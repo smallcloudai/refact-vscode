@@ -20,9 +20,13 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.window.showInformationMessage('Hello World from plugin-vscode!');
 	});
 
+	let disposable3 = vscode.commands.registerCommand('plugin-vscode.f1', () => {
+		vscode.window.showInformationMessage('F1 from plugin-vscode!');
+	});
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(disposable2);
+	context.subscriptions.push(disposable3);
 }
 
 // this method is called when your extension is deactivated
