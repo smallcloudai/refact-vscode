@@ -1,0 +1,6 @@
+dist
+node_modules
+src/test/*
+*.vsix
+out/*
+package-lock.json
