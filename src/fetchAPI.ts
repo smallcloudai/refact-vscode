@@ -41,6 +41,7 @@ export function fetchAPI(
     cursor0: number,
     cursor1: number,
     maxTokens: number,
+    maxEdits: number,
 ) {
     const url = "https://inference.smallcloud.ai/v1/contrast";
     // const url = window.env.get("plugin-vscode.contrastUrl");
@@ -53,7 +54,8 @@ export function fetchAPI(
         "cursor0": cursor0,
         "cursor1": cursor1,
         "temperature": 0.7,
-        "max_tokens": maxTokens
+        "max_tokens": maxTokens,
+        "max_edits": maxEdits
     });
     const headers = {
         "Content-Type": "application/json",
@@ -67,9 +69,6 @@ export function fetchAPI(
         cache: "no-cache",
         referrer: "no-referrer",
     });
-    // console.log(url);
-    // console.log(req);
     let promise = fetchH2.fetch(req);
-    console.log(promise);
     return promise;
 }
