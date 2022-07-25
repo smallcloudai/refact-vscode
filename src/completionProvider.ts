@@ -14,6 +14,7 @@ import {
     commands
 } from "vscode";
 // import {getCompletions} from "../utils/network";
+import {fetchAPI} from "./fetchAPI";
 
 
 const maxLines = 1000; // TODO move to settings
@@ -45,7 +46,7 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
         console.log("len of text after", textAfter.length);
         console.log("current line", currentLine);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // await new Promise(resolve => setTimeout(resolve, 1000));
 
         let completionItem = new InlineCompletionItem(
             "hello world2",
@@ -57,16 +58,25 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
             command: "plugin-vscode.inlineAccepted",
             arguments: [completionItem]
         };
-        return [completionItem];
-
-        // let rs;
-        // try {
-        //     rs = await getCompletions(currentLine, textBefore, textAfter);
-        // } catch (err: unknown) {
-        //     if (err instanceof Error) {
-        //         window.showErrorMessage(err.toString());
-        //     }
-        //     return { items: [] };
-        // }
-    }
+		let promise = fetchAPI(
+			{ "hello.py": textBefore + currentLine + textAfter },
+			"Fix",
+			"infill",
+			"hello.py",
+			position.character,
+			position.character,
+			50
+		);
+        try {
+			const result = await promise;
+			const json = await result.json();
+			console.log(json);
+		} catch (err: unknown) {
+            if (err instanceof Error) {
+				console.log(err.message);
+			}
+            return { items: [] };
+		}
+		return [completionItem];
+	}
 }
