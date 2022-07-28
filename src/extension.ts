@@ -8,10 +8,9 @@ import * as highlight from "./highlight";
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 	console.log('Congratulations, your extension "plugin-vscode" is now active!');
-	vscode.window.showInformationMessage('WTF');
 
 	let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', () => {
-		vscode.window.showInformationMessage('Accepted');
+		console.log(["Accepted"]);
 	});
 
 	const comp = new MyInlineCompletionProvider();
