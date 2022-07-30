@@ -130,7 +130,7 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
             let char2 = modif_doc.slice(i, i + 1);
             // console.log("i", i, "char1", char1, "char2", char2);
             if (char1 !== char2) {
-                stop_at = i;
+                stop_at = i + 1;
                 break;
             }
         }

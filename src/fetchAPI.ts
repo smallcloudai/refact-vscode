@@ -46,7 +46,7 @@ export function fetchAPI(
     const url = "https://inference.smallcloud.ai/v1/contrast";
     // const url = window.env.get("plugin-vscode.contrastUrl");
     const body = JSON.stringify({
-        "model": "CONTRASTcode/large",
+        "model": "CONTRASTcode/large/v5",
         "sources": sources,
         "intent": intent,
         "function": functionName,
