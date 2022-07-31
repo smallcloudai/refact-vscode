@@ -5,7 +5,8 @@ import {
     Range,
     Command,
     window,
-    commands
+    commands,
+    workspace
 } from "vscode";
 import * as fetchH2 from 'fetch-h2';
 
@@ -46,7 +47,7 @@ export function fetchAPI(
     const url = "https://inference.smallcloud.ai/v1/contrast";
     // const url = window.env.get("plugin-vscode.contrastUrl");
     const body = JSON.stringify({
-        "model": "CONTRASTcode/large/densehl",
+        "model": workspace.getConfiguration().get('mate.model'),
         "sources": sources,
         "intent": intent,
         "function": functionName,

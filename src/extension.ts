@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import {MyInlineCompletionProvider} from "./completionProvider";
 import * as highlight from "./highlight";
 
+
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
@@ -21,13 +22,21 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	let disposable3 = vscode.commands.registerCommand('plugin-vscode.f1', () => {
-        highlight.getHighlight();
+        highlight.getHighlight(context);
 		vscode.window.showInformationMessage('F1 from plugin-vscode!');
 	});
+
+    let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', () => {
+        highlight.clearDecorations();
+        // highlight.getHighlight(context);
+		vscode.window.showInformationMessage('ESC');
+	});
+
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(disposable2);
 	context.subscriptions.push(disposable3);
+	context.subscriptions.push(disposable4);
 }
 
 // this method is called when your extension is deactivated
