@@ -55,7 +55,13 @@
       },
       {
         "command": "plugin-vscode.esc",
-        "key": "escape"
+        "key": "escape",
+        "when" : "vscode-mate.runEsc"
+      },
+      {
+        "command": "plugin-vscode.tab",
+        "key": "tab",
+        "when" : "vscode-mate.runTab"
       }
     ]
   },
@@ -68,7 +74,8 @@
     "test": "node ./out/test/runTest.js"
   },
   "dependencies": {
-    "fetch-h2": "2"
+    "fetch-h2": "2",
+    "diff": "^5.0.0"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",

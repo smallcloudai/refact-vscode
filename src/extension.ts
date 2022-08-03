@@ -27,9 +27,16 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', () => {
-        highlight.clearDecorations();
+        highlight.clearHighlight();
         // highlight.getHighlight(context);
 		vscode.window.showInformationMessage('ESC');
+	});
+
+
+    let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
+        highlight.accept();
+        // highlight.getHighlight(context);
+		vscode.window.showInformationMessage('Tab');
 	});
 
 
@@ -37,6 +44,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(disposable2);
 	context.subscriptions.push(disposable3);
 	context.subscriptions.push(disposable4);
+	context.subscriptions.push(disposable5);
 }
 
 // this method is called when your extension is deactivated
