@@ -79,6 +79,7 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
 			let streamPromise = fetchAPI(
 				sources,
 				"Fix",
+				// "diff-atcursor",
 				"infill",
 				file_name,
 				cursor,
@@ -96,6 +97,7 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
 					json.then((result) => {
 						resolve(result);
 					}).catch((error) => {
+						// this happens!
 						console.log(["JSON ERROR", request.seq, error]);
 						reject(error);
 					});
