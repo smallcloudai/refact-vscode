@@ -25,10 +25,10 @@
       "properties": {
         "mate.model": {
           "type": "string",
-          "default": "CONTRASTcode/large/v5",
+          "default": "CONTRASTcode/large/densehl",
           "enum": [
-            "CONTRASTcode/large",
-            "CONTRASTcode/large/v5"
+            "CONTRASTcode/large/densehl",
+            "CONTRASTcode/large/infill"
           ],
           "description": "Model Name"
         }

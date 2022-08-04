@@ -24,9 +24,9 @@ const Diff = require('diff');
 
 // let highlightEsc: boolean = false;
 
-// highlite arrays
-let highliteType: any = [];
-let highliteArray: any = [];
+// highlight arrays
+let highlightType: any = [];
+let highlightArray: any = [];
 let originalCode: string;
 
 let diffType: any = [];
@@ -78,9 +78,8 @@ export async function getHighlight(context: ExtensionContext) {
     }
 
     console.log(json);
-    
+
     for (let index = 0; index < json.highlight.length; index++) {
-       
         const element = json.highlight[index];
         const start = document.positionAt(element[0]);
         const end = document.positionAt(element[1]);
@@ -90,33 +89,33 @@ export async function getHighlight(context: ExtensionContext) {
         );
 
         let decoration = { range };
-        highliteArray.push(decoration);
+        highlightArray.push(decoration);
 
         let dt = window.createTextEditorDecorationType({
             backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
             color: 'black'
         });
 
-        highliteType.push(dt);
-        
-        activeEditor?.setDecorations(dt, highliteArray);
+        highlightType.push(dt);
+
+        activeEditor?.setDecorations(dt, highlightArray);
 
         workspace.onDidChangeTextDocument(()=> {
-            for (let index = 0; index < highliteType.length; index++) {
-                const element = highliteType[index];
+            for (let index = 0; index < highlightType.length; index++) {
+                const element = highlightType[index];
                 element.dispose();
             }
-            highliteArray.length = 0;
-            highliteType.length = 0;
+            highlightArray.length = 0;
+            highlightType.length = 0;
         });
-   
+
     }
     window.onDidChangeTextEditorSelection(()=> {
         let cPos = activeEditor!.selection.active;
         let cursor = document.offsetAt(cPos);
 
-        for (let index = 0; index < highliteArray.length; index++) {
-            const element = highliteArray[index];
+        for (let index = 0; index < highlightArray.length; index++) {
+            const element = highlightArray[index];
             if(element.range.contains(cPos)) {
                 getDiff(cursor);
             }
@@ -127,15 +126,15 @@ export async function getHighlight(context: ExtensionContext) {
 
 export async function clearHighlight(): Promise<void> {
     let activeEditor = window.activeTextEditor;
-    
+
     if(currentMode === 0) {
-        for (let index = 0; index < highliteType.length; index++) {
-            const element = highliteType[index];
+        for (let index = 0; index < highlightType.length; index++) {
+            const element = highlightType[index];
             element.dispose();
         }
-        highliteArray.length = 0;
-        highliteType.length = 0;
-    
+        highlightArray.length = 0;
+        highlightType.length = 0;
+
         commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
     }
     if(currentMode === 1) {
@@ -155,8 +154,8 @@ export async function clearHighlight(): Promise<void> {
             element.dispose();
         }
         currentMode = 0;
-        console.log('highliteType',highliteType);
-        activeEditor?.setDecorations(highliteType[0], highliteArray);
+        console.log('highlightType',highlightType);
+        activeEditor?.setDecorations(highlightType[0], highlightArray);
         diffAdd.length = 0;
         diffRemove.length = 0;
         diffFull.length = 0;
@@ -231,7 +230,7 @@ export async function getDiff(cursor: number) {
     currentMode = 1;
     let improved_doc = '';
 
-    diff.forEach((part: any) => {                
+    diff.forEach((part: any) => {
         let span = part.value;
         improved_doc += span;
     });
@@ -257,7 +256,7 @@ export function makeHighlight(dox: any, diff: any, rng: any) {
     let decoration = { range };
     diffFull.push(decoration);
 
-    diff.forEach((part: any) => {                
+    diff.forEach((part: any) => {
 
         if(part.removed) {
             let st = doc.getText().indexOf(part.value);
@@ -303,11 +302,11 @@ export function makeHighlight(dox: any, diff: any, rng: any) {
             color: 'white',
             contentText: "+"
         },
-        
+
     });
 
     let blind = window.createTextEditorDecorationType({
-        color: 'gray',        
+        color: 'gray',
     });
 
     diffType.length = 0;
