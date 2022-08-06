@@ -88,12 +88,14 @@ export async function runHighlight(context: ExtensionContext) {
     getHighlight(json); 
 
     // workspace.onDidChangeTextDocument(()=> {
-    //     for (let index = 0; index < highlightType.length; index++) {
-    //         const element = highlightType[index];
-    //         element.dispose();
+    //     if(currentMode === 0) {
+    //         for (let index = 0; index < highlights.length; index++) {
+    //             const element = highlights[index];
+    //             activeEditor?.setDecorations(element, []);
+    //         }
+    //         highlights.length = 0;
+    //         ranges.length = 0;
     //     }
-    //     highlightArray.length = 0;
-    //     highlightType.length = 0;
     // });
 
     changeEvent = window.onDidChangeTextEditorSelection(()=> {
@@ -137,16 +139,16 @@ export function getHighlight(json: any = []) {
             activeEditor?.setDecorations(deco, ranger);
         }
         if(currentMode === 1) {
+            
             let deco = window.createTextEditorDecorationType({
                 backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
                 color: 'black'
             });
+            highlights.push(deco);
             activeEditor?.setDecorations(deco, [ranges[index]]);
         }
 
     }
-    // console.log('highlights',highlights);
-    // console.log('ranges',ranges);
 }
 
 export async function getDiff(cursor: number) {
@@ -291,13 +293,11 @@ export function makeDiffLines(doc: any, diff: any, rng: any) {
 
     let target = ConfigurationTarget.Global;
     let configuration = workspace.getConfiguration('indenticator');
-    // console.log('configuration',configuration);
     configuration.update('showIndentGuide', false, target);
     commands.executeCommand('setContext', 'vscode-mate.runTab', true);
 }
 
 export function clearHighlight() {
-
     if(currentMode === 0) {
         if(diffType.length > 0) {
             for (let index = 0; index < diffType.length; index++) {
@@ -317,20 +317,11 @@ export function clearHighlight() {
         highlights.length = 0;
         ranges.length = 0;
 
-        console.log('clear running');
-
         commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
         changeEvent.dispose();
     }
 
     if(currentMode === 1) {
-
-        // for (let index = 0; index < highlightType.length; index++) {
-        //     const element = highlightType[index];
-        //     activeEditor?.setDecorations(element, []);
-        // }
-        // highlightArray.length = 0;
-        // highlightType.length = 0;
         
         for (let index = 0; index < diffType.length; index++) {
             const element = diffType[index];
@@ -350,10 +341,29 @@ export function clearHighlight() {
 
         getHighlight(highlightJson);
         currentMode = 0;
-
-        // remove tab exec
-        // commands.executeCommand('setContext', 'vscode-mate.runEsc', false);   
     }
+    if(currentMode === 2) {
+        for (let index = 0; index < diffType.length; index++) {
+            const element = diffType[index];
+            activeEditor?.setDecorations(element, []);
+        }
+        diffType.length = 0;
+        diffAdd.length = 0;
+        diffRemove.length = 0;
+        diffFull.length = 0;
+
+        for (let index = 0; index < highlights.length; index++) {
+            const element = highlights[index];
+            activeEditor?.setDecorations(element, []);
+        }
+        highlights.length = 0;
+        ranges.length = 0;
+        currentMode = 0;
+    }
+    commands.executeCommand('setContext', 'vscode-mate.runTab', false);
+    let target = ConfigurationTarget.Global;
+    let configuration = workspace.getConfiguration('indenticator');
+    configuration.update('showIndentGuide', true, target);
 }
 
 export function accept() {
@@ -363,13 +373,12 @@ export function accept() {
     activeEditor?.edit((selectedText) => {
         selectedText.replace(textRange, diffCode);
     });
-    // clearHighlight();
+    currentMode = 2;
+    clearHighlight();
     commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
     commands.executeCommand('setContext', 'vscode-mate.runTab', false);
     changeEvent.dispose();
 }
-
-
 
 
 // vscode.window.onDidChangeActiveTextEditor(editor => {
@@ -378,31 +387,3 @@ export function accept() {
 //         triggerUpdateDecorations();
 //     }
 // }, null, context.subscriptions);
-
-
-
-// function fuck() {
-//     let activeEditor = window.activeTextEditor;
-    
-//     let range = new Range(0,0,1,20);
-//     let decoration = { range };
-//     let ranges: any = [];
-//     ranges.push(decoration);
-
-//     range = new Range(3,0,4,10);
-//     let deco = { range };
-//     let rrr: any = [];
-//     rrr.push(deco);
-
-
-//     let dectype = window.createTextEditorDecorationType({
-//         backgroundColor: 'blue',
-//         color: 'black'
-//     });
-//     let dectype2 = window.createTextEditorDecorationType({
-//         backgroundColor: 'green',
-//         color: 'black'
-//     });
-//     activeEditor?.setDecorations(dectype, ranges);  
-//     activeEditor?.setDecorations(dectype2, rrr);  
-// }
