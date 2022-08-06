@@ -165,3 +165,8 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
         return [completionItem];
     }
 }
+
+
+// Explore:
+// onDidChangeActiveTextEditor
+// onDidChangeTextEditorSelection
