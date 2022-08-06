@@ -47,7 +47,7 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
         cancelToken: CancellationToken
     )
     {
-        console.log(["provideInlineCompletionItems", position.line, position.character, context.triggerKind]);
+        //console.log(["provideInlineCompletionItems", position.line, position.character, context.triggerKind]);
 		// if (cancelToken) {
 			// let abort = new fetchH2.AbortController();
 			// cancelToken.onCancellationRequested(() => {
@@ -75,10 +75,10 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
 			return;
 		}
 		try {
-			console.log(["LAUNCH", request.seq, 'active reqs', globalRequests.length]);
+			// console.log(["LAUNCH", request.seq, 'active reqs', globalRequests.length]);
 			let streamPromise = fetchAPI(
 				sources,
-				"Fix",
+				"Infill",
 				// "diff-atcursor",
 				"infill",
 				file_name,
@@ -110,10 +110,10 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
 				if (index >= 0) {
 					globalRequests.splice(index, 1);
 				}
-				console.log(["--pendingRequests", globalRequests.length, request.seq]);
+				// console.log(["--pendingRequests", globalRequests.length, request.seq]);
 			});
 			globalRequests.push(request);
-			console.log(["++pendingRequests", globalRequests.length, request.seq]);
+			// console.log(["++pendingRequests", globalRequests.length, request.seq]);
 		} catch (err: unknown) {
 			console.log(["catched", request.seq, err]);
 		}
