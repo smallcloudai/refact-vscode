@@ -24,9 +24,13 @@ const Diff = require('diff');
 
 // let highlightEsc: boolean = false;
 
+let highlightJson: any = [];
 // highlight arrays
-let highlightType: any = [];
-let highlightArray: any = [];
+let highlights: any = [];
+let ranges: any = [];
+
+let changeEvent: any = [];
+
 let originalCode: string;
 
 let diffType: any = [];
@@ -38,10 +42,10 @@ let diffCode: string;
 let diffFetching: boolean = false;
 let currentMode: number = 0;
 
-export async function getHighlight(context: ExtensionContext) {
-    clearHighlight();
+const activeEditor = window.activeTextEditor;
 
-    let activeEditor = window.activeTextEditor;
+export async function runHighlight(context: ExtensionContext) {
+
     let document = activeEditor!.document;
     let curPos = activeEditor!.selection.active;
     let cursor = document.offsetAt(curPos);
@@ -79,43 +83,25 @@ export async function getHighlight(context: ExtensionContext) {
 
     console.log(json);
 
-    for (let index = 0; index < json.highlight.length; index++) {
-        const element = json.highlight[index];
-        const start = document.positionAt(element[0]);
-        const end = document.positionAt(element[1]);
-        let range = new Range(
-            start,
-            end
-        );
+    highlightJson = json;
 
-        let decoration = { range };
-        highlightArray.push(decoration);
+    getHighlight(json); 
 
-        let dt = window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
-            color: 'black'
-        });
+    // workspace.onDidChangeTextDocument(()=> {
+    //     for (let index = 0; index < highlightType.length; index++) {
+    //         const element = highlightType[index];
+    //         element.dispose();
+    //     }
+    //     highlightArray.length = 0;
+    //     highlightType.length = 0;
+    // });
 
-        highlightType.push(dt);
-
-        activeEditor?.setDecorations(dt, highlightArray);
-
-        workspace.onDidChangeTextDocument(()=> {
-            for (let index = 0; index < highlightType.length; index++) {
-                const element = highlightType[index];
-                element.dispose();
-            }
-            highlightArray.length = 0;
-            highlightType.length = 0;
-        });
-
-    }
-    window.onDidChangeTextEditorSelection(()=> {
+    changeEvent = window.onDidChangeTextEditorSelection(()=> {
         let cPos = activeEditor!.selection.active;
         let cursor = document.offsetAt(cPos);
 
-        for (let index = 0; index < highlightArray.length; index++) {
-            const element = highlightArray[index];
+        for (let index = 0; index < ranges.length; index++) {
+            const element = ranges[index];
             if(element.range.contains(cPos)) {
                 getDiff(cursor);
             }
@@ -124,65 +110,43 @@ export async function getHighlight(context: ExtensionContext) {
     commands.executeCommand('setContext', 'vscode-mate.runEsc', true);
 }
 
-export async function clearHighlight(): Promise<void> {
-    let activeEditor = window.activeTextEditor;
-
-    if(currentMode === 0) {
-        for (let index = 0; index < highlightType.length; index++) {
-            const element = highlightType[index];
-            element.dispose();
+export function getHighlight(json: any = []) {
+    let document = activeEditor!.document;
+    for (let index = 0; index < json.highlight.length; index++) {
+        const element = json.highlight[index];
+        if(currentMode === 0) {
+            const start = document.positionAt(element[0]);
+            const end = document.positionAt(element[1]);
+            let range = new Range(
+                start,
+                end
+            );
+    
+            let decoration = { range };
+            
+            let ranger: any = [];
+            ranger.push(decoration);
+            ranges.push(decoration);
+    
+            let deco = window.createTextEditorDecorationType({
+                backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
+                color: 'black'
+            });
+    
+            highlights.push(deco);
+            activeEditor?.setDecorations(deco, ranger);
         }
-        highlightArray.length = 0;
-        highlightType.length = 0;
+        if(currentMode === 1) {
+            let deco = window.createTextEditorDecorationType({
+                backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
+                color: 'black'
+            });
+            activeEditor?.setDecorations(deco, [ranges[index]]);
+        }
 
-        commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
     }
-    if(currentMode === 1) {
-        for (let index = 0; index < diffType.length; index++) {
-            const element = diffType[index];
-            console.log('element ' + index, element);
-        }
-        let firstLine = activeEditor?.document.lineAt(0);
-        let lastLine = activeEditor?.document.lineAt(activeEditor?.document.lineCount - 1);
-        let textRange = new Range(0,firstLine!.range.start.character,activeEditor!.document.lineCount - 1,lastLine!.range.end.character);
-        activeEditor?.edit((selectedText) => {
-            selectedText.replace(textRange, originalCode);
-        });
-
-        for (let index = 0; index < diffType.length; index++) {
-            const element = diffType[index];
-            element.dispose();
-        }
-        currentMode = 0;
-        console.log('highlightType',highlightType);
-        activeEditor?.setDecorations(highlightType[0], highlightArray);
-        diffAdd.length = 0;
-        diffRemove.length = 0;
-        diffFull.length = 0;
-        diffType.length = 0;
-        commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
-    }
-
-}
-
-export async function accept() {
-    let activeEditor = window.activeTextEditor;
-    let firstLine = activeEditor?.document.lineAt(0);
-    let lastLine = activeEditor?.document.lineAt(activeEditor?.document.lineCount - 1);
-    let textRange = new Range(0,firstLine!.range.start.character,activeEditor!.document.lineCount - 1,lastLine!.range.end.character);
-    activeEditor?.edit((selectedText) => {
-        selectedText.replace(textRange, diffCode);
-    });
-    clearHighlight();
-    commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
-    commands.executeCommand('setContext', 'vscode-mate.runTab', false);
-
-    // for (let index = 0; index < decorationType.length; index++) {
-    //     const element = decorationType[index];
-    //     element.dispose();
-    // }
-    // decorationsArray.length = 0;
-    // decorationType.length = 0;
+    // console.log('highlights',highlights);
+    // console.log('ranges',ranges);
 }
 
 export async function getDiff(cursor: number) {
@@ -191,7 +155,6 @@ export async function getDiff(cursor: number) {
     }
     diffFetching = true;
 
-    let activeEditor = window.activeTextEditor;
     let document = activeEditor!.document;
 
     let file_name = document.fileName;
@@ -226,7 +189,6 @@ export async function getDiff(cursor: number) {
     diffCode = modif_doc;
 
     const diff = Diff.diffLines(whole_doc, modif_doc);
-    clearHighlight();
     currentMode = 1;
     let improved_doc = '';
 
@@ -242,15 +204,22 @@ export async function getDiff(cursor: number) {
     activeEditor?.edit((selectedText) => {
         selectedText.replace(textRange, improved_doc);
     }).then(() => {
-        makeHighlight(activeEditor!.document, diff, textRange);
+        makeDiffLines(activeEditor!.document, diff, textRange);
     });
 }
 
-export function makeHighlight(dox: any, diff: any, rng: any) {
-    diffFetching = false;
-    let activeEditor = window.activeTextEditor;
+function hideHighlight() {
+    for (let index = 0; index < highlights.length; index++) {
+        const element = highlights[index];
+        activeEditor?.setDecorations(element, []);
+    }
+    highlights.length = 0;
+    // ranges.length = 0;
+}
 
-    let doc = dox;
+
+export function makeDiffLines(doc: any, diff: any, rng: any) {
+    diffFetching = false;
 
     let range = rng;
     let decoration = { range };
@@ -314,6 +283,8 @@ export function makeHighlight(dox: any, diff: any, rng: any) {
     diffType.push(dremove);
     diffType.push(dadd);
 
+    hideHighlight();
+
     activeEditor?.setDecorations(dadd, diffAdd);
     activeEditor?.setDecorations(dremove, diffRemove);
     activeEditor?.setDecorations(blind, diffFull);
@@ -322,7 +293,116 @@ export function makeHighlight(dox: any, diff: any, rng: any) {
     let configuration = workspace.getConfiguration('indenticator');
     // console.log('configuration',configuration);
     configuration.update('showIndentGuide', false, target);
-
-    commands.executeCommand('setContext', 'vscode-mate.runEsc', true);
     commands.executeCommand('setContext', 'vscode-mate.runTab', true);
 }
+
+export function clearHighlight() {
+
+    if(currentMode === 0) {
+        if(diffType.length > 0) {
+            for (let index = 0; index < diffType.length; index++) {
+                const element = diffType[index];
+                activeEditor?.setDecorations(element, []);
+            }
+            diffType.length = 0;
+            diffAdd.length = 0;
+            diffRemove.length = 0;
+            diffFull.length = 0;
+        }
+
+        for (let index = 0; index < highlights.length; index++) {
+            const element = highlights[index];
+            activeEditor?.setDecorations(element, []);
+        }
+        highlights.length = 0;
+        ranges.length = 0;
+
+        console.log('clear running');
+
+        commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
+        changeEvent.dispose();
+    }
+
+    if(currentMode === 1) {
+
+        // for (let index = 0; index < highlightType.length; index++) {
+        //     const element = highlightType[index];
+        //     activeEditor?.setDecorations(element, []);
+        // }
+        // highlightArray.length = 0;
+        // highlightType.length = 0;
+        
+        for (let index = 0; index < diffType.length; index++) {
+            const element = diffType[index];
+            activeEditor?.setDecorations(element, []);
+        }
+        diffType.length = 0;
+        diffAdd.length = 0;
+        diffRemove.length = 0;
+        diffFull.length = 0;
+
+        let firstLine = activeEditor?.document.lineAt(0);
+        let lastLine = activeEditor?.document.lineAt(activeEditor?.document.lineCount - 1);
+        let textRange = new Range(0,firstLine!.range.start.character,activeEditor!.document.lineCount - 1,lastLine!.range.end.character);
+        activeEditor?.edit((selectedText) => {
+            selectedText.replace(textRange, originalCode);
+        });
+
+        getHighlight(highlightJson);
+        currentMode = 0;
+
+        // remove tab exec
+        // commands.executeCommand('setContext', 'vscode-mate.runEsc', false);   
+    }
+}
+
+export function accept() {
+    let firstLine = activeEditor?.document.lineAt(0);
+    let lastLine = activeEditor?.document.lineAt(activeEditor?.document.lineCount - 1);
+    let textRange = new Range(0,firstLine!.range.start.character,activeEditor!.document.lineCount - 1,lastLine!.range.end.character);
+    activeEditor?.edit((selectedText) => {
+        selectedText.replace(textRange, diffCode);
+    });
+    // clearHighlight();
+    commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
+    commands.executeCommand('setContext', 'vscode-mate.runTab', false);
+    changeEvent.dispose();
+}
+
+
+
+
+// vscode.window.onDidChangeActiveTextEditor(editor => {
+//     activeEditor = editor;
+//     if (editor) {
+//         triggerUpdateDecorations();
+//     }
+// }, null, context.subscriptions);
+
+
+
+// function fuck() {
+//     let activeEditor = window.activeTextEditor;
+    
+//     let range = new Range(0,0,1,20);
+//     let decoration = { range };
+//     let ranges: any = [];
+//     ranges.push(decoration);
+
+//     range = new Range(3,0,4,10);
+//     let deco = { range };
+//     let rrr: any = [];
+//     rrr.push(deco);
+
+
+//     let dectype = window.createTextEditorDecorationType({
+//         backgroundColor: 'blue',
+//         color: 'black'
+//     });
+//     let dectype2 = window.createTextEditorDecorationType({
+//         backgroundColor: 'green',
+//         color: 'black'
+//     });
+//     activeEditor?.setDecorations(dectype, ranges);  
+//     activeEditor?.setDecorations(dectype2, rrr);  
+// }

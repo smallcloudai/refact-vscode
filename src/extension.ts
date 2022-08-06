@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	let disposable3 = vscode.commands.registerCommand('plugin-vscode.f1', () => {
-        highlight.getHighlight(context);
+        highlight.runHighlight(context);
 		vscode.window.showInformationMessage('F1 from plugin-vscode!');
 	});
 
