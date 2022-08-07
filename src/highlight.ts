@@ -20,7 +20,7 @@ import {
 } from "vscode";
 
 import {fetchAPI} from "./fetchAPI";
-const Diff = require('diff');
+const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 
 // let highlightEsc: boolean = false;
 
@@ -85,7 +85,7 @@ export async function runHighlight(context: ExtensionContext) {
 
     highlightJson = json;
 
-    getHighlight(json); 
+    getHighlight(json);
 
     // workspace.onDidChangeTextDocument(()=> {
     //     if(currentMode === 0) {
@@ -123,23 +123,23 @@ export function getHighlight(json: any = []) {
                 start,
                 end
             );
-    
+
             let decoration = { range };
-            
+
             let ranger: any = [];
             ranger.push(decoration);
             ranges.push(decoration);
-    
+
             let deco = window.createTextEditorDecorationType({
                 backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
                 color: 'black'
             });
-    
+
             highlights.push(deco);
             activeEditor?.setDecorations(deco, ranger);
         }
         if(currentMode === 1) {
-            
+
             let deco = window.createTextEditorDecorationType({
                 backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
                 color: 'black'
@@ -322,7 +322,7 @@ export function clearHighlight() {
     }
 
     if(currentMode === 1) {
-        
+
         for (let index = 0; index < diffType.length; index++) {
             const element = diffType[index];
             activeEditor?.setDecorations(element, []);

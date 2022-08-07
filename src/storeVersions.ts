@@ -52,12 +52,12 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
     }
     let last_version = versionlist[versionlist.length - 1];
     if (last_version === version) {
-        console.log(["same version", last_version, version]);
+        // console.log(["same version", last_version, version]);
         return;
     }
     let last_line = fn2line.get(fn);
     if (last_line === line0 && !force) {
-        console.log(["same line", last_line, line0]);
+        // console.log(["same line", last_line, line0]);
         return;
     }
     let whole_doc = document.getText();
@@ -89,16 +89,16 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
         return;
         // console.log(["onDidChangeTextDocument", "undo", v]);
     } else {
-        console.log(["Keyboard"]);
+        // console.log(["Keyboard"]);
     }
     let line_min = 1000000;
     let line_max = -1;
     for (let change of contentChanges) {
-        console.log([
-            "change", change.text.length,
-            "start", change.range.start.line, change.range.start.character,
-            "end", change.range.end.line, change.range.end.character,
-        ]);
+        // console.log([
+        //     "change", change.text.length,
+        //     "start", change.range.start.line, change.range.start.character,
+        //     "end", change.range.end.line, change.range.end.character,
+        // ]);
         line_min = Math.min(line_min, change.range.start.line);
         line_max = Math.max(line_max, change.range.end.line);
     }

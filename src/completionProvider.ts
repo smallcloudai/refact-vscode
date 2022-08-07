@@ -1,54 +1,19 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import {
-    CancellationToken,
-    Position,
-    TextDocument,
-    InlineCompletionContext,
-    InlineCompletionItemProvider,
-    InlineCompletionItem,
-    InlineCompletionList,
-    ProviderResult,
-    Range,
-    Command,
-    window,
-    InlineCompletionTriggerKind,
-    commands
-} from "vscode";
-import {fetchAPI} from "./fetchAPI";
+import * as vscode from 'vscode';
+import * as fetch from "./fetchAPI";
 
 
-// let pendingRequests = 0;
-let globalSeq = 100;
 
-
-class PendingRequest {
-    seq: number;
-    // optional
-    apiPromise: Promise<any> | undefined;
-    cancelToken: CancellationToken;
-
-    constructor(apiPromise: Promise<any> | undefined, cancelToken: CancellationToken) {
-        this.seq = globalSeq++;
-        this.apiPromise = apiPromise;
-        this.cancelToken = cancelToken;
-    }
-}
-
-
-let globalRequests: PendingRequest[] = [];
-
-
-export class MyInlineCompletionProvider implements InlineCompletionItemProvider
+export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
 {
     async provideInlineCompletionItems(
-        document: TextDocument,
-        position: Position,
-        context: InlineCompletionContext,
-        cancelToken: CancellationToken
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        context: vscode.InlineCompletionContext,
+        cancelToken: vscode.CancellationToken
     )
     {
-        // console.log(["provideInlineCompletionItems", position.line, position.character, context.triggerKind]);
-        return;
+        console.log(["provideInlineCompletionItems", position.line, position.character, context.triggerKind]);
         // if (cancelToken) {
             // let abort = new fetchH2.AbortController();
             // cancelToken.onCancellationRequested(() => {
@@ -59,65 +24,28 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
         let whole_doc = document.getText();
         let cursor = document.offsetAt(position);
         let file_name = document.fileName;
-        let sources: { [key: string]: string } = {};
-        sources[file_name] = whole_doc;
-        let max_tokens = 50;
-
-        for (let i=0; i<globalRequests.length; i++) {
-            let r = globalRequests[i];
-            if (r.apiPromise !== undefined) {
-                let tmp = await r.apiPromise;
-                console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
-            }
-        }
-
-        let request = new PendingRequest(undefined, cancelToken);
+        // sleep 100ms, in a hope request will be cancelled
+        await new Promise(resolve => setTimeout(resolve, 100));
         if (cancelToken.isCancellationRequested) {
             return;
         }
-        try {
-            // console.log(["LAUNCH", request.seq, 'active reqs', globalRequests.length]);
-            let streamPromise = fetchAPI(
-                sources,
-                "Infill",
-                // "diff-atcursor",
-                "infill",
-                file_name,
-                cursor,
-                cursor,
-                max_tokens,
-                1
-            );
-            streamPromise.catch((error) => {
-                console.log(["Error after start", request.seq, error]);
-                return;
-            });
-            request.apiPromise = new Promise((resolve, reject) => {
-                streamPromise.then((result_stream) => {
-                    let json = result_stream.json();
-                    json.then((result) => {
-                        resolve(result);
-                    }).catch((error) => {
-                        // this happens!
-                        console.log(["JSON ERROR", request.seq, error]);
-                        reject(error);
-                    });
-                }).catch((error) => {
-                    console.log(["STREAM ERROR", request.seq, error]);
-                    reject(error);
-                });
-            }).finally(() => {
-                let index = globalRequests.indexOf(request);
-                if (index >= 0) {
-                    globalRequests.splice(index, 1);
-                }
-                // console.log(["--pendingRequests", globalRequests.length, request.seq]);
-            });
-            globalRequests.push(request);
-            // console.log(["++pendingRequests", globalRequests.length, request.seq]);
-        } catch (err: unknown) {
-            console.log(["catched", request.seq, err]);
-        }
+
+        let sources: { [key: string]: string } = {};
+        sources[file_name] = whole_doc;
+        let max_tokens = 50;
+        let max_edits = 1;
+        let request = new fetch.PendingRequest(undefined, cancelToken);
+        request.supplyStream(fetch.fetchAPI(
+            sources,
+            "Infill",
+            // "diff-atcursor",
+            "infill",
+            file_name,
+            cursor,
+            cursor,
+            max_tokens,
+            max_edits,
+        ));
 
         let json: any = await request.apiPromise;
         let modif_doc = json["choices"][0]["files"][file_name];
@@ -147,22 +75,16 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
         let completion = modif_doc.substring(cursor, modif_doc.length + stop_at + 1);
         console.log(["SUCCESS", request.seq, completion]);
 
-        let completionItem = new InlineCompletionItem(
+        let completionItem = new vscode.InlineCompletionItem(
             completion,
-            new Range(position, position.translate(0, completion.length))
+            new vscode.Range(position, position.translate(0, completion.length))
         );
         completionItem.filterText = completion;
-        completionItem.command = {
-            title: "hello world2",
-            command: "plugin-vscode.inlineAccepted",
-            arguments: [completionItem]
-        };
-
-        // if (request.cancelToken.isCancellationRequested) {
-        //     console.log([request.seq, "Func stack cancelled"]);
-        //     return { items: [] };
-        // }
-
+        // completionItem.command = {
+        //     title: "hello world2",
+        //     command: "plugin-vscode.inlineAccepted",
+        //     arguments: [completionItem]
+        // };
         return [completionItem];
     }
 }

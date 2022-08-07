@@ -1,38 +1,69 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import {
-    Position,
-    TextDocument,
-    Range,
-    Command,
-    window,
-    commands,
-    workspace
-} from "vscode";
+import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 
 
-// curl https://inference.smallcloud.ai/v1/contrast \
-//   -H 'Content-Type: application/json' \
-//   -H "Authorization: Bearer $SMALLCLOUD_API_KEY" \
-//   -d '{
-//   "model": "CONTRASTcode/large",
-//   "sources": {"hello.py": "def hello_world():\n    pass\n\ndef a_distraction_function():\n    print(\"there to distract!\")\n\n"},
-//   "intent": "Implement hello_world function",
-//   "function": "highlight",
-//   "cursor_file": "hello.py",
-//   "cursor0": 25,
-//   "cursor1": 25,
-//   "stream": false,
-//   "temperature": 0.7,
-//   "max_tokens": 50
-// }'
+let globalSeq = 100;
 
-// "properties": [
-//     {
-//         "id": "plugin-vscode.contrastUrl",
-//         "title": "Use CONTRAST model at this URL",
-//         "type": "string",
-//         "default": "https://inference.smallcloud.ai/v1/contrast"
+
+export class PendingRequest {
+    seq: number;
+    apiPromise: Promise<any> | undefined;
+    cancelToken: vscode.CancellationToken;
+
+    constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken) {
+        this.seq = globalSeq++;
+        this.apiPromise = apiPromise;
+        this.cancelToken = cancelToken;
+    }
+
+    supplyStream(h2stream: Promise<fetchH2.Response>)
+    {
+        h2stream.catch((error) => {
+            console.log(["Error after start", this.seq, error]);
+            return;
+        });
+        this.apiPromise = new Promise((resolve, reject) => {
+            h2stream.then((result_stream) => {
+                let json = result_stream.json();
+                json.then((result) => {
+                    resolve(result);
+                }).catch((error) => {
+                    // this happens!
+                    console.log(["JSON ERROR", this.seq, error]);
+                    reject(error);
+                });
+            }).catch((error) => {
+                console.log(["STREAM ERROR", this.seq, error]);
+                reject(error);
+            });
+        }).finally(() => {
+            let index = globalRequests.indexOf(this);
+            if (index >= 0) {
+                globalRequests.splice(index, 1);
+            }
+            // console.log(["--pendingRequests", globalRequests.length, request.seq]);
+        });
+        globalRequests.push(this);
+        // console.log(["++pendingRequests", globalRequests.length, request.seq]);
+    }
+}
+
+
+let globalRequests: PendingRequest[] = [];
+
+
+export async function waitAllRequests()
+{
+    for (let i=0; i<globalRequests.length; i++) {
+        let r = globalRequests[i];
+        if (r.apiPromise !== undefined) {
+            let tmp = await r.apiPromise;
+            console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
+        }
+    }
+}
+
 
 export function fetchAPI(
     sources: { [key: string]: string },
@@ -47,7 +78,7 @@ export function fetchAPI(
     const url = "https://inference.smallcloud.ai/v1/contrast";
     // const url = window.env.get("plugin-vscode.contrastUrl");
     const body = JSON.stringify({
-        "model": workspace.getConfiguration().get('mate.model'),
+        "model": vscode.workspace.getConfiguration().get('mate.model'),
         "sources": sources,
         "intent": intent,
         "function": functionName,
