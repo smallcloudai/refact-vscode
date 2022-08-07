@@ -10,7 +10,7 @@ const N = 5;
 
 export function fnGetRevisions(fn: string)
 {
-    let result: Map<string, string> = new Map();
+    let result: { [key: string]: string } = {};
     let textlist = fn2textlist.get(fn);
     if (!textlist) {
         return result;
@@ -22,7 +22,7 @@ export function fnGetRevisions(fn: string)
     for (let i = 0; i < textlist.length; i++) {
         let version = versionlist[i];
         let version_str = version.toString();
-        result.set(fn + ":" + version_str, textlist[i]);
+        result[fn + ":" + version_str] = textlist[i];
     }
     return result;
 }

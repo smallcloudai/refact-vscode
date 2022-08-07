@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
-
+import * as storeVersions from './storeVersions';
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -13,7 +13,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cancelToken: vscode.CancellationToken
     )
     {
-        console.log(["provideInlineCompletionItems", position.line, position.character, context.triggerKind]);
         // if (cancelToken) {
             // let abort = new fetchH2.AbortController();
             // cancelToken.onCancellationRequested(() => {
@@ -24,8 +23,10 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let whole_doc = document.getText();
         let cursor = document.offsetAt(position);
         let file_name = document.fileName;
-        // sleep 100ms, in a hope request will be cancelled
-        await new Promise(resolve => setTimeout(resolve, 100));
+        if (context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) {
+            // sleep 100ms, in a hope request will be cancelled
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
         await fetch.waitAllRequests();
         if (cancelToken.isCancellationRequested) {
             return;
@@ -33,22 +34,52 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 
         let sources: { [key: string]: string } = {};
         sources[file_name] = whole_doc;
+        let request = new fetch.PendingRequest(undefined, cancelToken);
         let max_tokens = 50;
         let max_edits = 1;
-        let request = new fetch.PendingRequest(undefined, cancelToken);
-        request.supplyStream(fetch.fetchAPI(
-            sources,
-            "Infill",
-            // "diff-atcursor",
-            "infill",
-            file_name,
-            cursor,
-            cursor,
-            max_tokens,
-            max_edits,
-        ));
-
+        let current_line = document.lineAt(position.line);
+        let left_of_cursor = current_line.text.substring(0, position.character);
+        let right_of_cursor = current_line.text.substring(position.character);
+        let right_of_cursor_has_only_special_chars = right_of_cursor.match(/^[\s\t\n\r)"'\]]*$/);
+        if (right_of_cursor_has_only_special_chars) {
+            console.log(["INFILL", left_of_cursor, "|", right_of_cursor]);
+            request.supplyStream(fetch.fetchAPI(
+                sources,
+                "Infill",
+                // "diff-atcursor",
+                "infill",
+                file_name,
+                cursor,
+                cursor,
+                max_tokens,
+                max_edits,
+            ));
+        } else {
+            let more_revisions: { [key: string]: string } = storeVersions.fnGetRevisions(file_name);
+            more_revisions[file_name] = whole_doc;
+            let dump = "";
+            for (let key in more_revisions) {
+                dump += key + " ";
+            }
+            console.log(["edit chain", dump]);
+            request.supplyStream(fetch.fetchAPI(
+                more_revisions,
+                "Fix",
+                "edit-chain",
+                file_name,
+                cursor,
+                cursor,
+                max_tokens,
+                max_edits,
+            ));
+        }
         let json: any = await request.apiPromise;
+        // look if "detail" is in json
+        if (json.detail) {
+            let detail = json.detail;
+            console.log(["ERROR", detail]);
+            return;
+        }
         let modif_doc = json["choices"][0]["files"][file_name];
         let before_cursor1 = whole_doc.substring(0, cursor);
         let before_cursor2 = modif_doc.substring(0, cursor);
