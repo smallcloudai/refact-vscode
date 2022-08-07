@@ -22,16 +22,16 @@ let globalSeq = 100;
 
 
 class PendingRequest {
-	seq: number;
-	// optional
-	apiPromise: Promise<any> | undefined;
-	cancelToken: CancellationToken;
+    seq: number;
+    // optional
+    apiPromise: Promise<any> | undefined;
+    cancelToken: CancellationToken;
 
-	constructor(apiPromise: Promise<any> | undefined, cancelToken: CancellationToken) {
-		this.seq = globalSeq++;
-		this.apiPromise = apiPromise;
-		this.cancelToken = cancelToken;
-	}
+    constructor(apiPromise: Promise<any> | undefined, cancelToken: CancellationToken) {
+        this.seq = globalSeq++;
+        this.apiPromise = apiPromise;
+        this.cancelToken = cancelToken;
+    }
 }
 
 
@@ -47,14 +47,15 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
         cancelToken: CancellationToken
     )
     {
-        //console.log(["provideInlineCompletionItems", position.line, position.character, context.triggerKind]);
-		// if (cancelToken) {
-			// let abort = new fetchH2.AbortController();
-			// cancelToken.onCancellationRequested(() => {
-			// 	console.log(["User canceled inline completion"]);
-			// });
-			// init.signal = abort.signal;
-		// }
+        // console.log(["provideInlineCompletionItems", position.line, position.character, context.triggerKind]);
+        return;
+        // if (cancelToken) {
+            // let abort = new fetchH2.AbortController();
+            // cancelToken.onCancellationRequested(() => {
+            //     console.log(["User canceled inline completion"]);
+            // });
+            // init.signal = abort.signal;
+        // }
         let whole_doc = document.getText();
         let cursor = document.offsetAt(position);
         let file_name = document.fileName;
@@ -62,63 +63,63 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
         sources[file_name] = whole_doc;
         let max_tokens = 50;
 
-		for (let i=0; i<globalRequests.length; i++) {
-			let r = globalRequests[i];
-			if (r.apiPromise !== undefined) {
-				let tmp = await r.apiPromise;
-				console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
-			}
-		}
+        for (let i=0; i<globalRequests.length; i++) {
+            let r = globalRequests[i];
+            if (r.apiPromise !== undefined) {
+                let tmp = await r.apiPromise;
+                console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
+            }
+        }
 
-		let request = new PendingRequest(undefined, cancelToken);
-		if (cancelToken.isCancellationRequested) {
-			return;
-		}
-		try {
-			// console.log(["LAUNCH", request.seq, 'active reqs', globalRequests.length]);
-			let streamPromise = fetchAPI(
-				sources,
-				"Infill",
-				// "diff-atcursor",
-				"infill",
-				file_name,
-				cursor,
-				cursor,
-				max_tokens,
-				1
-			);
-			streamPromise.catch((error) => {
-				console.log(["Error after start", request.seq, error]);
-				return;
-			});
-			request.apiPromise = new Promise((resolve, reject) => {
-				streamPromise.then((result_stream) => {
-					let json = result_stream.json();
-					json.then((result) => {
-						resolve(result);
-					}).catch((error) => {
-						// this happens!
-						console.log(["JSON ERROR", request.seq, error]);
-						reject(error);
-					});
-				}).catch((error) => {
-					console.log(["STREAM ERROR", request.seq, error]);
-					reject(error);
-				});
-			}).finally(() => {
-				let index = globalRequests.indexOf(request);
-				if (index >= 0) {
-					globalRequests.splice(index, 1);
-				}
-				// console.log(["--pendingRequests", globalRequests.length, request.seq]);
-			});
-			globalRequests.push(request);
-			// console.log(["++pendingRequests", globalRequests.length, request.seq]);
-		} catch (err: unknown) {
-			console.log(["catched", request.seq, err]);
-		}
+        let request = new PendingRequest(undefined, cancelToken);
+        if (cancelToken.isCancellationRequested) {
+            return;
+        }
+        try {
+            // console.log(["LAUNCH", request.seq, 'active reqs', globalRequests.length]);
+            let streamPromise = fetchAPI(
+                sources,
+                "Infill",
+                // "diff-atcursor",
+                "infill",
+                file_name,
+                cursor,
+                cursor,
+                max_tokens,
+                1
+            );
+            streamPromise.catch((error) => {
+                console.log(["Error after start", request.seq, error]);
+                return;
+            });
+            request.apiPromise = new Promise((resolve, reject) => {
+                streamPromise.then((result_stream) => {
+                    let json = result_stream.json();
+                    json.then((result) => {
+                        resolve(result);
+                    }).catch((error) => {
+                        // this happens!
+                        console.log(["JSON ERROR", request.seq, error]);
+                        reject(error);
+                    });
+                }).catch((error) => {
+                    console.log(["STREAM ERROR", request.seq, error]);
+                    reject(error);
+                });
+            }).finally(() => {
+                let index = globalRequests.indexOf(request);
+                if (index >= 0) {
+                    globalRequests.splice(index, 1);
+                }
+                // console.log(["--pendingRequests", globalRequests.length, request.seq]);
+            });
+            globalRequests.push(request);
+            // console.log(["++pendingRequests", globalRequests.length, request.seq]);
+        } catch (err: unknown) {
+            console.log(["catched", request.seq, err]);
+        }
 
-		let json: any = await request.apiPromise;
+        let json: any = await request.apiPromise;
         let modif_doc = json["choices"][0]["files"][file_name];
         let before_cursor1 = whole_doc.substring(0, cursor);
         let before_cursor2 = modif_doc.substring(0, cursor);
@@ -157,16 +158,12 @@ export class MyInlineCompletionProvider implements InlineCompletionItemProvider
             arguments: [completionItem]
         };
 
-		// if (request.cancelToken.isCancellationRequested) {
-		// 	console.log([request.seq, "Func stack cancelled"]);
-		// 	return { items: [] };
-		// }
+        // if (request.cancelToken.isCancellationRequested) {
+        //     console.log([request.seq, "Func stack cancelled"]);
+        //     return { items: [] };
+        // }
 
         return [completionItem];
     }
 }
 
-
-// Explore:
-// onDidChangeActiveTextEditor
-// onDidChangeTextEditorSelection

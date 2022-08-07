@@ -12,8 +12,8 @@ export function activate(context: vscode.ExtensionContext)
 	// 	console.log(["Accepted"]);
 	// });
 
-	// const comp = new MyInlineCompletionProvider();
-	// vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
+	const comp = new MyInlineCompletionProvider();
+	vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
 	let disposable3 = vscode.commands.registerCommand('plugin-vscode.f1', () => {
         highlight.runHighlight(context);

@@ -3,73 +3,112 @@ import * as vscode from 'vscode';
 
 
 let fn2textlist = new Map<string, string[]>();
+let fn2versionlist = new Map<string, number[]>();
 let fn2line = new Map<string, number>();
-let fn2version = new Map<string, number>();
 const N = 5;
 
 
-function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
+export function fnGetRevisions(fn: string)
 {
-    console.log(["onChangeActiveTextEditor", editor]);
+    let result: Map<string, string> = new Map();
+    let textlist = fn2textlist.get(fn);
+    if (!textlist) {
+        return result;
+    }
+    let versionlist = fn2versionlist.get(fn);
+    if (!versionlist) {
+        return result;
+    }
+    for (let i = 0; i < textlist.length; i++) {
+        let version = versionlist[i];
+        let version_str = version.toString();
+        result.set(fn + ":" + version_str, textlist[i]);
+    }
+    return result;
 }
 
-function onChangeSelection(obj: vscode.TextEditorSelectionChangeEvent)
+function fnReset(document: vscode.TextDocument, line0: number)
 {
-    // let folders = vscode.workspace.workspaceFolders;
-    console.log(["onChangeSelection", obj]);
-    let selections = obj.selections;
-    let sel0 = selections[0];
-    let line0 = sel0.start.line;
-    let line1 = sel0.end.line;
-    let version = obj.textEditor.document.version;
-    let whole_doc = obj.textEditor.document.getText();
-    // if line is the same, or version, or text => return
-    console.log(["line", line0, line1, "version", version]);
-    let fn = obj.textEditor.document.fileName;
-    let versionlist = fn2textlist.get(fn);
-    if (!versionlist) {
-        versionlist = [];
-        versionlist.push(whole_doc);
-        fn2textlist.set(fn, versionlist);
-        fn2line.set(fn, line0);
-        fn2version.set(fn, version);
+    let fn = document.fileName;
+    let whole_doc = document.getText();
+    let version = document.version;
+    fn2textlist.set(fn, [whole_doc]);
+    fn2versionlist.set(fn, [version]);
+    fn2line.set(fn, line0);
+}
+
+function fnSaveChange(document: vscode.TextDocument, line0: number, force: boolean = false)
+{
+    let fn = document.fileName;
+    let version = document.version;
+    let textlist = fn2textlist.get(fn);
+    if (!textlist) {
+        fnReset(document, line0);
         return;
     }
-    let last_version = fn2version.get(fn);
+    let versionlist = fn2versionlist.get(fn);
+    if (!versionlist) {
+        return;
+    }
+    let last_version = versionlist[versionlist.length - 1];
     if (last_version === version) {
         console.log(["same version", last_version, version]);
         return;
     }
     let last_line = fn2line.get(fn);
-    if (last_line === line0) {
+    if (last_line === line0 && !force) {
         console.log(["same line", last_line, line0]);
         return;
     }
-    let last_text = versionlist[0];
-    if (last_text === whole_doc) {
-        console.log(["same text", last_text.length, whole_doc.length]);
-        return;
-    }
-    versionlist.push(whole_doc);
+    let whole_doc = document.getText();
+    // let last_text = textlist[0];
+    textlist.push(whole_doc);
+    versionlist.push(version);
     fn2line.set(fn, line0);
-    fn2version.set(fn, version);
-    if (versionlist.length > N) {
+    if (textlist.length > N) {
+        textlist.shift();
         versionlist.shift();
     }
-    for (let i = 0; i < versionlist.length; i++) {
-        console.log(["vlist[", i, "]", versionlist[i].length]);
+    for (let i = 0; i < textlist.length; i++) {
+        console.log(["textlist", i, textlist[i].length, "version", versionlist[i]]);
     }
 }
 
 function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
 {
-    // event.document.selections
-    // console.log(["onDidChangeTextDocument", event]);
+    let document = event.document;
+    let contentChanges = event.contentChanges;
+    let reason = event.reason;
+    let line0 = contentChanges[0].range.start.line;
+    if (reason === vscode.TextDocumentChangeReason.Redo) {
+        fnReset(document, line0);
+        return;
+        // console.log(["onDidChangeTextDocument", "redo", v]);
+    } else if (reason === vscode.TextDocumentChangeReason.Undo) {
+        fnReset(document, line0);
+        return;
+        // console.log(["onDidChangeTextDocument", "undo", v]);
+    } else {
+        console.log(["Keyboard"]);
+    }
+    let line_min = 1000000;
+    let line_max = -1;
+    for (let change of contentChanges) {
+        console.log([
+            "change", change.text.length,
+            "start", change.range.start.line, change.range.start.character,
+            "end", change.range.end.line, change.range.end.character,
+        ]);
+        line_min = Math.min(line_min, change.range.start.line);
+        line_max = Math.max(line_max, change.range.end.line);
+    }
+    let force = line_min !== line_max;
+    fnSaveChange(document, line0, force);
 }
 
 export function storeVersionsInit() {
-    let disposable6 = vscode.window.onDidChangeActiveTextEditor(onChangeActiveEditor);
-    let disposable7 = vscode.window.onDidChangeTextEditorSelection(onChangeSelection);
+    // let disposable6 = vscode.window.onDidChangeActiveTextEditor(onChangeActiveEditor);
     let disposable8 = vscode.workspace.onDidChangeTextDocument(onDidChangeTextDocument);
-    return [disposable6, disposable7, disposable8];
+    // return [disposable6, disposable7, disposable8];
+    return [disposable8];
 }
