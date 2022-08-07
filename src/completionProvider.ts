@@ -26,6 +26,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let file_name = document.fileName;
         // sleep 100ms, in a hope request will be cancelled
         await new Promise(resolve => setTimeout(resolve, 100));
+        fetch.waitAllRequests();
         if (cancelToken.isCancellationRequested) {
             return;
         }
