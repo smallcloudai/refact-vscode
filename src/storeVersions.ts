@@ -35,6 +35,7 @@ function fnReset(document: vscode.TextDocument, line0: number)
     fn2textlist.set(fn, [whole_doc]);
     fn2versionlist.set(fn, [version]);
     fn2line.set(fn, line0);
+    console.log(["fnReset", fn]);
 }
 
 function fnSaveChange(document: vscode.TextDocument, line0: number, force: boolean = false)
@@ -106,9 +107,23 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
     fnSaveChange(document, line0, force);
 }
 
+function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
+{
+    if (!editor) {
+        return;
+    }
+    let document = editor.document;
+    let line0 = editor.selection.start.line;
+    console.log(["onChangeActiveEditor"]);
+    fnSaveChange(document, line0);
+}
+
 export function storeVersionsInit() {
-    // let disposable6 = vscode.window.onDidChangeActiveTextEditor(onChangeActiveEditor);
+    let disposable6 = vscode.window.onDidChangeActiveTextEditor(onChangeActiveEditor);
     let disposable8 = vscode.workspace.onDidChangeTextDocument(onDidChangeTextDocument);
-    // return [disposable6, disposable7, disposable8];
-    return [disposable8];
+    let currentEditor = vscode.window.activeTextEditor;
+    if (currentEditor) {
+        onChangeActiveEditor(currentEditor);
+    }
+    return [disposable6, disposable8];
 }

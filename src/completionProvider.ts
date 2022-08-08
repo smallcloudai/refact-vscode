@@ -56,14 +56,20 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             ));
         } else {
             let more_revisions: { [key: string]: string } = storeVersions.fnGetRevisions(file_name);
-            more_revisions[file_name] = whole_doc;
-            let dump = "";
+            let send_revisions: { [key: string]: string } = {};
+            let explain = "";
             for (let key in more_revisions) {
-                dump += key + " ";
+                if (whole_doc === more_revisions[key]) {
+                    explain += key + " (the same) ";
+                    continue;
+                }
+                explain += key + " ";
+                send_revisions[key] = more_revisions[key];
             }
-            console.log(["edit chain", dump]);
+            send_revisions[file_name] = whole_doc;
+            console.log(["edit chain", explain]);
             request.supplyStream(fetch.fetchAPI(
-                more_revisions,
+                send_revisions,
                 "Fix",
                 "edit-chain",
                 file_name,
@@ -109,7 +115,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 
         let completionItem = new vscode.InlineCompletionItem(
             completion,
-            new vscode.Range(position, position.translate(0, completion.length))
+            new vscode.Range(position, position.translate(0, 1))
         );
         completionItem.filterText = completion;
         // completionItem.command = {
