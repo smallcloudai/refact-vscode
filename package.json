@@ -25,10 +25,11 @@
       "properties": {
         "mate.model": {
           "type": "string",
-          "default": "CONTRASTcode/large/densehl",
+          "default": "CONTRASTcode/large/stable",
           "enum": [
             "CONTRASTcode/large/densehl",
-            "CONTRASTcode/large/infill"
+            "CONTRASTcode/large/infill",
+            "CONTRASTcode/large/stable"
           ],
           "description": "Model Name"
         }
@@ -38,6 +39,21 @@
       {
         "command": "plugin-vscode.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "plugin-vscode.menu0",
+        "title": "Quick Input",
+        "category": "VSCodeMate"
+      },
+      {
+        "command": "plugin-vscode.menu1",
+        "title": "Menu 1",
+        "category": "VSCodeMate"
+      },
+      {
+        "command": "plugin-vscode.menu2",
+        "title": "Menu 2",
+        "category": "VSCodeMate"
       }
     ],
     "properties": [

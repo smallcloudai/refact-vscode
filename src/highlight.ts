@@ -6,6 +6,8 @@ import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 
+
+
 // let highlightEsc: boolean = false;
 
 let highlightJson: any = [];
@@ -48,15 +50,13 @@ export async function runHighlight(context: vscode.ExtensionContext) {
     originalCode = whole_doc;
     sources[file_name] = whole_doc;
     let max_tokens = 0;
-    let cancelToken: vscode.CancellationToken | undefined;
-    // await fetch.waitAllRequests();
-    // if (cancelToken.isCancellationRequested) {
-    //     return;
-    // }
+    let cancelToken = new vscode.CancellationTokenSource();
+
+    await fetch.waitAllRequests();
 
     // let cancelToken = ;
 
-    let request = new fetch.PendingRequest(undefined, cancelToken);
+    let request = new fetch.PendingRequest(undefined, cancelToken.token);
    
     request.supplyStream(fetch.fetchAPI(
         sources,
@@ -81,18 +81,18 @@ export async function runHighlight(context: vscode.ExtensionContext) {
     //     1
     // );
 
-    // let json;
-    // try {
-    //     const result = await promise;
-    //     json = await result.json();
-    // } catch (err: unknown) {
-    //     if (err instanceof Error) {
-    //         console.log(err.message);
-    //     }
-    //     return { items: [] };
-    // }
+    let json;
+    try {
+        const result = await request;
+        json = await result;
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.log(err.message);
+        }
+        return { items: [] };
+    }
 
-    // console.log(json);
+    console.log(json);
 
     // highlightJson = json;
 
