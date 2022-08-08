@@ -42,7 +42,10 @@ export function getHighlightRanges(
     document: any,
     diffs: any
 ) {
-    let result: any = [];
+    let result: any = {
+        added: [],
+        removed: [],
+    };
     let added: any = [];
     let removed: any = [];
     diffs.forEach((element: any) => {
@@ -63,8 +66,8 @@ export function getHighlightRanges(
             added.push({range});
         }
     });
-    result.push(...added);
-    result.push(...removed);
+    result.added.push(added);
+    result.removed.push(removed);
     return result;
 }
 
