@@ -50,15 +50,18 @@ export async function runHighlight(context: vscode.ExtensionContext) {
     originalCode = whole_doc;
     sources[file_name] = whole_doc;
     let max_tokens = 0;
-    let cancelToken = new vscode.CancellationTokenSource();
+    let cancellationTokenSource = new vscode.CancellationTokenSource();
+    let cancelToken = cancellationTokenSource.token;
 
     await fetch.waitAllRequests();
 
     // let cancelToken = ;
 
-    let request = new fetch.PendingRequest(undefined, cancelToken.token);
-   
+    let request = new fetch.PendingRequest(undefined, cancelToken);
+    let stop_tokens: string[] = [];
+
     request.supplyStream(fetch.fetchAPI(
+        cancelToken,
         sources,
         "Fix",
         // "diff-atcursor",
@@ -68,6 +71,7 @@ export async function runHighlight(context: vscode.ExtensionContext) {
         cursor,
         max_tokens,
         1,
+        stop_tokens,
     ));
 
     // let promise = fetchAPI(
@@ -175,8 +179,13 @@ export async function getDiff(cursor: number) {
     let whole_doc = document.getText();
     sources[file_name] = whole_doc;
     let max_tokens = 50;
+    let stop_tokens: string[] = [];
+
+    let cancellationTokenSource = new vscode.CancellationTokenSource();
+    let cancelToken = cancellationTokenSource.token;
 
     let promise = fetch.fetchAPI(
+        cancelToken,
         sources,
         "Fix",
         "diff-atcursor",
@@ -184,7 +193,8 @@ export async function getDiff(cursor: number) {
         cursor,
         cursor,
         max_tokens,
-        1
+        1,
+        stop_tokens,
     );
 
     let json;

@@ -27,8 +27,7 @@
           "type": "string",
           "default": "CONTRASTcode/large/stable",
           "enum": [
-            "CONTRASTcode/large/densehl",
-            "CONTRASTcode/large/infill",
+            "CONTRASTcode/large/debug",
             "CONTRASTcode/large/stable"
           ],
           "description": "Model Name"

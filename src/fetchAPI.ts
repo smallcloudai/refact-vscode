@@ -20,7 +20,10 @@ export class PendingRequest {
     supplyStream(h2stream: Promise<fetchH2.Response>)
     {
         h2stream.catch((error) => {
-            console.log(["Error after start", this.seq, error]);
+            if (!error.message.includes("aborted")) {
+                console.log(["STREAM ERROR2", this.seq, error]);
+            } else {
+            }
             return;
         });
         this.apiPromise = new Promise((resolve, reject) => {
@@ -34,7 +37,9 @@ export class PendingRequest {
                     reject(error);
                 });
             }).catch((error) => {
-                console.log(["STREAM ERROR", this.seq, error]);
+                if (!error.message.includes("aborted")) {
+                    console.log(["STREAM ERROR1", this.seq, error]);
+                }
                 reject(error);
             });
         }).finally(() => {
@@ -66,6 +71,7 @@ export async function waitAllRequests()
 
 
 export function fetchAPI(
+    cancelToken: vscode.CancellationToken,
     sources: { [key: string]: string },
     intent: string,
     functionName: string,
@@ -74,11 +80,14 @@ export function fetchAPI(
     cursor1: number,
     maxTokens: number,
     maxEdits: number,
+    stop_tokens: string[],
 ) {
     const url = "https://inference.smallcloud.ai/v1/contrast";
     // const url = window.env.get("plugin-vscode.contrastUrl");
+    let model = vscode.workspace.getConfiguration().get('mate.model');
+    // console.log(["fetchAPI", model]);
     const body = JSON.stringify({
-        "model": vscode.workspace.getConfiguration().get('mate.model'),
+        "model": model,
         "sources": sources,
         "intent": intent,
         "function": functionName,
@@ -87,7 +96,8 @@ export function fetchAPI(
         "cursor1": cursor1,
         "temperature": 0.2,
         "max_tokens": maxTokens,
-        "max_edits": maxEdits
+        "max_edits": maxEdits,
+        "stop": stop_tokens,
     });
     const headers = {
         "Content-Type": "application/json",
@@ -101,6 +111,16 @@ export function fetchAPI(
         cache: "no-cache",
         referrer: "no-referrer",
     });
-    let promise = fetchH2.fetch(req);
+    let init: any = {
+    };
+    if (cancelToken) {
+        let abort = new fetchH2.AbortController();
+        cancelToken.onCancellationRequested(() => {
+            // console.log(["Fetch cancelled"]);
+            abort.abort();
+        });
+        init.signal = abort.signal;
+    }
+    let promise = fetchH2.fetch(req, init);
     return promise;
 }
