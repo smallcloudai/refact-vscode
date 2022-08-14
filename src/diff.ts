@@ -125,9 +125,9 @@ export function removeDecorations(
 }
 
 // Add commands
-// vscode.commands.executeCommand('setContext', 'vscode-mate.runTab', true);
-// vscode.commands.executeCommand('setContext', 'vscode-mate.runEsc', true);
+// vscode.commands.executeCommand('setContext', 'codify.runTab', true);
+// vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
 
 // Remove commands
-// vscode.commands.executeCommand('setContext', 'vscode-mate.runTab', false);
-// vscode.commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
+// vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+// vscode.commands.executeCommand('setContext', 'codify.runEsc', false);

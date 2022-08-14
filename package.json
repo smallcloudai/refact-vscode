@@ -1,6 +1,6 @@
 {
-  "name": "vscode-mate",
-  "displayName": "vscode-mate",
+  "name": "codify",
+  "displayName": "Codify",
   "description": "",
   "publisher": "Small Cloud Inc.",
   "repository": {
@@ -21,7 +21,7 @@
   "contributes": {
     "configuration": {
       "type": "object",
-      "title": "VSCode Mate",
+      "title": "Codify",
       "properties": {
         "mate.model": {
           "type": "string",
@@ -42,17 +42,86 @@
       {
         "command": "plugin-vscode.menu0",
         "title": "Quick Input",
-        "category": "VSCodeMate"
+        "category": "Codify"
       },
       {
         "command": "plugin-vscode.menu1",
-        "title": "Menu 1",
-        "category": "VSCodeMate"
+        "title": "Highlight",
+        "category": "Codify"
       },
       {
         "command": "plugin-vscode.menu2",
         "title": "Menu 2",
-        "category": "VSCodeMate"
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.fixTypes",
+        "title": "Fix types",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.fixUnclearNames",
+        "title": "Fix unclear names",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.variablesShorter",
+        "title": "Make variables shorter",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.codeShorter",
+        "title": "Make code shorter",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.improvePerformance",
+        "title": "Improve performance",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.codeCleanup",
+        "title": "Code cleanup",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.formattingConsistent",
+        "title": "Make formatting consistent",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.removePython2",
+        "title": "Remove python 2 support",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.convertNumpy",
+        "title": "Convert to numpy",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.convertDictClass",
+        "title": "Convert dict to class",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.listComprehension",
+        "title": "Convert to list comprehension",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.addDocstrings",
+        "title": "Add docstrings",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.fixTypos",
+        "title": "Fix typos",
+        "category": "Codify"
+      },
+      {
+        "command": "extension.addConsoleLog",
+        "title": "Add Console Log"
       }
     ],
     "properties": [
@@ -71,12 +140,12 @@
       {
         "command": "plugin-vscode.esc",
         "key": "escape",
-        "when" : "vscode-mate.runEsc"
+        "when" : "codify.runEsc"
       },
       {
         "command": "plugin-vscode.tab",
         "key": "tab",
-        "when" : "vscode-mate.runTab"
+        "when" : "codify.runTab"
       }
     ]
   },

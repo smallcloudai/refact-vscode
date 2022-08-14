@@ -64,8 +64,8 @@ export async function runHighlight(context: vscode.ExtensionContext) {
         cancelToken,
         sources,
         "Fix",
-        // "diff-atcursor",
-        "highlight",
+        "diff-atcursor",
+        // "highlight",
         file_name,
         cursor,
         cursor,
@@ -124,7 +124,7 @@ export async function runHighlight(context: vscode.ExtensionContext) {
             }
         }
     });
-    vscode.commands.executeCommand('setContext', 'vscode-mate.runEsc', true);
+    vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
 }
 
 export function getHighlight(json: any = []) {
@@ -315,7 +315,7 @@ export function makeDiffLines(doc: any, diff: any, rng: any) {
     let target = vscode.ConfigurationTarget.Global;
     let configuration = vscode.workspace.getConfiguration('indenticator');
     configuration.update('showIndentGuide', false, target);
-    vscode.commands.executeCommand('setContext', 'vscode-mate.runTab', true);
+    vscode.commands.executeCommand('setContext', 'codify.runTab', true);
 }
 
 export function clearHighlight() {
@@ -338,7 +338,7 @@ export function clearHighlight() {
         highlights.length = 0;
         ranges.length = 0;
 
-        vscode.commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
+        vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         changeEvent.dispose();
     }
 
@@ -381,7 +381,7 @@ export function clearHighlight() {
         ranges.length = 0;
         currentMode = Mode.Highlight;
     }
-    vscode.commands.executeCommand('setContext', 'vscode-mate.runTab', false);
+    vscode.commands.executeCommand('setContext', 'codify.runTab', false);
     let target = vscode.ConfigurationTarget.Global;
     let configuration = vscode.workspace.getConfiguration('indenticator');
     configuration.update('showIndentGuide', true, target);
@@ -396,8 +396,8 @@ export function accept() {
     });
     currentMode = Mode.Accept;
     clearHighlight();
-    vscode.commands.executeCommand('setContext', 'vscode-mate.runEsc', false);
-    vscode.commands.executeCommand('setContext', 'vscode-mate.runTab', false);
+    vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+    vscode.commands.executeCommand('setContext', 'codify.runTab', false);
     changeEvent.dispose();
 }
 

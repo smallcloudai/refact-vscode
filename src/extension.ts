@@ -4,7 +4,8 @@ import * as vscode from 'vscode';
 import {MyInlineCompletionProvider} from "./completionProvider";
 import * as highlight from "./highlight";
 import * as storeVersions from "./storeVersions";
-
+import StatusBarMenu from "./statusBar";
+import LensProvider from "./codeLens";
 
 export function activate(context: vscode.ExtensionContext)
 {
@@ -12,11 +13,27 @@ export function activate(context: vscode.ExtensionContext)
 	// 	console.log(["Accepted"]);
 	// });
 
+    const menu = new StatusBarMenu();
+    menu.createStatusBarBlock(context);
+
+
+    let docSelector = {
+        scheme: "file"
+    };
+    
+      // Register our CodeLens provider
+    let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
+        docSelector,
+        new LensProvider()
+    );
+
+    context.subscriptions.push(codeLensProviderDisposable);
+
 	const comp = new MyInlineCompletionProvider();
 	vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
 	let disposable3 = vscode.commands.registerCommand('plugin-vscode.f1', () => {
-        vscode.commands.executeCommand("workbench.action.quickOpen", ">VSCodeMate:");
+        vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify:");
         // highlight.runHighlight(context);
         console.log(["F1"]);
 	});
@@ -34,7 +51,9 @@ export function activate(context: vscode.ExtensionContext)
 	});
 
     let disposable6 = vscode.commands.registerCommand('plugin-vscode.menu1', () => {
-        console.log(["Menu 1"]);
+        highlight.runHighlight(context);
+        menu.statusbarLoading(true);
+        // console.log(["Menu 1"]);
 	});
 
     let disposable7 = vscode.commands.registerCommand('plugin-vscode.menu2', () => {
@@ -55,7 +74,19 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(disposable7);
 	context.subscriptions.push(disposable8);
 	context.subscriptions.push(...disposables);
+
+    async function showMessage() {
+        vscode.window.showInformationMessage(`Hello World!`);
+    }
+
+    let commandDisposable = vscode.commands.registerCommand(
+        'extension.showMessage',
+        showMessage
+    );
+      
+    context.subscriptions.push(commandDisposable);
 }
+
 
 export async function showInputBox() {
 	const result = await vscode.window.showInputBox({
