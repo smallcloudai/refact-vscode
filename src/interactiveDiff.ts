@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-
+import { clearHighlight, showHighlight } from './highlight';
 
 export enum Mode {
     Normal,
@@ -19,10 +19,9 @@ class StateOfEditor {
     public mode = Mode.Normal;
     public highlights: any = [];
 
-    public deco_types: any = [];
-    public diffAdd: any = [];
-    public diffRemove: any = [];
-    public diffFull: any = [];
+    public diffDecos: any = [];
+    public diffDeletedLines: any = [];
+    public diffAddedLines: any = [];
 
     public sensitive_ranges: any = [];
 
@@ -58,116 +57,211 @@ export function getStateOfEditor(editor: vscode.TextEditor): StateOfEditor
 
 export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
 {
+    let state = getStateOfEditor(editor);
+    if (state.mode === Mode.Diff) {
+        return;
+    }
     let document = editor.document;
     let whole_doc = document.getText();
     const diff = Diff.diffLines(whole_doc, modif_doc);
-    // currentMode = Mode.Diff;
-    let improved_doc = '';
-
-    diff.forEach((part: any) => {
-        let span = part.value;
-        improved_doc += span;
-    });
-
-    let firstLine = document.lineAt(0);
-    let lastLine = document.lineAt(document.lineCount - 1);
-    let textRange = new vscode.Range(
-        0,
-        firstLine!.range.start.character,
-        document.lineCount - 1,
-        lastLine!.range.end.character,
-        );
-
-    editor.edit((selectedText) => {
-        selectedText.replace(textRange, improved_doc);
-    }).then(() => {
-        makeDiffLines(editor, diff, textRange);
+    let green_bg_ranges: vscode.Range[] = [];
+    let red_bg_ranges: vscode.Range[] = [];
+    let very_green_bg_ranges: vscode.Range[] = [];
+    let very_red_bg_ranges: vscode.Range[] = [];
+    state.diffDeletedLines = [];
+    state.diffAddedLines = [];
+    editor.edit((e: vscode.TextEditorEdit) => {
+        console.log(["result diff"]);
+        let line_n = 0;
+        let chunk_remember_removed = '';
+        let chunk_remember_removed_line = -1;
+        diff.forEach((part: any) => {
+            let span = part.value;
+            let span_lines = span.split('\n');
+            let span_lines_count = span_lines.length - 1;
+            if (part.removed) {
+                console.log(["removed span_lines_count", span_lines_count, span]);
+                red_bg_ranges.push(new vscode.Range(
+                    new vscode.Position(line_n, 0),
+                    new vscode.Position(line_n + span_lines_count - 1, 0),
+                ));
+                for (let i=0; i<span_lines_count; i++) {
+                    state.diffDeletedLines.push(line_n + i);
+                }
+                chunk_remember_removed = span;
+                chunk_remember_removed_line = line_n;
+                line_n += span_lines_count;
+            } else if (part.added) {
+                console.log(["added span_lines_count", span_lines_count, span]);
+                e.insert(
+                    new vscode.Position(line_n, 0),
+                    span
+                    );
+                green_bg_ranges.push(new vscode.Range(
+                    new vscode.Position(line_n, 0),
+                    new vscode.Position(line_n + span_lines_count - 1, 0),
+                ));
+                for (let i=0; i<span_lines_count; i++) {
+                    state.diffAddedLines.push(line_n + i);
+                }
+                let chunk_remember_added = span;
+                let chunk_remember_added_line = line_n;
+                line_n += span_lines_count;
+                if (chunk_remember_removed) {
+                    const diff_char = Diff.diffChars(chunk_remember_removed, chunk_remember_added);
+                    let char_del_line = chunk_remember_removed_line;
+                    let char_ins_line = chunk_remember_added_line;
+                    let char_del_pos = 0;
+                    let char_ins_pos = 0;
+                    diff_char.forEach((part_char: any) => {
+                        let span_char = part_char.value;
+                        if (part_char.removed) {
+                            very_red_bg_ranges.push(new vscode.Range(
+                                new vscode.Position(char_del_line, char_del_pos),
+                                new vscode.Position(char_del_line, char_del_pos + span_char.length),
+                            ));
+                        } else if (part_char.added) {
+                            very_green_bg_ranges.push(new vscode.Range(
+                                new vscode.Position(char_ins_line, char_ins_pos),
+                                new vscode.Position(char_ins_line, char_ins_pos + span_char.length),
+                            ));
+                        }
+                        if (part_char.removed || part_char.added === undefined) {
+                            for (let c=0; c<span_char.length; c++) {
+                                if (span_char[c] === '\n') {
+                                    char_del_line++;
+                                    char_del_pos = 0;
+                                } else {
+                                    char_del_pos++;
+                                }
+                            }
+                        }
+                        if (part_char.added || part_char.removed === undefined) {
+                            for (let c=0; c<span_char.length; c++) {
+                                if (span_char[c] === '\n') {
+                                    char_ins_line++;
+                                    char_ins_pos = 0;
+                                } else {
+                                    char_ins_pos++;
+                                }
+                            }
+                        }
+                        console.log(["char", span_char]);
+                    });
+                }
+                // now run diff chunk_accum
+            } else {
+                line_n += span_lines_count;
+                console.log(["unchanged", span.length]);
+                chunk_remember_removed = "";
+            }
+        });
+    }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+        let norm_fg = new vscode.ThemeColor('editor.foreground');
+        // let ghost_text_color = new vscode.ThemeColor('editorGhostText.foreground');
+        // let inserted_line_bg = new vscode.ThemeColor('diffEditor.insertedLineBackground');
+        // let green_type = vscode.window.createTextEditorDecorationType({
+        //     color: ghost_text_color,
+        //     isWholeLine: true,
+        // });
+        let green_type = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(0, 255, 0, 0.05)',
+            color: norm_fg,
+            isWholeLine: true,
+        });
+        let very_green_type = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(0, 255, 0, 0.30)',
+            color: norm_fg,
+        });
+        let red_type = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(255, 0, 0, 0.05)',
+            isWholeLine: true,
+        });
+        let very_red_type = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(255, 0, 0, 0.30)',
+        });
+        editor.setDecorations(green_type, green_bg_ranges);
+        editor.setDecorations(red_type, red_bg_ranges);
+        editor.setDecorations(very_green_type, very_green_bg_ranges);
+        editor.setDecorations(very_red_type, very_red_bg_ranges);
+        let state = getStateOfEditor(editor);
+        state.diffDecos.push(green_type);
+        state.diffDecos.push(red_type);
+        state.diffDecos.push(very_green_type);
+        state.diffDecos.push(very_red_type);
+        state.mode = Mode.Diff;
+        clearHighlight(editor);
+        vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+        console.log(["ESC ON DIFF"]);
+        vscode.commands.executeCommand('setContext', 'codify.runTab', true);
+        console.log(["TAB ON DIFF"]);
     });
 }
 
-export function makeDiffLines(editor: vscode.TextEditor, diff: any, rng: any)
+export function removeDeco(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
-    let doc = editor.document;
-    // diffFetching = false;
-    let range = rng;
-    let decoration = { range };
-    state.diffFull.push(decoration);
-
-    diff.forEach((part: any) => {
-        if (part.removed) {
-            let st = doc.getText().indexOf(part.value);
-            let ed = st + part.value.length;
-            let pos_start = doc.positionAt(st);
-            let pos_end = doc.positionAt(ed);
-            let range = new vscode.Range(pos_start,pos_end);
-            let decoration = { range };
-            state.diffRemove.push(decoration);
-        }
-        if (part.added) {
-            let st = doc.getText().indexOf(part.value);
-            let ed = st + part.value.length;
-
-            let pos_start = doc.positionAt(st);
-            let pos_end = doc.positionAt(ed - 1);
-
-            let range = new vscode.Range(pos_start,pos_end);
-            let decoration = { range };
-            state.diffAdd.push(decoration);
-            // let cut = doc.getText().substring(st, ed);
-        }
-    });
-
-    let dremove = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(108,22,22,1)',
-        color: 'white',
-        isWholeLine: true,
-        before: {
-            color: 'white',
-            contentText: "-"
-        },
-        // opacity: '0.2'
-    });
-
-    let dadd = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(75,86,51,1)',
-        color: 'white',
-        isWholeLine: true,
-        before: {
-            color: 'white',
-            contentText: "+"
-        },
-
-    });
-
-    let blind = vscode.window.createTextEditorDecorationType({
-        color: 'gray',
-    });
-
-    state.deco_types.length = 0;
-    state.deco_types.push(blind);
-    state.deco_types.push(dremove);
-    state.deco_types.push(dadd);
-
-    hideHighlight(editor);
-
-    editor.setDecorations(dadd, state.diffAdd);
-    editor.setDecorations(dremove, state.diffRemove);
-    editor.setDecorations(blind, state.diffFull);
-
-    let target = vscode.ConfigurationTarget.Global;
-    let configuration = vscode.workspace.getConfiguration('indenticator');
-    configuration.update('showIndentGuide', false, target);
-    vscode.commands.executeCommand('setContext', 'codify.runTab', true);
-}
-
-function hideHighlight(editor: vscode.TextEditor)
-{
-    let state = getStateOfEditor(editor);
-    for (let index = 0; index < state.highlights.length; index++) {
-        const element = state.highlights[index];
-        editor.setDecorations(element, []);
+    if (state.mode !== Mode.Diff) {
+        return;
     }
-    state.highlights.length = 0;
-    // ranges.length = 0;
+    for (let deco of state.diffDecos) {
+        editor.setDecorations(deco, []);
+    }
+    state.diffDecos.length = 0;
+    state.diffAddedLines.length = 0;
+    state.diffDeletedLines.length = 0;
+}
+
+export function rollback(editor: vscode.TextEditor)
+{
+    let state = getStateOfEditor(editor);
+    if (state.mode !== Mode.Diff) {
+        return;
+    }
+    editor.edit((e) => {
+        for (let i=0; i<state.diffAddedLines.length; i++) {
+            e.delete(new vscode.Range(
+                new vscode.Position(state.diffAddedLines[i], 0),
+                new vscode.Position(state.diffAddedLines[i] + 1, 0),
+            ));
+            // console.log(["rollback", state.diffAddedLines[i]]);
+        }
+    }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+        removeDeco(editor);
+        vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+        console.log(["TAB OFF DIFF"]);
+        vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+        console.log(["ESC OFF DIFF"]);
+        if (state.highlight_json_backup) {
+            showHighlight(editor, state.highlight_json_backup);
+            state.mode = Mode.Highlight;
+        } else {
+            state.mode = Mode.Normal;
+        }
+    });
+}
+
+export function commit(editor: vscode.TextEditor)
+{
+    let state = getStateOfEditor(editor);
+    if (state.mode !== Mode.Diff) {
+        return;
+    }
+    editor.edit((e) => {
+        for (let i=0; i<state.diffDeletedLines.length; i++) {
+            e.delete(new vscode.Range(
+                new vscode.Position(state.diffDeletedLines[i], 0),
+                new vscode.Position(state.diffDeletedLines[i] + 1, 0),
+            ));
+            // console.log(["commit", state.diffDeletedLines[i]]);
+        }
+    }, { undoStopBefore: false, undoStopAfter: true }).then(() => {
+        removeDeco(editor);
+        vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+        console.log(["TAB OFF DIFF"]);
+        vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+        console.log(["ESC OFF DIFF"]);
+        state.mode = Mode.Normal;
+        clearHighlight(editor);
+    });
 }

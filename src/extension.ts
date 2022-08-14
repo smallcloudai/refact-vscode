@@ -44,7 +44,12 @@ export function activate(context: vscode.ExtensionContext)
 		let editor = vscode.window.activeTextEditor;
 		if (editor) {
 			let state = interactiveDiff.getStateOfEditor(editor);
-			highlight.clearHighlight(editor);
+			if (state.mode === Mode.Diff) {
+				interactiveDiff.rollback(editor);
+			} else if (state.mode === Mode.Highlight) {
+				highlight.clearHighlight(editor);
+				state.mode = Mode.Normal;
+			}
 			if (state.mode === Mode.Normal) {
 				vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
 				console.log(["ESC OFF"]);
@@ -55,6 +60,13 @@ export function activate(context: vscode.ExtensionContext)
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
         // highlight.accept();
         console.log(["TAB"]);
+		let editor = vscode.window.activeTextEditor;
+		if (editor) {
+			let state = interactiveDiff.getStateOfEditor(editor);
+			if (state.mode === Mode.Diff) {
+				interactiveDiff.commit(editor);
+			}
+		}
     });
 
     let disposable6 = vscode.commands.registerCommand('plugin-vscode.menu1', () => {

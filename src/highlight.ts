@@ -52,6 +52,28 @@ export async function runHighlight(context: vscode.ExtensionContext)
     state.mode = Mode.Highlight;
     state.highlight_json_backup = json;
     showHighlight(editor, json);
+}
+
+export function showHighlight(editor: vscode.TextEditor, json: any)
+{
+    let state = interactiveDiff.getStateOfEditor(editor);
+    let doc = editor.document;
+    for (let index = 0; index < json.highlight.length; index++) {
+        const element = json.highlight[index];
+        const start = doc.positionAt(element[0]);
+        const end = doc.positionAt(element[1]);
+        let range = new vscode.Range(start, end);
+        let decorange = { range };
+        let range_list: any = [];
+        range_list.push(decorange);
+        state.sensitive_ranges.push(decorange);
+        let deco_type = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
+            color: 'black'
+        });
+        state.highlights.push(deco_type);
+        editor.setDecorations(deco_type, range_list);
+    }
     cursor_move_event = vscode.window.onDidChangeTextEditorSelection((ev: vscode.TextEditorSelectionChangeEvent) => {
         let ev_editor = ev.textEditor;
         if (!editor || editor !== ev_editor) {
@@ -66,40 +88,8 @@ export async function runHighlight(context: vscode.ExtensionContext)
             }
         }
     });
-}
-
-export function showHighlight(editor: vscode.TextEditor, json: any)
-{
-    let state = interactiveDiff.getStateOfEditor(editor);
-    let doc = editor.document;
-    for (let index = 0; index < json.highlight.length; index++) {
-        const element = json.highlight[index];
-        if (state.mode === Mode.Highlight) {
-            const start = doc.positionAt(element[0]);
-            const end = doc.positionAt(element[1]);
-            let range = new vscode.Range(start, end);
-            let decorange = { range };
-            let range_list: any = [];
-            range_list.push(decorange);
-            state.sensitive_ranges.push(decorange);
-            let deco_type = vscode.window.createTextEditorDecorationType({
-                backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
-                color: 'black'
-            });
-            state.highlights.push(deco_type);
-            editor.setDecorations(deco_type, range_list);
-        }
-        if (state.mode === Mode.Diff) {
-            let deco_type = vscode.window.createTextEditorDecorationType({
-                backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
-                color: 'black'
-            });
-            state.highlights.push(deco_type);
-            editor.setDecorations(deco_type, [state.sensitive_ranges[index]]);
-        }
-    }
     vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
-    console.log(["ESC ON"]);
+    console.log(["ESC ON HL"]);
 }
 
 export async function queryDiff(editor: vscode.TextEditor, cursor: number)
@@ -139,50 +129,50 @@ export async function queryDiff(editor: vscode.TextEditor, cursor: number)
     interactiveDiff.offerDiff(editor, modif_doc);
 }
 
+// let state = interactiveDiff.getStateOfEditor(editor);
+// if (state.mode === Mode.Highlight) {
+// state.mode = Mode.Normal;
+
 export function clearHighlight(editor: vscode.TextEditor)
 {
     let state = interactiveDiff.getStateOfEditor(editor);
-    if (state.mode === Mode.Highlight) {
-        for (let index = 0; index < state.deco_types.length; index++) {
-            const dt = state.deco_types[index];
-            editor.setDecorations(dt, []);
-        }
-        state.deco_types.length = 0;
-        state.diffAdd.length = 0;
-        state.diffRemove.length = 0;
-        state.diffFull.length = 0;
-        for (let index = 0; index < state.highlights.length; index++) {
-            const element = state.highlights[index];
-            editor.setDecorations(element, []);
-        }
-        state.highlights.length = 0;
-        state.sensitive_ranges.length = 0;
-        cursor_move_event.dispose();
-        state.mode = Mode.Normal;
+    for (let index = 0; index < state.highlights.length; index++) {
+        const element = state.highlights[index];
+        editor.setDecorations(element, []);
     }
-    if (state.mode === Mode.Diff) {
-        for (let index = 0; index < state.deco_types.length; index++) {
-            const dt = state.deco_types[index];
-            editor.setDecorations(dt, []);
-        }
-        state.deco_types.length = 0;
-        state.diffAdd.length = 0;
-        state.diffRemove.length = 0;
-        state.diffFull.length = 0;
-        let firstLine = editor.document.lineAt(0);
-        let lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-        let textRange = new vscode.Range(
-            0,
-            firstLine.range.start.character,
-            editor.document.lineCount - 1,
-            lastLine.range.end.character
-        );
-        editor.edit((selectedText) => {
-            selectedText.replace(textRange, state.originalCode);
-        });
-        showHighlight(editor, state.highlight_json_backup);
-        state.mode = Mode.Highlight;
-    }
+    state.highlights.length = 0;
+    state.sensitive_ranges.length = 0;
+    cursor_move_event.dispose();
+}
+
+// if (state.mode === Mode.Diff) {
+// export function clearDiff(editor: vscode.TextEditor)
+// {
+//     let state = interactiveDiff.getStateOfEditor(editor);
+//     for (let index = 0; index < state.deco_types.length; index++) {
+//         const dt = state.deco_types[index];
+//         editor.setDecorations(dt, []);
+//     }
+//     state.deco_types.length = 0;
+//     state.diffAdd.length = 0;
+//     state.diffRemove.length = 0;
+//     state.diffFull.length = 0;
+//     let firstLine = editor.document.lineAt(0);
+//     let lastLine = editor.document.lineAt(editor.document.lineCount - 1);
+//     let textRange = new vscode.Range(
+//         0,
+//         firstLine.range.start.character,
+//         editor.document.lineCount - 1,
+//         lastLine.range.end.character
+//     );
+//     editor.edit((selectedText) => {
+//         selectedText.replace(textRange, state.originalCode);
+//     });
+// }
+
+// showHighlight(editor, state.highlight_json_backup);
+// state.mode = Mode.Highlight;
+
     // if(currentMode === Mode.Accept) {
     //     for (let index = 0; index < deco_types.length; index++) {
     //         const element = deco_types[index];
@@ -201,11 +191,11 @@ export function clearHighlight(editor: vscode.TextEditor)
     //     sensitive_ranges.length = 0;
     //     currentMode = Mode.Highlight;
     // }
-    vscode.commands.executeCommand('setContext', 'codify.runTab', false);
-    let target = vscode.ConfigurationTarget.Global;
-    let configuration = vscode.workspace.getConfiguration('indenticator');
-    configuration.update('showIndentGuide', true, target);
-}
+//     vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+//     let target = vscode.ConfigurationTarget.Global;
+//     let configuration = vscode.workspace.getConfiguration('indenticator');
+//     configuration.update('showIndentGuide', true, target);
+// }
 
 // export function accept()
 // {
