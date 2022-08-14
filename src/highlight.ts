@@ -6,7 +6,9 @@ import * as fetch from "./fetchAPI";
 import * as interactiveDiff from "./interactiveDiff";
 
 
-// let highlightEsc: boolean = false;
+
+
+let highlightEsc: boolean = false;
 
 let highlightJson: any = [];
 // highlight arrays
@@ -32,10 +34,10 @@ enum Mode {
 }
 let currentMode = Mode.Highlight;
 
-const activeEditor = vscode.window.activeTextEditor;
+let activeEditor = vscode.window.activeTextEditor;
 
-export async function runHighlight(context: vscode.ExtensionContext)
-{
+export async function runHighlight(context: vscode.ExtensionContext) {
+
     let document = activeEditor!.document;
     let curPos = activeEditor!.selection.active;
     let cursor = document.offsetAt(curPos);
@@ -56,6 +58,7 @@ export async function runHighlight(context: vscode.ExtensionContext)
     let request = new fetch.PendingRequest(undefined, cancelToken);
     let stop_tokens: string[] = [];
 
+    console.log('sources', sources);
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         sources,
@@ -75,7 +78,7 @@ export async function runHighlight(context: vscode.ExtensionContext)
         console.log(["ERROR", detail]);
         return;
     }
-
+    console.log('json', json);
     highlightJson = json;
     showHighlight(json);
     // workspace.onDidChangeTextDocument(()=> {
@@ -89,17 +92,17 @@ export async function runHighlight(context: vscode.ExtensionContext)
     //     }
     // });
 
-    // changeEvent = vscode.window.onDidChangeTextEditorSelection(()=> {
-    //     let cPos = activeEditor!.selection.active;
-    //     let cursor = document.offsetAt(cPos);
+    changeEvent = vscode.window.onDidChangeTextEditorSelection(()=> {
+        let cPos = activeEditor!.selection.active;
+        let cursor = document.offsetAt(cPos);
 
-    //     for (let index = 0; index < ranges.length; index++) {
-    //         const element = ranges[index];
-    //         if(element.range.contains(cPos)) {
-    //             getDiff(cursor);
-    //         }
-    //     }
-    // });
+        for (let index = 0; index < ranges.length; index++) {
+            const element = ranges[index];
+            if(element.range.contains(cPos)) {
+                getDiff(cursor);
+            }
+        }
+    });
     vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
 }
 
@@ -107,6 +110,7 @@ export function showHighlight(json: any = []) {
     let document = activeEditor!.document;
     for (let index = 0; index < json.highlight.length; index++) {
         const element = json.highlight[index];
+        let states = interactiveDiff.getStateOfEditor(activeEditor!);
         if(currentMode === Mode.Highlight) {
             const start = document.positionAt(element[0]);
             const end = document.positionAt(element[1]);
@@ -125,8 +129,7 @@ export function showHighlight(json: any = []) {
                 backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
                 color: 'black'
             });
-
-            highlights.push(deco);
+            states.highlights.push(deco);
             activeEditor?.setDecorations(deco, ranger);
         }
         if(currentMode === Mode.Diff) {
@@ -135,7 +138,7 @@ export function showHighlight(json: any = []) {
                 backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
                 color: 'black'
             });
-            highlights.push(deco);
+            states.highlights.push(deco);
             activeEditor?.setDecorations(deco, [ranges[index]]);
         }
 

@@ -80,6 +80,7 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
     let document = event.document;
     let contentChanges = event.contentChanges;
     let reason = event.reason;
+    if(contentChanges.length === 0) { return; };
     let line0 = contentChanges[0].range.start.line;
     if (reason === vscode.TextDocumentChangeReason.Redo) {
         fnReset(document, line0);
