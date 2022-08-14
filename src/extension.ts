@@ -7,6 +7,8 @@ import * as storeVersions from "./storeVersions";
 import StatusBarMenu from "./statusBar";
 import LensProvider from "./codeLens";
 import { runEditChaining } from "./editChaining";
+import * as interactiveDiff from "./interactiveDiff";
+import { Mode } from "./interactiveDiff";
 
 export function activate(context: vscode.ExtensionContext)
 {
@@ -39,12 +41,19 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', () => {
-        highlight.clearHighlight();
-        console.log(["ESC"]);
+		let editor = vscode.window.activeTextEditor;
+		if (editor) {
+			let state = interactiveDiff.getStateOfEditor(editor);
+			highlight.clearHighlight(editor);
+			if (state.mode === Mode.Normal) {
+				vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+				console.log(["ESC OFF"]);
+			}
+		}
     });
 
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
-        highlight.accept();
+        // highlight.accept();
         console.log(["TAB"]);
     });
 
@@ -56,8 +65,8 @@ export function activate(context: vscode.ExtensionContext)
 
     let disposable7 = vscode.commands.registerCommand('plugin-vscode.menu2', () => {
         console.log(["Menu 2"]);
-        runEditChaining();
-        // highlight.runHighlight(context);
+        // runEditChaining();
+        highlight.runHighlight(context);
     });
 
     let disposable8 = vscode.commands.registerCommand('plugin-vscode.menu0', () => {

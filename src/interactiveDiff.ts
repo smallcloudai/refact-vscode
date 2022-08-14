@@ -3,24 +3,37 @@ import * as vscode from 'vscode';
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 
 
+export enum Mode {
+    Normal,
+    Highlight,
+    Diff,
+    Accept
+};
+
+
 class StateOfEditor {
     public editor: vscode.TextEditor;
     public originalCode: string;
+    public diffCode: string = "";
 
+    public mode = Mode.Normal;
     public highlights: any = [];
 
-    public diffType: any = [];
+    public deco_types: any = [];
     public diffAdd: any = [];
     public diffRemove: any = [];
     public diffFull: any = [];
-    public diffCode: string = "";
-    // public last_touched_ts: number = 0;
+
+    public sensitive_ranges: any = [];
+
+    public highlight_json_backup: any = {};
 
     constructor(editor: vscode.TextEditor) {
         this.editor = editor;
         this.originalCode = editor.document.getText();
     }
 };
+
 
 // map editor to state of editor
 let editor2state = new Map<vscode.TextEditor, StateOfEditor>();
@@ -131,10 +144,10 @@ export function makeDiffLines(editor: vscode.TextEditor, diff: any, rng: any)
         color: 'gray',
     });
 
-    state.diffType.length = 0;
-    state.diffType.push(blind);
-    state.diffType.push(dremove);
-    state.diffType.push(dadd);
+    state.deco_types.length = 0;
+    state.deco_types.push(blind);
+    state.deco_types.push(dremove);
+    state.deco_types.push(dadd);
 
     hideHighlight(editor);
 
