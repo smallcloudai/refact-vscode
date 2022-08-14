@@ -36,8 +36,8 @@ let currentMode = Mode.Highlight;
 
 const activeEditor = vscode.window.activeTextEditor;
 
-export async function runHighlight(context: vscode.ExtensionContext) {
-
+export async function runHighlight(context: vscode.ExtensionContext)
+{
     let document = activeEditor!.document;
     let curPos = activeEditor!.selection.active;
     let cursor = document.offsetAt(curPos);
@@ -100,7 +100,7 @@ export async function runHighlight(context: vscode.ExtensionContext) {
 
     // highlightJson = json;
 
-    // getHighlight(json);
+    // showHighlight(json);
 
     // workspace.onDidChangeTextDocument(()=> {
     //     if(currentMode === 0) {
@@ -127,7 +127,7 @@ export async function runHighlight(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
 }
 
-export function getHighlight(json: any = []) {
+export function showHighlight(json: any = []) {
     let document = activeEditor!.document;
     for (let index = 0; index < json.highlight.length; index++) {
         const element = json.highlight[index];
@@ -360,7 +360,7 @@ export function clearHighlight() {
             selectedText.replace(textRange, originalCode);
         });
 
-        getHighlight(highlightJson);
+        showHighlight(highlightJson);
         currentMode = Mode.Highlight;
     }
     if(currentMode === Mode.Accept) {

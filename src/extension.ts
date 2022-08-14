@@ -20,7 +20,7 @@ export function activate(context: vscode.ExtensionContext)
     let docSelector = {
         scheme: "file"
     };
-    
+
       // Register our CodeLens provider
     let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
         docSelector,
@@ -34,26 +34,24 @@ export function activate(context: vscode.ExtensionContext)
 
 	let disposable3 = vscode.commands.registerCommand('plugin-vscode.f1', () => {
         vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify:");
-        // highlight.runHighlight(context);
         console.log(["F1"]);
 	});
 
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', () => {
         highlight.clearHighlight();
-        // highlight.getHighlight(context);
 		console.log(["ESC"]);
 	});
 
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
         highlight.accept();
-        // highlight.getHighlight(context);
 		console.log(["TAB"]);
 	});
 
     let disposable6 = vscode.commands.registerCommand('plugin-vscode.menu1', () => {
         highlight.runHighlight(context);
         menu.statusbarLoading(true);
-        // console.log(["Menu 1"]);
+        console.log(["Menu 1"]);
+        // highlight.runHighlight(context);
 	});
 
     let disposable7 = vscode.commands.registerCommand('plugin-vscode.menu2', () => {
@@ -83,7 +81,7 @@ export function activate(context: vscode.ExtensionContext)
         'extension.showMessage',
         showMessage
     );
-      
+
     context.subscriptions.push(commandDisposable);
 }
 
