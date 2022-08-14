@@ -2,10 +2,8 @@
 import { clear } from "console";
 import internal = require("stream");
 import * as vscode from 'vscode';
-
 import * as fetch from "./fetchAPI";
-const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-
+import * as interactiveDiff from "./interactiveDiff";
 
 
 // let highlightEsc: boolean = false;
@@ -144,14 +142,18 @@ export function showHighlight(json: any = []) {
     }
 }
 
-export async function getDiff(cursor: number) {
+export async function getDiff(cursor: number)
+{
     if(diffFetching === true) {
         return;
     }
     diffFetching = true;
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
 
-    let document = activeEditor!.document;
-
+    let document = editor.document;
     let file_name = document.fileName;
     let sources: { [key: string]: string } = {};
     let whole_doc = document.getText();
@@ -188,115 +190,12 @@ export async function getDiff(cursor: number) {
     console.log('diff',json);
     let modif_doc = json["choices"][0]["files"][file_name];
     diffCode = modif_doc;
-
-    const diff = Diff.diffLines(whole_doc, modif_doc);
-    currentMode = Mode.Diff;
-    let improved_doc = '';
-
-    diff.forEach((part: any) => {
-        let span = part.value;
-        improved_doc += span;
-    });
-
-    let firstLine = activeEditor?.document.lineAt(0);
-    let lastLine = activeEditor?.document.lineAt(activeEditor?.document.lineCount - 1);
-    let textRange = new vscode.Range(0,firstLine!.range.start.character,activeEditor!.document.lineCount - 1,lastLine!.range.end.character);
-
-    activeEditor?.edit((selectedText) => {
-        selectedText.replace(textRange, improved_doc);
-    }).then(() => {
-        makeDiffLines(activeEditor!.document, diff, textRange);
-    });
-}
-
-function hideHighlight() {
-    for (let index = 0; index < highlights.length; index++) {
-        const element = highlights[index];
-        activeEditor?.setDecorations(element, []);
-    }
-    highlights.length = 0;
-    // ranges.length = 0;
+    interactiveDiff.offerDiff(editor, modif_doc);
 }
 
 
-export function makeDiffLines(doc: any, diff: any, rng: any) {
-    diffFetching = false;
-
-    let range = rng;
-    let decoration = { range };
-    diffFull.push(decoration);
-
-    diff.forEach((part: any) => {
-
-        if(part.removed) {
-            let st = doc.getText().indexOf(part.value);
-            let ed = st + part.value.length;
-            let pos_start = doc.positionAt(st);
-            let pos_end = doc.positionAt(ed);
-            let range = new vscode.Range(pos_start,pos_end);
-            let decoration = { range };
-            diffRemove.push(decoration);
-
-        }
-        if(part.added) {
-
-            let st = doc.getText().indexOf(part.value);
-            let ed = st + part.value.length;
-
-            let pos_start = doc.positionAt(st);
-            let pos_end = doc.positionAt(ed - 1);
-
-            let range = new vscode.Range(pos_start,pos_end);
-            let decoration = { range };
-            diffAdd.push(decoration);
-            // let cut = doc.getText().substring(st, ed);
-        }
-    });
-
-    let dremove = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(108,22,22,1)',
-        color: 'white',
-        isWholeLine: true,
-        before: {
-            color: 'white',
-            contentText: "-"
-        },
-        // opacity: '0.2'
-    });
-
-    let dadd = vscode.window.createTextEditorDecorationType({
-        backgroundColor: 'rgba(75,86,51,1)',
-        color: 'white',
-        isWholeLine: true,
-        before: {
-            color: 'white',
-            contentText: "+"
-        },
-
-    });
-
-    let blind = vscode.window.createTextEditorDecorationType({
-        color: 'gray',
-    });
-
-    diffType.length = 0;
-    diffType.push(blind);
-    diffType.push(dremove);
-    diffType.push(dadd);
-
-    hideHighlight();
-
-    activeEditor?.setDecorations(dadd, diffAdd);
-    activeEditor?.setDecorations(dremove, diffRemove);
-    activeEditor?.setDecorations(blind, diffFull);
-
-    let target = vscode.ConfigurationTarget.Global;
-    let configuration = vscode.workspace.getConfiguration('indenticator');
-    configuration.update('showIndentGuide', false, target);
-    vscode.commands.executeCommand('setContext', 'codify.runTab', true);
-}
-
-export function clearHighlight() {
+export function clearHighlight()
+{
     if(currentMode === Mode.Highlight) {
         if(diffType.length > 0) {
             for (let index = 0; index < diffType.length; index++) {
@@ -365,7 +264,8 @@ export function clearHighlight() {
     configuration.update('showIndentGuide', true, target);
 }
 
-export function accept() {
+export function accept()
+{
     let firstLine = activeEditor?.document.lineAt(0);
     let lastLine = activeEditor?.document.lineAt(activeEditor?.document.lineCount - 1);
     let textRange = new vscode.Range(0,firstLine!.range.start.character,activeEditor!.document.lineCount - 1,lastLine!.range.end.character);

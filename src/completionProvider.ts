@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
-import * as storeVersions from './storeVersions';
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -34,50 +33,22 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
-        let right_of_cursor_has_only_special_chars = right_of_cursor.match(/^[\s\t\n\r)"'\]]*$/);
-        if (right_of_cursor_has_only_special_chars) {
-            console.log(["INFILL", left_of_cursor, "|", right_of_cursor]);
-            request.supplyStream(fetch.fetchAPI(
-                cancelToken,
-                sources,
-                "Infill",
-                // "diff-atcursor",
-                "infill",
-                file_name,
-                cursor,
-                cursor,
-                max_tokens,
-                max_edits,
-                stop_tokens,
-            ));
-        } else {
-            let more_revisions: { [key: string]: string } = storeVersions.fnGetRevisions(file_name);
-            let send_revisions: { [key: string]: string } = {};
-            let explain = "";
-            for (let key in more_revisions) {
-                if (whole_doc === more_revisions[key]) {
-                    explain += key + " (the same) ";
-                    continue;
-                }
-                explain += key + " ";
-                send_revisions[key] = more_revisions[key];
-            }
-            let stop_tokens: string[] = [];
-            send_revisions[file_name] = whole_doc;
-            console.log(["edit chain", explain]);
-            request.supplyStream(fetch.fetchAPI(
-                cancelToken,
-                send_revisions,
-                "Fix",
-                "edit-chain",
-                file_name,
-                cursor,
-                cursor,
-                max_tokens,
-                max_edits,
-                stop_tokens,
-            ));
-        }
+        // let right_of_cursor_has_only_special_chars = right_of_cursor.match(/^[\s\t\n\r)"'\]]*$/);
+        // if (right_of_cursor_has_only_special_chars) {
+        console.log(["INFILL", left_of_cursor, "|", right_of_cursor]);
+        request.supplyStream(fetch.fetchAPI(
+            cancelToken,
+            sources,
+            "Infill",
+            // "diff-atcursor",
+            "infill",
+            file_name,
+            cursor,
+            cursor,
+            max_tokens,
+            max_edits,
+            stop_tokens,
+        ));
         let json: any = await request.apiPromise;
         if (json.detail) {
             let detail = json.detail;
