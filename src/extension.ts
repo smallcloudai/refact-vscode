@@ -51,11 +51,11 @@ export function activate(context: vscode.ExtensionContext)
         highlight.runHighlight(context);
         menu.statusbarLoading(true);
         console.log(["Menu 1"]);
-        // highlight.runHighlight(context);
 	});
 
     let disposable7 = vscode.commands.registerCommand('plugin-vscode.menu2', () => {
         console.log(["Menu 2"]);
+        highlight.runHighlight(context);
 	});
 
     let disposable8 = vscode.commands.registerCommand('plugin-vscode.menu0', () => {

@@ -42,8 +42,6 @@ export async function runHighlight(context: vscode.ExtensionContext)
     let curPos = activeEditor!.selection.active;
     let cursor = document.offsetAt(curPos);
 
-    console.log('cursor position', cursor);
-
     let file_name = document.fileName;
     let sources: { [key: string]: string } = {};
     let whole_doc = document.getText();
@@ -64,8 +62,7 @@ export async function runHighlight(context: vscode.ExtensionContext)
         cancelToken,
         sources,
         "Fix",
-        "diff-atcursor",
-        // "highlight",
+        "highlight",
         file_name,
         cursor,
         cursor,
@@ -74,34 +71,15 @@ export async function runHighlight(context: vscode.ExtensionContext)
         stop_tokens,
     ));
 
-    // let promise = fetchAPI(
-    //     sources,
-    //     "Fix",
-    //     "highlight",
-    //     file_name,
-    //     cursor,
-    //     cursor,
-    //     max_tokens,
-    //     1
-    // );
-
-    let json;
-    try {
-        const result = await request;
-        json = await result;
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            console.log(err.message);
-        }
-        return { items: [] };
+    let json: any = await request.apiPromise;
+    if (json.detail) {
+        let detail = json.detail;
+        console.log(["ERROR", detail]);
+        return;
     }
 
-    console.log(json);
-
-    // highlightJson = json;
-
-    // showHighlight(json);
-
+    highlightJson = json;
+    showHighlight(json);
     // workspace.onDidChangeTextDocument(()=> {
     //     if(currentMode === 0) {
     //         for (let index = 0; index < highlights.length; index++) {
@@ -113,17 +91,17 @@ export async function runHighlight(context: vscode.ExtensionContext)
     //     }
     // });
 
-    changeEvent = vscode.window.onDidChangeTextEditorSelection(()=> {
-        let cPos = activeEditor!.selection.active;
-        let cursor = document.offsetAt(cPos);
+    // changeEvent = vscode.window.onDidChangeTextEditorSelection(()=> {
+    //     let cPos = activeEditor!.selection.active;
+    //     let cursor = document.offsetAt(cPos);
 
-        for (let index = 0; index < ranges.length; index++) {
-            const element = ranges[index];
-            if(element.range.contains(cPos)) {
-                getDiff(cursor);
-            }
-        }
-    });
+    //     for (let index = 0; index < ranges.length; index++) {
+    //         const element = ranges[index];
+    //         if(element.range.contains(cPos)) {
+    //             getDiff(cursor);
+    //         }
+    //     }
+    // });
     vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
 }
 
