@@ -238,7 +238,7 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
         //     color: ghost_text_color,
         //     isWholeLine: true,
         // });
-        let extension_path = vscode.extensions.getExtension('smc.codify')!.extensionPath;
+        let extension_path = vscode.extensions.getExtension('smallcloud.codify')!.extensionPath;
         let green_type = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(0, 255, 0, 0.1)',
             color: norm_fg,

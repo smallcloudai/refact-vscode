@@ -1,19 +1,28 @@
 {
   "name": "codify",
   "displayName": "Codify",
-  "description": "",
-  "publisher": "smc",
+  "description": "AI autocomplete, refactoring and advanced code generation",
+  "publisher": "smallcloud",
+  "icon": "logo-small.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
+  "author": "Codify <codify@smallcloud.ai> (https://codify.smallcloud.ai)",
   "repository": {
     "type": "git",
     "url": "https://github.com/smallcloudai/plugin-vscode"
-  },
+  }, 
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.69.0"
   },
+  
   "categories": [
+    "Programming Languages",
+    "Snippets",
     "Other"
-  ],
+ ],
   "activationEvents": [
     "onStartupFinished",
     "onView:codify-presets"
@@ -75,8 +84,17 @@
         "when": "codify.runTab"
       }
     ],
+    "viewsContainers": {
+        "activitybar": [
+          {
+            "id": "codify-pane",     
+            "title": "Codify",
+            "icon": "$(heart)"
+          }
+        ]
+    },
     "views": {
-        "explorer": [
+        "codify-pane": [
             {
                 "type": "webview",
                 "id": "codify-presets",

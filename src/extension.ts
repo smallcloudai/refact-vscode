@@ -24,13 +24,13 @@ export function activate(context: vscode.ExtensionContext)
         scheme: "file"
     };
 
-      // Register our CodeLens provider
-    let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
-        docSelector,
-        new LensProvider()
-    );
+    // Register our CodeLens provider
+    // let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
+    //     docSelector,
+    //     new LensProvider()
+    // );
 
-    context.subscriptions.push(codeLensProviderDisposable);
+    // context.subscriptions.push(codeLensProviderDisposable);
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);

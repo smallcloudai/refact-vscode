@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
+import * as highlight from "./highlight";
 class PanelWebview implements vscode.WebviewViewProvider {
 
-	public static readonly viewType = 'smc.codify';
+	public static readonly viewType = 'smallcloud.codify';
 
 	private _view?: vscode.WebviewView;
 
@@ -30,7 +31,12 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			switch (data.type) {
 				case 'presetSelected':
 					{
-                        vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
+                        let editor = vscode.window.activeTextEditor;
+                        if (!editor) {
+                            return;
+                        }
+                        // vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
+                        highlight.runHighlight(editor, data.value);
 						break;
 					}
 			}
@@ -38,8 +44,8 @@ class PanelWebview implements vscode.WebviewViewProvider {
 	}
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.js'));
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'main.css'));
+		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.js'));
+		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.css'));
 
 		const nonce = getNonce();
 
