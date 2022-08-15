@@ -8,6 +8,7 @@ import LensProvider from "./codeLens";
 import { runEditChaining } from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import { Mode } from "./interactiveDiff";
+import PanelWebview from "./panel";
 
 export function activate(context: vscode.ExtensionContext)
 {
@@ -90,6 +91,14 @@ export function activate(context: vscode.ExtensionContext)
     // context.subscriptions.push(disposable7);
     context.subscriptions.push(disposable8);
     context.subscriptions.push(...disposables);
+
+
+    const PanelWebViewProvider = new PanelWebview(context?.extensionUri);
+	let view = vscode.window.registerWebviewViewProvider(
+		'codify-presets',
+		PanelWebViewProvider,
+	);
+	context.subscriptions.push(view);
 }
 
 

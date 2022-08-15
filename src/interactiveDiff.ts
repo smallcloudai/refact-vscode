@@ -238,18 +238,24 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
         //     color: ghost_text_color,
         //     isWholeLine: true,
         // });
+        let extension_path = vscode.extensions.getExtension('smc.codify')!.extensionPath;
         let green_type = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(0, 255, 0, 0.1)',
             color: norm_fg,
             isWholeLine: true,
+            gutterIconPath: extension_path + '/images/add_line.svg',
+            gutterIconSize: '40%',
         });
         let very_green_type = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(0, 255, 0, 0.30)',
             color: norm_fg,
         });
+        // let red_path = vscode.Uri.file('././images/add_plus_icon.svg');
         let red_type = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(255, 0, 0, 0.1)',
             isWholeLine: true,
+            gutterIconPath: extension_path + '/images/remove_line.svg',
+            gutterIconSize: '40%',
         });
         let very_red_type = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(255, 0, 0, 0.30)',

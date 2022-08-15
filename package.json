@@ -15,7 +15,8 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:codify-presets"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -66,14 +67,23 @@
       {
         "command": "plugin-vscode.esc",
         "key": "escape",
-        "when" : "codify.runEsc"
+        "when": "codify.runEsc"
       },
       {
         "command": "plugin-vscode.tab",
         "key": "tab",
-        "when" : "codify.runTab"
+        "when": "codify.runTab"
       }
-    ]
+    ],
+    "views": {
+        "explorer": [
+            {
+                "type": "webview",
+                "id": "codify-presets",
+                "name": "Codify Presets"
+            }
+        ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -84,13 +94,12 @@
     "test": "node ./out/test/runTest.js"
   },
   "dependencies": {
-    "fetch-h2": "2",
-    "diff": "^5.0.0"
+    "diff": "^5.0.0",
+    "fetch-h2": "2"
   },
   "devDependencies": {
     "@types/glob": "^7.2.0",
     "@types/mocha": "^9.1.1",
-    "@types/node": "16.x",
     "@types/vscode": "^1.69.0",
     "@typescript-eslint/eslint-plugin": "^5.30.0",
     "@typescript-eslint/parser": "^5.30.0",

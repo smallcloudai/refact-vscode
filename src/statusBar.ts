@@ -19,7 +19,7 @@ import * as vscode from 'vscode';
         item.command = statusBarMenu;
     
         context.subscriptions.push(item);
-        item.text = `$(rocket) Codify`;
+        item.text = `Codify`;
         item.tooltip = `Click for commands`;
         item.show();
 
@@ -38,7 +38,7 @@ import * as vscode from 'vscode';
             this.menu.color = 'yellow';
         }
         else {
-            this.menu.text = `$(rocket) Codify`;
+            this.menu.text = `Codify`;
             this.menu.color = undefined;
         }
         return state;

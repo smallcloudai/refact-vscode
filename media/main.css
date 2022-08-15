@@ -1,0 +1,13 @@
+.presets {
+    list-style: none;
+    padding: 0;
+}
+.presets li {
+    list-style: none;
+    cursor: pointer;
+    font-size: 1.25em;
+    line-height: 1.5em;
+}
+.presets li:hover {
+    color: lime;
+}
