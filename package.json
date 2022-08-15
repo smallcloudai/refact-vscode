@@ -2,7 +2,7 @@
   "name": "codify",
   "displayName": "Codify",
   "description": "",
-  "publisher": "Small Cloud Inc.",
+  "publisher": "smc",
   "repository": {
     "type": "git",
     "url": "https://github.com/smallcloudai/plugin-vscode"
