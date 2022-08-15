@@ -9,13 +9,15 @@ import { Mode } from "./interactiveDiff";
 // let highlights: any = [];
 
 let cursor_move_event: any = [];
+export let global_intent = "Fix";
 
 
-export async function runHighlight(context: vscode.ExtensionContext)
+export async function runHighlight(editor: vscode.TextEditor, intent: string | undefined)
 {
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        return;
+    if (intent === undefined) {
+        intent = global_intent;
+    } else {
+        global_intent = intent;
     }
     let state = interactiveDiff.getStateOfEditor(editor);
     let doc = editor.document;
@@ -34,7 +36,7 @@ export async function runHighlight(context: vscode.ExtensionContext)
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         sources,
-        "Fix",
+        intent,
         "highlight",
         file_name,
         cursor,
@@ -109,7 +111,7 @@ export async function queryDiff(editor: vscode.TextEditor, cursor: number)
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         sources,
-        "Fix",
+        global_intent,
         "diff-atcursor",
         file_name,
         cursor,
@@ -124,14 +126,11 @@ export async function queryDiff(editor: vscode.TextEditor, cursor: number)
         console.log(["ERROR", detail]);
         return;
     }
-    let modif_doc = json["choices"][0]["files"][file_name];
-    state.diffCode = modif_doc;
-    interactiveDiff.offerDiff(editor, modif_doc);
+    if (state.mode === Mode.Highlight) {
+        let modif_doc = json["choices"][0]["files"][file_name];
+        interactiveDiff.offerDiff(editor, modif_doc);
+    }
 }
-
-// let state = interactiveDiff.getStateOfEditor(editor);
-// if (state.mode === Mode.Highlight) {
-// state.mode = Mode.Normal;
 
 export function clearHighlight(editor: vscode.TextEditor)
 {
@@ -145,77 +144,3 @@ export function clearHighlight(editor: vscode.TextEditor)
     cursor_move_event.dispose();
 }
 
-// if (state.mode === Mode.Diff) {
-// export function clearDiff(editor: vscode.TextEditor)
-// {
-//     let state = interactiveDiff.getStateOfEditor(editor);
-//     for (let index = 0; index < state.deco_types.length; index++) {
-//         const dt = state.deco_types[index];
-//         editor.setDecorations(dt, []);
-//     }
-//     state.deco_types.length = 0;
-//     state.diffAdd.length = 0;
-//     state.diffRemove.length = 0;
-//     state.diffFull.length = 0;
-//     let firstLine = editor.document.lineAt(0);
-//     let lastLine = editor.document.lineAt(editor.document.lineCount - 1);
-//     let textRange = new vscode.Range(
-//         0,
-//         firstLine.range.start.character,
-//         editor.document.lineCount - 1,
-//         lastLine.range.end.character
-//     );
-//     editor.edit((selectedText) => {
-//         selectedText.replace(textRange, state.originalCode);
-//     });
-// }
-
-// showHighlight(editor, state.highlight_json_backup);
-// state.mode = Mode.Highlight;
-
-    // if(currentMode === Mode.Accept) {
-    //     for (let index = 0; index < deco_types.length; index++) {
-    //         const element = deco_types[index];
-    //         activeEditor?.setDecorations(element, []);
-    //     }
-    //     deco_types.length = 0;
-    //     diffAdd.length = 0;
-    //     diffRemove.length = 0;
-    //     diffFull.length = 0;
-
-    //     for (let index = 0; index < highlights.length; index++) {
-    //         const element = highlights[index];
-    //         activeEditor?.setDecorations(element, []);
-    //     }
-    //     highlights.length = 0;
-    //     sensitive_ranges.length = 0;
-    //     currentMode = Mode.Highlight;
-    // }
-//     vscode.commands.executeCommand('setContext', 'codify.runTab', false);
-//     let target = vscode.ConfigurationTarget.Global;
-//     let configuration = vscode.workspace.getConfiguration('indenticator');
-//     configuration.update('showIndentGuide', true, target);
-// }
-
-// export function accept()
-// {
-//     let firstLine = activeEditor?.document.lineAt(0);
-//     let lastLine = activeEditor?.document.lineAt(activeEditor?.document.lineCount - 1);
-//     let textRange = new vscode.Range(0,firstLine!.range.start.character,activeEditor!.document.lineCount - 1,lastLine!.range.end.character);
-//     activeEditor?.edit((selectedText) => {
-//         selectedText.replace(textRange, diffCode);
-//     });
-//     currentMode = Mode.Accept;
-//     clearHighlight();
-//     vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
-//     vscode.commands.executeCommand('setContext', 'codify.runTab', false);
-//     changeEvent.dispose();
-// }
-
-
-// vscode.window.onDidChangeActiveTextEditor(editor => {
-//     activeEditor = editor;
-//     if (editor) {
-//         triggerUpdateDecorations();
-//     }
-// }, null, context.subscriptions);

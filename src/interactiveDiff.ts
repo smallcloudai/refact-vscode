@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-import { clearHighlight, showHighlight } from './highlight';
+import { clearHighlight, showHighlight, runHighlight } from './highlight';
 
 export enum Mode {
     Normal,
@@ -14,7 +14,6 @@ export enum Mode {
 class StateOfEditor {
     public editor: vscode.TextEditor;
     public originalCode: string;
-    public diffCode: string = "";
 
     public mode = Mode.Normal;
     public highlights: any = [];
@@ -241,7 +240,7 @@ export function rollback(editor: vscode.TextEditor)
     });
 }
 
-export function commit(editor: vscode.TextEditor)
+export function accept(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
     if (state.mode !== Mode.Diff) {
@@ -253,7 +252,7 @@ export function commit(editor: vscode.TextEditor)
                 new vscode.Position(state.diffDeletedLines[i], 0),
                 new vscode.Position(state.diffDeletedLines[i] + 1, 0),
             ));
-            // console.log(["commit", state.diffDeletedLines[i]]);
+            // console.log(["accept", state.diffDeletedLines[i]]);
         }
     }, { undoStopBefore: false, undoStopAfter: true }).then(() => {
         removeDeco(editor);
@@ -263,5 +262,6 @@ export function commit(editor: vscode.TextEditor)
         console.log(["ESC OFF DIFF"]);
         state.mode = Mode.Normal;
         clearHighlight(editor);
+        runHighlight(editor, undefined);
     });
 }

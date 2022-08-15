@@ -36,92 +36,14 @@
     },
     "commands": [
       {
-        "command": "plugin-vscode.helloWorld",
-        "title": "Hello World"
-      },
-      {
-        "command": "plugin-vscode.menu0",
-        "title": "Quick Input",
+        "command": "plugin-vscode.highlight",
+        "title": "Ask Intent and Highlight",
         "category": "Codify"
       },
       {
-        "command": "plugin-vscode.menu1",
-        "title": "Highlight",
+        "command": "plugin-vscode.editChaining",
+        "title": "Edit Chaining",
         "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.menu2",
-        "title": "Menu 2",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.fixTypes",
-        "title": "Fix types",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.fixUnclearNames",
-        "title": "Fix unclear names",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.variablesShorter",
-        "title": "Make variables shorter",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.codeShorter",
-        "title": "Make code shorter",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.improvePerformance",
-        "title": "Improve performance",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.codeCleanup",
-        "title": "Code cleanup",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.formattingConsistent",
-        "title": "Make formatting consistent",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.removePython2",
-        "title": "Remove python 2 support",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.convertNumpy",
-        "title": "Convert to numpy",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.convertDictClass",
-        "title": "Convert dict to class",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.listComprehension",
-        "title": "Convert to list comprehension",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.addDocstrings",
-        "title": "Add docstrings",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.fixTypos",
-        "title": "Fix typos",
-        "category": "Codify"
-      },
-      {
-        "command": "extension.addConsoleLog",
-        "title": "Add Console Log"
       }
     ],
     "properties": [
@@ -134,8 +56,12 @@
     ],
     "keybindings": [
       {
-        "command": "plugin-vscode.f1",
+        "command": "plugin-vscode.highlight",
         "key": "F1"
+      },
+      {
+        "command": "plugin-vscode.editChaining",
+        "key": "F2"
       },
       {
         "command": "plugin-vscode.esc",
