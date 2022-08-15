@@ -10,6 +10,7 @@ export class PendingRequest {
     seq: number;
     apiPromise: Promise<any> | undefined;
     cancelToken: vscode.CancellationToken;
+    cancellationTokenSource: vscode.CancellationTokenSource | undefined;
 
     constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken) {
         this.seq = globalSeq++;
@@ -69,6 +70,15 @@ export async function waitAllRequests()
     }
 }
 
+export function cancelAllRequests()
+{
+    for (let i=0; i<globalRequests.length; i++) {
+        let r = globalRequests[i];
+        if (r.cancellationTokenSource !== undefined) {
+            r.cancellationTokenSource.cancel();
+        }
+    }
+}
 
 export function fetchAPI(
     cancelToken: vscode.CancellationToken,

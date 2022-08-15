@@ -20,6 +20,12 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
         global_intent = intent;
     }
     let state = interactiveDiff.getStateOfEditor(editor);
+    if (state.mode === Mode.Highlight) {
+        clearHighlight(editor);
+    } else if (state.mode === Mode.Diff) {
+        interactiveDiff.rollback(editor);
+        state.area2cache.clear();
+    }
     let doc = editor.document;
     let cursor = doc.offsetAt(editor.selection.active);
     let file_name = doc.fileName;
@@ -66,7 +72,7 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         const end = doc.positionAt(element[1]);
         let range = new vscode.Range(start, end);
         let decorange = { range };
-        let range_list: any = [];
+        let range_list: vscode.DecorationOptions[] = [];
         range_list.push(decorange);
         state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
@@ -86,7 +92,7 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         for (let index = 0; index < state.sensitive_ranges.length; index++) {
             const element = state.sensitive_ranges[index];
             if (element.range.contains(cPos)) {
-                queryDiff(editor, cursor);
+                interactiveDiff.queryDiff(editor, element.range);
             }
         }
     });
@@ -94,43 +100,6 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
     console.log(["ESC ON HL"]);
 }
 
-export async function queryDiff(editor: vscode.TextEditor, cursor: number)
-{
-    let state = interactiveDiff.getStateOfEditor(editor);
-    let doc = editor.document;
-    let file_name = doc.fileName;
-    let sources: { [key: string]: string } = {};
-    let whole_doc = doc.getText();
-    sources[file_name] = whole_doc;
-    let max_tokens = 150;
-    let cancellationTokenSource = new vscode.CancellationTokenSource();
-    let cancelToken = cancellationTokenSource.token;
-    await fetch.waitAllRequests();
-    let request = new fetch.PendingRequest(undefined, cancelToken);
-    let stop_tokens: string[] = [];
-    request.supplyStream(fetch.fetchAPI(
-        cancelToken,
-        sources,
-        global_intent,
-        "diff-atcursor",
-        file_name,
-        cursor,
-        cursor,
-        max_tokens,
-        1,
-        stop_tokens,
-    ));
-    let json: any = await request.apiPromise;
-    if (json.detail) {
-        let detail = json.detail;
-        console.log(["ERROR", detail]);
-        return;
-    }
-    if (state.mode === Mode.Highlight) {
-        let modif_doc = json["choices"][0]["files"][file_name];
-        interactiveDiff.offerDiff(editor, modif_doc);
-    }
-}
 
 export function clearHighlight(editor: vscode.TextEditor)
 {

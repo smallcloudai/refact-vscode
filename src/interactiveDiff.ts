@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
+import * as fetch from "./fetchAPI";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-import { clearHighlight, showHighlight, runHighlight } from './highlight';
+import { clearHighlight, showHighlight, runHighlight, global_intent } from './highlight';
+
 
 export enum Mode {
     Normal,
@@ -9,6 +11,19 @@ export enum Mode {
     Diff,
     Accept
 };
+
+
+class CacheEntity {
+    public editor: vscode.TextEditor;
+    public sensitive_area: vscode.Range;
+    public request: fetch.PendingRequest | undefined;
+    public json: any;
+
+    public constructor(editor: vscode.TextEditor, sensitive_area: vscode.Range) {
+        this.editor = editor;
+        this.sensitive_area = sensitive_area;
+    }
+}
 
 
 class StateOfEditor {
@@ -22,7 +37,8 @@ class StateOfEditor {
     public diffDeletedLines: any = [];
     public diffAddedLines: any = [];
 
-    public sensitive_ranges: any = [];
+    public sensitive_ranges: vscode.DecorationOptions[] = [];
+    public area2cache = new Map<Number, CacheEntity>();
 
     public highlight_json_backup: any = {};
 
@@ -51,6 +67,65 @@ export function getStateOfEditor(editor: vscode.TextEditor): StateOfEditor
         console.log(["forget state of", oldest_editor.document.fileName]);
     }
     return state;
+}
+
+
+export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscode.Range)
+{
+    let state = getStateOfEditor(editor);
+    let doc = editor.document;
+    let cache_key = doc.offsetAt(sensitive_area.start);
+    let cache = state.area2cache.get(cache_key);
+    if (!cache) {
+        cache = new CacheEntity(editor, sensitive_area);
+    }
+
+    let cancellationTokenSource = new vscode.CancellationTokenSource();
+    let cancelToken = cancellationTokenSource.token;
+    let request = new fetch.PendingRequest(undefined, cancelToken);
+    cache.request = request;
+
+    fetch.cancelAllRequests();
+    request.cancellationTokenSource = cancellationTokenSource;
+    await fetch.waitAllRequests();
+    if (cancelToken.isCancellationRequested) {
+        return;
+    }
+    let file_name = doc.fileName;
+
+    if (cache.json === undefined) {
+        let sources: { [key: string]: string } = {};
+        let whole_doc = doc.getText();
+        sources[file_name] = whole_doc;
+        let max_tokens = 150;
+        let stop_tokens: string[] = [];
+        let cursor = doc.offsetAt(sensitive_area.start);
+        request.supplyStream(fetch.fetchAPI(
+            cancelToken,
+            sources,
+            global_intent,
+            "diff-atcursor",
+            file_name,
+            cursor,
+            cursor,
+            max_tokens,
+            1,
+            stop_tokens,
+        ));
+        let json: any = await request.apiPromise;
+        if (json.detail) {
+            let detail = json.detail;
+            console.log(["ERROR", detail]);
+            return;
+        }
+        cache.json = json;
+        state.area2cache.set(cache_key, cache);
+        console.log(["cache_key", cache_key, state.area2cache.size]);
+    }
+    if (state.mode === Mode.Highlight && !cancelToken.isCancellationRequested) {
+        let modif_doc = cache.json["choices"][0]["files"][file_name];
+        offerDiff(editor, modif_doc);
+    }
 }
 
 
@@ -107,7 +182,7 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
                 let chunk_remember_added_line = line_n;
                 line_n += span_lines_count;
                 if (chunk_remember_removed) {
-                    const diff_char = Diff.diffChars(chunk_remember_removed, chunk_remember_added);
+                    const diff_char = Diff.diffWords(chunk_remember_removed, chunk_remember_added);
                     let char_del_line = chunk_remember_removed_line;
                     let char_ins_line = chunk_remember_added_line;
                     let char_del_pos = 0;
@@ -164,7 +239,7 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
         //     isWholeLine: true,
         // });
         let green_type = vscode.window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(0, 255, 0, 0.05)',
+            backgroundColor: 'rgba(0, 255, 0, 0.1)',
             color: norm_fg,
             isWholeLine: true,
         });
@@ -173,7 +248,7 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
             color: norm_fg,
         });
         let red_type = vscode.window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(255, 0, 0, 0.05)',
+            backgroundColor: 'rgba(255, 0, 0, 0.1)',
             isWholeLine: true,
         });
         let very_red_type = vscode.window.createTextEditorDecorationType({
@@ -260,6 +335,7 @@ export function accept(editor: vscode.TextEditor)
         console.log(["TAB OFF DIFF"]);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
+        state.area2cache.clear();
         state.mode = Mode.Normal;
         clearHighlight(editor);
         runHighlight(editor, undefined);
