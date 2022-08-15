@@ -29,19 +29,37 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let request = new fetch.PendingRequest(undefined, cancelToken);
         let max_tokens = 50;
         let max_edits = 1;
-        let stop_tokens: string[] = ["\n", "\n\n"];
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
+        let left_all_spaces = left_of_cursor.replace(/\s/g, "").length === 0;
+        let right_all_spaces = right_of_cursor.replace(/\s/g, "").length === 0;
+        let altcursor = position.character;
+        // if (left_all_spaces && right_all_spaces) {
+        //     console.log(["left 41", cursor]);
+        //     // altcursor = Math.max(altcursor - 4, 0);
+        //     // altcursor = 0;
+        //     cursor -= (position.character - altcursor);
+        //     left_of_cursor = current_line.text.substring(0, altcursor);
+        //     console.log(["left 42", cursor]);
+        // }
+        // let altcursor_pos = new vscode.Position(position.line, altcursor);
+        let multiline = left_all_spaces;
+        let stop_tokens: string[];
+        if (multiline) {
+            stop_tokens = [];
+        } else {
+            stop_tokens = ["\n", "\n\n"];
+        }
+        let eol_pos = new vscode.Position(position.line, current_line.text.length);
         // let right_of_cursor_has_only_special_chars = right_of_cursor.match(/^[\s\t\n\r)"'\]]*$/);
         // if (right_of_cursor_has_only_special_chars) {
         console.log(["INFILL", left_of_cursor, "|", right_of_cursor]);
         request.supplyStream(fetch.fetchAPI(
             cancelToken,
             sources,
-            "Infill",
-            // "diff-atcursor",
-            "infill",
+            "Infill", // message
+            "infill", // api function
             file_name,
             cursor,
             cursor,
@@ -79,12 +97,15 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         // console.log("modif_doc == ", modif_doc);
         // console.log("cursor", cursor, "stop_at", stop_at, "modif_doc.length", modif_doc.length);
 
-        let completion = modif_doc.substring(cursor, modif_doc.length + stop_at + 1);
+        let completion = modif_doc.substring(cursor, modif_doc.length + stop_at);
         console.log(["SUCCESS", request.seq, completion]);
-
+        if (!multiline) {
+            completion = completion.replace(/\s+$/, "");
+            console.log(["RTRIM", request.seq, completion]);
+        }
         let completionItem = new vscode.InlineCompletionItem(
             completion,
-            new vscode.Range(position, position.translate(0, 1))
+            new vscode.Range(position, eol_pos.translate(0, 0))
         );
         completionItem.filterText = completion;
         // completionItem.command = {
