@@ -5,24 +5,22 @@ import * as interactiveDiff from "./interactiveDiff";
 import { Mode } from "./interactiveDiff";
 
 
-// let highlightJson: any = [];
-// let highlights: any = [];
-
 let cursor_move_event: any = [];
 export let global_intent = "Fix";
 
 
 export async function runHighlight(editor: vscode.TextEditor, intent: string | undefined)
 {
+    let state = interactiveDiff.getStateOfEditor(editor);
     if (intent === undefined) {
         intent = global_intent;
     } else {
         global_intent = intent;
+        state.area2cache.clear();
     }
-    let state = interactiveDiff.getStateOfEditor(editor);
     if (state.mode === Mode.Highlight) {
         clearHighlight(editor);
-    } else if (state.mode === Mode.Diff) {
+    } else if (state.mode === Mode.Diff || state.mode === Mode.DiffWait) {
         interactiveDiff.rollback(editor);
         state.area2cache.clear();
     }
@@ -74,11 +72,29 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         let decorange = { range };
         let range_list: vscode.DecorationOptions[] = [];
         range_list.push(decorange);
+        // state.sensitive_ranges.push(decorange);
+        let deco_type = vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(245, 220, 0, ' + element[2] + ')',
+            // color: 'black'
+        });
+        console.log(["opacity", element[2], "text", doc.getText(range)]);
+        state.highlights.push(deco_type);
+        editor.setDecorations(deco_type, range_list);
+    }
+    for (let index = 0; index < json.highlight16.length; index++) {
+        const element = json.highlight16[index];
+        const start = doc.positionAt(element[0]);
+        const end = doc.positionAt(element[1]);
+        let range = new vscode.Range(start, end);
+        let decorange = { range };
+        let range_list: vscode.DecorationOptions[] = [];
+        range_list.push(decorange);
         state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
-            color: 'black'
+            // color: 'black'
         });
+        console.log(["opacity", element[2], "16text", doc.getText(range)]);
         state.highlights.push(deco_type);
         editor.setDecorations(deco_type, range_list);
     }
@@ -110,6 +126,8 @@ export function clearHighlight(editor: vscode.TextEditor)
     }
     state.highlights.length = 0;
     state.sensitive_ranges.length = 0;
-    cursor_move_event.dispose();
+    if (cursor_move_event) {
+        cursor_move_event.dispose();
+        cursor_move_event = undefined;
+    }
 }
-

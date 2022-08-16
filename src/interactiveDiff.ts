@@ -72,6 +72,7 @@ export function getStateOfEditor(editor: vscode.TextEditor): StateOfEditor
 
 export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscode.Range)
 {
+    // We get there every time the cursor moves (very often).
     let state = getStateOfEditor(editor);
     let doc = editor.document;
     let cache_key = doc.offsetAt(sensitive_area.start);
@@ -86,6 +87,9 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     cache.request = request;
 
     fetch.cancelAllRequests();
+    if (state.mode === Mode.DiffWait) {
+        state.mode = Mode.Normal;
+    }
     request.cancellationTokenSource = cancellationTokenSource;
     await fetch.waitAllRequests();
     if (cancelToken.isCancellationRequested) {
@@ -124,7 +128,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         state.area2cache.set(cache_key, cache);
         console.log(["cache_key", cache_key, state.area2cache.size]);
     }
-    if ((state.mode === Mode.Highlight || state.mode === Mode.DiffWait) && !cancelToken.isCancellationRequested) {
+    if ((state.mode !== Mode.Diff) && !cancelToken.isCancellationRequested) {
         let modif_doc = cache.json["choices"][0]["files"][file_name];
         offerDiff(editor, modif_doc);
     }
@@ -193,8 +197,9 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
     state.diffDeletedLines = [];
     state.diffAddedLines = [];
     editor.edit((e: vscode.TextEditorEdit) => {
-        console.log(["result diff"]);
+        // console.log(["result diff"]);
         let line_n = 0;
+        let line_n_insert = 0;
         let chunk_remember_removed = '';
         let chunk_remember_removed_line = -1;
         diff.forEach((part: any) => {
@@ -202,7 +207,7 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
             let span_lines = span.split('\n');
             let span_lines_count = span_lines.length - 1;
             if (part.removed) {
-                console.log(["removed span_lines_count", span_lines_count, span]);
+                // console.log(["removed span_lines_count", span_lines_count, span]);
                 red_bg_ranges.push(new vscode.Range(
                     new vscode.Position(line_n, 0),
                     new vscode.Position(line_n + span_lines_count - 1, 0),
@@ -213,10 +218,11 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
                 chunk_remember_removed = span;
                 chunk_remember_removed_line = line_n;
                 line_n += span_lines_count;
+                line_n_insert += span_lines_count;
             } else if (part.added) {
-                console.log(["added span_lines_count", span_lines_count, span]);
+                // console.log(["added span_lines_count", span_lines_count, span]);
                 e.insert(
-                    new vscode.Position(line_n, 0),
+                    new vscode.Position(line_n_insert, 0),
                     span
                     );
                 green_bg_ranges.push(new vscode.Range(
@@ -268,13 +274,14 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
                                 }
                             }
                         }
-                        console.log(["char", span_char]);
+                        // console.log(["char", span_char]);
                     });
                 }
                 // now run diff chunk_accum
             } else {
                 line_n += span_lines_count;
-                console.log(["unchanged", span.length]);
+                line_n_insert += span_lines_count;
+                // console.log(["unchanged", span.length]);
                 chunk_remember_removed = "";
             }
         });
