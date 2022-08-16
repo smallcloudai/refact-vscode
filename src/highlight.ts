@@ -106,7 +106,7 @@ export function clearHighlight(editor: vscode.TextEditor)
     let state = interactiveDiff.getStateOfEditor(editor);
     for (let index = 0; index < state.highlights.length; index++) {
         const element = state.highlights[index];
-        editor.setDecorations(element, []);
+        element.dispose();
     }
     state.highlights.length = 0;
     state.sensitive_ranges.length = 0;

@@ -9,7 +9,7 @@ export enum Mode {
     Normal,
     Highlight,
     Diff,
-    Accept
+    DiffWait,
 };
 
 
@@ -94,6 +94,8 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let file_name = doc.fileName;
 
     if (cache.json === undefined) {
+        state.mode = Mode.DiffWait;
+        animationStart(editor, sensitive_area);
         let sources: { [key: string]: string } = {};
         let whole_doc = doc.getText();
         sources[file_name] = whole_doc;
@@ -122,12 +124,58 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         state.area2cache.set(cache_key, cache);
         console.log(["cache_key", cache_key, state.area2cache.size]);
     }
-    if (state.mode === Mode.Highlight && !cancelToken.isCancellationRequested) {
+    if ((state.mode === Mode.Highlight || state.mode === Mode.DiffWait) && !cancelToken.isCancellationRequested) {
         let modif_doc = cache.json["choices"][0]["files"][file_name];
         offerDiff(editor, modif_doc);
     }
 }
 
+export async function animationStart(editor: vscode.TextEditor, sensitive_area: vscode.Range)
+{
+    clearHighlight(editor);
+    let state = getStateOfEditor(editor);
+    let animation_decos: vscode.TextEditorDecorationType[] = [];
+    let animation_ranges: vscode.Range[][] = [];
+    for (let c=0; c<20; c++) {
+        let phase = c / 10;
+        let red =   Math.max(100, Math.floor(255 * Math.sin(phase * Math.PI + Math.PI)));
+        let blue =  Math.max(100, Math.floor(255 * Math.sin(phase * Math.PI + Math.PI / 2)));
+        let green = Math.max(100, Math.floor(255 * Math.sin(phase * Math.PI + 3 * Math.PI / 2)));
+        let red_str = red.toString();
+        let green_str = green.toString();
+        let blue_str = blue.toString();
+        animation_decos.push(vscode.window.createTextEditorDecorationType({
+            backgroundColor: 'rgba(' + red_str + ', ' + green_str + ', ' + blue_str + ', 0.5)',
+            // isWholeLine: true,
+        }));
+        animation_ranges.push([]);
+    }
+    let t = 0;
+    while (state.mode === Mode.DiffWait) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        for (let a=0; a<animation_decos.length; a++) {
+            animation_ranges[a].length = 0;
+        }
+        for (let line_n=sensitive_area.start.line; line_n<=sensitive_area.end.line; line_n++) {
+            let line = editor.document.lineAt(line_n);
+            for (let c=0; c<line.text.length; c+=2) {
+                let a = (line_n + c + t) % animation_decos.length;
+                let range = new vscode.Range(
+                    new vscode.Position(line_n, c),
+                    new vscode.Position(line_n, c+2),
+                );
+                animation_ranges[a].push(range);
+            }
+        }
+        for (let a=0; a<animation_decos.length; a++) {
+            editor.setDecorations(animation_decos[a], animation_ranges[a]);
+        }
+        t += 1;
+    }
+    for (let a=0; a<animation_decos.length; a++) {
+        animation_decos[a].dispose();
+    }
+}
 
 export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
 {
@@ -285,7 +333,7 @@ export function removeDeco(editor: vscode.TextEditor)
         return;
     }
     for (let deco of state.diffDecos) {
-        editor.setDecorations(deco, []);
+        deco.dispose();
     }
     state.diffDecos.length = 0;
     state.diffAddedLines.length = 0;
