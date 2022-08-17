@@ -64,7 +64,16 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', () => {
-        askAndHighlight();
+        let editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        let state = interactiveDiff.getStateOfEditor(editor);
+        if (state.mode === Mode.Diff) {
+            rollback_and_regen(editor);
+        } else {
+            askIntent();
+        }
         // vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify:");
     });
 
@@ -101,7 +110,14 @@ export function activate(context: vscode.ExtensionContext)
 }
 
 
-export async function askAndHighlight()
+export async function rollback_and_regen(editor: vscode.TextEditor)
+{
+    await interactiveDiff.rollback(editor);
+    interactiveDiff.regen(editor);
+}
+
+
+export async function askIntent()
 {
 	let editor = vscode.window.activeTextEditor;
 	if (!editor) {

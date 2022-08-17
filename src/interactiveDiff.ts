@@ -39,6 +39,7 @@ class StateOfEditor {
 
     public sensitive_ranges: vscode.DecorationOptions[] = [];
     public area2cache = new Map<Number, CacheEntity>();
+    public showing_diff_for_range: vscode.Range | undefined = undefined;
 
     public highlight_json_backup: any = undefined;
 
@@ -135,6 +136,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     }
     if ((state.mode === Mode.Diff) && !cancelToken.isCancellationRequested) {
         let modif_doc = cache.json["choices"][0]["files"][file_name];
+        state.showing_diff_for_range = sensitive_area;
         offerDiff(editor, modif_doc);
     }
 }
@@ -353,7 +355,7 @@ export function removeDeco(editor: vscode.TextEditor)
 }
 
 
-export function rollback(editor: vscode.TextEditor)
+export async function rollback(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
     if (state.mode === Mode.DiffWait) {
@@ -364,7 +366,7 @@ export function rollback(editor: vscode.TextEditor)
         return;
     }
     state.mode = Mode.DiffChangingDoc;
-    editor.edit((e) => {
+    await editor.edit((e) => {
         for (let i=0; i<state.diffAddedLines.length; i++) {
             e.delete(new vscode.Range(
                 new vscode.Position(state.diffAddedLines[i], 0),
@@ -394,6 +396,7 @@ export function accept(editor: vscode.TextEditor)
     if (state.mode !== Mode.Diff) {
         return;
     }
+    state.mode = Mode.DiffChangingDoc;
     editor.edit((e) => {
         for (let i=0; i<state.diffDeletedLines.length; i++) {
             e.delete(new vscode.Range(
@@ -418,6 +421,17 @@ export function accept(editor: vscode.TextEditor)
             backToNormal(editor);
         }
     });
+}
+
+
+export function regen(editor: vscode.TextEditor)
+{
+    let state = getStateOfEditor(editor);
+    if (state.showing_diff_for_range !== undefined) {
+        removeDeco(editor);
+        state.area2cache.clear();
+        queryDiff(editor, state.showing_diff_for_range);
+    }
 }
 
 

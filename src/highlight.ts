@@ -34,7 +34,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     if (state.mode === Mode.Highlight) {
         clearHighlight(editor);
     } else if (state.mode === Mode.Diff || state.mode === Mode.DiffWait) {
-        interactiveDiff.rollback(editor);
+        await interactiveDiff.rollback(editor);
     }
     interactiveDiff.handsOff(editor);
     let doc = editor.document;
