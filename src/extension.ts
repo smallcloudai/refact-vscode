@@ -12,6 +12,7 @@ import PanelWebview from "./panel";
 
 declare global {
     var menu: any;
+    var panelProvider: any;
 }
 
 export function activate(context: vscode.ExtensionContext)
@@ -104,10 +105,10 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...disposables);
 
 
-    const PanelWebViewProvider = new PanelWebview(context?.extensionUri);
+    global.panelProvider = new PanelWebview(context?.extensionUri);
 	let view = vscode.window.registerWebviewViewProvider(
 		'codify-presets',
-		PanelWebViewProvider,
+		global.panelProvider,
 	);
 	context.subscriptions.push(view);
 }
@@ -134,6 +135,7 @@ export async function askIntent()
         valueSelection: [0, 80],
         placeHolder: 'Convert to list comprehension',
     });
+    global.panelProvider.updateQuery(intent);
     if (selection_empty) {
         if (intent) {
             highlight.runHighlight(editor, intent);

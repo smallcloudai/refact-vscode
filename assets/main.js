@@ -14,4 +14,16 @@
             vscode.postMessage({ type: 'quickInput', value: quickInput.value });
         }
     });
+
+    window.addEventListener('message', event => {
+
+        const message = event.data;
+        switch (message.command) {
+            case 'updateQuery':
+                if(message.value) {
+                    quickInput.value = message.value;
+                }   
+                break;
+        }
+    });
 }());

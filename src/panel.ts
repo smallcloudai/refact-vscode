@@ -4,10 +4,12 @@ class PanelWebview implements vscode.WebviewViewProvider {
 
 	public static readonly viewType = 'smallcloud.codify';
 
-	private _view?: vscode.WebviewView;
+	_view?: vscode.WebviewView;
+    _history: string[] = [];
 
 	constructor(
 		private readonly _extensionUri: vscode.Uri,
+        // view: vscode.WebviewView,
 	) { }
 
 	public resolveWebviewView(
@@ -52,8 +54,8 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		});
 	}
 
-    public updatePanel() {
-        return true;
+    public updateQuery(intent: string) {
+        this._view!.webview.postMessage({ command: 'updateQuery', value: intent });
     }
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
@@ -81,7 +83,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <input type="text" name="quickinput" id="quickinput" value="${highlight.global_intent}">
                     <button id="quicksubmit">⏎</button>
                 </div>
-				<h3>Presets</h3>
+				<h3 class="presets-title">Presets</h3>
                 <ul class="presets">
                     <li>Fix types</li>
                     <li>Fix typos</li>
@@ -96,6 +98,9 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <li>Convert to numpy</li>
                     <li>Convert dict to class</li>
                     <li>Convert to list comprehension</li>
+                </ul>
+                <h3 class="history-title">History</h3>
+                <ul class="history">
                 </ul>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
