@@ -150,6 +150,7 @@ export function onTextEdited(editor: vscode.TextEditor)
         state.mode = Mode.Normal;
     } else if (state.mode === Mode.Highlight) {
         clearHighlight(editor);
+        state.area2cache.clear();
         state.mode = Mode.Normal;
     } else {
         console.log(["text edited mode", state.mode, "do nothing"]);
