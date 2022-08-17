@@ -29,7 +29,6 @@ class CacheEntity {
 
 class StateOfEditor {
     public editor: vscode.TextEditor;
-    public originalCode: string;
 
     public mode = Mode.Normal;
     public highlights: any = [];
@@ -41,11 +40,10 @@ class StateOfEditor {
     public sensitive_ranges: vscode.DecorationOptions[] = [];
     public area2cache = new Map<Number, CacheEntity>();
 
-    public highlight_json_backup: any = {};
+    public highlight_json_backup: any = undefined;
 
     constructor(editor: vscode.TextEditor) {
         this.editor = editor;
-        this.originalCode = editor.document.getText();
     }
 };
 
@@ -380,7 +378,7 @@ export function rollback(editor: vscode.TextEditor)
         console.log(["TAB OFF DIFF"]);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
-        if (state.highlight_json_backup) {
+        if (state.highlight_json_backup !== undefined) {
             showHighlight(editor, state.highlight_json_backup);
             state.mode = Mode.Highlight;
         } else {
@@ -411,8 +409,14 @@ export function accept(editor: vscode.TextEditor)
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
         state.area2cache.clear();
-        backToNormal(editor);
-        runHighlight(editor, undefined);
+        if (state.highlight_json_backup) {
+            state.highlight_json_backup = undefined;
+            backToNormal(editor);
+            runHighlight(editor, undefined);
+        } else {
+            state.highlight_json_backup = undefined;
+            backToNormal(editor);
+        }
     });
 }
 

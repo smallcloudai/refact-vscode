@@ -101,24 +101,31 @@ export function activate(context: vscode.ExtensionContext)
 }
 
 
-
-export async function askAndHighlight() {
+export async function askAndHighlight()
+{
 	let editor = vscode.window.activeTextEditor;
 	if (!editor) {
 		return;
 	}
+    let selection = editor.selection;
+    let selection_empty = selection.isEmpty;
     const intent = await vscode.window.showInputBox({
+        title: (selection_empty ? "What would you like to do? (this action highlights code first)" : "What would you like to do with the selected code?"),
         value: highlight.global_intent,
         valueSelection: [0, 80],
         placeHolder: 'Convert to list comprehension',
-        // validateInput: text => {
-        //     vscode.window.showInformationMessage(`Validating: ${text}`);
-        //     return text === '123' ? 'Not 123!' : null;
-        // }
     });
-	if (intent) {
-		highlight.runHighlight(editor, intent);
-	}
+    if (selection_empty) {
+        if (intent) {
+            highlight.runHighlight(editor, intent);
+        }
+    } else {
+        if (intent) {
+            highlight.saveIntent(intent);
+            editor.selection = new vscode.Selection(selection.start, selection.start);
+            interactiveDiff.queryDiff(editor, selection);
+        }
+    }
     // vscode.window.showInformationMessage(`Got: ${result}`);
 }
 

@@ -10,16 +10,26 @@ let text_edited_event: any = undefined;
 export let global_intent = "Fix";
 
 
+export function saveIntent(intent: string)
+{
+    if (global_intent !== intent) {
+        global_intent = intent;
+        let editor = vscode.window.activeTextEditor;
+        if (editor) {
+            let state = interactiveDiff.getStateOfEditor(editor);
+            state.area2cache.clear();
+        }
+    }
+}
+
+
 export async function runHighlight(editor: vscode.TextEditor, intent: string | undefined)
 {
     let state = interactiveDiff.getStateOfEditor(editor);
     if (intent === undefined) {
         intent = global_intent;
     } else {
-        if (global_intent !== intent) {
-            global_intent = intent;
-            state.area2cache.clear();
-        }
+        saveIntent(intent);
     }
     if (state.mode === Mode.Highlight) {
         clearHighlight(editor);
@@ -32,7 +42,6 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     let file_name = doc.fileName;
     let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
-    state.originalCode = whole_doc;
     sources[file_name] = whole_doc;
     let max_tokens = 0;
     let cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -146,12 +155,17 @@ export function onTextEdited(editor: vscode.TextEditor)
     if (state.mode === Mode.Diff || state.mode === Mode.DiffWait) {
         console.log(["text edited mode", state.mode, "hands off"]);
         interactiveDiff.handsOff(editor);
+        state.highlight_json_backup = undefined;
         state.area2cache.clear();
         state.mode = Mode.Normal;
     } else if (state.mode === Mode.Highlight) {
         clearHighlight(editor);
         state.area2cache.clear();
+        state.highlight_json_backup = undefined;
         state.mode = Mode.Normal;
+    } else if (state.mode === Mode.Normal) {
+        state.area2cache.clear();
+        state.highlight_json_backup = undefined;
     } else {
         console.log(["text edited mode", state.mode, "do nothing"]);
     }
@@ -187,6 +201,7 @@ export function backToNormal(editor: vscode.TextEditor)
 {
     let state = interactiveDiff.getStateOfEditor(editor);
     state.mode = Mode.Normal;
+    state.highlight_json_backup = undefined;
     _forgetEvents();
     clearHighlight(editor);
 }
