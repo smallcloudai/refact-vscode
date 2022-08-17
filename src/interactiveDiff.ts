@@ -75,7 +75,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     // We get there every time the cursor moves (very often).
     let state = getStateOfEditor(editor);
     let doc = editor.document;
-    let cache_key = doc.offsetAt(sensitive_area.start);
+    let cache_key = doc.offsetAt(sensitive_area.start) + 10000*doc.offsetAt(sensitive_area.end);
     let cache = state.area2cache.get(cache_key);
     if (!cache) {
         cache = new CacheEntity(editor, sensitive_area);
@@ -105,15 +105,14 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         sources[file_name] = whole_doc;
         let max_tokens = 150;
         let stop_tokens: string[] = [];
-        let cursor = doc.offsetAt(sensitive_area.start);
         request.supplyStream(fetch.fetchAPI(
             cancelToken,
             sources,
             global_intent,
             "diff-atcursor",
             file_name,
-            cursor,
-            cursor,
+            doc.offsetAt(sensitive_area.start),
+            doc.offsetAt(sensitive_area.end),
             max_tokens,
             1,
             stop_tokens,
@@ -284,7 +283,6 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
                         // console.log(["char", span_char]);
                     });
                 }
-                // now run diff chunk_accum
             } else {
                 line_n += span_lines_count;
                 line_n_insert += span_lines_count;
@@ -342,6 +340,7 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
         console.log(["TAB ON DIFF"]);
     });
 }
+
 
 export function removeDeco(editor: vscode.TextEditor)
 {
