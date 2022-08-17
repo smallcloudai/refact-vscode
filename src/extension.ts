@@ -107,6 +107,7 @@ export function activate(context: vscode.ExtensionContext)
 		PanelWebViewProvider,
 	);
 	context.subscriptions.push(view);
+    console.log('inputbox',vscode.window.showInputBox);
 }
 
 

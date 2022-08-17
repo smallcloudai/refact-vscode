@@ -39,6 +39,15 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         highlight.runHighlight(editor, data.value);
 						break;
 					}
+                case 'quickInput':
+                    {
+                        let editor = vscode.window.activeTextEditor;
+                        if (!editor) {
+                            return;
+                        }
+                        highlight.runHighlight(editor, data.value);
+                        break;
+                    }
 			}
 		});
 	}
@@ -46,6 +55,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.js'));
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.css'));
+        let inputValue = highlight.global_intent;
 
 		const nonce = getNonce();
 
@@ -60,11 +70,15 @@ class PanelWebview implements vscode.WebviewViewProvider {
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 				
-				<title>Codify Presets</title>
+				<title>Presets</title>
                 <link href="${styleMainUri}" rel="stylesheet">
 			</head>
 			<body>
-				<h1>Codify Presets</h1>
+                <div id="quickbar">
+                    <input type="text" name="quickinput" id="quickinput" value="${inputValue}">
+                    <button id="quicksubmit">⏎</button>
+                </div>
+				<h3>Presets</h3>
                 <ul class="presets">
                     <li>Fix types</li>
                     <li>Fix typos</li>

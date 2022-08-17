@@ -110,7 +110,7 @@
             {
                 "type": "webview",
                 "id": "codify-presets",
-                "name": "Codify Presets"
+                "name": "Presets"
             }
         ]
     }

@@ -11,3 +11,28 @@
 .presets li:hover {
     color: lime;
 }
+#quickinput {
+    width: 100%;
+    height: 36px;
+    border: 1px solid #ddd;
+    background: transparent;
+    color: #FFF;
+    padding: 0 10px;
+    font-size: 1.25em;
+    box-sizing: border-box;
+}
+#quickbar {
+    display: flex;
+    align-items: center;
+}
+#quicksubmit {
+    background: transparent;
+    color: #eee;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    border: 0;
+    font-size: 1.25em;
+    opacity: 0.3;
+    cursor: pointer;
+}
