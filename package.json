@@ -33,7 +33,7 @@
       "type": "object",
       "title": "Codify",
       "properties": {
-        "mate.model": {
+        "codify.model": {
           "type": "string",
           "default": "CONTRASTcode/large/stable",
           "enum": [
@@ -41,6 +41,18 @@
             "CONTRASTcode/large/stable"
           ],
           "description": "Model Name"
+        },
+        "codify.temperature": {
+            "type": "number",
+            "default": 0.2,
+            "minimum": 0.0,
+            "maximum": 0.8,
+            "description": "Temperature (0.0 - 0.8)"
+        },
+        "codify.debugMode": {
+            "type": "boolean",
+            "default": 0,
+            "description": "Debug Mode"
         }
       }
     },

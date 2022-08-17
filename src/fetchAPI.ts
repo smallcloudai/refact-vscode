@@ -94,7 +94,8 @@ export function fetchAPI(
 ) {
     const url = "https://inference.smallcloud.ai/v1/contrast";
     // const url = window.env.get("plugin-vscode.contrastUrl");
-    let model = vscode.workspace.getConfiguration().get('mate.model');
+    let model = vscode.workspace.getConfiguration().get('codify.model');
+    let temp = vscode.workspace.getConfiguration().get('codify.temperature');
     // console.log(["fetchAPI", model]);
     const body = JSON.stringify({
         "model": model,
@@ -104,7 +105,7 @@ export function fetchAPI(
         "cursor_file": cursorFile,
         "cursor0": cursor0,
         "cursor1": cursor1,
-        "temperature": 0.2,
+        "temperature": temp,
         "max_tokens": maxTokens,
         "max_edits": maxEdits,
         "stop": stop_tokens,

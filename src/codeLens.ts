@@ -8,10 +8,10 @@ import {
 
 class LensProvider implements CodeLensProvider {
     async provideCodeLenses(document: TextDocument): Promise<CodeLens[]> {
-        let topOfDocument = new Range(0, 0, 0, 0);
+        let topOfDocument = new Range(10, 0, 10, 0);
         let c: Command = {
-          command: 'extension.addConsoleLog',
-          title: 'Insert console.log',
+          command: 'codify.runTab',
+          title: 'Accept',
         };   
         let codeLens = new CodeLens(topOfDocument, c);   
         return [codeLens];
