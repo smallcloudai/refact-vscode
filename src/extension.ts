@@ -42,8 +42,7 @@ export function activate(context: vscode.ExtensionContext)
 			if (state.mode === Mode.Diff) {
 				interactiveDiff.rollback(editor);
 			} else if (state.mode === Mode.Highlight) {
-				highlight.clearHighlight(editor);
-				state.mode = Mode.Normal;
+				highlight.backToNormal(editor);
 			}
 			if (state.mode === Mode.Normal) {
 				vscode.commands.executeCommand('setContext', 'codify.runEsc', false);

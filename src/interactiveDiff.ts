@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-import { clearHighlight, showHighlight, runHighlight, global_intent } from './highlight';
+import { clearHighlight, showHighlight, runHighlight, backToNormal, global_intent } from './highlight';
 
 
 export enum Mode {
@@ -10,6 +10,7 @@ export enum Mode {
     Highlight,
     Diff,
     DiffWait,
+    DiffChangingDoc,
 };
 
 
@@ -126,9 +127,15 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         }
         cache.json = json;
         state.area2cache.set(cache_key, cache);
-        console.log(["cache_key", cache_key, state.area2cache.size]);
+        console.log(["saving diff", cache_key, "size", state.area2cache.size]);
+        if (state.mode === Mode.DiffWait) {
+           state.mode = Mode.Diff;
+        }
+    } else {
+        console.log(["get cached diff", cache_key, "size", state.area2cache.size]);
+        state.mode = Mode.Diff;
     }
-    if ((state.mode !== Mode.Diff) && !cancelToken.isCancellationRequested) {
+    if ((state.mode === Mode.Diff) && !cancelToken.isCancellationRequested) {
         let modif_doc = cache.json["choices"][0]["files"][file_name];
         offerDiff(editor, modif_doc);
     }
@@ -184,9 +191,9 @@ export async function animationStart(editor: vscode.TextEditor, sensitive_area: 
 export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
 {
     let state = getStateOfEditor(editor);
-    if (state.mode === Mode.Diff) {
-        return;
-    }
+    removeDeco(editor);
+    clearHighlight(editor);
+    state.mode = Mode.DiffChangingDoc;
     let document = editor.document;
     let whole_doc = document.getText();
     const diff = Diff.diffLines(whole_doc, modif_doc);
@@ -286,6 +293,11 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
             }
         });
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+        let state = getStateOfEditor(editor);
+        if (state.mode !== Mode.DiffChangingDoc) {
+            return;
+        }
+        state.mode = Mode.Diff;
         let norm_fg = new vscode.ThemeColor('editor.foreground');
         // let ghost_text_color = new vscode.ThemeColor('editorGhostText.foreground');
         // let inserted_line_bg = new vscode.ThemeColor('diffEditor.insertedLineBackground');
@@ -319,12 +331,10 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
         editor.setDecorations(red_type, red_bg_ranges);
         editor.setDecorations(very_green_type, very_green_bg_ranges);
         editor.setDecorations(very_red_type, very_red_bg_ranges);
-        let state = getStateOfEditor(editor);
         state.diffDecos.push(green_type);
         state.diffDecos.push(red_type);
         state.diffDecos.push(very_green_type);
         state.diffDecos.push(very_red_type);
-        state.mode = Mode.Diff;
         clearHighlight(editor);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
         console.log(["ESC ON DIFF"]);
@@ -336,9 +346,6 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
 export function removeDeco(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
-    if (state.mode !== Mode.Diff) {
-        return;
-    }
     for (let deco of state.diffDecos) {
         deco.dispose();
     }
@@ -347,12 +354,18 @@ export function removeDeco(editor: vscode.TextEditor)
     state.diffDeletedLines.length = 0;
 }
 
+
 export function rollback(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
+    if (state.mode === Mode.DiffWait) {
+        state.mode = Mode.Normal;
+        return;
+    }
     if (state.mode !== Mode.Diff) {
         return;
     }
+    state.mode = Mode.DiffChangingDoc;
     editor.edit((e) => {
         for (let i=0; i<state.diffAddedLines.length; i++) {
             e.delete(new vscode.Range(
@@ -376,6 +389,7 @@ export function rollback(editor: vscode.TextEditor)
     });
 }
 
+
 export function accept(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
@@ -397,8 +411,22 @@ export function accept(editor: vscode.TextEditor)
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
         state.area2cache.clear();
-        state.mode = Mode.Normal;
-        clearHighlight(editor);
+        backToNormal(editor);
         runHighlight(editor, undefined);
     });
+}
+
+
+export function handsOff(editor: vscode.TextEditor)
+{
+    let state = getStateOfEditor(editor);
+    removeDeco(editor);
+    if (state.mode !== Mode.Diff) {
+        return;
+    }
+    vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+    console.log(["TAB OFF DIFF"]);
+    vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+    console.log(["ESC OFF DIFF"]);
+    state.mode = Mode.Normal;
 }

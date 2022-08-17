@@ -5,7 +5,8 @@ import * as interactiveDiff from "./interactiveDiff";
 import { Mode } from "./interactiveDiff";
 
 
-let cursor_move_event: any = [];
+let cursor_move_event: any = undefined;
+let text_edited_event: any = undefined;
 export let global_intent = "Fix";
 
 
@@ -15,15 +16,17 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     if (intent === undefined) {
         intent = global_intent;
     } else {
-        global_intent = intent;
-        state.area2cache.clear();
+        if (global_intent !== intent) {
+            global_intent = intent;
+            state.area2cache.clear();
+        }
     }
     if (state.mode === Mode.Highlight) {
         clearHighlight(editor);
     } else if (state.mode === Mode.Diff || state.mode === Mode.DiffWait) {
         interactiveDiff.rollback(editor);
-        state.area2cache.clear();
     }
+    interactiveDiff.handsOff(editor);
     let doc = editor.document;
     let cursor = doc.offsetAt(editor.selection.active);
     let file_name = doc.fileName;
@@ -77,7 +80,7 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
             backgroundColor: 'rgba(245, 220, 0, ' + element[2] + ')',
             // color: 'black'
         });
-        console.log(["opacity", element[2], "text", doc.getText(range)]);
+        // console.log(["opacity", element[2], "text", doc.getText(range)]);
         state.highlights.push(deco_type);
         editor.setDecorations(deco_type, range_list);
     }
@@ -94,26 +97,63 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
             backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
             // color: 'black'
         });
-        console.log(["opacity", element[2], "16text", doc.getText(range)]);
+        // console.log(["opacity", element[2], "16text", doc.getText(range)]);
         state.highlights.push(deco_type);
         editor.setDecorations(deco_type, range_list);
     }
+    _forgetEvents();
     cursor_move_event = vscode.window.onDidChangeTextEditorSelection((ev: vscode.TextEditorSelectionChangeEvent) => {
         let ev_editor = ev.textEditor;
         if (!editor || editor !== ev_editor) {
             return;
         }
-        let cPos = editor.selection.active;
-        let cursor = doc.offsetAt(cPos);
-        for (let index = 0; index < state.sensitive_ranges.length; index++) {
-            const element = state.sensitive_ranges[index];
-            if (element.range.contains(cPos)) {
-                interactiveDiff.queryDiff(editor, element.range);
-            }
+        let pos1 = editor.selection.active;
+        let pos2 = editor.selection.anchor;
+        if (pos1.line === pos2.line && pos1.character === pos2.character) {
+            onCursorMoved(editor, pos1);
         }
+    });
+    text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
+    // window.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
+        let doc = ev.document;
+        let ev_doc = editor.document;
+        if (doc !== ev_doc) {
+            return;
+        }
+        onTextEdited(editor);
     });
     vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
     console.log(["ESC ON HL"]);
+}
+
+
+export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
+{
+    console.log(["cursor moved", pos.line, pos.character]);
+    let state = interactiveDiff.getStateOfEditor(editor);
+    for (let i = 0; i < state.sensitive_ranges.length; i++) {
+        const element = state.sensitive_ranges[i];
+        if (element.range.contains(pos)) {
+            interactiveDiff.queryDiff(editor, element.range);
+        }
+    }
+}
+
+
+export function onTextEdited(editor: vscode.TextEditor)
+{
+    let state = interactiveDiff.getStateOfEditor(editor);
+    if (state.mode === Mode.Diff || state.mode === Mode.DiffWait) {
+        console.log(["text edited mode", state.mode, "hands off"]);
+        interactiveDiff.handsOff(editor);
+        state.area2cache.clear();
+        state.mode = Mode.Normal;
+    } else if (state.mode === Mode.Highlight) {
+        clearHighlight(editor);
+        state.mode = Mode.Normal;
+    } else {
+        console.log(["text edited mode", state.mode, "do nothing"]);
+    }
 }
 
 
@@ -126,8 +166,26 @@ export function clearHighlight(editor: vscode.TextEditor)
     }
     state.highlights.length = 0;
     state.sensitive_ranges.length = 0;
-    if (cursor_move_event) {
+}
+
+
+function _forgetEvents()
+{
+    if (cursor_move_event !== undefined) {
         cursor_move_event.dispose();
         cursor_move_event = undefined;
     }
+    if (text_edited_event !== undefined) {
+        text_edited_event.dispose();
+        text_edited_event = undefined;
+    }
+}
+
+
+export function backToNormal(editor: vscode.TextEditor)
+{
+    let state = interactiveDiff.getStateOfEditor(editor);
+    state.mode = Mode.Normal;
+    _forgetEvents();
+    clearHighlight(editor);
 }
