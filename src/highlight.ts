@@ -49,6 +49,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     await fetch.waitAllRequests();
     let request = new fetch.PendingRequest(undefined, cancelToken);
     let stop_tokens: string[] = [];
+    global.menu.statusbarLoading(true);
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         sources,
@@ -62,9 +63,12 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
         stop_tokens,
     ));
     let json: any = await request.apiPromise;
+    global.menu.statusbarError(false);
+    if(json) { global.menu.statusbarLoading(false); }
     if (json.detail) {
         let detail = json.detail;
         console.log(["ERROR", detail]);
+        global.menu.statusbarError(true);
         return;
     }
     state.mode = Mode.Highlight;

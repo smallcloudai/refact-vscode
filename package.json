@@ -101,7 +101,7 @@
           {
             "id": "codify-pane",     
             "title": "Codify",
-            "icon": "$(heart)"
+            "icon": "$(codify-logo)"
           }
         ]
     },
@@ -113,6 +113,15 @@
                 "name": "Presets"
             }
         ]
+    },
+    "icons": {
+        "codify-logo": {
+            "description": "codify logo",
+            "default": {
+                "fontPath": "./assets/codify.woff",
+                "fontCharacter": "\\41"
+            }
+        }
     }
   },
   "scripts": {

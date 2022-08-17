@@ -19,7 +19,7 @@ import * as vscode from 'vscode';
         item.command = statusBarMenu;
     
         context.subscriptions.push(item);
-        item.text = `Codify`;
+        item.text = `$(codify-logo)codify`;
         item.tooltip = `Click for commands`;
         item.show();
 
@@ -34,11 +34,23 @@ import * as vscode from 'vscode';
      */
     statusbarLoading(state: boolean) {
         if(state) {
-            this.menu.text = `$(sync~spin) Codify`;
-            this.menu.color = 'yellow';
+            this.menu.text = `$(sync~spin)codify`;
+            this.menu.color = '#ffff7d';
         }
         else {
-            this.menu.text = `Codify`;
+            this.menu.text = `$(codify-logo)codify`;
+            this.menu.color = undefined;
+        }
+        return state;
+    }
+    
+    statusbarError(state: boolean) {
+        if(state) {
+            this.menu.text = `$(testing-error-icon)codify`;
+            this.menu.color = 'red';
+        }
+        else {
+            this.menu.text = `$(codify-logo)codify`;
             this.menu.color = undefined;
         }
         return state;

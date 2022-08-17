@@ -52,10 +52,13 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		});
 	}
 
+    public updatePanel() {
+        return true;
+    }
+
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.js'));
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.css'));
-        let inputValue = highlight.global_intent;
 
 		const nonce = getNonce();
 
@@ -75,7 +78,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			</head>
 			<body>
                 <div id="quickbar">
-                    <input type="text" name="quickinput" id="quickinput" value="${inputValue}">
+                    <input type="text" name="quickinput" id="quickinput" value="${highlight.global_intent}">
                     <button id="quicksubmit">⏎</button>
                 </div>
 				<h3>Presets</h3>

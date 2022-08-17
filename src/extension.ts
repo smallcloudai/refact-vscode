@@ -10,15 +10,18 @@ import * as interactiveDiff from "./interactiveDiff";
 import { Mode } from "./interactiveDiff";
 import PanelWebview from "./panel";
 
+declare global {
+    var menu: any;
+}
+
 export function activate(context: vscode.ExtensionContext)
 {
     // let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', () => {
     //     console.log(["Accepted"]);
     // });
 
-    const menu = new StatusBarMenu();
-    menu.createStatusBarBlock(context);
-
+    global.menu = new StatusBarMenu();
+    global.menu.createStatusBarBlock(context);
 
     let docSelector = {
         scheme: "file"
@@ -107,7 +110,6 @@ export function activate(context: vscode.ExtensionContext)
 		PanelWebViewProvider,
 	);
 	context.subscriptions.push(view);
-    console.log('inputbox',vscode.window.showInputBox);
 }
 
 
