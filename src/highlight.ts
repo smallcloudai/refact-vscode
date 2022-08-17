@@ -77,8 +77,8 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         range_list.push(decorange);
         // state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(245, 220, 0, ' + element[2] + ')',
-            // color: 'black'
+            backgroundColor: 'rgba(255, 255, 0, ' + element[2] + ')',
+            color: 'black'
         });
         // console.log(["opacity", element[2], "text", doc.getText(range)]);
         state.highlights.push(deco_type);
@@ -94,7 +94,7 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         range_list.push(decorange);
         state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(255, 240, 0, ' + element[2] + ')',
+            backgroundColor: 'rgba(255, 255, 0, ' + element[2] + ')',
             // color: 'black'
         });
         // console.log(["opacity", element[2], "16text", doc.getText(range)]);
