@@ -5,22 +5,56 @@ import * as highlight from "./highlight";
 import * as storeVersions from "./storeVersions";
 import StatusBarMenu from "./statusBar";
 import LensProvider from "./codeLens";
-import { runEditChaining } from "./editChaining";
+import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import { Mode } from "./interactiveDiff";
 import PanelWebview from "./panel";
+
 
 declare global {
     var menu: any;
     var panelProvider: any;
 }
 
+
+export async function hui(document: vscode.TextDocument, pos: vscode.Position)
+{
+    let state1 = interactiveDiff.getStateOfDocument(document);
+    console.log(["Accepted", pos.line, pos.character]);
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+    let state2 = interactiveDiff.getStateOfEditor(editor);
+    if (state1 !== state2) {
+        return;
+    }
+    let next_line_pos = new vscode.Position(pos.line + 1, 0);
+    let next_next_line_pos = new vscode.Position(pos.line + 2, 0);
+    await editor.edit((e) => {
+        e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
+    }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+        console.log(["Deleted"]);
+        if (editor) {
+            interactiveDiff.showEditChainDiff(editor);
+        }
+        //     vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+        //     console.log(["TAB OFF DIFF"]);
+        //     vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+        //     console.log(["ESC OFF DIFF"]);
+        //     if (state.highlight_json_backup !== undefined) {
+        //         showHighlight(editor, state.highlight_json_backup);
+        //         state.mode = Mode.Highlight;
+        //     } else {
+        //         state.mode = Mode.Normal;
+        //     }
+        // });
+    });
+}
+
 export function activate(context: vscode.ExtensionContext)
 {
-    // let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', () => {
-    //     console.log(["Accepted"]);
-    // });
-
+    let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', hui);
     global.menu = new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
 
@@ -76,6 +110,7 @@ export function activate(context: vscode.ExtensionContext)
         } else {
             askIntent();
         }
+        // vscode.commands.executeCommand('editor.action.triggerSuggest');
     });
 
 	// let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {
@@ -87,7 +122,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
-    // context.subscriptions.push(disposable8);
+    context.subscriptions.push(disposable2);
     context.subscriptions.push(...disposables);
 
 

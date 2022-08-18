@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 import * as editChaining from "./editChaining";
+import * as interactiveDiff from "./interactiveDiff";
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -13,6 +14,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cancelToken: vscode.CancellationToken
     )
     {
+        let state = interactiveDiff.getStateOfDocument(document);
+        if (state) {
+            if (state.mode !== interactiveDiff.Mode.Normal && state.mode !== interactiveDiff.Mode.Highlight) {
+                return;
+            }
+        }
         let whole_doc = document.getText();
         let cursor = document.offsetAt(position);
         let file_name = document.fileName;
@@ -72,7 +79,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let before_cursor2 = modif_doc.substring(0, cursor);
             if (before_cursor1 !== before_cursor2) {
                 console.log("before_cursor1 != before_cursor2");
-                return { items: [] };
+                return;
             }
             stop_at = 0;
             let any_different = false;
@@ -107,14 +114,16 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         // completion === whole_doc.substring(cursor)
         console.log(["fail", fail]);
-        let end_of_line = new vscode.Position(position.line, current_line.text.length);
+        // let end_of_line = new vscode.Position(position.line, current_line.text.length);
+        let chain = false;
         if (fail || completion === right_of_cursor) {
             let modified_doc = await editChaining.runEditChaining(false);
             if (!modified_doc) {
-                return { items: [] };
+                return;
             }
             completion = right_of_cursor + "\nhello_world";
-            multiline = true;
+            // multiline = true;
+            chain = true;
         }
         let completion_length = completion.length;
         let index_of_slash_n = completion.indexOf("\n");
@@ -134,11 +143,13 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         // } else {
             // completionItem.filterText = completion;
         // }
-        // completionItem.command = {
-        //     title: "hello world2",
-        //     command: "plugin-vscode.inlineAccepted",
-        //     arguments: [completionItem]
-        // };
+        if (chain) {
+            completionItem.command = {
+                title: "hello world",
+                command: "plugin-vscode.inlineAccepted",
+                arguments: [document, position]
+            };
+        }
         return [completionItem];
     }
 }
