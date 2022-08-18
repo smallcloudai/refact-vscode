@@ -110,7 +110,6 @@ export function activate(context: vscode.ExtensionContext)
         } else {
             askIntent();
         }
-        // vscode.commands.executeCommand('editor.action.triggerSuggest');
     });
 
 	// let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {

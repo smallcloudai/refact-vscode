@@ -55,20 +55,22 @@ export async function runEditChaining(animation: boolean): Promise<String>
     let more_revisions: { [key: string]: string } = storeVersions.fnGetRevisions(file_name);
     let send_revisions: { [key: string]: string } = {};
     let explain = "";
+    let recent_but_different = "";
     for (let key in more_revisions) {
         if (whole_doc === more_revisions[key]) {
             explain += key + " (the same) ";
             continue;
         }
         explain += key + " ";
-        send_revisions[key] = more_revisions[key];
+        recent_but_different = key;
+        // send_revisions[key] = more_revisions[key];
     }
-    // test if empty
-    if (explain.length === 0) {
+    if (!recent_but_different) {
         return "";
     }
-    let stop_tokens: string[] = [];
+    send_revisions[recent_but_different] = more_revisions[recent_but_different];
     send_revisions[file_name] = whole_doc;
+    let stop_tokens: string[] = [];
     console.log(["edit chain", explain]);
     state.mode = interactiveDiff.Mode.DiffWait;
     let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
@@ -99,7 +101,9 @@ export async function runEditChaining(animation: boolean): Promise<String>
     state.showing_diff_edit_chain = sensitive_area;
     state.edit_chain_modif_doc = json["choices"][0]["files"][file_name];
     if (state.edit_chain_modif_doc) {
-        return generateDiffSummary(line_n, whole_doc, state.edit_chain_modif_doc);
+        let summary = generateDiffSummary(line_n, whole_doc, state.edit_chain_modif_doc);
+        console.log(["CHAIN summary", summary]);
+        return summary;
     } else {
         return "";
     }
@@ -120,29 +124,36 @@ function generateDiffSummary(current_line: number, whole_doc: string, modif_doc:
     diff.forEach((part: any) => {
         let span = part.value;
         if (part.added) {
-            count_added += 1;
+            count_added += span.split("\n").length - 1;
             if (first_line === -1 || prefer_added) {
                 prefer_added = false;
                 if (first_line === -1) {
                     first_line = line_n;
                 }
-                first_chars = span.trim();
-                first_chars = first_chars.substring(0, 50);
+                first_chars = span;
             }
         } else if (part.removed) {
-            count_removed += 1;
+            count_removed += span.split("\n").length - 1;
             if (first_line === -1) {
                 first_line = line_n;
-                first_chars = span.trim();
-                first_chars = first_chars.substring(0, 50);
+                first_chars = span;
             }
             line_n += span.split("\n").length - 1;
         } else {
             line_n += span.split("\n").length - 1;
         }
     });
+    let tmp = first_chars.trim();
+    let slash_n = tmp.indexOf("\n");
+    if (slash_n !== -1) {
+        tmp = tmp.substring(0, slash_n);
+    }
+    first_chars = tmp.substring(0, 50);
+    if (tmp.length > 50) {
+        first_chars += "…";
+    }
     let result = "";
-    if (first_line < current_line) {
+    if (first_line <= current_line) {
         result = "↑↑ line " + (first_line + 1).toString() + "   ";
     } else {
         result = "↓↓ line " + (first_line + 1).toString() + "   ";

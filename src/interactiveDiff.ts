@@ -437,8 +437,9 @@ export async function rollback(editor: vscode.TextEditor)
 
 export function accept(editor: vscode.TextEditor)
 {
-    editChaining.cleanupEditChaining(editor);
     let state = getStateOfEditor(editor);
+    let suggest_again = state.edit_chain_modif_doc !== undefined;
+    editChaining.cleanupEditChaining(editor);
     if (state.mode !== Mode.Diff) {
         return;
     }
@@ -465,6 +466,12 @@ export function accept(editor: vscode.TextEditor)
         } else {
             state.highlight_json_backup = undefined;
             backToNormal(editor);
+            if (suggest_again) {
+                // trigger inline completion
+                vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
+                // vscode.commands.executeCommand('editor.action.triggerSuggest');
+                console.log(["TRIGGER SUGGEST"]);
+            }
         }
     });
 }
