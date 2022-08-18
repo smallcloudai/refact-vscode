@@ -55,4 +55,20 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.3);
     text-transform: uppercase;
     letter-spacing: 1px;
+    display: none;
+}
+.history {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+}
+.history li {
+    list-style: none;
+    cursor: pointer;
+    font-size: 1.25em;
+    line-height: 1.5em;
+}
+.history li:hover {
+    color: lime;
 }

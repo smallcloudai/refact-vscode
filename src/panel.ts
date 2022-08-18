@@ -38,6 +38,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                             return;
                         }
                         // vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
+                        this.addHistory(data.value);
                         highlight.runHighlight(editor, data.value);
 						break;
 					}
@@ -47,6 +48,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         if (!editor) {
                             return;
                         }
+                        this.addHistory(data.value);
                         highlight.runHighlight(editor, data.value);
                         break;
                     }
@@ -56,6 +58,11 @@ class PanelWebview implements vscode.WebviewViewProvider {
 
     public updateQuery(intent: string) {
         this._view!.webview.postMessage({ command: 'updateQuery', value: intent });
+    }
+
+    public addHistory(intent: string) {
+        this._history.push(intent);
+        this._view!.webview.postMessage({ command: 'updateHistory', value: this._history });
     }
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
@@ -83,30 +90,32 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <input type="text" name="quickinput" id="quickinput" value="${highlight.global_intent}">
                     <button id="quicksubmit">⏎</button>
                 </div>
-                <h3 class="presets-title">Works Well</h3>
-                <ul class="presets">
-                    <li>Add type hints</li>
-                    <li>Remove type hints</li>
-                    <li>Convert to list comprehension</li>
-                    <li>Add docstrings</li>
-                    <li>Convert dict to class</li>
-                    <li>Fix typos</li>
-                    <li>Fix bugs</li>
-                </ul>
-				<h3 class="presets-title">Ideas</h3>
-                <ul class="presets">
-                    <li>Fix unclear names</li>
-                    <li>Make variables shorter</li>
-                    <li>Make code shorter</li>
-                    <li>Improve performance</li>
-                    <li>Code cleanup</li>
-                    <li>Make formatting consistent</li>
-                    <li>Remove python 2 support</li>
-                    <li>Convert to numpy</li>
-                </ul>
-                <h3 class="history-title">History</h3>
-                <ul class="history">
-                </ul>
+                <div id="sidebar">
+                    <h3 class="presets-title">Works Well</h3>
+                    <ul class="presets links-menu">
+                        <li>Add type hints</li>
+                        <li>Remove type hints</li>
+                        <li>Convert to list comprehension</li>
+                        <li>Add docstrings</li>
+                        <li>Convert dict to class</li>
+                        <li>Fix typos</li>
+                        <li>Fix bugs</li>
+                    </ul>
+                    <h3 class="presets-title">Ideas</h3>
+                    <ul class="presets links-menu">
+                        <li>Fix unclear names</li>
+                        <li>Make variables shorter</li>
+                        <li>Make code shorter</li>
+                        <li>Improve performance</li>
+                        <li>Code cleanup</li>
+                        <li>Make formatting consistent</li>
+                        <li>Remove python 2 support</li>
+                        <li>Convert to numpy</li>
+                    </ul>
+                    <h3 class="history-title">History</h3>
+                    <ul class="history links-menu">
+                    </ul>
+                </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
                 </html>`;
