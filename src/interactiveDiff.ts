@@ -152,7 +152,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         let modif_doc = cache.json["choices"][0]["files"][file_name];
         state.showing_diff_for_range = sensitive_area;
         state.showing_diff_edit_chain = undefined;
-        offerDiff(editor, modif_doc);
+        offerDiff(editor, modif_doc, false);
     }
 }
 
@@ -203,17 +203,17 @@ export async function animationStart(editor: vscode.TextEditor, sensitive_area: 
     }
 }
 
-export function showEditChainDiff(editor: vscode.TextEditor)
+export async function showEditChainDiff(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
     let modif_doc = state.edit_chain_modif_doc;
     if (modif_doc) {
         state.showing_diff_for_range = undefined;
-        offerDiff(editor, modif_doc);
+        await offerDiff(editor, modif_doc, true);
     }
 }
 
-export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
+export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, move_cursor: boolean)
 {
     let state = getStateOfEditor(editor);
     removeDeco(editor);
@@ -228,7 +228,7 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
     let very_red_bg_ranges: vscode.Range[] = [];
     state.diffDeletedLines = [];
     state.diffAddedLines = [];
-    editor.edit((e: vscode.TextEditorEdit) => {
+    await editor.edit((e: vscode.TextEditorEdit) => {
         // console.log(["result diff"]);
         let line_n = 0;
         let line_n_insert = 0;
@@ -370,6 +370,9 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
                 new vscode.Position(Math.max(...scroll_to), 0),
             );
             editor.revealRange(reveal_range);
+            if (move_cursor) {
+                editor.selection = new vscode.Selection(reveal_range.start, reveal_range.start);
+            }
         }
         state.diffDecos.push(green_type);
         state.diffDecos.push(red_type);
@@ -473,7 +476,7 @@ export async function regen(editor: vscode.TextEditor)
     let state = getStateOfEditor(editor);
     if (state.showing_diff_edit_chain !== undefined) {
         await editChaining.runEditChaining(true);
-        showEditChainDiff(editor);
+        await showEditChainDiff(editor);
         return;
     }
     if (state.showing_diff_for_range !== undefined) {

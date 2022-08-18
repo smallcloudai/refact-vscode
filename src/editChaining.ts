@@ -4,6 +4,7 @@ import * as fetch from "./fetchAPI";
 import * as storeVersions from './storeVersions';
 import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
+const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 
 
 export async function cleanupEditChaining(editor: vscode.TextEditor)
@@ -97,5 +98,61 @@ export async function runEditChaining(animation: boolean): Promise<String>
     }
     state.showing_diff_edit_chain = sensitive_area;
     state.edit_chain_modif_doc = json["choices"][0]["files"][file_name];
-    return "hello world";
+    if (state.edit_chain_modif_doc) {
+        return generateDiffSummary(line_n, whole_doc, state.edit_chain_modif_doc);
+    } else {
+        return "";
+    }
+}
+
+function generateDiffSummary(current_line: number, whole_doc: string, modif_doc: string): string
+{
+    if (whole_doc === modif_doc) {
+        return "";
+    }
+    const diff = Diff.diffLines(whole_doc, modif_doc);
+    let count_added = 0;
+    let count_removed = 0;
+    let first_line = -1;
+    let first_chars = "";
+    let prefer_added = true;
+    let line_n = 0;
+    diff.forEach((part: any) => {
+        let span = part.value;
+        if (part.added) {
+            count_added += 1;
+            if (first_line === -1 || prefer_added) {
+                prefer_added = false;
+                if (first_line === -1) {
+                    first_line = line_n;
+                }
+                first_chars = span.trim();
+                first_chars = first_chars.substring(0, 50);
+            }
+        } else if (part.removed) {
+            count_removed += 1;
+            if (first_line === -1) {
+                first_line = line_n;
+                first_chars = span.trim();
+                first_chars = first_chars.substring(0, 50);
+            }
+            line_n += span.split("\n").length - 1;
+        } else {
+            line_n += span.split("\n").length - 1;
+        }
+    });
+    let result = "";
+    if (first_line < current_line) {
+        result = "↑↑ line " + (first_line + 1).toString() + "   ";
+    } else {
+        result = "↓↓ line " + (first_line + 1).toString() + "   ";
+    }
+    for (let c=0; c<count_removed; c++) {
+        result += "-";
+    }
+    for (let c=0; c<count_added; c++) {
+        result += "+";
+    }
+    result += "   " + first_chars;
+    return result;
 }

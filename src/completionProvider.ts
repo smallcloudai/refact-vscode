@@ -117,11 +117,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         // let end_of_line = new vscode.Position(position.line, current_line.text.length);
         let chain = false;
         if (fail || completion === right_of_cursor) {
-            let modified_doc = await editChaining.runEditChaining(false);
-            if (!modified_doc) {
+            let summary = await editChaining.runEditChaining(false);
+            if (!summary) {
                 return;
             }
-            completion = right_of_cursor + "\nhello_world";
+            completion = right_of_cursor + "\n" + summary;
             // multiline = true;
             chain = true;
         }
