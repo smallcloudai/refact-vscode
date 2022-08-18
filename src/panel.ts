@@ -83,21 +83,26 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <input type="text" name="quickinput" id="quickinput" value="${highlight.global_intent}">
                     <button id="quicksubmit">⏎</button>
                 </div>
-				<h3 class="presets-title">Presets</h3>
+                <h3 class="presets-title">Works Well</h3>
                 <ul class="presets">
-                    <li>Fix types</li>
+                    <li>Add type hints</li>
+                    <li>Remove type hints</li>
+                    <li>Convert to list comprehension</li>
+                    <li>Add docstrings</li>
+                    <li>Convert dict to class</li>
                     <li>Fix typos</li>
+                    <li>Fix bugs</li>
+                </ul>
+				<h3 class="presets-title">Ideas</h3>
+                <ul class="presets">
                     <li>Fix unclear names</li>
                     <li>Make variables shorter</li>
                     <li>Make code shorter</li>
                     <li>Improve performance</li>
                     <li>Code cleanup</li>
-                    <li>Add docstrings</li>
                     <li>Make formatting consistent</li>
                     <li>Remove python 2 support</li>
                     <li>Convert to numpy</li>
-                    <li>Convert dict to class</li>
-                    <li>Convert to list comprehension</li>
                 </ul>
                 <h3 class="history-title">History</h3>
                 <ul class="history">
