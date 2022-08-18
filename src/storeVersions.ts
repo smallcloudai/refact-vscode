@@ -36,7 +36,7 @@ function fnReset(document: vscode.TextDocument, line0: number)
     fn2textlist.set(fn, [whole_doc]);
     fn2versionlist.set(fn, [version]);
     fn2line.set(fn, line0);
-    console.log(["fnReset", fn]);
+    console.log(["fnReset", fn, "version", version, "line0", line0]);
 }
 
 function fnSaveChange(document: vscode.TextDocument, line0: number, force: boolean = false)
@@ -65,7 +65,7 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
     }
     let last_line = fn2line.get(fn);
     if (last_line === line0 && !force) {
-        // console.log(["same line", last_line, line0]);
+        console.log(["same line", last_line, line0]);
         return;
     }
     let whole_doc = document.getText();

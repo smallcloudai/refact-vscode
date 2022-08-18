@@ -112,6 +112,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
 function generateDiffSummary(current_line: number, whole_doc: string, modif_doc: string): string
 {
     if (whole_doc === modif_doc) {
+        console.log(["modified document is identical"]);
         return "";
     }
     const diff = Diff.diffLines(whole_doc, modif_doc);

@@ -25,7 +25,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let file_name = document.fileName;
         if (context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) {
             // sleep 100ms, in a hope request will be cancelled
-            // await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 10));
         }
         await fetch.waitAllRequests();
         if (cancelToken.isCancellationRequested) {
@@ -44,13 +44,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let multiline = left_all_spaces;
         let stop_tokens: string[];
         if (multiline) {
-            stop_tokens = [];
+            stop_tokens = ["\n\n"];
         } else {
             stop_tokens = ["\n", "\n\n"];
         }
         let eol_pos = new vscode.Position(position.line, current_line.text.length);
         let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r)"'\]]*$/));
-        console.log(["right_of_cursor_has_only_special_chars", right_of_cursor_has_only_special_chars]);
         let fail = !right_of_cursor_has_only_special_chars;
         let stop_at = cursor;
         let modif_doc = whole_doc;
@@ -113,7 +112,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             fail = completion.length === 0;
         }
         // completion === whole_doc.substring(cursor)
-        console.log(["fail", fail]);
+        // console.log(["fail", fail]);
         // let end_of_line = new vscode.Position(position.line, current_line.text.length);
         let chain = false;
         if (fail || completion === right_of_cursor) {
