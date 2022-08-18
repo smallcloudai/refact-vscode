@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 import * as storeVersions from './storeVersions';
-// import * as highlight from "./highlight";
+import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 
 
@@ -12,16 +12,29 @@ export async function runEditChaining()
     if (!editor) {
         return;
     }
-    let document = editor.document;
+    let state = interactiveDiff.getStateOfEditor(editor);
+    let doc = editor.document;
     let position: vscode.Position = editor.selection.active;
-    let whole_doc = document.getText();
-    let cursor = document.offsetAt(position);
-    let file_name = document.fileName;
+    let cursor = doc.offsetAt(position);
+    let file_name = doc.fileName;
+
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
-    let sources: { [key: string]: string } = {};
-    sources[file_name] = whole_doc;
     let request = new fetch.PendingRequest(undefined, cancelToken);
+
+    fetch.cancelAllRequests();
+    if (state.mode === interactiveDiff.Mode.DiffWait) {
+        state.mode = interactiveDiff.Mode.Normal;
+    }
+    request.cancellationTokenSource = cancellationTokenSource;
+    await fetch.waitAllRequests();
+    if (cancelToken.isCancellationRequested) {
+        return;
+    }
+
+    let sources: { [key: string]: string } = {};
+    let whole_doc = doc.getText();
+    sources[file_name] = whole_doc;
     let max_tokens = 50;
     let max_edits = 1;
     // let current_line = document.lineAt(position.line);
@@ -44,7 +57,7 @@ export async function runEditChaining()
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         send_revisions,
-        "Fix",
+        highlight.global_intent,
         "edit-chain",
         file_name,
         cursor,
