@@ -112,7 +112,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             "diff-atcursor",
             file_name,
             doc.offsetAt(sensitive_area.start),
-            doc.offsetAt(sensitive_area.end),
+            doc.offsetAt(sensitive_area.start),
             max_tokens,
             1,
             stop_tokens,
@@ -155,7 +155,7 @@ export async function animationStart(editor: vscode.TextEditor, sensitive_area: 
         let green_str = green.toString();
         let blue_str = blue.toString();
         animation_decos.push(vscode.window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(' + red_str + ', ' + green_str + ', ' + blue_str + ', 0.5)',
+            backgroundColor: 'rgba(' + red_str + ', ' + green_str + ', ' + blue_str + ', 0.3)',
             // isWholeLine: true,
         }));
         animation_ranges.push([]);
