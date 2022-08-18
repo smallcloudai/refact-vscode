@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
+import * as interactiveDiff from "./interactiveDiff";
 
 
 let fn2textlist = new Map<string, string[]>();
@@ -40,6 +41,12 @@ function fnReset(document: vscode.TextDocument, line0: number)
 
 function fnSaveChange(document: vscode.TextDocument, line0: number, force: boolean = false)
 {
+    let state = interactiveDiff.getStateOfDocument(document);
+    if (state) {
+        if (state.mode !== interactiveDiff.Mode.Normal) {
+            return;
+        }
+    }
     let fn = document.fileName;
     let version = document.version;
     let textlist = fn2textlist.get(fn);
@@ -119,7 +126,8 @@ function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
     fnSaveChange(document, line0);
 }
 
-export function storeVersionsInit() {
+export function storeVersionsInit()
+{
     let disposable6 = vscode.window.onDidChangeActiveTextEditor(onChangeActiveEditor);
     let disposable8 = vscode.workspace.onDidChangeTextDocument(onDidChangeTextDocument);
     let currentEditor = vscode.window.activeTextEditor;

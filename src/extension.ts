@@ -56,8 +56,6 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
-        // highlight.accept();
-        console.log(["TAB"]);
 		let editor = vscode.window.activeTextEditor;
 		if (editor) {
 			let state = interactiveDiff.getStateOfEditor(editor);
@@ -78,20 +76,10 @@ export function activate(context: vscode.ExtensionContext)
         } else {
             askIntent();
         }
-        // vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify:");
     });
 
-	let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {
-        runEditChaining();
-    });
-
-    // let disposable6 = vscode.commands.registerCommand('plugin-vscode.highlight', () => {
-    //     // menu.statusbarLoading(true);
-    //     // console.log(["Menu 1"]);
-    // });
-
-    // let disposable7 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {
-    //     // highlight.runHighlight(context);
+	// let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {
+    //     runEditChaining();
     // });
 
     let disposables = storeVersions.storeVersionsInit();
@@ -99,9 +87,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
-    // context.subscriptions.push(disposable6);
-    // context.subscriptions.push(disposable7);
-    context.subscriptions.push(disposable8);
+    // context.subscriptions.push(disposable8);
     context.subscriptions.push(...disposables);
 
 
@@ -135,7 +121,7 @@ export async function askIntent()
         valueSelection: [0, 80],
         placeHolder: 'Convert to list comprehension',
     });
-    global.panelProvider.updateQuery(intent);
+    // global.panelProvider.updateQuery(intent);
     if (selection_empty) {
         if (intent) {
             highlight.runHighlight(editor, intent);

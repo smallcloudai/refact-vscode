@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
+import * as editChaining from "./editChaining";
 import { clearHighlight, showHighlight, runHighlight, backToNormal, global_intent } from './highlight';
 
 
@@ -40,6 +41,9 @@ class StateOfEditor {
     public sensitive_ranges: vscode.DecorationOptions[] = [];
     public area2cache = new Map<Number, CacheEntity>();
     public showing_diff_for_range: vscode.Range | undefined = undefined;
+    public showing_diff_edit_chain: vscode.Range | undefined = undefined;
+
+    public edit_chain_modif_doc: string | undefined = undefined;
 
     public highlight_json_backup: any = undefined;
 
@@ -67,6 +71,17 @@ export function getStateOfEditor(editor: vscode.TextEditor): StateOfEditor
         console.log(["forget state of", oldest_editor.document.fileName]);
     }
     return state;
+}
+
+
+export function getStateOfDocument(doc: vscode.TextDocument): StateOfEditor | undefined
+{
+    for (const [editor, state] of editor2state) {
+        if (editor.document === doc) {
+            return state;
+        }
+    }
+    return undefined;
 }
 
 
@@ -136,6 +151,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     if ((state.mode === Mode.Diff) && !cancelToken.isCancellationRequested) {
         let modif_doc = cache.json["choices"][0]["files"][file_name];
         state.showing_diff_for_range = sensitive_area;
+        state.showing_diff_edit_chain = undefined;
         offerDiff(editor, modif_doc);
     }
 }
@@ -184,6 +200,16 @@ export async function animationStart(editor: vscode.TextEditor, sensitive_area: 
     }
     for (let a=0; a<animation_decos.length; a++) {
         animation_decos[a].dispose();
+    }
+}
+
+export function showEditChainDiff(editor: vscode.TextEditor)
+{
+    let state = getStateOfEditor(editor);
+    let modif_doc = state.edit_chain_modif_doc;
+    if (modif_doc) {
+        state.showing_diff_for_range = undefined;
+        offerDiff(editor, modif_doc);
     }
 }
 
@@ -329,6 +355,22 @@ export function offerDiff(editor: vscode.TextEditor, modif_doc: string)
         editor.setDecorations(red_type, red_bg_ranges);
         editor.setDecorations(very_green_type, very_green_bg_ranges);
         editor.setDecorations(very_red_type, very_red_bg_ranges);
+        let scroll_to: number[] = [];
+        if (state.diffAddedLines.length > 0) {
+            scroll_to.push(state.diffAddedLines[0]);
+            scroll_to.push(state.diffAddedLines[state.diffAddedLines.length - 1]);
+        }
+        if (state.diffDeletedLines.length > 0) {
+            scroll_to.push(state.diffDeletedLines[0]);
+            scroll_to.push(state.diffDeletedLines[state.diffDeletedLines.length - 1]);
+        }
+        if (scroll_to.length > 0) {
+            let reveal_range = new vscode.Range(
+                new vscode.Position(Math.min(...scroll_to), 0),
+                new vscode.Position(Math.max(...scroll_to), 0),
+            );
+            editor.revealRange(reveal_range);
+        }
         state.diffDecos.push(green_type);
         state.diffDecos.push(red_type);
         state.diffDecos.push(very_green_type);
@@ -356,6 +398,7 @@ export function removeDeco(editor: vscode.TextEditor)
 
 export async function rollback(editor: vscode.TextEditor)
 {
+    editChaining.cleanupEditChaining(editor);
     let state = getStateOfEditor(editor);
     if (state.mode === Mode.DiffWait) {
         state.mode = Mode.Normal;
@@ -391,6 +434,7 @@ export async function rollback(editor: vscode.TextEditor)
 
 export function accept(editor: vscode.TextEditor)
 {
+    editChaining.cleanupEditChaining(editor);
     let state = getStateOfEditor(editor);
     if (state.mode !== Mode.Diff) {
         return;
@@ -423,9 +467,15 @@ export function accept(editor: vscode.TextEditor)
 }
 
 
-export function regen(editor: vscode.TextEditor)
+export async function regen(editor: vscode.TextEditor)
 {
+    editChaining.cleanupEditChaining(editor);
     let state = getStateOfEditor(editor);
+    if (state.showing_diff_edit_chain !== undefined) {
+        await editChaining.runEditChaining(true);
+        showEditChainDiff(editor);
+        return;
+    }
     if (state.showing_diff_for_range !== undefined) {
         removeDeco(editor);
         state.area2cache.clear();
@@ -437,6 +487,7 @@ export function regen(editor: vscode.TextEditor)
 export function handsOff(editor: vscode.TextEditor)
 {
     let state = getStateOfEditor(editor);
+    state.edit_chain_modif_doc = undefined;
     removeDeco(editor);
     if (state.mode !== Mode.Diff) {
         return;

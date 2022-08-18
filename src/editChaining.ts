@@ -6,15 +6,26 @@ import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 
 
-export async function runEditChaining()
+export async function cleanupEditChaining(editor: vscode.TextEditor)
+{
+    let state = interactiveDiff.getStateOfEditor(editor);
+    state.edit_chain_modif_doc = undefined;
+}
+
+
+export async function runEditChaining(animation: boolean): Promise<String>
 {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
-        return;
+        return "";
     }
     let state = interactiveDiff.getStateOfEditor(editor);
+    if (state.mode !== interactiveDiff.Mode.Normal && state.mode !== interactiveDiff.Mode.Highlight) {
+        return "";
+    }
     let doc = editor.document;
     let position: vscode.Position = editor.selection.active;
+    let line_n = position.line;
     let cursor = doc.offsetAt(position);
     let file_name = doc.fileName;
 
@@ -23,13 +34,13 @@ export async function runEditChaining()
     let request = new fetch.PendingRequest(undefined, cancelToken);
 
     fetch.cancelAllRequests();
-    if (state.mode === interactiveDiff.Mode.DiffWait) {
-        state.mode = interactiveDiff.Mode.Normal;
-    }
+    // if (state.mode === interactiveDiff.Mode.DiffWait) {
+    //     state.mode = interactiveDiff.Mode.Normal;
+    // }
     request.cancellationTokenSource = cancellationTokenSource;
     await fetch.waitAllRequests();
     if (cancelToken.isCancellationRequested) {
-        return;
+        return "";
     }
 
     let sources: { [key: string]: string } = {};
@@ -51,9 +62,18 @@ export async function runEditChaining()
         explain += key + " ";
         send_revisions[key] = more_revisions[key];
     }
+    // test if empty
+    if (explain.length === 0) {
+        return "";
+    }
     let stop_tokens: string[] = [];
     send_revisions[file_name] = whole_doc;
     console.log(["edit chain", explain]);
+    state.mode = interactiveDiff.Mode.DiffWait;
+    let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
+    if (animation) {
+        interactiveDiff.animationStart(editor, sensitive_area);
+    }
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         send_revisions,
@@ -66,13 +86,16 @@ export async function runEditChaining()
         max_edits,
         stop_tokens,
     ));
+    if ((state.mode === interactiveDiff.Mode.DiffWait) && !cancelToken.isCancellationRequested) {
+        state.mode = interactiveDiff.Mode.Normal;
+    }
     let json: any = await request.apiPromise;
     if (json.detail) {
         let detail = json.detail;
         console.log(["ERROR", detail]);
-        return;
+        return "";
     }
-    let modif_doc = json["choices"][0]["files"][file_name];
-    interactiveDiff.offerDiff(editor, modif_doc);
+    state.showing_diff_edit_chain = sensitive_area;
+    state.edit_chain_modif_doc = json["choices"][0]["files"][file_name];
+    return "hello world";
 }
-
