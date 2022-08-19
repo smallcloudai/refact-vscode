@@ -16,11 +16,11 @@ import * as vscode from 'vscode';
             const pageType = await vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify:");
         }));
         const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        item.command = statusBarMenu;
+        // item.command = statusBarMenu;
     
         context.subscriptions.push(item);
         item.text = `$(codify-logo)codify`;
-        item.tooltip = `Click for commands`;
+        // item.tooltip = `Click for commands`;
         item.show();
 
         this.menu = item;
