@@ -115,6 +115,14 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         editor.setDecorations(deco_type, range_list);
     }
     _forgetEvents();
+    setupKeyboardReactions(editor);
+    vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+    console.log(["ESC ON HL"]);
+}
+
+
+export function setupKeyboardReactions(editor: vscode.TextEditor)
+{
     cursor_move_event = vscode.window.onDidChangeTextEditorSelection((ev: vscode.TextEditorSelectionChangeEvent) => {
         let ev_editor = ev.textEditor;
         if (!editor || editor !== ev_editor) {
@@ -135,8 +143,6 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         }
         onTextEdited(editor);
     });
-    vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
-    console.log(["ESC ON HL"]);
 }
 
 

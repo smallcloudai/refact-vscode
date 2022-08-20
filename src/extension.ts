@@ -17,7 +17,7 @@ declare global {
 }
 
 
-export async function hui(document: vscode.TextDocument, pos: vscode.Position)
+export async function acceptEditChain(document: vscode.TextDocument, pos: vscode.Position)
 {
     let state1 = interactiveDiff.getStateOfDocument(document);
     console.log(["Accepted", pos.line, pos.character]);
@@ -34,27 +34,17 @@ export async function hui(document: vscode.TextDocument, pos: vscode.Position)
     await editor.edit((e) => {
         e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
-        console.log(["Deleted"]);
         if (editor) {
             interactiveDiff.showEditChainDiff(editor);
+            highlight.setupKeyboardReactions(editor);
         }
-        //     vscode.commands.executeCommand('setContext', 'codify.runTab', false);
-        //     console.log(["TAB OFF DIFF"]);
-        //     vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
-        //     console.log(["ESC OFF DIFF"]);
-        //     if (state.highlight_json_backup !== undefined) {
-        //         showHighlight(editor, state.highlight_json_backup);
-        //         state.mode = Mode.Highlight;
-        //     } else {
-        //         state.mode = Mode.Normal;
-        //     }
-        // });
     });
 }
 
+
 export function activate(context: vscode.ExtensionContext)
 {
-    let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', hui);
+    let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', acceptEditChain);
     global.menu = new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
 
