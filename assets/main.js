@@ -19,6 +19,11 @@
         }
     });
 
+    const settingsButton = document.querySelector('#settings');
+    settingsButton.addEventListener('click', () => { 
+        vscode.postMessage({ type: 'openSettings' });
+    });
+
     window.addEventListener('message', event => {
         const message = event.data;
         switch (message.command) {

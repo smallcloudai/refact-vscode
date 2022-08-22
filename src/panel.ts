@@ -52,6 +52,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         highlight.runHighlight(editor, data.value);
                         break;
                     }
+                case 'openSettings':
+                    {
+                        vscode.commands.executeCommand("plugin-vscode.openSettings");
+                    }
 			}
 		});
 	}
@@ -116,6 +120,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <ul class="history links-menu">
                     </ul>
                 </div>
+                <button id="settings">Settings</button>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
                 </html>`;

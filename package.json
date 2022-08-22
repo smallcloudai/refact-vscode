@@ -66,6 +66,11 @@
         "command": "plugin-vscode.editChaining",
         "title": "Edit Chaining",
         "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.openSettings",
+        "title": "Settings Page",
+        "category": "Codify"
       }
     ],
     "properties": [
