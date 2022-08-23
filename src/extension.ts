@@ -9,13 +9,13 @@ import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import { Mode } from "./interactiveDiff";
 import PanelWebview from "./panel";
-import SettingsWebview from "./settings";
+import SettingsPage from "./settings";
 
 
 declare global {
     var menu: any;
     var panelProvider: any;
-    var settingsProvider: any;
+    var settingsPage: any;
 }
 
 
@@ -125,16 +125,10 @@ export function activate(context: vscode.ExtensionContext)
 	context.subscriptions.push(view);
 
 
-    let openSettingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', global.settingsProvider);
-    context.subscriptions.push(openSettingsCommand);
-
-    global.settingsProvider = new PanelWebview(context?.extensionUri);
-	let settings = vscode.window.registerWebviewViewProvider(
-		'settingsPage',
-		global.settingsProvider,
-	);
-
-	context.subscriptions.push(settings);
+    let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
+        SettingsPage.render(context.extensionUri);
+    });
+    context.subscriptions.push(settingsCommand);
 }
 
 

@@ -10,17 +10,17 @@ import * as vscode from 'vscode';
     menu: any = {};
 
     createStatusBarBlock(context: vscode.ExtensionContext) {
-        const statusBarMenu = 'myExtension.statusBarClick';
+        const statusBarMenu = 'plugin-vscode.statusBarClick';
         context.subscriptions.push(vscode.commands.registerCommand(statusBarMenu, async () => 
         {
-            const pageType = await vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify:");
+            const pageType = await vscode.commands.executeCommand("plugin-vscode.openSettings");
         }));
         const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        // item.command = statusBarMenu;
+        item.command = statusBarMenu;
     
         context.subscriptions.push(item);
         item.text = `$(codify-logo)codify`;
-        // item.tooltip = `Click for commands`;
+        item.tooltip = `Settings`;
         item.show();
 
         this.menu = item;

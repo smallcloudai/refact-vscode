@@ -1,79 +1,78 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 import * as highlight from "./highlight";
 class PanelWebview implements vscode.WebviewViewProvider {
-
-	public static readonly viewType = 'smallcloud.codify';
-
 	_view?: vscode.WebviewView;
-    _history: string[] = [];
+	_history: string[] = [];
 
 	constructor(
-		private readonly _extensionUri: vscode.Uri,
-        // view: vscode.WebviewView,
-	) { }
+		private readonly _extensionUri: vscode.Uri
+	) 
+	{}
 
 	public resolveWebviewView(
 		webviewView: vscode.WebviewView,
 		context: vscode.WebviewViewResolveContext,
-		_token: vscode.CancellationToken,
+		_token: vscode.CancellationToken
 	) {
 		this._view = webviewView;
 
 		webviewView.webview.options = {
 			enableScripts: true,
 
-			localResourceRoots: [
-				this._extensionUri
-			]
+			localResourceRoots: [this._extensionUri],
 		};
 
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-		webviewView.webview.onDidReceiveMessage(data => {
+		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
-				case 'presetSelected':
-					{
-                        let editor = vscode.window.activeTextEditor;
-                        if (!editor) {
-                            return;
-                        }
-                        // vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
-                        this.addHistory(data.value);
-                        highlight.runHighlight(editor, data.value);
-						break;
+				case "presetSelected": {
+					let editor = vscode.window.activeTextEditor;
+					if (!editor) {
+						return;
 					}
-                case 'quickInput':
-                    {
-                        let editor = vscode.window.activeTextEditor;
-                        if (!editor) {
-                            return;
-                        }
-                        this.addHistory(data.value);
-                        highlight.runHighlight(editor, data.value);
-                        break;
-                    }
-                case 'openSettings':
-                    {
-                        vscode.commands.executeCommand("plugin-vscode.openSettings");
-                    }
+					// vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
+					this.addHistory(data.value);
+					highlight.runHighlight(editor, data.value);
+					break;
+				}
+				case "quickInput": {
+					let editor = vscode.window.activeTextEditor;
+					if (!editor) {
+						return;
+					}
+					this.addHistory(data.value);
+					highlight.runHighlight(editor, data.value);
+					break;
+				}
+				case "openSettings": {
+					vscode.commands.executeCommand("plugin-vscode.openSettings");
+				}
 			}
 		});
 	}
 
-    public updateQuery(intent: string) {
-        this._view!.webview.postMessage({ command: 'updateQuery', value: intent });
-    }
+	public updateQuery(intent: string) {
+		this._view!.webview.postMessage({ command: "updateQuery", value: intent });
+	}
 
-    public addHistory(intent: string) {
-        this._history.push(intent);
-        this._view!.webview.postMessage({ command: 'updateHistory', value: this._history });
-    }
+	public addHistory(intent: string) {
+		this._history.push(intent);
+		this._view!.webview.postMessage({
+			command: "updateHistory",
+			value: this._history,
+		});
+	}
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
-		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.js'));
-		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'assets', 'main.css'));
+		const scriptUri = webview.asWebviewUri(
+			vscode.Uri.joinPath(this._extensionUri, "assets", "main.js")
+		);
+		const styleMainUri = webview.asWebviewUri(
+			vscode.Uri.joinPath(this._extensionUri, "assets", "main.css")
+		);
 
-		const nonce = getNonce();
+		const nonce = this.getNonce();
 
 		return `<!DOCTYPE html>
 			<html lang="en">
@@ -124,16 +123,16 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
                 </html>`;
-            }
-        }
+	}
+	getNonce() {
+		let text = "";
+		const possible =
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		for (let i = 0; i < 32; i++) {
+			text += possible.charAt(Math.floor(Math.random() * possible.length));
+		}
+		return text;
+	}
+}
 
 export default PanelWebview;
-
-function getNonce() {
-	let text = '';
-	const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	for (let i = 0; i < 32; i++) {
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	}
-	return text;
-}
