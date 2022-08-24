@@ -4,10 +4,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
 	_history: string[] = [];
 
-	constructor(
-		private readonly _extensionUri: vscode.Uri
-	) 
-	{}
+	constructor(private readonly _extensionUri: vscode.Uri) {}
 
 	public resolveWebviewView(
 		webviewView: vscode.WebviewView,
@@ -66,10 +63,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		const scriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._extensionUri, "assets", "main.js")
+			vscode.Uri.joinPath(this._extensionUri, "assets", "sidebar.js")
 		);
 		const styleMainUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._extensionUri, "assets", "main.css")
+			vscode.Uri.joinPath(this._extensionUri, "assets", "sidebar.css")
 		);
 
 		const nonce = this.getNonce();
@@ -89,37 +86,39 @@ class PanelWebview implements vscode.WebviewViewProvider {
                 <link href="${styleMainUri}" rel="stylesheet">
 			</head>
 			<body>
-                <div id="quickbar">
-                    <input type="text" name="quickinput" id="quickinput" value="${highlight.global_intent}">
-                    <button id="quicksubmit">⏎</button>
+                <div class="sidebar">
+                    <div id="quickbar">
+                        <input type="text" name="quickinput" id="quickinput" value="${highlight.global_intent}">
+                        <button id="quicksubmit">⏎</button>
+                    </div>
+                    <div id="sidebar">
+                        <h3 class="presets-title">Works Well</h3>
+                        <ul class="presets links-menu">
+                            <li>Add type hints</li>
+                            <li>Remove type hints</li>
+                            <li>Convert to list comprehension</li>
+                            <li>Add docstrings</li>
+                            <li>Convert dict to class</li>
+                            <li>Fix typos</li>
+                            <li>Fix bugs</li>
+                        </ul>
+                        <h3 class="presets-title">Ideas</h3>
+                        <ul class="presets links-menu">
+                            <li>Fix unclear names</li>
+                            <li>Make variables shorter</li>
+                            <li>Make code shorter</li>
+                            <li>Improve performance</li>
+                            <li>Code cleanup</li>
+                            <li>Make formatting consistent</li>
+                            <li>Remove python 2 support</li>
+                            <li>Convert to numpy</li>
+                        </ul>
+                        <h3 class="history-title">History</h3>
+                        <ul class="history links-menu">
+                        </ul>
+                    </div>
+                    <button id="settings">Settings</button>
                 </div>
-                <div id="sidebar">
-                    <h3 class="presets-title">Works Well</h3>
-                    <ul class="presets links-menu">
-                        <li>Add type hints</li>
-                        <li>Remove type hints</li>
-                        <li>Convert to list comprehension</li>
-                        <li>Add docstrings</li>
-                        <li>Convert dict to class</li>
-                        <li>Fix typos</li>
-                        <li>Fix bugs</li>
-                    </ul>
-                    <h3 class="presets-title">Ideas</h3>
-                    <ul class="presets links-menu">
-                        <li>Fix unclear names</li>
-                        <li>Make variables shorter</li>
-                        <li>Make code shorter</li>
-                        <li>Improve performance</li>
-                        <li>Code cleanup</li>
-                        <li>Make formatting consistent</li>
-                        <li>Remove python 2 support</li>
-                        <li>Convert to numpy</li>
-                    </ul>
-                    <h3 class="history-title">History</h3>
-                    <ul class="history links-menu">
-                    </ul>
-                </div>
-                <button id="settings">Settings</button>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
                 </html>`;

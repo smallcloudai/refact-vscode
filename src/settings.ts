@@ -14,20 +14,21 @@ export class SettingsPage {
 	}
 
 	public static render(extensionUri: any) {
-		if (SettingsPage.currentPanel) {
-			SettingsPage.currentPanel._panel.reveal(vscode.ViewColumn.One);
-		} else {
-			const panel = vscode.window.createWebviewPanel(
-				"codify-settings",
-				"Codify Settings",
-				vscode.ViewColumn.One,
-				{
-					// Empty for now
-				}
-			);
+		const panel = vscode.window.createWebviewPanel(
+			"codify-settings",
+			"Codify Settings",
+			vscode.ViewColumn.One,
+			{
+				enableScripts: true,
+			}
+		);
+		panel.iconPath = vscode.Uri.joinPath(
+			extensionUri,
+			"images",
+			"logo-small.png"
+		);
 
-			SettingsPage.currentPanel = new SettingsPage(panel, extensionUri);
-		}
+		SettingsPage.currentPanel = new SettingsPage(panel, extensionUri);
 	}
 
 	public dispose() {
@@ -45,10 +46,13 @@ export class SettingsPage {
 
 	_getHtmlForWebview(webview: vscode.Webview, extensionUri: any) {
 		const scriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(extensionUri, "assets", "main.js")
+			vscode.Uri.joinPath(extensionUri, "assets", "settings.js")
 		);
 		const styleMainUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(extensionUri, "assets", "main.css")
+			vscode.Uri.joinPath(extensionUri, "assets", "settings.css")
+		);
+		const imagesUri = webview.asWebviewUri(
+			vscode.Uri.joinPath(extensionUri, "images")
 		);
 
 		const nonce = this.getNonce();
@@ -61,14 +65,28 @@ export class SettingsPage {
                     Use a content security policy to only allow loading images from https or from our extension directory,
                     and only allow scripts that have a specific nonce.
                 -->
-                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}';">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 
-                <title>Presets</title>
+                <title>Settings</title>
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <h1>Hello!</h1>
+                <div class="container">
+                    <header class="s-header">
+                        <h1 class="s-header__title">
+                            Settings
+                        </h1>
+                        <img class="s-header__logo" src="${imagesUri}/logo-full.svg" alt="Codify" />
+                        <img class="s-header__logowhite" src="${imagesUri}/logo-full-white.svg" alt="Codify" />
+                    </header>
+                    <div class="s-body">
+                        <div class="s-body__inline">
+                            <label>User Key</label>
+                            <input class="s-body__input" type="text" name="userKey" />
+                        </div>
+                    </div>
+                </div>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;
