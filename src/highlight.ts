@@ -90,6 +90,8 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         range_list.push(decorange);
         // state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
+            overviewRulerLane: vscode.OverviewRulerLane.Full,
+            overviewRulerColor: 'rgba(255, 255, 0, ' + element[2] + ')',
             backgroundColor: 'rgba(255, 255, 0, ' + element[2] + ')',
             color: 'black'
         });
@@ -107,6 +109,8 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         range_list.push(decorange);
         state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
+            overviewRulerLane: vscode.OverviewRulerLane.Full,
+            overviewRulerColor: 'rgba(255, 255, 0, ' + element[2] + ')',
             backgroundColor: 'rgba(255, 255, 0, ' + element[2] + ')',
             // color: 'black'
         });

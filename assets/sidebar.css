@@ -97,10 +97,16 @@ body.vscode-light .presets-title {
 .history li:hover {
     color: var(--secondary);
 }
-#settings {
+.sidebar-controls {
     position: absolute;
     bottom: 20px;
-    right: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    box-sizing: border-box;
+}
+#settings {
     font-size: 13px;
     border: 1px solid var(--secondary);
     padding: 8px 20px;
@@ -108,8 +114,23 @@ body.vscode-light .presets-title {
     letter-spacing: 1px;
     background: transparent;
     cursor: pointer;
+    box-sizing: border-box;
 }
 body.vscode-light #settings {
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
+#login {
+    font-size: 13px;
+    border: 1px solid var(--secondary);
+    padding: 8px 20px;
+    color: var(--secondary);
+    letter-spacing: 1px;
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+body.vscode-light #login {
     color: var(--secondary);
     border-color: var(--secondary);
 }

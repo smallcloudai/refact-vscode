@@ -1,19 +1,28 @@
-import {
-    CodeLensProvider,
-    TextDocument,
-    CodeLens,
-    Range,
-    Command
-  } from "vscode";
+// import {
+//     CodeLensProvider,
+//     TextDocument,
+//     CodeLens,
+//     Range,
+//     Command,
+//     Position
+//   } from "vscode";
 
-class LensProvider implements CodeLensProvider {
-    async provideCodeLenses(document: TextDocument): Promise<CodeLens[]> {
-        let topOfDocument = new Range(10, 0, 10, 0);
-        let c: Command = {
-          command: 'codify.runTab',
-          title: 'Accept',
+import * as vscode from 'vscode';
+
+class LensProvider implements vscode.CodeLensProvider {
+    async provideCodeLenses(
+        document: vscode.TextDocument,
+    ): Promise<vscode.CodeLens[]> {
+        let activeEditor = vscode.window.activeTextEditor;
+        let selection = activeEditor!.selection;
+        let currentLineRange = document.lineAt(selection.active.line).range;
+        console.log('currentLineRange',currentLineRange);
+        let c: vscode.Command = {
+          command: 'plugin-vscode.highlight',
+        //   title: '💡 Press F1 to start highlight',
+          title: '⬆ Scroll to highlight',
         };   
-        let codeLens = new CodeLens(topOfDocument, c);   
+        let codeLens = new vscode.CodeLens(currentLineRange, c);   
         return [codeLens];
       }
   }

@@ -54,41 +54,49 @@ export function activate(context: vscode.ExtensionContext)
         scheme: "file"
     };
 
+    const pluginRun = pluginFirstRun(context);
+    if(!pluginRun) {
+        let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
+            docSelector,
+            new LensProvider()
+        );
+        context.subscriptions.push(codeLensProviderDisposable);
+    }
+
     // Register our CodeLens provider
     // let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
     //     docSelector,
     //     new LensProvider()
     // );
-
     // context.subscriptions.push(codeLensProviderDisposable);
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', () => {
-		let editor = vscode.window.activeTextEditor;
-		if (editor) {
-			let state = interactiveDiff.getStateOfEditor(editor);
-			if (state.mode === Mode.Diff) {
-				interactiveDiff.rollback(editor);
-			} else if (state.mode === Mode.Highlight) {
-				highlight.backToNormal(editor);
-			}
-			if (state.mode === Mode.Normal) {
-				vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
-				console.log(["ESC OFF"]);
-			}
-		}
+        let editor = vscode.window.activeTextEditor;
+        if (editor) {
+            let state = interactiveDiff.getStateOfEditor(editor);
+            if (state.mode === Mode.Diff) {
+                interactiveDiff.rollback(editor);
+            } else if (state.mode === Mode.Highlight) {
+                highlight.backToNormal(editor);
+            }
+            if (state.mode === Mode.Normal) {
+                vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+                console.log(["ESC OFF"]);
+            }
+        }
     });
 
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
-		let editor = vscode.window.activeTextEditor;
-		if (editor) {
-			let state = interactiveDiff.getStateOfEditor(editor);
-			if (state.mode === Mode.Diff) {
-				interactiveDiff.accept(editor);
-			}
-		}
+        let editor = vscode.window.activeTextEditor;
+        if (editor) {
+            let state = interactiveDiff.getStateOfEditor(editor);
+            if (state.mode === Mode.Diff) {
+                interactiveDiff.accept(editor);
+            }
+        }
     });
 
     let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', () => {
@@ -104,7 +112,7 @@ export function activate(context: vscode.ExtensionContext)
         }
     });
 
-	// let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {
+    // let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {
     //     runEditChaining();
     // });
 
@@ -118,17 +126,26 @@ export function activate(context: vscode.ExtensionContext)
 
 
     global.panelProvider = new PanelWebview(context?.extensionUri);
-	let view = vscode.window.registerWebviewViewProvider(
-		'codify-presets',
-		global.panelProvider,
-	);
-	context.subscriptions.push(view);
+    let view = vscode.window.registerWebviewViewProvider(
+        'codify-presets',
+        global.panelProvider,
+    );
+    context.subscriptions.push(view);
 
 
     let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
         SettingsPage.render(context.extensionUri);
     });
     context.subscriptions.push(settingsCommand);
+}
+
+export function pluginFirstRun(context: vscode.ExtensionContext) {
+    const firstRun = context.globalState.get('codifyFirstRun');
+    if (firstRun !== undefined && firstRun) { return true; }
+    else {
+        context.globalState.update('codifyFirstRun', true);
+        return false;
+    }
 }
 
 
@@ -141,10 +158,10 @@ export async function rollback_and_regen(editor: vscode.TextEditor)
 
 export async function askIntent()
 {
-	let editor = vscode.window.activeTextEditor;
-	if (!editor) {
-		return;
-	}
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
     let selection = editor.selection;
     let selection_empty = selection.isEmpty;
     const intent = await vscode.window.showInputBox({

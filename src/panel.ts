@@ -117,7 +117,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         <ul class="history links-menu">
                         </ul>
                     </div>
-                    <button id="settings">Settings</button>
+                    <div class="sidebar-controls">
+                        <button id="login">Login / Register</button>
+                        <button id="settings">Settings</button>
+                    </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
