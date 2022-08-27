@@ -41,6 +41,7 @@ class StateOfEditor {
     public sensitive_ranges: vscode.DecorationOptions[] = [];
     public area2cache = new Map<Number, CacheEntity>();
     public showing_diff_for_range: vscode.Range | undefined = undefined;
+    public showing_diff_for_function: string | undefined = undefined;
     public showing_diff_edit_chain: vscode.Range | undefined = undefined;
 
     public edit_chain_modif_doc: string | undefined = undefined;
@@ -85,7 +86,7 @@ export function getStateOfDocument(doc: vscode.TextDocument): StateOfEditor | un
 }
 
 
-export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscode.Range)
+export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscode.Range, model_function: string)
 {
     // We get there every time the cursor moves (very often).
     let state = getStateOfEditor(editor);
@@ -124,12 +125,12 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             cancelToken,
             sources,
             global_intent,
-            "diff-atcursor",
+            model_function,
             file_name,
             doc.offsetAt(sensitive_area.start),
-            doc.offsetAt(sensitive_area.start),
+            doc.offsetAt(sensitive_area.end),
             max_tokens,
-            1,
+            10,
             stop_tokens,
         ));
         let json: any = await request.apiPromise;
@@ -154,6 +155,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     if ((state.mode === Mode.Diff) && !cancelToken.isCancellationRequested) {
         let modif_doc = cache.json["choices"][0]["files"][file_name];
         state.showing_diff_for_range = sensitive_area;
+        state.showing_diff_for_function = model_function;
         state.showing_diff_edit_chain = undefined;
         offerDiff(editor, modif_doc, false);
     }
@@ -212,6 +214,7 @@ export async function showEditChainDiff(editor: vscode.TextEditor)
     let modif_doc = state.edit_chain_modif_doc;
     if (modif_doc) {
         state.showing_diff_for_range = undefined;
+        state.showing_diff_for_function = undefined;
         await offerDiff(editor, modif_doc, true);
     }
 }
@@ -489,10 +492,10 @@ export async function regen(editor: vscode.TextEditor)
         await showEditChainDiff(editor);
         return;
     }
-    if (state.showing_diff_for_range !== undefined) {
+    if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined) {
         removeDeco(editor);
         state.area2cache.clear();
-        queryDiff(editor, state.showing_diff_for_range);
+        queryDiff(editor, state.showing_diff_for_range, state.showing_diff_for_function);
     }
 }
 

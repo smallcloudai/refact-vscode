@@ -49,6 +49,9 @@ export class PendingRequest {
                 globalRequests.splice(index, 1);
             }
             // console.log(["--pendingRequests", globalRequests.length, request.seq]);
+        }).catch((error) => {
+            // just print message
+            console.log(["API ERROR", this.seq, error]);
         });
         globalRequests.push(this);
         // console.log(["++pendingRequests", globalRequests.length, request.seq]);

@@ -25,15 +25,18 @@ export async function acceptEditChain(document: vscode.TextDocument, pos: vscode
     console.log(["Accepted", pos.line, pos.character]);
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
+        console.log(["Accepted no editor"]);
         return;
     }
     let state2 = interactiveDiff.getStateOfEditor(editor);
     if (state1 !== state2) {
+        console.log(["Accepted bad state"]);
         return;
     }
     let next_line_pos = new vscode.Position(pos.line + 1, 0);
     let next_next_line_pos = new vscode.Position(pos.line + 2, 0);
     await editor.edit((e) => {
+        console.log(["Accepted deleting..."]);
         e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
         if (editor) {
@@ -179,7 +182,7 @@ export async function askIntent()
         if (intent) {
             highlight.saveIntent(intent);
             editor.selection = new vscode.Selection(selection.start, selection.start);
-            interactiveDiff.queryDiff(editor, selection);
+            interactiveDiff.queryDiff(editor, selection, "diff-selection");
         }
     }
     // vscode.window.showInformationMessage(`Got: ${result}`);

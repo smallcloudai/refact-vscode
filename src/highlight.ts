@@ -157,8 +157,13 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
     for (let i = 0; i < state.sensitive_ranges.length; i++) {
         const element = state.sensitive_ranges[i];
         if (element.range.contains(pos)) {
-            interactiveDiff.queryDiff(editor, element.range);
+            interactiveDiff.queryDiff(editor, element.range, "diff-atcursor");
         }
+    }
+    let selection = editor.selection;
+    let is_empty = selection.anchor === selection.active;
+    if (!is_empty && state.mode === Mode.DiffChangingDoc) {
+        interactiveDiff.handsOff(editor);
     }
 }
 

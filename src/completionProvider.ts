@@ -17,6 +17,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let state = interactiveDiff.getStateOfDocument(document);
         if (state) {
             if (state.mode !== interactiveDiff.Mode.Normal && state.mode !== interactiveDiff.Mode.Highlight) {
+                console.log(["333 no inline", state.mode]);
                 return;
             }
         }
@@ -29,6 +30,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         await fetch.waitAllRequests();
         if (cancelToken.isCancellationRequested) {
+            console.log(["444 on inline"]);
             return;
         }
 
