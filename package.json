@@ -12,12 +12,12 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/smallcloudai/plugin-vscode"
-  }, 
+  },
   "version": "0.0.3",
   "engines": {
     "vscode": "^1.69.0"
   },
-  
+
   "categories": [
     "Programming Languages",
     "Snippets",
@@ -87,10 +87,6 @@
         "key": "F1"
       },
       {
-        "command": "plugin-vscode.editChaining",
-        "key": "F2"
-      },
-      {
         "command": "plugin-vscode.esc",
         "key": "escape",
         "when": "codify.runEsc"
@@ -104,7 +100,7 @@
     "viewsContainers": {
         "activitybar": [
           {
-            "id": "codify-pane",     
+            "id": "codify-pane",
             "title": "Codify",
             "icon": "$(codify-logo)"
           }

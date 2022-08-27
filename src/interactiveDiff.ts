@@ -141,6 +141,9 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         cache.json = json;
         state.area2cache.set(cache_key, cache);
         console.log(["saving diff", cache_key, "size", state.area2cache.size]);
+        if (cancelToken.isCancellationRequested) {
+            return;
+        }
         if (state.mode === Mode.DiffWait) {
            state.mode = Mode.Diff;
         }
