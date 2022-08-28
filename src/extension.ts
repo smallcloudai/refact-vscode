@@ -57,14 +57,14 @@ export function activate(context: vscode.ExtensionContext)
         scheme: "file"
     };
 
-    const pluginRun = pluginFirstRun(context);
-    if(!pluginRun) {
-        let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
-            docSelector,
-            new LensProvider()
-        );
-        context.subscriptions.push(codeLensProviderDisposable);
-    }
+    // const pluginRun = pluginFirstRun(context);
+    // if(!pluginRun) {
+    //     let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
+    //         docSelector,
+    //         new LensProvider()
+    //     );
+    //     context.subscriptions.push(codeLensProviderDisposable);
+    // }
 
     // Register our CodeLens provider
     // let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
