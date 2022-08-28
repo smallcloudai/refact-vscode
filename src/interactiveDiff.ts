@@ -9,7 +9,6 @@ import * as highlight from "./highlight";
 
 export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
 {
-    console.log(["cursor moved", pos.line, pos.character]);
     let state = estate.state_of_editor(editor);
     for (let i = 0; i < state.sensitive_ranges.length; i++) {
         const element = state.sensitive_ranges[i];
@@ -68,7 +67,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             doc.offsetAt(sensitive_area.start),
             doc.offsetAt(sensitive_area.end),
             max_tokens,
-            10,
+            model_function==="diff-atcursor" ? 1 : 10,
             stop_tokens,
         ));
         let json: any = await request.apiPromise;
