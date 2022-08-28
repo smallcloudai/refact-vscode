@@ -7,7 +7,8 @@ import StatusBarMenu from "./statusBar";
 import LensProvider from "./codeLens";
 import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
-import { Mode } from "./interactiveDiff";
+import * as estate from "./estate";
+import { Mode } from "./estate";
 import PanelWebview from "./panel";
 import SettingsPage from "./settings";
 
@@ -21,14 +22,14 @@ declare global {
 
 export async function acceptEditChain(document: vscode.TextDocument, pos: vscode.Position)
 {
-    let state1 = interactiveDiff.getStateOfDocument(document);
+    let state1 = estate.state_of_document(document);
     console.log(["Accepted", pos.line, pos.character]);
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
         console.log(["Accepted no editor"]);
         return;
     }
-    let state2 = interactiveDiff.getStateOfEditor(editor);
+    let state2 = estate.state_of_editor(editor);
     if (state1 !== state2) {
         console.log(["Accepted bad state"]);
         return;
@@ -79,7 +80,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', () => {
         let editor = vscode.window.activeTextEditor;
         if (editor) {
-            let state = interactiveDiff.getStateOfEditor(editor);
+            let state = estate.state_of_editor(editor);
             if (state.mode === Mode.Diff) {
                 interactiveDiff.rollback(editor);
             } else if (state.mode === Mode.Highlight) {
@@ -95,7 +96,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
         let editor = vscode.window.activeTextEditor;
         if (editor) {
-            let state = interactiveDiff.getStateOfEditor(editor);
+            let state = estate.state_of_editor(editor);
             if (state.mode === Mode.Diff) {
                 interactiveDiff.accept(editor);
             }
@@ -107,7 +108,7 @@ export function activate(context: vscode.ExtensionContext)
         if (!editor) {
             return;
         }
-        let state = interactiveDiff.getStateOfEditor(editor);
+        let state = estate.state_of_editor(editor);
         if (state.mode === Mode.Diff) {
             rollback_and_regen(editor);
         } else {

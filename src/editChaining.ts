@@ -4,12 +4,13 @@ import * as fetch from "./fetchAPI";
 import * as storeVersions from './storeVersions';
 import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
+import * as estate from './estate';
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 
 
 export async function cleanupEditChaining(editor: vscode.TextEditor)
 {
-    let state = interactiveDiff.getStateOfEditor(editor);
+    let state = estate.state_of_editor(editor);
     state.edit_chain_modif_doc = undefined;
 }
 
@@ -20,8 +21,8 @@ export async function runEditChaining(animation: boolean): Promise<String>
     if (!editor) {
         return "";
     }
-    let state = interactiveDiff.getStateOfEditor(editor);
-    if (state.mode !== interactiveDiff.Mode.Normal && state.mode !== interactiveDiff.Mode.Highlight) {
+    let state = estate.state_of_editor(editor);
+    if (state.mode !== estate.Mode.Normal && state.mode !== estate.Mode.Highlight) {
         return "";
     }
     let doc = editor.document;
@@ -72,7 +73,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     send_revisions[file_name] = whole_doc;
     let stop_tokens: string[] = [];
     console.log(["edit chain", explain]);
-    state.mode = interactiveDiff.Mode.DiffWait;
+    state.mode = estate.Mode.DiffWait;
     let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
     if (animation) {
         interactiveDiff.animationStart(editor, sensitive_area);
@@ -89,8 +90,8 @@ export async function runEditChaining(animation: boolean): Promise<String>
         max_edits,
         stop_tokens,
     ));
-    if ((state.mode === interactiveDiff.Mode.DiffWait) && !cancelToken.isCancellationRequested) {
-        state.mode = interactiveDiff.Mode.Normal;
+    if ((state.mode === estate.Mode.DiffWait) && !cancelToken.isCancellationRequested) {
+        state.mode = estate.Mode.Normal;
     }
     let json: any = await request.apiPromise;
     if (json.detail) {

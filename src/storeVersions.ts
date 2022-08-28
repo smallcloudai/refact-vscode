@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
+import * as estate from './estate';
 import * as interactiveDiff from "./interactiveDiff";
 
 
@@ -41,9 +42,9 @@ function fnReset(document: vscode.TextDocument, line0: number)
 
 function fnSaveChange(document: vscode.TextDocument, line0: number, force: boolean = false)
 {
-    let state = interactiveDiff.getStateOfDocument(document);
+    let state = estate.state_of_document(document);
     if (state) {
-        if (state.mode !== interactiveDiff.Mode.Normal) {
+        if (state.mode !== estate.Mode.Normal) {
             return;
         }
     }

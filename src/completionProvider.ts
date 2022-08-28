@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
+import * as estate from "./estate";
 import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 
@@ -14,9 +15,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cancelToken: vscode.CancellationToken
     )
     {
-        let state = interactiveDiff.getStateOfDocument(document);
+        let state = estate.state_of_document(document);
         if (state) {
-            if (state.mode !== interactiveDiff.Mode.Normal && state.mode !== interactiveDiff.Mode.Highlight) {
+            if (state.mode !== estate.Mode.Normal && state.mode !== estate.Mode.Highlight) {
                 console.log(["333 no inline", state.mode]);
                 return;
             }

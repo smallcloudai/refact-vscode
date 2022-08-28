@@ -2,7 +2,8 @@
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 import * as interactiveDiff from "./interactiveDiff";
-import { Mode } from "./interactiveDiff";
+import { Mode } from "./estate";
+import * as estate from "./estate";
 
 
 let cursor_move_event: any = undefined;
@@ -16,7 +17,7 @@ export function saveIntent(intent: string)
         global_intent = intent;
         let editor = vscode.window.activeTextEditor;
         if (editor) {
-            let state = interactiveDiff.getStateOfEditor(editor);
+            let state = estate.state_of_editor(editor);
             state.area2cache.clear();
         }
     }
@@ -25,7 +26,7 @@ export function saveIntent(intent: string)
 
 export async function runHighlight(editor: vscode.TextEditor, intent: string | undefined)
 {
-    let state = interactiveDiff.getStateOfEditor(editor);
+    let state = estate.state_of_editor(editor);
     if (intent === undefined) {
         intent = global_intent;
     } else {
@@ -78,7 +79,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
 
 export function showHighlight(editor: vscode.TextEditor, json: any)
 {
-    let state = interactiveDiff.getStateOfEditor(editor);
+    let state = estate.state_of_editor(editor);
     let doc = editor.document;
     for (let index = 0; index < json.highlight.length; index++) {
         const element = json.highlight[index];
@@ -153,7 +154,7 @@ export function setupKeyboardReactions(editor: vscode.TextEditor)
 export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
 {
     console.log(["cursor moved", pos.line, pos.character]);
-    let state = interactiveDiff.getStateOfEditor(editor);
+    let state = estate.state_of_editor(editor);
     for (let i = 0; i < state.sensitive_ranges.length; i++) {
         const element = state.sensitive_ranges[i];
         if (element.range.contains(pos)) {
@@ -170,7 +171,7 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
 
 export function onTextEdited(editor: vscode.TextEditor)
 {
-    let state = interactiveDiff.getStateOfEditor(editor);
+    let state = estate.state_of_editor(editor);
     if (state.mode === Mode.Diff || state.mode === Mode.DiffWait) {
         console.log(["text edited mode", state.mode, "hands off"]);
         interactiveDiff.handsOff(editor);
@@ -193,7 +194,7 @@ export function onTextEdited(editor: vscode.TextEditor)
 
 export function clearHighlight(editor: vscode.TextEditor)
 {
-    let state = interactiveDiff.getStateOfEditor(editor);
+    let state = estate.state_of_editor(editor);
     for (let index = 0; index < state.highlights.length; index++) {
         const element = state.highlights[index];
         element.dispose();
@@ -218,7 +219,7 @@ function _forgetEvents()
 
 export function backToNormal(editor: vscode.TextEditor)
 {
-    let state = interactiveDiff.getStateOfEditor(editor);
+    let state = estate.state_of_editor(editor);
     state.mode = Mode.Normal;
     state.highlight_json_backup = undefined;
     _forgetEvents();
