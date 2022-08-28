@@ -3,7 +3,11 @@ import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 import * as editChaining from "./editChaining";
-import { clearHighlight, showHighlight, runHighlight, backToNormal, global_intent } from './highlight';
+import * as highlight from "./highlight";
+import * as interactiveDiff from "./interactiveDiff";
+
+
+export let global_intent: string = "Fix";
 
 
 export enum Mode {
@@ -11,7 +15,6 @@ export enum Mode {
     Highlight,
     Diff,
     DiffWait,
-    DiffChangingDoc,
 };
 
 
@@ -31,15 +34,22 @@ export class CacheEntity {
 export class StateOfEditor {
     public editor: vscode.TextEditor;
 
-    public mode = Mode.Normal;
+    _mode: Mode = Mode.Normal;
+    public get_mode(): Mode {
+        return this._mode;
+    }
+
     public highlights: any = [];
 
+    public diff_changing_doc: boolean = false;
     public diffDecos: any = [];
     public diffDeletedLines: any = [];
     public diffAddedLines: any = [];
 
     public sensitive_ranges: vscode.DecorationOptions[] = [];
     public area2cache = new Map<Number, CacheEntity>();
+    public showing_diff_modif_doc: string | undefined;
+    public showing_diff_move_cursor: boolean = false;
     public showing_diff_for_range: vscode.Range | undefined = undefined;
     public showing_diff_for_function: string | undefined = undefined;
     public showing_diff_edit_chain: vscode.Range | undefined = undefined;
@@ -48,8 +58,21 @@ export class StateOfEditor {
 
     public highlight_json_backup: any = undefined;
 
-    constructor(editor: vscode.TextEditor) {
+    public cursor_move_event: any = undefined;
+    public text_edited_event: any = undefined;
+
+    constructor(editor: vscode.TextEditor)
+    {
         this.editor = editor;
+    }
+
+    public cache_clear()
+    {
+        // call on text edited, intent change
+        this.area2cache.clear();
+        this.highlight_json_backup = undefined;
+        this.sensitive_ranges.length = 0;
+        this.highlights.length = 0;
     }
 };
 
@@ -85,10 +108,128 @@ export function state_of_document(doc: vscode.TextDocument): StateOfEditor | und
 }
 
 
-export function switch_state(state: StateOfEditor, new_mode: Mode)
+export async function switch_mode(state: StateOfEditor, new_mode: Mode)
 {
-    let old_mode = state.mode;
-    state.mode = new_mode;
+    let old_mode = state._mode;
+    console.log(["switch mode", old_mode, new_mode]);
+    state._mode = new_mode;
+
+    if (old_mode === Mode.Diff) {
+        await interactiveDiff.rollback(state.editor);
+        vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+        console.log(["TAB OFF DIFF"]);
+        vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+        console.log(["ESC OFF DIFF"]);
+    } else if (old_mode === Mode.Highlight) {
+        highlight.clearHighlight(state.editor);
+    } else if (old_mode === Mode.DiffWait) {
+        highlight.clearHighlight(state.editor);
+    }
+
+    if (new_mode === Mode.Diff) {
+        if (state.showing_diff_modif_doc !== undefined) {
+            await interactiveDiff.offerDiff(state.editor, state.showing_diff_modif_doc, state.showing_diff_move_cursor);
+            state.showing_diff_move_cursor = false;
+            vscode.commands.executeCommand('setContext', 'codify.runTab', true);
+            console.log(["TAB ON DIFF"]);
+            vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+            console.log(["ESC ON DIFF"]);
+        } else {
+            console.log(["cannot enter diff state, no diff modif doc"]);
+        }
+    }
+    if (new_mode === Mode.Highlight) {
+        if (state.highlight_json_backup !== undefined) {
+            highlight.showHighlight(state.editor, state.highlight_json_backup);
+        } else {
+            console.log(["cannot enter highlight state, no hl json"]);
+        }
+    }
+    if (new_mode !== Mode.Normal) {
+        keyboard_events_on(state.editor);
+        vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+    }
+    // editChaining.cleanupEditChaining(editor);
 
 }
 
+
+export async function back_to_normal(state: StateOfEditor)
+{
+    switch_mode(state, Mode.Normal);
+}
+
+
+export function keyboard_events_on(editor: vscode.TextEditor)
+{
+    let state = state_of_editor(editor);
+    state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection((ev: vscode.TextEditorSelectionChangeEvent) => {
+        let ev_editor = ev.textEditor;
+        if (!editor || editor !== ev_editor) {
+            return;
+        }
+        let pos1 = editor.selection.active;
+        let pos2 = editor.selection.anchor;
+        if (pos1.line === pos2.line && pos1.character === pos2.character) {
+            interactiveDiff.onCursorMoved(editor, pos1);
+        }
+    });
+    state.text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
+        let doc = ev.document;
+        let ev_doc = editor.document;
+        if (doc !== ev_doc) {
+            return;
+        }
+        onTextEdited(editor);
+    });
+}
+
+
+function keyboard_events_off(state: StateOfEditor)
+{
+    if (state.cursor_move_event !== undefined) {
+        state.cursor_move_event.dispose();
+        state.cursor_move_event = undefined;
+    }
+    if (state.text_edited_event !== undefined) {
+        state.text_edited_event.dispose();
+        state.text_edited_event = undefined;
+    }
+}
+
+
+export function onTextEdited(editor: vscode.TextEditor)
+{
+    let state = state_of_editor(editor);
+    if (state.diff_changing_doc) {
+        console.log(["text edited, do nothing"]);
+        return;
+    }
+    if (state._mode === Mode.Diff || state._mode === Mode.DiffWait) {
+        console.log(["text edited mode", state._mode, "hands off"]);
+        interactiveDiff.handsOff(editor);
+        state.highlight_json_backup = undefined;
+        state.area2cache.clear();
+        switch_mode(state, Mode.Normal);
+    } else if (state._mode === Mode.Highlight) {
+        highlight.clearHighlight(editor);
+        state.highlight_json_backup = undefined;
+        state.area2cache.clear();
+        switch_mode(state, Mode.Normal);
+    } else if (state._mode === Mode.Normal) {
+        state.area2cache.clear();
+        state.highlight_json_backup = undefined;
+    }
+}
+
+
+export function saveIntent(intent: string)
+{
+    if (global_intent !== intent) {
+        global_intent = intent;
+        for (const [editor, state] of editor2state) {
+            state.area2cache.clear();
+            state.highlight_json_backup = undefined;
+        }
+    }
+}

@@ -17,8 +17,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
     {
         let state = estate.state_of_document(document);
         if (state) {
-            if (state.mode !== estate.Mode.Normal && state.mode !== estate.Mode.Highlight) {
-                console.log(["333 no inline", state.mode]);
+            if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
+                console.log(["333 no inline", state.get_mode()]);
                 return;
             }
         }

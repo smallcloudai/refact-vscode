@@ -44,7 +44,7 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
 {
     let state = estate.state_of_document(document);
     if (state) {
-        if (state.mode !== estate.Mode.Normal) {
+        if (state.get_mode() !== estate.Mode.Normal) {
             return;
         }
     }

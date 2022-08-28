@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import * as highlight from "./highlight";
+import * as estate from "./estate";
+
 class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
 	_history: string[] = [];
@@ -81,14 +83,14 @@ class PanelWebview implements vscode.WebviewViewProvider {
 				-->
 				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				
+
 				<title>Presets</title>
                 <link href="${styleMainUri}" rel="stylesheet">
 			</head>
 			<body>
                 <div class="sidebar">
                     <div id="quickbar">
-                        <input type="text" name="quickinput" id="quickinput" value="${highlight.global_intent}">
+                        <input type="text" name="quickinput" id="quickinput" value="${estate.global_intent}">
                         <button id="quicksubmit">⏎</button>
                     </div>
                     <div id="sidebar">

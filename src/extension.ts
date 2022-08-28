@@ -20,37 +20,9 @@ declare global {
 }
 
 
-export async function acceptEditChain(document: vscode.TextDocument, pos: vscode.Position)
-{
-    let state1 = estate.state_of_document(document);
-    console.log(["Accepted", pos.line, pos.character]);
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        console.log(["Accepted no editor"]);
-        return;
-    }
-    let state2 = estate.state_of_editor(editor);
-    if (state1 !== state2) {
-        console.log(["Accepted bad state"]);
-        return;
-    }
-    let next_line_pos = new vscode.Position(pos.line + 1, 0);
-    let next_next_line_pos = new vscode.Position(pos.line + 2, 0);
-    await editor.edit((e) => {
-        console.log(["Accepted deleting..."]);
-        e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
-    }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
-        if (editor) {
-            interactiveDiff.showEditChainDiff(editor);
-            highlight.setupKeyboardReactions(editor);
-        }
-    });
-}
-
-
 export function activate(context: vscode.ExtensionContext)
 {
-    let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', acceptEditChain);
+    let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
     global.menu = new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
 
@@ -81,12 +53,16 @@ export function activate(context: vscode.ExtensionContext)
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let state = estate.state_of_editor(editor);
-            if (state.mode === Mode.Diff) {
-                interactiveDiff.rollback(editor);
-            } else if (state.mode === Mode.Highlight) {
-                highlight.backToNormal(editor);
+            if (state.get_mode() === Mode.Diff) {
+                if (state.highlight_json_backup !== undefined) {
+                    estate.switch_mode(state, Mode.Highlight);
+                } else {
+                    estate.switch_mode(state, Mode.Normal);
+                }
+            } else if (state.get_mode() === Mode.Highlight) {
+                estate.back_to_normal(state);
             }
-            if (state.mode === Mode.Normal) {
+            if (state.get_mode() === Mode.Normal) {
                 vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
                 console.log(["ESC OFF"]);
             }
@@ -97,7 +73,7 @@ export function activate(context: vscode.ExtensionContext)
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let state = estate.state_of_editor(editor);
-            if (state.mode === Mode.Diff) {
+            if (state.get_mode() === Mode.Diff) {
                 interactiveDiff.accept(editor);
             }
         }
@@ -109,7 +85,7 @@ export function activate(context: vscode.ExtensionContext)
             return;
         }
         let state = estate.state_of_editor(editor);
-        if (state.mode === Mode.Diff) {
+        if (state.get_mode() === Mode.Diff) {
             rollback_and_regen(editor);
         } else {
             askIntent();
@@ -170,7 +146,7 @@ export async function askIntent()
     let selection_empty = selection.isEmpty;
     const intent = await vscode.window.showInputBox({
         title: (selection_empty ? "What would you like to do? (this action highlights code first)" : "What would you like to do with the selected code?"),
-        value: highlight.global_intent,
+        value: estate.global_intent,
         valueSelection: [0, 80],
         placeHolder: 'Convert to list comprehension',
     });
@@ -181,7 +157,7 @@ export async function askIntent()
         }
     } else {
         if (intent) {
-            highlight.saveIntent(intent);
+            estate.saveIntent(intent);
             editor.selection = new vscode.Selection(selection.start, selection.start);
             interactiveDiff.queryDiff(editor, selection, "diff-selection");
         }

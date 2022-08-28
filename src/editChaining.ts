@@ -22,7 +22,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
         return "";
     }
     let state = estate.state_of_editor(editor);
-    if (state.mode !== estate.Mode.Normal && state.mode !== estate.Mode.Highlight) {
+    if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
         return "";
     }
     let doc = editor.document;
@@ -73,7 +73,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     send_revisions[file_name] = whole_doc;
     let stop_tokens: string[] = [];
     console.log(["edit chain", explain]);
-    state.mode = estate.Mode.DiffWait;
+    // state.mode = estate.Mode.DiffWait;
     let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
     if (animation) {
         interactiveDiff.animationStart(editor, sensitive_area);
@@ -81,7 +81,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         send_revisions,
-        highlight.global_intent,
+        estate.global_intent,
         "edit-chain",
         file_name,
         cursor,
@@ -90,9 +90,9 @@ export async function runEditChaining(animation: boolean): Promise<String>
         max_edits,
         stop_tokens,
     ));
-    if ((state.mode === estate.Mode.DiffWait) && !cancelToken.isCancellationRequested) {
-        state.mode = estate.Mode.Normal;
-    }
+    // if ((state.mode === estate.Mode.DiffWait) && !cancelToken.isCancellationRequested) {
+    //     state.mode = estate.Mode.Normal;
+    // }
     let json: any = await request.apiPromise;
     if (json.detail) {
         let detail = json.detail;
@@ -168,4 +168,32 @@ function generateDiffSummary(current_line: number, whole_doc: string, modif_doc:
     }
     result += "   " + first_chars;
     return result;
+}
+
+
+export async function acceptEditChain(document: vscode.TextDocument, pos: vscode.Position)
+{
+    let state1 = estate.state_of_document(document);
+    console.log(["Accepted", pos.line, pos.character]);
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        console.log(["Accepted no editor"]);
+        return;
+    }
+    let state2 = estate.state_of_editor(editor);
+    if (state1 !== state2) {
+        console.log(["Accepted bad state"]);
+        return;
+    }
+    let next_line_pos = new vscode.Position(pos.line + 1, 0);
+    let next_next_line_pos = new vscode.Position(pos.line + 2, 0);
+    await editor.edit((e) => {
+        console.log(["Accepted deleting..."]);
+        e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
+    }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+        if (editor) {
+            interactiveDiff.showEditChainDiff(editor);
+            estate.keyboard_events_on(editor);
+        }
+    });
 }
