@@ -21,7 +21,7 @@ export function fnGetRevisions(fn: string)
     if (!versionlist) {
         return result;
     }
-    for (let i = 0; i < textlist.length; i++) {
+    for (let i = textlist.length - 1; i >= 0; i--) {
         let version = versionlist[i];
         let version_str = version.toString();
         result[fn + ":" + version_str] = textlist[i];
@@ -91,11 +91,11 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
     if(contentChanges.length === 0) { return; };
     let line0 = contentChanges[0].range.start.line;
     if (reason === vscode.TextDocumentChangeReason.Redo) {
-        fnReset(document, line0);
+        // fnReset(document, line0);
         return;
         // console.log(["onDidChangeTextDocument", "redo", v]);
     } else if (reason === vscode.TextDocumentChangeReason.Undo) {
-        fnReset(document, line0);
+        // fnReset(document, line0);
         return;
         // console.log(["onDidChangeTextDocument", "undo", v]);
     } else {

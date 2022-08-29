@@ -55,25 +55,40 @@ export async function runEditChaining(animation: boolean): Promise<String>
     // let right_of_cursor = current_line.text.substring(position.character);
     let more_revisions: { [key: string]: string } = storeVersions.fnGetRevisions(file_name);
     let send_revisions: { [key: string]: string } = {};
-    let explain = "";
-    let recent_but_different = "";
+    // let recent_but_different = "";
+    let first_time_a_lot_of_changes = "";
     for (let key in more_revisions) {
-        if (whole_doc === more_revisions[key]) {
-            explain += key + " (the same) ";
+        let rev = more_revisions[key];
+        if (whole_doc === rev) {
+            console.log(["echain same", key]);
             continue;
         }
-        explain += key + " ";
-        recent_but_different = key;
-        // send_revisions[key] = more_revisions[key];
+        const diff = Diff.diffLines(whole_doc, rev);
+        let count_added = 0;
+        let count_removed = 0;
+        diff.forEach((part: any) => {
+            if (part.added) {
+                count_added += 1;
+            } else if (part.removed) {
+                count_removed += 1;
+            }
+        });
+        // recent_but_different = key;
+        // send_revisions[key] = rev
+        console.log(["echain", key]);
+        console.log(["added", count_added, "removed", count_removed]);
+        first_time_a_lot_of_changes = key;
+        if (count_added + count_removed > 5) {
+            console.log(["HAPPY"]);
+            break;
+        }
     }
-    if (!recent_but_different) {
+    if (!first_time_a_lot_of_changes) {
         return "";
     }
-    send_revisions[recent_but_different] = more_revisions[recent_but_different];
+    send_revisions[first_time_a_lot_of_changes] = more_revisions[first_time_a_lot_of_changes];
     send_revisions[file_name] = whole_doc;
     let stop_tokens: string[] = [];
-    console.log(["edit chain", explain]);
-    // state.mode = estate.Mode.DiffWait;
     let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
     if (animation) {
         interactiveDiff.animationStart(editor, sensitive_area);
