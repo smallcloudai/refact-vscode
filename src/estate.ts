@@ -39,6 +39,8 @@ export class StateOfEditor {
         return this._mode;
     }
 
+    public inline_prefer_edit_chaining: boolean = false;
+
     public highlights: any = [];
 
     public diff_changing_doc: boolean = false;

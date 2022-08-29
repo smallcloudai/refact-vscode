@@ -384,12 +384,9 @@ export async function accept(editor: vscode.TextEditor)
         } else {
             state.highlight_json_backup = undefined;
             estate.back_to_normal(state);
-            if (suggest_again) {
-                // trigger inline completion
-                vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
-                // vscode.commands.executeCommand('editor.action.triggerSuggest');
-                console.log(["TRIGGER SUGGEST"]);
-            }
+            console.log(["TRIGGER SUGGEST"]);
+            state.inline_prefer_edit_chaining = true;
+            vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         }
     });
     await thenable;
