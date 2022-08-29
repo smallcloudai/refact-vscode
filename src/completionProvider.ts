@@ -22,9 +22,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 return;
             }
         }
-        if (!state) {
-            return;
-        }
         let whole_doc = document.getText();
         let cursor = document.offsetAt(position);
         let file_name = document.fileName;
@@ -57,8 +54,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let eol_pos = new vscode.Position(position.line, current_line.text.length);
         let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r),."'\]]*$/));
         let fail = !right_of_cursor_has_only_special_chars;
-        if (!fail) {
+        if (!fail && state) {
             fail = state.inline_prefer_edit_chaining;
+            state.inline_prefer_edit_chaining = false;
         }
         let stop_at = cursor;
         let modif_doc = whole_doc;
