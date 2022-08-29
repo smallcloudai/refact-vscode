@@ -154,7 +154,7 @@ export async function showEditChainDiff(editor: vscode.TextEditor)
     let modif_doc = state.edit_chain_modif_doc;
     if (modif_doc) {
         state.showing_diff_for_range = undefined;
-        state.showing_diff_for_function = undefined;
+        state.showing_diff_for_function = "edit-chain";
         await offerDiff(editor, modif_doc, true);
     }
 }

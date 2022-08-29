@@ -150,7 +150,6 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
     }
     // editChaining.cleanupEditChaining(editor);
-
 }
 
 

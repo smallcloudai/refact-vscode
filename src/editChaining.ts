@@ -191,9 +191,16 @@ export async function acceptEditChain(document: vscode.TextDocument, pos: vscode
         console.log(["Accepted deleting..."]);
         e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
-        if (editor) {
-            interactiveDiff.showEditChainDiff(editor);
-            estate.keyboard_events_on(editor);
+        if (!editor) {
+            return;
+        }
+        let modif_doc = state2.edit_chain_modif_doc;
+        if (modif_doc) {
+            state2.showing_diff_modif_doc = modif_doc;
+            state2.showing_diff_move_cursor = true;
+            state2.showing_diff_for_function = "edit-chain";
+            state2.showing_diff_for_range = undefined;
+            estate.switch_mode(state2, estate.Mode.Diff);
         }
     });
 }
