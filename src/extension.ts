@@ -8,6 +8,7 @@ import LensProvider from "./codeLens";
 import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
+import * as fetch from "./fetchAPI";
 import { Mode } from "./estate";
 import PanelWebview from "./panel";
 import SettingsPage from "./settings";
@@ -53,7 +54,10 @@ export function activate(context: vscode.ExtensionContext)
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let state = estate.state_of_editor(editor);
-            if (state.get_mode() === Mode.Diff) {
+            if (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait) {
+                if (state.get_mode() === Mode.DiffWait) {
+                    fetch.cancelAllRequests();
+                }
                 if (state.highlight_json_backup !== undefined) {
                     estate.switch_mode(state, Mode.Highlight);
                 } else {

@@ -71,6 +71,9 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             stop_tokens,
         ));
         let json: any = await request.apiPromise;
+        if (json === undefined) {
+            return;
+        }
         if (json.detail) {
             let detail = json.detail;
             console.log(["ERROR", detail]);
