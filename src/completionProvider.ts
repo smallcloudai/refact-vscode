@@ -52,7 +52,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             stop_tokens = ["\n", "\n\n"];
         }
         let eol_pos = new vscode.Position(position.line, current_line.text.length);
-        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r)"'\]]*$/));
+        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r),."'\]]*$/));
         let fail = !right_of_cursor_has_only_special_chars;
         let stop_at = cursor;
         let modif_doc = whole_doc;
