@@ -129,6 +129,7 @@ body.vscode-light #settings {
     background: transparent;
     cursor: pointer;
     box-sizing: border-box;
+    text-decoration: none;
 }
 body.vscode-light #login {
     color: var(--secondary);

@@ -5,15 +5,16 @@ export class SettingsPage {
 	private readonly _panel: vscode.WebviewPanel;
 	private _disposables: vscode.Disposable[] = [];
 
-	private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+	private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any) {
 		this._panel = panel;
 		this._panel.webview.html = this._getHtmlForWebview(
 			this._panel.webview,
-			extensionUri
+			extensionUri,
+            context
 		);
 	}
 
-	public static render(extensionUri: any) {
+	public static render(context: any) {
 		const panel = vscode.window.createWebviewPanel(
 			"codify-settings",
 			"Codify Settings",
@@ -23,12 +24,21 @@ export class SettingsPage {
 			}
 		);
 		panel.iconPath = vscode.Uri.joinPath(
-			extensionUri,
+			context.extensionUri,
 			"images",
 			"logo-small.png"
 		);
 
-		SettingsPage.currentPanel = new SettingsPage(panel, extensionUri);
+		SettingsPage.currentPanel = new SettingsPage(panel, context.extensionUri, context);
+    
+        var store = context.globalState;
+        panel.webview.onDidReceiveMessage((data) => {
+			switch (data.type) {
+				case "apiKey": {
+                    store.update('codify_apiKey', data.value);
+				}
+			}
+		});
 	}
 
 	public dispose() {
@@ -44,7 +54,7 @@ export class SettingsPage {
 		}
 	}
 
-	_getHtmlForWebview(webview: vscode.Webview, extensionUri: any) {
+	_getHtmlForWebview(webview: vscode.Webview, extensionUri: any, cnt: any) {
 		const scriptUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(extensionUri, "assets", "settings.js")
 		);
@@ -54,6 +64,9 @@ export class SettingsPage {
 		const imagesUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(extensionUri, "images")
 		);
+
+        var store = cnt.globalState;
+        const apiKey = store.get('codify_apiKey');
 
 		const nonce = this.getNonce();
 
@@ -82,9 +95,12 @@ export class SettingsPage {
                     </header>
                     <div class="s-body">
                         <div class="s-body__inline">
-                            <label>User Key</label>
-                            <input class="s-body__input" type="text" name="userKey" />
+                            <label>API Key</label>
+                            <input id="apiKey" class="s-body__input" value="${apiKey}" type="text" name="apiKey"  />
                         </div>
+                    </div>
+                    <div class="s-footer">
+                        <button class="s-submit">Save</button>
                     </div>
                 </div>
                 <script nonce="${nonce}" src="${scriptUri}"></script>

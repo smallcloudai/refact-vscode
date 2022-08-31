@@ -80,3 +80,20 @@ body.vscode-light .s-header__logowhite {
     0% { opacity: 0; }
     100% { opacity: 1; }
 }
+
+.s-submit {
+    margin-top: 50px;
+    font-size: 13px;
+    border: 1px solid var(--secondary);
+    padding: 8px 20px;
+    color: var(--secondary);
+    letter-spacing: 1px;
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: inline-block;
+}
+body.vscode-light .s-submit {
+    color: var(--secondary);
+    border-color: var(--secondary);
+}

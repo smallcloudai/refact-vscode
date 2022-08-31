@@ -3,7 +3,6 @@
 	let presets = document.querySelectorAll(".presets li");
 
 	document.querySelector("#sidebar").addEventListener("click", (event) => {
-		console.log("sidebar clicked", event);
 		if (event.target && event.target.nodeName === "LI") {
 			let text = event.target.innerText;
 			quickInput.value = text;
@@ -31,6 +30,15 @@
 					quickInput.value = message.value;
 				}
 				break;
+            case "updateButtons":
+                if (message.value) {
+                    let login = document.querySelector('#login');
+                    login.style.opacity = 0;
+                    login.style.visiblity = 'hidden';
+                    let settings = document.querySelector('#settings');
+                    settings.innerHTML = message.value;
+                }
+                break;
 			case "updateHistory":
 				if (message.value && message.value.length > 0) {
 					let historyTitle = document.querySelector(".history-title");

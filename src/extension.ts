@@ -47,6 +47,22 @@ export function activate(context: vscode.ExtensionContext)
     // );
     // context.subscriptions.push(codeLensProviderDisposable);
 
+    let store = context.globalState;
+    const handleUri = (uri: vscode.Uri) => {
+        const queryParams = new URLSearchParams(uri.query);  
+        if (queryParams.has('key')) {
+            store.update('codify_apiKey', queryParams.get('key'));
+            store.update('codify_clientName', queryParams.get('client'));
+            global.panelProvider.updateButtons(context);
+        }
+     };
+   
+     context.subscriptions.push(
+       vscode.window.registerUriHandler({
+         handleUri
+       })
+     );
+
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
@@ -100,6 +116,7 @@ export function activate(context: vscode.ExtensionContext)
     //     runEditChaining();
     // });
 
+
     let disposables = storeVersions.storeVersionsInit();
 
     context.subscriptions.push(disposable3);
@@ -109,7 +126,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...disposables);
 
 
-    global.panelProvider = new PanelWebview(context?.extensionUri);
+    global.panelProvider = new PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
         'codify-presets',
         global.panelProvider,
@@ -118,7 +135,7 @@ export function activate(context: vscode.ExtensionContext)
 
 
     let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
-        SettingsPage.render(context.extensionUri);
+        SettingsPage.render(context);
     });
     context.subscriptions.push(settingsCommand);
 }

@@ -6,7 +6,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
 	_history: string[] = [];
 
-	constructor(private readonly _extensionUri: vscode.Uri) {}
+	constructor(private readonly _context: any) {}
 
 	public resolveWebviewView(
 		webviewView: vscode.WebviewView,
@@ -18,7 +18,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		webviewView.webview.options = {
 			enableScripts: true,
 
-			localResourceRoots: [this._extensionUri],
+			localResourceRoots: [this._context.extensionUri],
 		};
 
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
@@ -55,6 +55,12 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		this._view!.webview.postMessage({ command: "updateQuery", value: intent });
 	}
 
+    public updateButtons(context: any) {
+        let store = context.globalState;
+        const clientName = store.get('codify_clientName');
+		this._view!.webview.postMessage({ command: "updateButtons", value: clientName });
+	}
+
 	public addHistory(intent: string) {
 		this._history.push(intent);
 		this._view!.webview.postMessage({
@@ -65,10 +71,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		const scriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._extensionUri, "assets", "sidebar.js")
+			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
 		);
 		const styleMainUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._extensionUri, "assets", "sidebar.css")
+			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
 		);
 
 		const nonce = this.getNonce();
@@ -120,7 +126,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         </ul>
                     </div>
                     <div class="sidebar-controls">
-                        <button id="login">Login / Register</button>
+                        <a href="https://max.smallcloud.ai/codify/?login" id="login">Login / Register</a>
                         <button id="settings">Settings</button>
                     </div>
                 </div>
