@@ -17,8 +17,8 @@ body.vscode-dark {
 .presets li {
     list-style: none;
     cursor: pointer;
-    font-size: 1.25em;
-    line-height: 1.5em;
+    font-size: 1.1em;
+    line-height: 1.4em;
 }
 .presets li:hover {
     color: var(--secondary);
@@ -29,12 +29,12 @@ body.vscode-dark {
 }
 #quickinput {
     width: calc(100% - 36px);
-    height: 36px;
+    height: 32px;
     border: 1px solid var(--secondary);
     background: transparent;
     color: #FFF;
     padding: 0 10px;
-    font-size: 1.25em;
+    font-size: 1.05em;
     box-sizing: border-box;
 }
 body.vscode-light #quickinput {
@@ -44,7 +44,7 @@ body.vscode-light #quickinput {
 #quicksubmit {
     background: transparent;
     color: var(--dark);
-    height: 36px;
+    height: 32px;
     display: flex;
     align-items: center;
     border: 0;
@@ -101,20 +101,26 @@ body.vscode-light .presets-title {
     position: absolute;
     bottom: 20px;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
+    flex-direction: column;
     align-items: center;
     width: 90%;
     box-sizing: border-box;
+    
 }
+
 #settings {
     font-size: 13px;
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
-    letter-spacing: 1px;
     background: transparent;
     cursor: pointer;
     box-sizing: border-box;
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin: 5px 0;
 }
 body.vscode-light #settings {
     color: var(--secondary);
@@ -125,11 +131,14 @@ body.vscode-light #settings {
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
-    letter-spacing: 1px;
     background: transparent;
     cursor: pointer;
     box-sizing: border-box;
     text-decoration: none;
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin: 5px 0;
 }
 body.vscode-light #login {
     color: var(--secondary);

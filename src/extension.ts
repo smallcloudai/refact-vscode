@@ -135,7 +135,7 @@ export function activate(context: vscode.ExtensionContext)
 
 
     let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
-        SettingsPage.render(context);
+        // SettingsPage.render(context);
     });
     context.subscriptions.push(settingsCommand);
 }
