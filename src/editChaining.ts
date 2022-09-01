@@ -188,25 +188,20 @@ function generateDiffSummary(current_line: number, whole_doc: string, modif_doc:
 
 export async function acceptEditChain(document: vscode.TextDocument, pos: vscode.Position)
 {
-    let state1 = estate.state_of_document(document);
+    let state2 = estate.state_of_document(document);
+    if (!state2) {
+        console.log(["Accepted but no state"]);
+        return;
+    }
     console.log(["Accepted", pos.line, pos.character]);
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        console.log(["Accepted no editor"]);
-        return;
-    }
-    let state2 = estate.state_of_editor(editor);
-    if (state1 !== state2) {
-        console.log(["Accepted bad state"]);
-        return;
-    }
+    let editor = state2.editor;
     let next_line_pos = new vscode.Position(pos.line + 1, 0);
     let next_next_line_pos = new vscode.Position(pos.line + 2, 0);
     await editor.edit((e) => {
         console.log(["Accepted deleting..."]);
         e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
-        if (!editor) {
+        if (!editor || !state2) {
             return;
         }
         let modif_doc = state2.edit_chain_modif_doc;
