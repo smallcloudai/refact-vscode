@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as highlight from "./highlight";
 import * as estate from "./estate";
+import * as interactiveDiff from "./interactiveDiff";
 
 class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
@@ -32,7 +33,8 @@ class PanelWebview implements vscode.WebviewViewProvider {
 					}
 					// vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
 					this.addHistory(data.value);
-					highlight.runHighlight(editor, data.value);
+					estate.saveIntent(data.value);
+                    this.presetIntent(data.value);
 					break;
 				}
 				case "quickInput": {
@@ -50,6 +52,27 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			}
 		});
 	}
+
+    public async presetIntent(intent: string) {
+        let editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        let selection = editor.selection;
+        let selectionEmpty = selection.isEmpty;
+
+        if (selectionEmpty) {
+            if (intent) {
+                highlight.runHighlight(editor, intent);
+            }
+        } else {
+            if (intent) {
+                estate.saveIntent(intent);
+                editor.selection = new vscode.Selection(selection.start, selection.start);
+                interactiveDiff.queryDiff(editor, selection, "diff-selection");
+            }
+        }
+    }
 
 	public updateQuery(intent: string) {
 		this._view!.webview.postMessage({ command: "updateQuery", value: intent });

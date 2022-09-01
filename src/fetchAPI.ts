@@ -113,9 +113,10 @@ export function fetchAPI(
         "max_edits": maxEdits,
         "stop": stop_tokens,
     });
+    let apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer AAA1337`,
+        "Authorization": `Bearer ${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",

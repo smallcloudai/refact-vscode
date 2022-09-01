@@ -33,6 +33,11 @@
       "type": "object",
       "title": "Codify",
       "properties": {
+        "codify.apiKey": {
+            "type": "string",
+            "default": null,
+            "description": "API Key"
+        },
         "codify.model": {
           "type": "string",
           "default": "CONTRASTcode/large/stable",
