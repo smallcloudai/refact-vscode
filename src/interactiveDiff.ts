@@ -70,6 +70,12 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             model_function==="diff-atcursor" ? 1 : 10,
             stop_tokens,
         ));
+        state.report_to_mothership_sources = sources;
+        state.report_to_mothership_intent = estate.global_intent;
+        state.report_to_mothership_function = model_function;
+        state.report_to_mothership_cursor_file = file_name;
+        state.report_to_mothership_cursor_pos0 = doc.offsetAt(sensitive_area.start);
+        state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
         let json: any = await request.apiPromise;
         if (json === undefined) {
             return;
@@ -93,6 +99,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     }
     if (!cancelToken.isCancellationRequested) {
         let modif_doc = cache.json["choices"][0]["files"][file_name];
+        state.report_to_mothership_results = cache.json["choices"][0]["files"];
         state.showing_diff_for_range = sensitive_area;
         state.showing_diff_for_function = model_function;
         state.showing_diff_edit_chain = undefined;
@@ -340,6 +347,9 @@ export async function rollback(editor: vscode.TextEditor)
 {
     editChaining.cleanupEditChaining(editor);
     let state = estate.state_of_editor(editor);
+    if (state.diffAddedLines.length == 0) {
+        return;
+    }
     state.diff_changing_doc = true;
     await editor.edit((e) => {
         for (let i=0; i<state.diffAddedLines.length; i++) {
@@ -351,6 +361,16 @@ export async function rollback(editor: vscode.TextEditor)
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
         state.diff_changing_doc = false;
         removeDeco(editor);
+        fetch.report_to_mothership(
+            false,
+            state.report_to_mothership_sources,
+            state.report_to_mothership_results,
+            state.report_to_mothership_intent,
+            state.report_to_mothership_function,
+            state.report_to_mothership_cursor_file,
+            state.report_to_mothership_cursor_pos0,
+            state.report_to_mothership_cursor_pos1,
+        );
     });
 }
 
@@ -358,7 +378,6 @@ export async function rollback(editor: vscode.TextEditor)
 export async function accept(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
-    let suggest_again = state.edit_chain_modif_doc !== undefined;
     state.diff_changing_doc = true;
     let thenable = editor.edit((e) => {
         for (let i=0; i<state.diffDeletedLines.length; i++) {
@@ -388,6 +407,16 @@ export async function accept(editor: vscode.TextEditor)
             state.inline_prefer_edit_chaining = true;
             vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         }
+        fetch.report_to_mothership(
+            true,
+            state.report_to_mothership_sources,
+            state.report_to_mothership_results,
+            state.report_to_mothership_intent,
+            state.report_to_mothership_function,
+            state.report_to_mothership_cursor_file,
+            state.report_to_mothership_cursor_pos0,
+            state.report_to_mothership_cursor_pos1,
+        );
     });
     await thenable;
 }

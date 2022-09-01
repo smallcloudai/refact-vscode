@@ -171,9 +171,9 @@ function generateDiffSummary(current_line: number, whole_doc: string, modif_doc:
     }
     let result = "";
     if (first_line <= current_line) {
-        result = "↑↑ line " + (first_line + 1).toString() + "   ";
+        result = " ⬆️ line " + (first_line + 1).toString() + " ⬆️   ";
     } else {
-        result = "↓↓ line " + (first_line + 1).toString() + "   ";
+        result = " ⬇️ line " + (first_line + 1).toString() + " ⬇️   ";
     }
     for (let c=0; c<count_removed; c++) {
         result += "-";

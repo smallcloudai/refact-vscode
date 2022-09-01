@@ -77,9 +77,7 @@ export function anything_still_working()
 {
     for (let i=0; i<globalRequests.length; i++) {
         let r = globalRequests[i];
-        console.log(["anything_still_working", r.seq]);
         if (!r.cancelToken.isCancellationRequested) {
-            console.log(["yes", r.seq]);
             return true;
         }
     }
@@ -95,6 +93,7 @@ export function cancelAllRequests()
         }
     }
 }
+
 
 export function fetchAPI(
     cancelToken: vscode.CancellationToken,
@@ -150,5 +149,48 @@ export function fetchAPI(
         init.signal = abort.signal;
     }
     let promise = fetchH2.fetch(req, init);
+    return promise;
+}
+
+
+export async function report_to_mothership(
+    positive: boolean,
+    sources: { [key: string]: string },
+    results: { [key: string]: string },
+    intent: string,
+    functionName: string,
+    cursor_file: string,
+    cursor_pos0: number,
+    cursor_pos1: number,
+) {
+    const url = "https://inference.smallcloud.ai/v1/report-to-mothership";
+    const body = JSON.stringify({
+        "positive": positive,
+        "sources": sources,
+        "results": results,
+        "intent": intent,
+        "function": functionName,
+        "cursor_file": cursor_file,
+        "cursor0": cursor_pos0,
+        "cursor1": cursor_pos1,
+    });
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer aaabbbxxxyyy`,
+    };
+    let req = new fetchH2.Request(url, {
+        method: "POST",
+        headers: headers,
+        body: body,
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    });
+    let promise = fetchH2.fetch(req);
+    promise.then((result) => {
+        console.log([positive ? "👍" : "👎", "report_to_mothership", result.status]);
+    }).catch((error) => {
+        console.log(["report_to_mothership", "error", error]);
+    });
     return promise;
 }

@@ -118,7 +118,6 @@ export function clearHighlight(editor: vscode.TextEditor)
 
 export async function hl_animation_start(editor: vscode.TextEditor, sensitive_area: vscode.Range)
 {
-    let state = estate.state_of_editor(editor);
     let yellow = vscode.window.createTextEditorDecorationType({
         backgroundColor: 'rgba(255, 255, 0, 0.5)',
     });

@@ -63,6 +63,14 @@ export class StateOfEditor {
     public cursor_move_event: any = undefined;
     public text_edited_event: any = undefined;
 
+    public report_to_mothership_sources: { [key: string]: string } = {};
+    public report_to_mothership_results: { [key: string]: string } = {};
+    public report_to_mothership_intent: string = "";
+    public report_to_mothership_function: string = "";
+    public report_to_mothership_cursor_file: string = "";
+    public report_to_mothership_cursor_pos0: number = 0;
+    public report_to_mothership_cursor_pos1: number = 0;
+
     constructor(editor: vscode.TextEditor)
     {
         this.editor = editor;
