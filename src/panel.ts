@@ -43,7 +43,8 @@ class PanelWebview implements vscode.WebviewViewProvider {
 						return;
 					}
 					this.addHistory(data.value);
-					highlight.runHighlight(editor, data.value);
+					estate.saveIntent(data.value);
+                    this.presetIntent(data.value);
 					break;
 				}
 				case "openSettings": {
