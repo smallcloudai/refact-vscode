@@ -73,6 +73,19 @@ export async function waitAllRequests()
     }
 }
 
+export function anything_still_working()
+{
+    for (let i=0; i<globalRequests.length; i++) {
+        let r = globalRequests[i];
+        console.log(["anything_still_working", r.seq]);
+        if (!r.cancelToken.isCancellationRequested) {
+            console.log(["yes", r.seq]);
+            return true;
+        }
+    }
+    return false;
+}
+
 export function cancelAllRequests()
 {
     for (let i=0; i<globalRequests.length; i++) {
