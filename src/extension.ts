@@ -11,7 +11,7 @@ import * as estate from "./estate";
 import * as fetch from "./fetchAPI";
 import { Mode } from "./estate";
 import PanelWebview from "./panel";
-import SettingsPage from "./settings";
+// import SettingsPage from "./settings";
 
 
 declare global {
@@ -135,7 +135,7 @@ export function activate(context: vscode.ExtensionContext)
 
 
     let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
-        // SettingsPage.render(context);
+        vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.codify' );
     });
     context.subscriptions.push(settingsCommand);
 }
