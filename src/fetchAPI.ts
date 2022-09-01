@@ -174,9 +174,10 @@ export async function report_to_mothership(
         "cursor0": cursor_pos0,
         "cursor1": cursor_pos1,
     });
+    let apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer aaabbbxxxyyy`,
+        "Authorization": `Bearer ${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
