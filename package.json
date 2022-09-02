@@ -13,7 +13,7 @@
     "type": "git",
     "url": "https://github.com/smallcloudai/plugin-vscode"
   },
-  "version": "0.0.8",
+  "version": "0.0.9",
   "engines": {
     "vscode": "^1.69.0"
   },
@@ -41,10 +41,6 @@
         "codify.model": {
           "type": "string",
           "default": "CONTRASTcode/large/stable",
-          "enum": [
-            "CONTRASTcode/large/debug",
-            "CONTRASTcode/large/stable"
-          ],
           "description": "Model Name"
         },
         "codify.temperature": {
