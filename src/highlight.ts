@@ -41,9 +41,12 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
         stop_tokens,
     ));
     hl_animation_start(editor, editor.selection);
-    let json: any = await request.apiPromise;
-    global.menu.statusbarError(false);
-    if (json) {
+    let json: any;
+    try {
+        global.menu.statusbarError(false);
+        global.menu.statusbarLoading(true);
+        json = await request.apiPromise;
+    } finally {
         global.menu.statusbarLoading(false);
     }
     if (json.detail) {
@@ -124,26 +127,29 @@ export async function hl_animation_start(editor: vscode.TextEditor, sensitive_ar
     let animation_ranges: vscode.Range[] = [];
     let line0 = sensitive_area.start.line;
     let line1 = sensitive_area.end.line;
-    while (fetch.anything_still_working()) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        animation_ranges.length = 0;
-        if (line0 >= 0) {
-            let line0_txt = editor.document.lineAt(line0);
-            animation_ranges.push(new vscode.Range(
-                new vscode.Position(line0, 0),
-                new vscode.Position(line0, line0_txt.text.length),
-            ));
+    try {
+        while (fetch.anything_still_working()) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            animation_ranges.length = 0;
+            if (line0 >= 0) {
+                let line0_txt = editor.document.lineAt(line0);
+                animation_ranges.push(new vscode.Range(
+                    new vscode.Position(line0, 0),
+                    new vscode.Position(line0, line0_txt.text.length),
+                ));
+            }
+            if (line1 >= 0) {
+                let line1_txt = editor.document.lineAt(line1);
+                animation_ranges.push(new vscode.Range(
+                    new vscode.Position(line1, 0),
+                    new vscode.Position(line1, line1_txt.text.length),
+                ));
+            }
+            editor.setDecorations(yellow, animation_ranges);
+            line0 -= 1;
+            line1 += 1;
         }
-        if (line1 >= 0) {
-            let line1_txt = editor.document.lineAt(line1);
-            animation_ranges.push(new vscode.Range(
-                new vscode.Position(line1, 0),
-                new vscode.Position(line1, line1_txt.text.length),
-            ));
-        }
-        editor.setDecorations(yellow, animation_ranges);
-        line0 -= 1;
-        line1 += 1;
+    } finally {
+        yellow.dispose();
     }
-    yellow.dispose();
 }

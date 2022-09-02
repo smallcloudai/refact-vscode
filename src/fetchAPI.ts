@@ -162,6 +162,7 @@ export async function report_to_mothership(
     cursor_file: string,
     cursor_pos0: number,
     cursor_pos1: number,
+    // TODO: user thought for N seconds
 ) {
     const url = "https://inference.smallcloud.ai/v1/report-to-mothership";
     const body = JSON.stringify({
