@@ -109,7 +109,7 @@ export function fetchAPI(
 ) {
     const url = "https://inference.smallcloud.ai/v1/contrast";
     let model = vscode.workspace.getConfiguration().get('codify.model');
-    if(!model) {
+    if(typeof model === 'undefined' || model === null || model === '') {
         model = 'CONTRASTcode/stable';
     }
     let temp = vscode.workspace.getConfiguration().get('codify.temperature');
