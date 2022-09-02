@@ -38,11 +38,6 @@
             "default": null,
             "description": "API Key"
         },
-        "codify.model": {
-          "type": "string",
-          "default": "CONTRASTcode/large/stable",
-          "description": "Model Name"
-        },
         "codify.temperature": {
             "type": "number",
             "default": 0.2,
