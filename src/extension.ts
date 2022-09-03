@@ -47,21 +47,10 @@ export function activate(context: vscode.ExtensionContext)
     // );
     // context.subscriptions.push(codeLensProviderDisposable);
 
-    let store = context.globalState;
-    const handleUri = (uri: vscode.Uri) => {
-        const queryParams = new URLSearchParams(uri.query);  
-        if (queryParams.has('key')) {
-            store.update('codify_apiKey', queryParams.get('key'));
-            store.update('codify_clientName', queryParams.get('client'));
-            global.panelProvider.updateButtons(context);
-        }
-     };
-   
-     context.subscriptions.push(
-       vscode.window.registerUriHandler({
-         handleUri
-       })
-     );
+    let auth = checkAuth(context);
+    // console.log('auth', auth);
+    let token = generateToken();
+    // console.log('token', token);
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
@@ -185,6 +174,28 @@ export async function askIntent()
     }
     // vscode.window.showInformationMessage(`Got: ${result}`);
 }
+
+export function checkAuth(context:any) {
+    const store = context.globalState;
+    // let apiKey = store.get('codify_apiKey');
+    let clientName = store.get('codify_auth');
+    if(!clientName) { return false; }
+    return true;
+    
+    // store.update('codify_apiKey', queryParams.get('key'));
+    // store.update('codify_clientName', queryParams.get('client'));
+}
+
+export function getApiKey() {
+    const apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
+    if(!apiKey) { return false; }
+    return apiKey;
+}
+
+export function generateToken() {
+    return Math.random().toString(26).substring(2) + Math.random().toString(26).substring(2);
+}
+
 
 export function deactivate()
 {

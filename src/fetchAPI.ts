@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
+import { getApiKey } from './extension';
 
 
 let globalSeq = 100;
@@ -127,7 +128,7 @@ export function fetchAPI(
         "max_edits": maxEdits,
         "stop": stop_tokens,
     });
-    let apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
+    const apiKey = getApiKey();
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
@@ -177,7 +178,7 @@ export async function report_to_mothership(
         "cursor0": cursor_pos0,
         "cursor1": cursor_pos1,
     });
-    let apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
+    const apiKey = getApiKey();
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
