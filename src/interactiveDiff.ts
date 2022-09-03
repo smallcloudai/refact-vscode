@@ -347,9 +347,6 @@ export async function rollback(editor: vscode.TextEditor)
 {
     editChaining.cleanupEditChaining(editor);
     let state = estate.state_of_editor(editor);
-    if (state.diffAddedLines.length == 0) {
-        return;
-    }
     state.diff_changing_doc = true;
     await editor.edit((e) => {
         for (let i=0; i<state.diffAddedLines.length; i++) {

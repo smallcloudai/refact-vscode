@@ -78,7 +78,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
         console.log(["echain", key]);
         console.log(["added", count_added, "removed", count_removed]);
         first_time_a_lot_of_changes = key;
-        if (count_added + count_removed > 5) {
+        if (count_added + count_removed > 2) {
             console.log(["HAPPY"]);
             break;
         }
@@ -124,6 +124,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
         return "";
     }
 }
+
 
 function generateDiffSummary(current_line: number, whole_doc: string, modif_doc: string): string
 {
