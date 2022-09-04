@@ -13,7 +13,7 @@
     "type": "git",
     "url": "https://github.com/smallcloudai/plugin-vscode"
   },
-  "version": "0.0.9",
+  "version": "0.0.10",
   "engines": {
     "vscode": "^1.69.0"
   },
