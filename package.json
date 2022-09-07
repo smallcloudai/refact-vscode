@@ -13,11 +13,13 @@
     "type": "git",
     "url": "https://github.com/smallcloudai/plugin-vscode"
   },
+  "bugs": {
+    "url": "https://github.com/smallcloudai/plugin-vscode/issues/"
+  },
   "version": "0.0.11",
   "engines": {
     "vscode": "^1.69.0"
   },
-
   "categories": [
     "Programming Languages",
     "Snippets",
@@ -26,6 +28,13 @@
   "activationEvents": [
     "onStartupFinished",
     "onView:codify-presets"
+  ],
+  "badges": [
+        {
+            "url": "https://img.shields.io/github/stars/smallcloudai/plugin-vscode?style=social",
+            "description": "Github Stars",
+            "href": "https://smallcloud.ai"
+        }
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -44,11 +53,6 @@
             "minimum": 0.0,
             "maximum": 0.8,
             "description": "Temperature (0.0 - 0.8)"
-        },
-        "codify.debugMode": {
-            "type": "boolean",
-            "default": 0,
-            "description": "Debug Mode"
         }
       }
     },

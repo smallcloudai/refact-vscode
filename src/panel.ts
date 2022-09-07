@@ -2,6 +2,8 @@ import * as vscode from "vscode";
 import * as highlight from "./highlight";
 import * as estate from "./estate";
 import * as interactiveDiff from "./interactiveDiff";
+import { fetch } from 'fetch-h2';
+import { checkAuth } from './extension';
 
 class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
@@ -15,14 +17,18 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		_token: vscode.CancellationToken
 	) {
 		this._view = webviewView;
-
+        
 		webviewView.webview.options = {
-			enableScripts: true,
-
+            enableScripts: true,
+            
 			localResourceRoots: [this._context.extensionUri],
 		};
-
+        
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        const auth = checkAuth(this._context);
+        if(auth) {
+            webviewView.webview.postMessage({ command: "alreadyLogged", value: auth});
+        }
 
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
@@ -47,6 +53,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     this.presetIntent(data.value);
 					break;
 				}
+                case "runLogin": {
+                    this.runLogin(this._context);    
+                    break;
+                }
 				case "openSettings": {
 					vscode.commands.executeCommand("plugin-vscode.openSettings");
 				}
@@ -79,11 +89,19 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		this._view!.webview.postMessage({ command: "updateQuery", value: intent });
 	}
 
-    public updateButtons(context: any) {
+    async runLogin(context: any) {
+        const url = 'https://max.smallcloud.ai/users/apikey/' + global.userToken;
+        const response = await fetch(url);
+        const responseText = await response.text();
+        const data = JSON.parse(responseText);
+        // console.log(data);
+		this._view!.webview.postMessage({ command: "loggedIn", value: data });
         let store = context.globalState;
-        const clientName = store.get('codify_clientName');
-		this._view!.webview.postMessage({ command: "updateButtons", value: clientName });
+        store.update('codify_userName',data.userName);
+        store.update('codify_apiKey',data.apiKey);
+        await vscode.workspace.getConfiguration().update('codify.apiKey', data.apiKey,vscode.ConfigurationTarget.Global);
 	}
+    
 
 	public addHistory(intent: string) {
 		this._history.push(intent);
@@ -111,7 +129,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 					Use a content security policy to only allow loading images from https or from our extension directory,
 					and only allow scripts that have a specific nonce.
 				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+				<!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
 				<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 				<title>Presets</title>
@@ -150,8 +168,8 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         </ul>
                     </div>
                     <div class="sidebar-controls">
-                        <a href="https://max.smallcloud.ai/codify/?login" id="login">Login / Register</a>
-                        <button id="settings">Settings</button>
+                        <a tabindex="-1" href="https://max.smallcloud.ai/codify/?login&token=${global.userToken}" id="login">Login / Register</a>
+                        <button tabindex="-1" id="settings">Settings</button>
                     </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>

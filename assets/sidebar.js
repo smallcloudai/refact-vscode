@@ -1,6 +1,7 @@
 (function () {
 	const vscode = acquireVsCodeApi();
 	let presets = document.querySelectorAll(".presets li");
+    let token = 'r2kv3sxwj9e-3glml41tuzp';
 
 	document.querySelector("#sidebar").addEventListener("click", (event) => {
 		if (event.target && event.target.nodeName === "LI") {
@@ -21,6 +22,11 @@
 	settingsButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "openSettings" });
 	});
+    
+	const loginButton = document.querySelector("#login");
+	loginButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "runLogin" });
+	});
 
 	window.addEventListener("message", (event) => {
 		const message = event.data;
@@ -30,13 +36,27 @@
 					quickInput.value = message.value;
 				}
 				break;
-            case "updateButtons":
+            case "getToken":
+                if (message.value) {
+                    token = message.value;
+                }
+                break;
+            case "loggedIn":
                 if (message.value) {
                     let login = document.querySelector('#login');
                     login.style.opacity = 0;
                     login.style.visiblity = 'hidden';
                     let settings = document.querySelector('#settings');
-                    settings.innerHTML = message.value;
+                    settings.innerHTML = message.value.userName;
+                }
+                break;
+            case "alreadyLogged":
+                if (message.value) {
+                    let login = document.querySelector('#login');
+                    login.style.opacity = 0;
+                    login.style.visiblity = 'hidden';
+                    let settings = document.querySelector('#settings');
+                    settings.innerHTML = message.value.userName;
                 }
                 break;
 			case "updateHistory":

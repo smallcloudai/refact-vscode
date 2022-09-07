@@ -18,6 +18,7 @@ declare global {
     var menu: any;
     var panelProvider: any;
     var settingsPage: any;
+    var userToken: string;
 }
 
 
@@ -47,10 +48,7 @@ export function activate(context: vscode.ExtensionContext)
     // );
     // context.subscriptions.push(codeLensProviderDisposable);
 
-    let auth = checkAuth(context);
-    // console.log('auth', auth);
-    let token = generateToken();
-    // console.log('token', token);
+    global.userToken = getUserToken(context);
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
@@ -177,13 +175,10 @@ export async function askIntent()
 
 export function checkAuth(context:any) {
     const store = context.globalState;
-    // let apiKey = store.get('codify_apiKey');
-    let clientName = store.get('codify_auth');
-    if(!clientName) { return false; }
-    return true;
-    
-    // store.update('codify_apiKey', queryParams.get('key'));
-    // store.update('codify_clientName', queryParams.get('client'));
+    let apiKey = store.get('codify_apiKey');
+    let userName = store.get('codify_userName');
+    if(!userName || !apiKey) { return false; }
+    return {'apiKey': apiKey, 'userName': userName};
 }
 
 export function getApiKey() {
@@ -192,11 +187,20 @@ export function getApiKey() {
     return apiKey;
 }
 
-export function generateToken() {
-    return Math.random().toString(26).substring(2) + Math.random().toString(26).substring(2);
+export function getUserToken(context: any) {
+    const store = context.globalState;
+    let token = store.get('codify_userToken');
+    if(!token) {
+        token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
+        store.update('codify_userToken',token);
+        return token;
+    }
+    else {
+        return token;
+    }
 }
 
-
+//
 export function deactivate()
 {
 }
