@@ -11,7 +11,7 @@ import * as estate from "./estate";
 import * as fetch from "./fetchAPI";
 import { Mode } from "./estate";
 import PanelWebview from "./panel";
-// import SettingsPage from "./settings";
+import BugPage from "./bug";
 
 
 declare global {
@@ -27,10 +27,20 @@ export function activate(context: vscode.ExtensionContext)
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
     global.menu = new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
+    global.menu.statusbarGuest(true);
+
 
     let docSelector = {
         scheme: "file"
     };
+
+    // POPUP window with disable/enable question
+    // vscode.window.showInformationMessage('Disable Codify?','Disable Globally','Disable for Current File')
+    // .then(selection => {
+    //   if (selection === 'Disable Globally') {
+    //     // console.log(window.localStorage);
+    //   }
+    // });
 
     // const pluginRun = pluginFirstRun(context);
     // if(!pluginRun) {
@@ -120,11 +130,26 @@ export function activate(context: vscode.ExtensionContext)
     );
     context.subscriptions.push(view);
 
+    const auth = checkAuth(context);
+    if(auth) {
+        global.menu.statusbarGuest(false);
+    }
+
 
     let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
         vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.codify' );
     });
     context.subscriptions.push(settingsCommand);
+
+    let bugCommand = vscode.commands.registerCommand('plugin-vscode.openBug', () => {
+        BugPage.render(context);
+    });
+    context.subscriptions.push(bugCommand);
+
+    let openLogin = vscode.commands.registerCommand('plugin-vscode.openLogin', () => {
+        vscode.env.openExternal(vscode.Uri.parse(`https://max.smallcloud.ai/codify/?login&token=${global.userToken}`));
+    });
+    context.subscriptions.push(openLogin);
 }
 
 export function pluginFirstRun(context: vscode.ExtensionContext) {

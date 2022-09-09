@@ -50,7 +50,6 @@ body.vscode-light .s-header__logowhite {
     padding: 0;
     line-height: 18px;
 	font-size: 24px;
-    letter-spacing: 2px;
     color: var(--color);
 }
 
@@ -61,19 +60,43 @@ body.vscode-light .s-header__logowhite {
 }
 .s-body label {
     font-weight: bold;
-    font-size: 16px;
-    margin-right: 10px;
+    font-size: 18px;
+    margin-right: 0px;
+    margin-bottom: 10px;
 }
 .s-body__inline {
     display: flex;
-    align-items: center;;
+    align-items: center;
+}
+.s-body__item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    width: 100%;
 }
 .s-body__input {
     background: transparent;
     border: 1px solid var(--secondary);
     color: var(--color);
     padding: 8px 16px;
-    min-width: 300px;
+    max-width: 450px;
+    width: 100%;
+}
+.s-body__textarea {
+    background: transparent;
+    border: 1px solid var(--secondary);
+    color: var(--color);
+    padding: 8px 16px;
+    max-width: 450px;
+    width: 100%;
+    height: 150px;
+}
+
+.s-body__note {
+    opacity: 0.5;
+    margin-top: 5px;
+    font-size: 13px;
 }
 
 @keyframes fadeIn {
@@ -82,7 +105,7 @@ body.vscode-light .s-header__logowhite {
 }
 
 .s-submit {
-    margin-top: 50px;
+    margin-top: 30px;
     font-size: 13px;
     border: 1px solid var(--secondary);
     padding: 8px 20px;
@@ -92,6 +115,7 @@ body.vscode-light .s-header__logowhite {
     cursor: pointer;
     box-sizing: border-box;
     display: inline-block;
+    margin-bottom: 50px;
 }
 body.vscode-light .s-submit {
     color: var(--secondary);

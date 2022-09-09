@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/smallcloudai/plugin-vscode/issues/"
   },
-  "version": "0.0.11",
+  "version": "0.0.12",
   "engines": {
     "vscode": "^1.69.0"
   },
@@ -42,6 +42,16 @@
       "type": "object",
       "title": "Codify",
       "properties": {
+        "codify.privacySaveData": {
+            "type": "boolean",
+            "default": null,
+            "description": "Privacy: Save My Data"
+        },
+        "codify.privacyTrainData": {
+            "type": "boolean",
+            "default": null, 
+            "description": "Privacy: Allow to train model on my data"
+        },
         "codify.apiKey": {
             "type": "string",
             "default": null,
@@ -63,6 +73,11 @@
         "category": "Codify"
       },
       {
+        "command": "plugin-vscode.deactivate",
+        "title": "Deactivate",
+        "category": "Codify"
+      },
+      {
         "command": "plugin-vscode.editChaining",
         "title": "Edit Chaining",
         "category": "Codify"
@@ -70,6 +85,11 @@
       {
         "command": "plugin-vscode.openSettings",
         "title": "Settings Page",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.openLogin",
+        "title": "Login / Register",
         "category": "Codify"
       }
     ],

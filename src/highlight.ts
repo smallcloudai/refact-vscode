@@ -28,6 +28,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     let stop_tokens: string[] = [];
     global.menu.statusbarLoading(true);
     let max_tokens = 0;
+
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         sources,

@@ -19,7 +19,7 @@ import * as vscode from 'vscode';
         item.command = statusBarMenu;
     
         context.subscriptions.push(item);
-        item.text = `$(codify-logo)codify`;
+        item.text = `$(codify-logo) codify`;
         item.tooltip = `Settings`;
         item.show();
 
@@ -34,23 +34,35 @@ import * as vscode from 'vscode';
      */
     statusbarLoading(state: boolean) {
         if(state) {
-            this.menu.text = `$(sync~spin)codify`;
-            this.menu.color = '#ffff7d';
+            this.menu.text = `$(sync~spin) codify`;
+            // this.menu.color = '#ffff7d';
         }
         else {
-            this.menu.text = `$(codify-logo)codify`;
-            this.menu.color = undefined;
+            this.menu.text = `$(codify-logo) codify`;
+            // this.menu.color = undefined;
         }
         return state;
     }
     
     statusbarError(state: boolean) {
         if(state) {
-            this.menu.text = `$(testing-error-icon)codify`;
-            this.menu.color = 'red';
+            this.menu.text = `$(testing-error-icon) codify`;
+            this.menu.color = '';
         }
         else {
-            this.menu.text = `$(codify-logo)codify`;
+            this.menu.text = `$(codify-logo) codify`;
+            this.menu.color = undefined;
+        }
+        return state;
+    }
+
+    statusbarGuest(state: boolean) {
+        if(state) {
+            this.menu.text = `$(person) codify`;
+            this.menu.color = '#FF0010';
+        }
+        else {
+            this.menu.text = `$(codify-logo) codify`;
             this.menu.color = undefined;
         }
         return state;

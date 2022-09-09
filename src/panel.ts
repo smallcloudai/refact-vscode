@@ -57,6 +57,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     this.runLogin(this._context);    
                     break;
                 }
+                case "openBug": {
+                    vscode.commands.executeCommand("plugin-vscode.openBug");
+                    break;
+                }
 				case "openSettings": {
 					vscode.commands.executeCommand("plugin-vscode.openSettings");
 				}
@@ -170,6 +174,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="sidebar-controls">
                         <a tabindex="-1" href="https://max.smallcloud.ai/codify/?login&token=${global.userToken}" id="login">Login / Register</a>
                         <button tabindex="-1" id="settings">Settings</button>
+                        <button tabindex="-1" id="bug">Bug Report</button>
                     </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>

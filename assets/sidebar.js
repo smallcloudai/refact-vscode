@@ -22,7 +22,11 @@
 	settingsButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "openSettings" });
 	});
-    
+  
+    const reportButton = document.querySelector("#bug");
+	reportButton.addEventListener("click", () => {
+		vscode.postMessage({ type: "openBug" });
+	});  
 	const loginButton = document.querySelector("#login");
 	loginButton.addEventListener("click", () => {
         vscode.postMessage({ type: "runLogin" });
@@ -48,6 +52,8 @@
                     login.style.visiblity = 'hidden';
                     let settings = document.querySelector('#settings');
                     settings.innerHTML = message.value.userName;
+                    let bug = document.querySelector('#bug');
+                    bug.style.display = 'block'; 
                 }
                 break;
             case "alreadyLogged":
@@ -57,6 +63,8 @@
                     login.style.visiblity = 'hidden';
                     let settings = document.querySelector('#settings');
                     settings.innerHTML = message.value.userName;
+                    let bug = document.querySelector('#bug');
+                    bug.style.display = 'block'; 
                 }
                 break;
 			case "updateHistory":

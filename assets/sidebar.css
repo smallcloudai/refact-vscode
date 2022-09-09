@@ -108,7 +108,23 @@ body.vscode-light .presets-title {
     box-sizing: border-box;
     
 }
-
+#bug {
+    font-size: 13px;
+    border: 1px solid var(--secondary);
+    padding: 8px 20px;
+    color: var(--secondary);
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+    display: none;
+    width: 100%;
+    text-align: center;
+    margin: 5px 0;
+}
+body.vscode-light #bug {
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
 #settings {
     font-size: 13px;
     border: 1px solid var(--secondary);
