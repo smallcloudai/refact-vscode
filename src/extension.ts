@@ -200,9 +200,10 @@ export async function askIntent()
 
 export function checkAuth(context:any) {
     const store = context.globalState;
-    let apiKey = store.get('codify_apiKey');
+    let apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
     let userName = store.get('codify_userName');
-    if(!userName || !apiKey) { return false; }
+    if(!apiKey && apiKey === '') { return false; }
+    if(!userName && userName === '') { return false; }
     return {'apiKey': apiKey, 'userName': userName};
 }
 
@@ -226,6 +227,8 @@ export function getUserToken(context: any) {
 }
 
 //
-export function deactivate()
+export function deactivate(context: vscode.ExtensionContext)
 {
+    const store = context.globalState;
+    store.update('codify_userName',null);
 }
