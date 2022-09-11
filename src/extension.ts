@@ -61,7 +61,7 @@ export function activate(context: vscode.ExtensionContext)
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let state = estate.state_of_editor(editor);
-            if (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait) {
+            if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
                 if (state.get_mode() === Mode.DiffWait) {
                     fetch.cancelAllRequests();
                 }
@@ -70,10 +70,10 @@ export function activate(context: vscode.ExtensionContext)
                 } else {
                     estate.switch_mode(state, Mode.Normal);
                 }
-            } else if (state.get_mode() === Mode.Highlight) {
+            } else if (state && state.get_mode() === Mode.Highlight) {
                 estate.back_to_normal(state);
             }
-            if (state.get_mode() === Mode.Normal) {
+            if (state && state.get_mode() === Mode.Normal) {
                 vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
                 console.log(["ESC OFF"]);
             }
@@ -84,7 +84,7 @@ export function activate(context: vscode.ExtensionContext)
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let state = estate.state_of_editor(editor);
-            if (state.get_mode() === Mode.Diff) {
+            if (state && state.get_mode() === Mode.Diff) {
                 interactiveDiff.accept(editor);
             }
         }
@@ -96,7 +96,7 @@ export function activate(context: vscode.ExtensionContext)
             return;
         }
         let state = estate.state_of_editor(editor);
-        if (state.get_mode() === Mode.Diff) {
+        if (state && state.get_mode() === Mode.Diff) {
             rollback_and_regen(editor);
         } else {
             askIntent();
@@ -248,17 +248,16 @@ export async function status_bar_clicked()
         await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
         console.log(["disable", lang]);
     } else {
-        vscode.window.showInformationMessage(
+        let selection = await vscode.window.showInformationMessage(
             "Enable Codify for the programming language \"" + lang + "\"?",
             "Enable",
             "Bug Report..."
-        ).then(selection => {
-            if (selection === "Enable") {
-                vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
-                console.log(["enable", lang]);
-            } else if (selection === "Bug Report...") {
-                console.log(["bug report!!!"]);
-            }
-        });
+        );
+        if (selection === "Enable") {
+            await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
+            console.log(["enable", lang]);
+        } else if (selection === "Bug Report...") {
+            console.log(["bug report!!!"]);
+        }
     }
 }

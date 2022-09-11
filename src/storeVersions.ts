@@ -86,6 +86,10 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
 function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
 {
     let document = event.document;
+    if (!estate.is_lang_enabled(document)) {
+        fnReset(document, 0);
+        return;
+    }
     let contentChanges = event.contentChanges;
     let reason = event.reason;
     if(contentChanges.length === 0) { return; };
@@ -123,6 +127,10 @@ function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
     }
     let document = editor.document;
     let line0 = editor.selection.start.line;
+    if (!estate.is_lang_enabled(document)) {
+        fnReset(document, 0);
+        return;
+    }
     console.log(["onChangeActiveEditor"]);
     fnSaveChange(document, line0);
 }

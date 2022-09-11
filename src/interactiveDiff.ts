@@ -10,6 +10,9 @@ import * as highlight from "./highlight";
 export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     for (let i = 0; i < state.sensitive_ranges.length; i++) {
         const element = state.sensitive_ranges[i];
         if (element.range.contains(pos)) {
@@ -29,6 +32,9 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     // We get there every time the cursor moves (very often).
     // NOT called from estate switch mode
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     let doc = editor.document;
     let cache_key = doc.offsetAt(sensitive_area.start) + 10000*doc.offsetAt(sensitive_area.end);
     let cache = state.area2cache.get(cache_key);
@@ -112,6 +118,9 @@ export async function animationStart(editor: vscode.TextEditor, sensitive_area: 
 {
     highlight.clearHighlight(editor);
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     let animation_decos: vscode.TextEditorDecorationType[] = [];
     let animation_ranges: vscode.Range[][] = [];
     for (let c=0; c<20; c++) {
@@ -158,6 +167,9 @@ export async function animationStart(editor: vscode.TextEditor, sensitive_area: 
 export async function showEditChainDiff(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     let modif_doc = state.edit_chain_modif_doc;
     if (modif_doc) {
         state.showing_diff_for_range = undefined;
@@ -169,6 +181,9 @@ export async function showEditChainDiff(editor: vscode.TextEditor)
 export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, move_cursor: boolean)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     removeDeco(editor);
     highlight.clearHighlight(editor);
     let document = editor.document;
@@ -187,6 +202,9 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
         let chunk_remember_removed = '';
         let chunk_remember_removed_line = -1;
         diff.forEach((part: any) => {
+            if (!state) {
+                return;
+            }
             let span = part.value;
             let span_lines = span.split('\n');
             let span_lines_count = span_lines.length - 1;
@@ -270,6 +288,9 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
         });
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
         let state = estate.state_of_editor(editor);
+        if (!state) {
+            return;
+        }
         state.diff_changing_doc = false;
         let norm_fg = new vscode.ThemeColor('editor.foreground');
         // let ghost_text_color = new vscode.ThemeColor('editorGhostText.foreground');
@@ -334,6 +355,9 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
 export function removeDeco(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     for (let deco of state.diffDecos) {
         deco.dispose();
     }
@@ -347,8 +371,14 @@ export async function rollback(editor: vscode.TextEditor)
 {
     editChaining.cleanupEditChaining(editor);
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     state.diff_changing_doc = true;
     await editor.edit((e) => {
+        if (!state) {
+            return;
+        }
         for (let i=0; i<state.diffAddedLines.length; i++) {
             e.delete(new vscode.Range(
                 new vscode.Position(state.diffAddedLines[i], 0),
@@ -356,6 +386,9 @@ export async function rollback(editor: vscode.TextEditor)
             ));
         }
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+        if (!state) {
+            return;
+        }
         state.diff_changing_doc = false;
         removeDeco(editor);
         fetch.report_to_mothership(
@@ -375,8 +408,14 @@ export async function rollback(editor: vscode.TextEditor)
 export async function accept(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     state.diff_changing_doc = true;
     let thenable = editor.edit((e) => {
+        if (!state) {
+            return;
+        }
         for (let i=0; i<state.diffDeletedLines.length; i++) {
             e.delete(new vscode.Range(
                 new vscode.Position(state.diffDeletedLines[i], 0),
@@ -386,6 +425,9 @@ export async function accept(editor: vscode.TextEditor)
         }
     }, { undoStopBefore: false, undoStopAfter: true });
     thenable.then(() => {
+        if (!state) {
+            return;
+        }
         state.diff_changing_doc = false;
         removeDeco(editor);
         vscode.commands.executeCommand('setContext', 'codify.runTab', false);
@@ -423,6 +465,9 @@ export async function regen(editor: vscode.TextEditor)
 {
     editChaining.cleanupEditChaining(editor);
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     if (state.showing_diff_edit_chain !== undefined) {
         await editChaining.runEditChaining(true);
         await showEditChainDiff(editor);
@@ -439,6 +484,9 @@ export async function regen(editor: vscode.TextEditor)
 export function handsOff(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     state.edit_chain_modif_doc = undefined;
     removeDeco(editor);
 }

@@ -10,6 +10,9 @@ import * as estate from "./estate";
 export async function runHighlight(editor: vscode.TextEditor, intent: string | undefined)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     if (intent === undefined) {
         intent = estate.global_intent;
     } else {
@@ -66,6 +69,9 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         return;
     }
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     let doc = editor.document;
     for (let index = 0; index < json.highlight.length; index++) {
         const element = json.highlight[index];
@@ -111,6 +117,9 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
 export function clearHighlight(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     for (let index = 0; index < state.highlights.length; index++) {
         const element = state.highlights[index];
         element.dispose();

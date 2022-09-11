@@ -2,9 +2,9 @@
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-import * as editChaining from "./editChaining";
 import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
+import * as langDB from "./langDB";
 
 
 export let global_intent: string = "Fix";
@@ -90,8 +90,24 @@ export class StateOfEditor {
 let editor2state = new Map<vscode.TextEditor, StateOfEditor>();
 
 
-export function state_of_editor(editor: vscode.TextEditor): StateOfEditor
+export function is_lang_enabled(document: vscode.TextDocument): boolean
 {
+    let lang = langDB.language_from_filename(document.fileName);
+    let enabled: boolean|undefined = vscode.workspace.getConfiguration().get(`codify.lang.${lang}`);
+    if (enabled === undefined || enabled === false) {
+        return false;
+    }
+    return true;
+}
+
+export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEditor|undefined
+{
+    if (!editor) {
+        return undefined;
+    }
+    if (!is_lang_enabled(editor.document)) {
+        return undefined;
+    }
     let state = editor2state.get(editor);
     if (!state) {
         state = new StateOfEditor(editor);
@@ -111,7 +127,7 @@ export function state_of_document(doc: vscode.TextDocument): StateOfEditor | und
 {
     for (const [editor, state] of editor2state) {
         if (editor.document === doc) {
-            return state;
+            return state_of_editor(editor);
         }
     }
     return undefined;
@@ -172,6 +188,9 @@ export async function back_to_normal(state: StateOfEditor)
 export function keyboard_events_on(editor: vscode.TextEditor)
 {
     let state = state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection((ev: vscode.TextEditorSelectionChangeEvent) => {
         let ev_editor = ev.textEditor;
         if (!editor || editor !== ev_editor) {
@@ -210,6 +229,9 @@ function keyboard_events_off(state: StateOfEditor)
 export function onTextEdited(editor: vscode.TextEditor)
 {
     let state = state_of_editor(editor);
+    if (!state) {
+        return;
+    }
     if (state.diff_changing_doc) {
         console.log(["text edited, do nothing"]);
         return;

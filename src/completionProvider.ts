@@ -21,6 +21,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 return;
             }
         }
+        if (!estate.is_lang_enabled(document)) {
+            return;
+        }
         let whole_doc = document.getText();
         let cursor = document.offsetAt(position);
         let file_name = document.fileName;

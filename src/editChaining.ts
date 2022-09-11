@@ -11,7 +11,9 @@ const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsd
 export async function cleanupEditChaining(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
-    state.edit_chain_modif_doc = undefined;
+    if (state) {
+        state.edit_chain_modif_doc = undefined;
+    }
 }
 
 
@@ -22,6 +24,9 @@ export async function runEditChaining(animation: boolean): Promise<String>
         return "";
     }
     let state = estate.state_of_editor(editor);
+    if (!state) {
+        return "";
+    }
     if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
         return "";
     }
