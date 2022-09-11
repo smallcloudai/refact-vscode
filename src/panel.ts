@@ -123,6 +123,8 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
 		);
 
+        let url = `https://codify.smallcloud.ai/codify/?login&token=${global.userToken}`;
+
 		const nonce = this.getNonce();
 
 		return `<!DOCTYPE html>
@@ -172,7 +174,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         </ul>
                     </div>
                     <div class="sidebar-controls">
-                        <a tabindex="-1" href="https://max.smallcloud.ai/codify/?login&token=${global.userToken}" id="login">Login / Register</a>
+                        <a tabindex="-1" href="${url}" id="login">Login / Register</a>
                         <button tabindex="-1" id="settings">Settings</button>
                         <button tabindex="-1" id="bug">Bug Report</button>
                     </div>

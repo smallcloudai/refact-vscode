@@ -142,7 +142,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(bugCommand);
 
     let openLogin = vscode.commands.registerCommand('plugin-vscode.openLogin', () => {
-        vscode.env.openExternal(vscode.Uri.parse(`https://max.smallcloud.ai/codify/?login&token=${global.userToken}`));
+        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/?login&token=${global.userToken}`));
     });
     context.subscriptions.push(openLogin);
 }
