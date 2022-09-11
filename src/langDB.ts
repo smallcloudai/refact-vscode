@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import * as vscode from 'vscode';
 
 
 let lang_to_extlist: { [key: string]: string[] } = {
@@ -60,4 +61,17 @@ export function language_from_filename(filename: string): string
         }
     }
     return "Unknown";
+}
+
+
+export function is_language_enabled(lang: string): boolean
+{
+    let enabled: boolean|undefined = vscode.workspace.getConfiguration().get(`codify.lang.${lang}`);
+    if ((enabled === undefined || enabled === null) && lang==="Python") {
+        return true;
+    }
+    if (enabled === undefined || enabled === false || enabled === null) {
+        return false;
+    }
+    return true;
 }

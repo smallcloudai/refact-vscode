@@ -240,11 +240,9 @@ export async function status_bar_clicked()
         // - file bug report
         return;
     }
-    // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
     let lang = langDB.language_from_filename(editor.document.fileName);
-    let enabled: boolean|undefined = vscode.workspace.getConfiguration().get(`codify.lang.${lang}`);
-    console.log(["Reading settings", lang, enabled]);
-    if (enabled === true || enabled === undefined) {
+    let enabled = langDB.is_language_enabled(lang);
+    if (enabled) {
         await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
         console.log(["disable", lang]);
     } else {

@@ -93,12 +93,10 @@ let editor2state = new Map<vscode.TextEditor, StateOfEditor>();
 export function is_lang_enabled(document: vscode.TextDocument): boolean
 {
     let lang = langDB.language_from_filename(document.fileName);
-    let enabled: boolean|undefined = vscode.workspace.getConfiguration().get(`codify.lang.${lang}`);
-    if (enabled === undefined || enabled === false) {
-        return false;
-    }
-    return true;
+    let enabled = langDB.is_language_enabled(lang);
+    return enabled;
 }
+
 
 export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEditor|undefined
 {
