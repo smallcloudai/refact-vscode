@@ -231,15 +231,21 @@ export function deactivate(context: vscode.ExtensionContext)
 export async function status_bar_clicked()
 {
     let editor = vscode.window.activeTextEditor;
-    // no login -> offer login
+    // no login
+    // "It takes two clicks to join the waitlist"
+    // - login
     if (!editor) {
-        // no open text editor
+        // no open text editor:
+        // - visit website
+        // - file bug report
         return;
     }
+    // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
     let lang = langDB.language_from_filename(editor.document.fileName);
-    let enabled = vscode.workspace.getConfiguration("languages").get(lang);
+    let enabled: boolean|undefined = vscode.workspace.getConfiguration().get(`codify.lang.${lang}`);
+    console.log(["Reading settings", lang, enabled]);
     if (enabled === true || enabled === undefined) {
-        vscode.workspace.getConfiguration("languages").update(lang, false, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
         console.log(["disable", lang]);
     } else {
         vscode.window.showInformationMessage(
@@ -248,7 +254,8 @@ export async function status_bar_clicked()
             "Bug Report..."
         ).then(selection => {
             if (selection === "Enable") {
-                vscode.workspace.getConfiguration("languages").update(lang, true, vscode.ConfigurationTarget.Global);
+                vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
+                console.log(["enable", lang]);
             } else if (selection === "Bug Report...") {
                 console.log(["bug report!!!"]);
             }

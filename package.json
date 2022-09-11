@@ -49,13 +49,20 @@
         },
         "codify.privacyTrainData": {
             "type": "boolean",
-            "default": null, 
+            "default": null,
             "description": "Privacy: Allow to train model on my data"
         },
         "codify.apiKey": {
             "type": "string",
             "default": null,
             "description": "API Key"
+        },
+        "codify.lang": {
+            "*": {
+                "type": "boolean",
+                "default": true,
+                "description": "Enable plugin for this language"
+            }
         },
         "codify.temperature": {
             "type": "number",
