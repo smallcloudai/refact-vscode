@@ -202,6 +202,7 @@ export async function acceptEditChain(document: vscode.TextDocument, pos: vscode
         console.log(["Accepted deleting..."]);
         e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+        console.log(["Accepted done"]);
         if (!editor || !state2) {
             return;
         }
