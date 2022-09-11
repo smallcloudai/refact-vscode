@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 import * as estate from "./estate";
 import * as editChaining from "./editChaining";
-import * as interactiveDiff from "./interactiveDiff";
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider

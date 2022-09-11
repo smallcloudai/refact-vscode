@@ -13,7 +13,8 @@ export class PendingRequest {
     cancelToken: vscode.CancellationToken;
     cancellationTokenSource: vscode.CancellationTokenSource | undefined;
 
-    constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken) {
+    constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken)
+    {
         this.seq = globalSeq++;
         this.apiPromise = apiPromise;
         this.cancelToken = cancelToken;

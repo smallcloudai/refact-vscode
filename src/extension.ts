@@ -9,6 +9,7 @@ import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 import * as fetch from "./fetchAPI";
+import * as langDB from "./langDB";
 import { Mode } from "./estate";
 import PanelWebview from "./panel";
 import BugPage from "./bug";
@@ -25,22 +26,15 @@ declare global {
 export function activate(context: vscode.ExtensionContext)
 {
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
-    global.menu = new StatusBarMenu();
+    global.menu =  new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
     global.menu.statusbarGuest(true);
-
 
     let docSelector = {
         scheme: "file"
     };
 
-    // POPUP window with disable/enable question
-    // vscode.window.showInformationMessage('Disable Codify?','Disable Globally','Disable for Current File')
-    // .then(selection => {
-    //   if (selection === 'Disable Globally') {
-    //     // console.log(window.localStorage);
-    //   }
-    // });
+    context.subscriptions.push(vscode.commands.registerCommand(global.menu.command, status_bar_clicked));
 
     // const pluginRun = pluginFirstRun(context);
     // if(!pluginRun) {
@@ -231,4 +225,33 @@ export function deactivate(context: vscode.ExtensionContext)
 {
     const store = context.globalState;
     store.update('codify_userName',null);
+}
+
+
+export async function status_bar_clicked()
+{
+    let editor = vscode.window.activeTextEditor;
+    // no login -> offer login
+    if (!editor) {
+        // no open text editor
+        return;
+    }
+    let lang = langDB.language_from_filename(editor.document.fileName);
+    let enabled = vscode.workspace.getConfiguration("languages").get(lang);
+    if (enabled === true || enabled === undefined) {
+        vscode.workspace.getConfiguration("languages").update(lang, false, vscode.ConfigurationTarget.Global);
+        console.log(["disable", lang]);
+    } else {
+        vscode.window.showInformationMessage(
+            "Enable Codify for the programming language \"" + lang + "\"?",
+            "Enable",
+            "Bug Report..."
+        ).then(selection => {
+            if (selection === "Enable") {
+                vscode.workspace.getConfiguration("languages").update(lang, true, vscode.ConfigurationTarget.Global);
+            } else if (selection === "Bug Report...") {
+                console.log(["bug report!!!"]);
+            }
+        });
+    }
 }
