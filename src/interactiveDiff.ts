@@ -391,16 +391,19 @@ export async function rollback(editor: vscode.TextEditor)
         }
         state.diff_changing_doc = false;
         removeDeco(editor);
-        fetch.report_to_mothership(
-            false,
-            state.report_to_mothership_sources,
-            state.report_to_mothership_results,
-            state.report_to_mothership_intent,
-            state.report_to_mothership_function,
-            state.report_to_mothership_cursor_file,
-            state.report_to_mothership_cursor_pos0,
-            state.report_to_mothership_cursor_pos1,
-        );
+        if (state.report_to_mothership_cursor_file) {
+            fetch.report_to_mothership(
+                false,
+                state.report_to_mothership_sources,
+                state.report_to_mothership_results,
+                state.report_to_mothership_intent,
+                state.report_to_mothership_function,
+                state.report_to_mothership_cursor_file,
+                state.report_to_mothership_cursor_pos0,
+                state.report_to_mothership_cursor_pos1,
+            );
+        }
+        state.report_to_mothership_cursor_file = "";
     });
 }
 
@@ -446,16 +449,19 @@ export async function accept(editor: vscode.TextEditor)
             state.inline_prefer_edit_chaining = true;
             vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         }
-        fetch.report_to_mothership(
-            true,
-            state.report_to_mothership_sources,
-            state.report_to_mothership_results,
-            state.report_to_mothership_intent,
-            state.report_to_mothership_function,
-            state.report_to_mothership_cursor_file,
-            state.report_to_mothership_cursor_pos0,
-            state.report_to_mothership_cursor_pos1,
-        );
+        if (state.report_to_mothership_cursor_file) {
+            fetch.report_to_mothership(
+                true,
+                state.report_to_mothership_sources,
+                state.report_to_mothership_results,
+                state.report_to_mothership_intent,
+                state.report_to_mothership_function,
+                state.report_to_mothership_cursor_file,
+                state.report_to_mothership_cursor_pos0,
+                state.report_to_mothership_cursor_pos1,
+            );
+            state.report_to_mothership_cursor_file = "";
+        }
     });
     await thenable;
 }
