@@ -104,13 +104,15 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         console.log(["get cached diff", cache_key, "size", state.area2cache.size]);
     }
     if (!cancelToken.isCancellationRequested) {
-        let modif_doc = cache.json["choices"][0]["files"][file_name];
-        state.report_to_mothership_results = cache.json["choices"][0]["files"];
-        state.showing_diff_for_range = sensitive_area;
-        state.showing_diff_for_function = model_function;
-        state.showing_diff_edit_chain = undefined;
-        state.showing_diff_modif_doc = modif_doc;
-        estate.switch_mode(state, estate.Mode.Diff);
+        if (cache.json && cache.json["choices"]) {
+            let modif_doc = cache.json["choices"][0]["files"][file_name];
+            state.report_to_mothership_results = cache.json["choices"][0]["files"];
+            state.showing_diff_for_range = sensitive_area;
+            state.showing_diff_for_function = model_function;
+            state.showing_diff_edit_chain = undefined;
+            state.showing_diff_modif_doc = modif_doc;
+            estate.switch_mode(state, estate.Mode.Diff);
+        }
     }
 }
 

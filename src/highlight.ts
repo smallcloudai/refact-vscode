@@ -148,7 +148,7 @@ export async function hl_animation_start(editor: vscode.TextEditor, sensitive_ar
                     new vscode.Position(line0, line0_txt.text.length),
                 ));
             }
-            if (line1 >= 0) {
+            if (line1 < editor.document.lineCount) {
                 let line1_txt = editor.document.lineAt(line1);
                 animation_ranges.push(new vscode.Range(
                     new vscode.Position(line1, 0),
