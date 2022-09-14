@@ -102,7 +102,6 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		this._view!.webview.postMessage({ command: "loggedIn", value: data });
         let store = context.globalState;
         store.update('codify_userName',data.userName);
-        store.update('codify_apiKey',data.apiKey);
         await vscode.workspace.getConfiguration().update('codify.apiKey', data.apiKey,vscode.ConfigurationTarget.Global);
 	}
     

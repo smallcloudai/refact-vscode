@@ -28,7 +28,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
     global.menu =  new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
-    global.menu.statusbarGuest(true);
+    global.menu.statusbarGuest(false);
 
     let docSelector = {
         scheme: "file"
@@ -81,7 +81,6 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
-        console.log(["TAB"]);
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let state = estate.state_of_editor(editor);
@@ -126,8 +125,13 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(view);
 
     const auth = checkAuth(context);
-    if(auth) {
-        global.menu.statusbarGuest(false);
+    if(!auth) {
+        global.menu.statusbarGuest(true);
+        const header = "Please login";
+        const options: vscode.MessageOptions = { detail: 'Please Login to Codify', modal: true };
+        vscode.window.showInformationMessage(header, options, ...["Login"]).then((item)=>{
+            vscode.commands.executeCommand( 'plugin-vscode.login');
+        });
     }
 
 
@@ -141,10 +145,17 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(bugCommand);
 
-    let openLogin = vscode.commands.registerCommand('plugin-vscode.openLogin', () => {
+    let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
         vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/?login&token=${global.userToken}`));
     });
-    context.subscriptions.push(openLogin);
+    context.subscriptions.push(login);
+
+    let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
+        context.globalState.update('codifyFirstRun', false);
+        context.globalState.update('codify_userName',null);
+        vscode.workspace.getConfiguration().update('codify.apiKey', null);
+    });
+    context.subscriptions.push(logout);
 }
 
 export function pluginFirstRun(context: vscode.ExtensionContext) {
@@ -224,8 +235,6 @@ export function getUserToken(context: any) {
 //
 export function deactivate(context: vscode.ExtensionContext)
 {
-    const store = context.globalState;
-    store.update('codify_userName',null);
 }
 
 

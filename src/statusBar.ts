@@ -44,11 +44,11 @@ import * as vscode from 'vscode';
     statusbarError(state: boolean) {
         if(state) {
             this.menu.text = `$(testing-error-icon) codify`;
-            this.menu.color = '';
+            this.menu.backgroundColor = '#6d5318';
         }
         else {
             this.menu.text = `$(codify-logo) codify`;
-            this.menu.color = undefined;
+            this.menu.backgroundColor = undefined;
         }
         return state;
     }
@@ -56,11 +56,11 @@ import * as vscode from 'vscode';
     statusbarGuest(state: boolean) {
         if(state) {
             this.menu.text = `$(person) codify`;
-            this.menu.color = '#FF0010';
+            this.menu.backgroundColor = '#6d5318';
         }
         else {
             this.menu.text = `$(codify-logo) codify`;
-            this.menu.color = undefined;
+            this.menu.backgroundColor = undefined;
         }
         return state;
     }

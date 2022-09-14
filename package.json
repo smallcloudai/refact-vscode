@@ -9,13 +9,6 @@
     "theme": "dark"
   },
   "author": "Codify <codify@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/smallcloudai/plugin-vscode"
-  },
-  "bugs": {
-    "url": "https://github.com/smallcloudai/plugin-vscode/issues/"
-  },
   "version": "0.0.12",
   "engines": {
     "vscode": "^1.69.0"
@@ -42,15 +35,10 @@
       "type": "object",
       "title": "Codify",
       "properties": {
-        "codify.privacySaveData": {
+        "codify.fineTune": {
             "type": "boolean",
             "default": null,
-            "description": "Privacy: Save My Data"
-        },
-        "codify.privacyTrainData": {
-            "type": "boolean",
-            "default": null,
-            "description": "Privacy: Allow to train model on my data"
+            "description": "Fine-tune: use the changes to code that I accept or reject to personalize for me and generally improve the model behind Codify"
         },
         "codify.apiKey": {
             "type": "string",
@@ -80,8 +68,13 @@
         "category": "Codify"
       },
       {
-        "command": "plugin-vscode.deactivate",
-        "title": "Deactivate",
+        "command": "plugin-vscode.login",
+        "title": "Login",
+        "category": "Codify"
+      },
+      {
+        "command": "plugin-vscode.logout",
+        "title": "Logout",
         "category": "Codify"
       },
       {
