@@ -81,6 +81,7 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
+        console.log(["TAB"]);
         let editor = vscode.window.activeTextEditor;
         if (editor) {
             let state = estate.state_of_editor(editor);

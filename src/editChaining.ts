@@ -65,7 +65,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     for (let key in more_revisions) {
         let rev = more_revisions[key];
         if (whole_doc === rev) {
-            console.log(["echain same", key]);
+            console.log(["EC same text", key]);
             continue;
         }
         const diff = Diff.diffLines(whole_doc, rev);
@@ -80,11 +80,11 @@ export async function runEditChaining(animation: boolean): Promise<String>
         });
         // recent_but_different = key;
         // send_revisions[key] = rev
-        console.log(["echain", key]);
-        console.log(["added", count_added, "removed", count_removed]);
+        console.log(["EC echain", key]);
+        console.log(["EC added", count_added, "removed", count_removed]);
         first_time_a_lot_of_changes = key;
         if (count_added + count_removed > 2) {
-            console.log(["HAPPY"]);
+            console.log(["EC HAPPY"]);
             break;
         }
     }

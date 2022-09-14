@@ -113,9 +113,12 @@ export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEdi
     }
     if (editor2state.size > 2) {
         let oldest_editor = editor2state.keys().next().value;
-        // let oldest_state = editor2state.get(oldest_editor);
-        editor2state.delete(oldest_editor);
         console.log(["forget state of", oldest_editor.document.fileName]);
+        let oldest_state = editor2state.get(oldest_editor);
+        if (oldest_state) {
+            switch_mode(oldest_state, Mode.Normal);
+        }
+        editor2state.delete(oldest_editor);
     }
     return state;
 }

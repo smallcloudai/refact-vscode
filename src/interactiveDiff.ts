@@ -84,20 +84,29 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
         let json: any = await request.apiPromise;
         if (json === undefined) {
+            if (state.get_mode() === estate.Mode.DiffWait) {
+                estate.switch_mode(state, estate.Mode.Normal);
+            }
             return;
         }
         if (json.detail) {
             let detail = json.detail;
             console.log(["ERROR", detail]);
+            if (state.get_mode() === estate.Mode.DiffWait) {
+                estate.switch_mode(state, estate.Mode.Normal);
+            }
             return;
         }
         cache.json = json;
         state.area2cache.set(cache_key, cache);
         console.log(["saving diff", cache_key, "size", state.area2cache.size]);
-        if (cancelToken.isCancellationRequested) {
+        if (state.get_mode() !== estate.Mode.DiffWait) {
             return;
         }
-        if (state.get_mode() !== estate.Mode.DiffWait) {
+        if (cancelToken.isCancellationRequested) {
+            if (state.get_mode() === estate.Mode.DiffWait) {
+                estate.switch_mode(state, estate.Mode.Normal);
+            }
             return;
         }
     } else {
@@ -113,6 +122,9 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             state.showing_diff_modif_doc = modif_doc;
             estate.switch_mode(state, estate.Mode.Diff);
         }
+    }
+    if (state.get_mode() === estate.Mode.DiffWait) {
+        estate.switch_mode(state, estate.Mode.Normal);
     }
 }
 
