@@ -1,7 +1,7 @@
 (function () {
 	const vscode = acquireVsCodeApi();
 	let presets = document.querySelectorAll(".presets li");
-    let token = 'r2kv3sxwj9e-3glml41tuzp';
+    // let token = 'r2kv3sxwj9e-3glml41tuzp';
 
 	document.querySelector("#sidebar").addEventListener("click", (event) => {
 		if (event.target && event.target.nodeName === "LI") {
@@ -48,23 +48,27 @@
             case "loggedIn":
                 if (message.value) {
                     let login = document.querySelector('#login');
-                    login.style.opacity = 0;
-                    login.style.visiblity = 'hidden';
-                    let settings = document.querySelector('#settings');
-                    settings.innerHTML = message.value.userName;
+                    login.style.display = 'none'; 
                     let bug = document.querySelector('#bug');
                     bug.style.display = 'block'; 
+                    let logout = document.querySelector('#logout');
+                    bug.style.display = 'block'; 
+                    let info = document.querySelector('.sidebar-logged');
+                    document.querySelector('.sidebar-logged span').innerHTML = message.value.userName;
+                    info.style.display = 'block'; 
                 }
                 break;
             case "alreadyLogged":
                 if (message.value) {
                     let login = document.querySelector('#login');
-                    login.style.opacity = 0;
-                    login.style.visiblity = 'hidden';
-                    let settings = document.querySelector('#settings');
-                    settings.innerHTML = message.value.userName;
+                    login.style.display = 'none'; 
                     let bug = document.querySelector('#bug');
                     bug.style.display = 'block'; 
+                    let logout = document.querySelector('#logout');
+                    bug.style.display = 'block'; 
+                    let info = document.querySelector('.sidebar-logged');
+                    document.querySelector('.sidebar-logged span').innerHTML = message.value.userName;
+                    info.style.display = 'block'; 
                 }
                 break;
 			case "updateHistory":

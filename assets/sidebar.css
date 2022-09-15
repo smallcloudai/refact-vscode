@@ -160,3 +160,31 @@ body.vscode-light #login {
     color: var(--secondary);
     border-color: var(--secondary);
 }
+
+#logout {
+    font-size: 13px;
+    border: 1px solid var(--secondary);
+    padding: 8px 20px;
+    color: var(--secondary);
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin: 5px 0;
+    display: none;
+}
+body.vscode-light #logout {
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
+
+.sidebar-logged {
+    display: none;
+    margin-bottom: 5px;
+}
+
+.sidebar-logged span {
+}

@@ -126,11 +126,13 @@ export function activate(context: vscode.ExtensionContext)
 
     const auth = checkAuth(context);
     if(!auth) {
+        console.log('======>');
         global.menu.statusbarGuest(true);
         const header = "Please login";
-        const options: vscode.MessageOptions = { detail: 'Please Login to Codify', modal: true };
-        vscode.window.showInformationMessage(header, options, ...["Login"]).then((item)=>{
-            vscode.commands.executeCommand( 'plugin-vscode.login');
+        vscode.window.showInformationMessage('Please Login to Codify','Login').then((selection) => {
+            if(selection === 'Login') {
+                vscode.commands.executeCommand('plugin-vscode.login');
+            }
         });
     }
 
@@ -146,26 +148,26 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(bugCommand);
 
     let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
-        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/?login&token=${global.userToken}`));
+        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/login?token=${global.userToken}`));
     });
     context.subscriptions.push(login);
 
     let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
-        context.globalState.update('codifyFirstRun', false);
+        context.globalState.update('codifyFirstRun',false);
         context.globalState.update('codify_userName',null);
         vscode.workspace.getConfiguration().update('codify.apiKey', null);
     });
     context.subscriptions.push(logout);
 }
 
-export function pluginFirstRun(context: vscode.ExtensionContext) {
-    const firstRun = context.globalState.get('codifyFirstRun');
-    if (firstRun !== undefined && firstRun) { return true; }
-    else {
-        context.globalState.update('codifyFirstRun', true);
-        return false;
-    }
-}
+// export function pluginFirstRun(context: vscode.ExtensionContext) {
+//     const firstRun = context.globalState.get('codifyFirstRun');
+//     if (firstRun !== undefined && firstRun) { return true; }
+//     else {
+//         context.globalState.update('codifyFirstRun', true);
+//         return false;
+//     }
+// }
 
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
@@ -205,12 +207,9 @@ export async function askIntent()
 }
 
 export function checkAuth(context:any) {
-    const store = context.globalState;
-    let apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
-    let userName = store.get('codify_userName');
-    if(!apiKey && apiKey === '') { return false; }
-    if(!userName && userName === '') { return false; }
-    return {'apiKey': apiKey, 'userName': userName};
+    let apiKey = getApiKey();
+    if(apiKey === false || apiKey === '') { return false; }
+    return {'apiKey': apiKey };
 }
 
 export function getApiKey() {
@@ -221,15 +220,9 @@ export function getApiKey() {
 
 export function getUserToken(context: any) {
     const store = context.globalState;
-    let token = store.get('codify_userToken');
-    if(!token) {
-        token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
-        store.update('codify_userToken',token);
-        return token;
-    }
-    else {
-        return token;
-    }
+    let token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
+    store.update('codify_userToken',token);
+    return token;
 }
 
 //

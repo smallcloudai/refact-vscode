@@ -25,10 +25,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		};
         
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-        const auth = checkAuth(this._context);
-        if(auth) {
-            webviewView.webview.postMessage({ command: "alreadyLogged", value: auth});
-        }
+        // const auth = checkAuth(this._context);
+        // if(auth) {
+        //     webviewView.webview.postMessage({ command: "alreadyLogged", value: auth});
+        // }
 
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
@@ -94,15 +94,17 @@ class PanelWebview implements vscode.WebviewViewProvider {
 	}
 
     async runLogin(context: any) {
-        const url = 'https://max.smallcloud.ai/users/apikey/' + global.userToken;
+        const url = 'https://max.smallcloud.ai/codify/apikey/' + global.userToken;
         const response = await fetch(url);
         const responseText = await response.text();
         const data = JSON.parse(responseText);
-        // console.log(data);
+        console.log('status ======> ',response.status);
+        console.log('data ======> ',responseText);
 		this._view!.webview.postMessage({ command: "loggedIn", value: data });
         let store = context.globalState;
         store.update('codify_userName',data.userName);
         await vscode.workspace.getConfiguration().update('codify.apiKey', data.apiKey,vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update('codify.fineTune', data.fineTune,vscode.ConfigurationTarget.Global);
 	}
     
 
@@ -122,7 +124,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
 		);
 
-        let url = `https://codify.smallcloud.ai/codify/?login&token=${global.userToken}`;
+        let url = `https://codify.smallcloud.ai/login?token=${global.userToken}`;
 
 		const nonce = this.getNonce();
 
@@ -173,8 +175,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         </ul>
                     </div>
                     <div class="sidebar-controls">
+                        <div class="sidebar-logged">Logged as <span></span></div>
                         <a tabindex="-1" href="${url}" id="login">Login / Register</a>
                         <button tabindex="-1" id="settings">Settings</button>
+                        <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="bug">Bug Report</button>
                     </div>
                 </div>
