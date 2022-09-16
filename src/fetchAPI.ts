@@ -132,7 +132,7 @@ export function fetchAPI(
     const apiKey = getApiKey();
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
@@ -182,7 +182,7 @@ export async function report_to_mothership(
     const apiKey = getApiKey();
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        "Authorization": `${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
@@ -197,6 +197,34 @@ export async function report_to_mothership(
         console.log([positive ? "👍" : "👎", "report_to_mothership", result.status]);
     }).catch((error) => {
         console.log(["report_to_mothership", "error", error]);
+    });
+    return promise;
+}
+
+export async function login() {
+    const url = "https://max.smallcloud.ai/v1/api-activate";
+    const ticket = global.userTicket;
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `codify-${ticket}`,
+    };
+    let req = new fetchH2.Request(url, {
+        method: "GET",
+        headers: headers,
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    });
+    let promise = fetchH2.fetch(req);
+    promise.then((result) => {
+        result.json().then((json) => {
+            vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
+            vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
+            global.panelProvider.runLogin(json.account);
+            console.log('RUN LOGIN ======>>>>>>');
+        });
+    }).catch((error) => {
+        console.log(["login", "error", error]);
     });
     return promise;
 }

@@ -28,9 +28,9 @@
 		vscode.postMessage({ type: "openBug" });
 	});  
 	const loginButton = document.querySelector("#login");
-	loginButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "runLogin" });
-	});
+	// loginButton.addEventListener("click", () => {
+    //     vscode.postMessage({ type: "runLogin" });
+	// });
 
 	window.addEventListener("message", (event) => {
 		const message = event.data;
@@ -45,7 +45,7 @@
                     token = message.value;
                 }
                 break;
-            case "loggedIn":
+            case "login":
                 if (message.value) {
                     let login = document.querySelector('#login');
                     login.style.display = 'none'; 
@@ -54,7 +54,7 @@
                     let logout = document.querySelector('#logout');
                     bug.style.display = 'block'; 
                     let info = document.querySelector('.sidebar-logged');
-                    document.querySelector('.sidebar-logged span').innerHTML = message.value.userName;
+                    document.querySelector('.sidebar-logged span').innerHTML = message.value;
                     info.style.display = 'block'; 
                 }
                 break;
@@ -71,6 +71,19 @@
                     info.style.display = 'block'; 
                 }
                 break;
+            case "logout":
+                    if (message.value) {
+                        let login = document.querySelector('#login');
+                        login.style.display = 'block'; 
+                        let bug = document.querySelector('#bug');
+                        bug.style.display = 'none'; 
+                        let logout = document.querySelector('#logout');
+                        bug.style.display = 'none'; 
+                        let info = document.querySelector('.sidebar-logged');
+                        document.querySelector('.sidebar-logged span').innerHTML = '';
+                        info.style.display = 'none'; 
+                    }
+                    break;
 			case "updateHistory":
 				if (message.value && message.value.length > 0) {
 					let historyTitle = document.querySelector(".history-title");

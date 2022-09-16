@@ -50,6 +50,8 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     fetch.cancelAllRequests();
     estate.back_to_normal(state);
     request.cancellationTokenSource = cancellationTokenSource;
+    let login: any = await fetch.login();
+    if (!login) { return; }
     await fetch.waitAllRequests();
     if (cancelToken.isCancellationRequested) {
         return;

@@ -25,10 +25,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		};
         
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-        // const auth = checkAuth(this._context);
-        // if(auth) {
-        //     webviewView.webview.postMessage({ command: "alreadyLogged", value: auth});
-        // }
+        const auth = checkAuth(this._context);
+        if(auth) {
+            webviewView.webview.postMessage({ command: "alreadyLogged", value: auth});
+        }
 
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
@@ -53,10 +53,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     this.presetIntent(data.value);
 					break;
 				}
-                case "runLogin": {
-                    this.runLogin(this._context);    
-                    break;
-                }
+                // case "runLogin": {
+                //     this.runLogin(this._context);    
+                //     break;
+                // }
                 case "openBug": {
                     vscode.commands.executeCommand("plugin-vscode.openBug");
                     break;
@@ -93,20 +93,26 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		this._view!.webview.postMessage({ command: "updateQuery", value: intent });
 	}
 
-    async runLogin(context: any) {
-        const url = 'https://max.smallcloud.ai/codify/apikey/' + global.userToken;
-        const response = await fetch(url);
-        const responseText = await response.text();
-        const data = JSON.parse(responseText);
-        console.log('status ======> ',response.status);
-        console.log('data ======> ',responseText);
-		this._view!.webview.postMessage({ command: "loggedIn", value: data });
-        let store = context.globalState;
-        store.update('codify_userName',data.userName);
-        await vscode.workspace.getConfiguration().update('codify.apiKey', data.apiKey,vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('codify.fineTune', data.fineTune,vscode.ConfigurationTarget.Global);
-	}
-    
+    // async runLogin(context: any) {
+    //     const url = 'https://max.smallcloud.ai/codify/apikey/' + global.userTicket;
+    //     const response = await fetch(url);
+    //     const responseText = await response.text();
+    //     console.log('status ======> ',response.status);
+    //     console.log('data ======> ',responseText);
+	// }
+
+    public runLogout() {
+        this._view!.webview.postMessage({
+			command: "logout"
+		});
+    }
+
+    public runLogin(account: string) {
+        this._view!.webview.postMessage({
+			command: "login",
+            value: account
+		});
+    }
 
 	public addHistory(intent: string) {
 		this._history.push(intent);
@@ -124,7 +130,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
 		);
 
-        let url = `https://codify.smallcloud.ai/login?token=${global.userToken}`;
+        let url = `https://codify.smallcloud.ai/login?token=${global.userTicket}`;
 
 		const nonce = this.getNonce();
 

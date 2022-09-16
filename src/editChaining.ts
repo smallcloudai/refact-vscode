@@ -45,6 +45,8 @@ export async function runEditChaining(animation: boolean): Promise<String>
     //     state.mode = interactiveDiff.Mode.Normal;
     // }
     request.cancellationTokenSource = cancellationTokenSource;
+    let login: any = await fetch.login();
+    if (!login) { return ""; }
     await fetch.waitAllRequests();
     if (cancelToken.isCancellationRequested) {
         return "";

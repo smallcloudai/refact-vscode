@@ -19,7 +19,7 @@ declare global {
     var menu: any;
     var panelProvider: any;
     var settingsPage: any;
-    var userToken: string;
+    var userTicket: string;
 }
 
 
@@ -52,7 +52,7 @@ export function activate(context: vscode.ExtensionContext)
     // );
     // context.subscriptions.push(codeLensProviderDisposable);
 
-    global.userToken = getUserToken(context);
+    global.userTicket = getTicket(context);
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
@@ -148,14 +148,16 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(bugCommand);
 
     let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
-        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/login?token=${global.userToken}`));
+        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/login?token=${global.userTicket}`));
     });
     context.subscriptions.push(login);
 
     let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
-        context.globalState.update('codifyFirstRun',false);
+        context.globalState.update('codifyFirstRun',false,);
         context.globalState.update('codify_userName',null);
-        vscode.workspace.getConfiguration().update('codify.apiKey', null);
+        vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
+        vscode.workspace.getConfiguration().update('codify.fineTune', false,vscode.ConfigurationTarget.Global);
+        global.panelProvider.runLogout();
     });
     context.subscriptions.push(logout);
 }
@@ -218,10 +220,9 @@ export function getApiKey() {
     return apiKey;
 }
 
-export function getUserToken(context: any) {
+export function getTicket(context: any) {
     const store = context.globalState;
     let token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
-    store.update('codify_userToken',token);
     return token;
 }
 
