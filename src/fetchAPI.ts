@@ -132,7 +132,7 @@ export function fetchAPI(
     const apiKey = getApiKey();
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
@@ -220,6 +220,7 @@ export async function login() {
         result.json().then((json) => {
             vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
             vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
+            return;
             global.panelProvider.runLogin(json.account);
             console.log('RUN LOGIN ======>>>>>>');
         });
