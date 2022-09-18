@@ -67,7 +67,7 @@
                     let logout = document.querySelector('#logout');
                     bug.style.display = 'block'; 
                     let info = document.querySelector('.sidebar-logged');
-                    document.querySelector('.sidebar-logged span').innerHTML = message.value.userName;
+                    document.querySelector('.sidebar-logged span').innerHTML = message.value;
                     info.style.display = 'block'; 
                 }
                 break;

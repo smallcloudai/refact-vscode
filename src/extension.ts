@@ -20,6 +20,7 @@ declare global {
     var panelProvider: any;
     var settingsPage: any;
     var userTicket: string;
+    var userLogged: any;
 }
 
 
@@ -28,7 +29,6 @@ export function activate(context: vscode.ExtensionContext)
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
     global.menu =  new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
-    global.menu.statusbarGuest(false);
 
     let docSelector = {
         scheme: "file"
@@ -53,6 +53,7 @@ export function activate(context: vscode.ExtensionContext)
     // context.subscriptions.push(codeLensProviderDisposable);
 
     global.userTicket = getTicket(context);
+    isLangaugeDisabled();
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
@@ -126,7 +127,6 @@ export function activate(context: vscode.ExtensionContext)
 
     const auth = checkAuth(context);
     if(!auth) {
-        console.log('======>');
         global.menu.statusbarGuest(true);
         const header = "Please login";
         vscode.window.showInformationMessage('Please Login to Codify','Login').then((selection) => {
@@ -157,7 +157,18 @@ export function activate(context: vscode.ExtensionContext)
         context.globalState.update('codify_userName',null);
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
         vscode.workspace.getConfiguration().update('codify.fineTune', false,vscode.ConfigurationTarget.Global);
-        global.panelProvider.runLogout();
+        global.menu.statusbarGuest(true);
+        global.userLogged = false;
+        const header = "Please login";
+        vscode.window.showInformationMessage('Please Login to Codify','Login').then((selection) => {
+            if(selection === 'Login') {
+                vscode.commands.executeCommand('plugin-vscode.login');
+            }
+        });
+        if(global.panelProvider) {
+            global.panelProvider.runLogout();
+            vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+        }
     });
     context.subscriptions.push(logout);
 }
@@ -248,6 +259,7 @@ export async function status_bar_clicked()
     let enabled = langDB.is_language_enabled(lang);
     if (enabled) {
         await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
+        global.menu.statusbarLang(true);
         console.log(["disable", lang]);
     } else {
         let selection = await vscode.window.showInformationMessage(
@@ -257,9 +269,21 @@ export async function status_bar_clicked()
         );
         if (selection === "Enable") {
             await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
+            global.menu.statusbarLang(false);
             console.log(["enable", lang]);
         } else if (selection === "Bug Report...") {
             console.log(["bug report!!!"]);
         }
+    }
+}
+
+export async function isLangaugeDisabled() {
+    let editor = vscode.window.activeTextEditor;
+    if(editor) {
+        let lang = langDB.language_from_filename(editor.document.fileName);
+        let enabled = langDB.is_language_enabled(lang);
+        if(!enabled) {
+            global.menu.statusbarLang(true);
+        }   
     }
 }

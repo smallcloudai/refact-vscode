@@ -63,7 +63,6 @@ export function language_from_filename(filename: string): string
     return "Unknown";
 }
 
-
 export function is_language_enabled(lang: string): boolean
 {
     let enabled: boolean|undefined = vscode.workspace.getConfiguration().get(`codify.lang.${lang}`);

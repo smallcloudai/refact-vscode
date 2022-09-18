@@ -44,7 +44,7 @@ import * as vscode from 'vscode';
     statusbarError(state: boolean) {
         if(state) {
             this.menu.text = `$(testing-error-icon) codify`;
-            this.menu.backgroundColor = '#6d5318';
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
         }
         else {
             this.menu.text = `$(codify-logo) codify`;
@@ -55,8 +55,20 @@ import * as vscode from 'vscode';
 
     statusbarGuest(state: boolean) {
         if(state) {
-            this.menu.text = `$(person) codify`;
-            this.menu.backgroundColor = '#6d5318';
+            this.menu.text = `$(account) codify`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+        }
+        else {
+            this.menu.text = `$(codify-logo) codify`;
+            this.menu.backgroundColor = undefined;
+        }
+        return state;
+    }
+
+    statusbarLang(state: boolean) {
+        if(state) {
+            this.menu.text = `$(codify-logo) codify`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
         }
         else {
             this.menu.text = `$(codify-logo) codify`;

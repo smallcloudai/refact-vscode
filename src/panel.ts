@@ -25,9 +25,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		};
         
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+
         const auth = checkAuth(this._context);
-        if(auth) {
-            webviewView.webview.postMessage({ command: "alreadyLogged", value: auth});
+        if(global.userLogged) {
+            webviewView.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
         }
 
 		webviewView.webview.onDidReceiveMessage((data) => {
@@ -53,10 +54,6 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     this.presetIntent(data.value);
 					break;
 				}
-                // case "runLogin": {
-                //     this.runLogin(this._context);    
-                //     break;
-                // }
                 case "openBug": {
                     vscode.commands.executeCommand("plugin-vscode.openBug");
                     break;
@@ -108,6 +105,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     public runLogin(account: string) {
+        this._context.globalState.update('codify_userName',account);
         this._view!.webview.postMessage({
 			command: "login",
             value: account

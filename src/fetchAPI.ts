@@ -202,6 +202,9 @@ export async function report_to_mothership(
 }
 
 export async function login() {
+    if(global.userLogged) {
+        return 'ok';
+    }
     const url = "https://max.smallcloud.ai/v1/api-activate";
     const ticket = global.userTicket;
     const headers = {
@@ -218,11 +221,18 @@ export async function login() {
     let promise = fetchH2.fetch(req);
     promise.then((result) => {
         result.json().then((json) => {
-            vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
-            vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
-            return;
-            global.panelProvider.runLogin(json.account);
-            console.log('RUN LOGIN ======>>>>>>');
+            console.log(["login", result.status, json]);
+            if(json.retcode === 'OK') {
+                vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
+                vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
+                global.userLogged = json.account;
+                if(global.panelProvider) { 
+                    vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+                }
+            }
+            if(json.retcode === 'FAILED') {
+                vscode.window.showErrorMessage(json.human_readable_message);
+            }
         });
     }).catch((error) => {
         console.log(["login", "error", error]);
