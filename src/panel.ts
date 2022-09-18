@@ -26,11 +26,15 @@ class PanelWebview implements vscode.WebviewViewProvider {
         
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-        const auth = checkAuth(this._context);
         if(global.userLogged) {
-            webviewView.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
+            console.log("logged panel check");
+            this._view?.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
         }
-        console.log('PANEL RELOAD ========================++>>>>>>>>>>>>>>>>>>>');
+
+        // const auth = checkAuth(this._context);
+        // if(global.userLogged) {
+        //     webviewView.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
+        // }
 
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
@@ -100,17 +104,24 @@ class PanelWebview implements vscode.WebviewViewProvider {
 	// }
 
     public runLogout() {
+        global.userLogged = false;
         this._view!.webview.postMessage({
 			command: "logout"
 		});
+        // vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     }
 
-    public runLogin(account: string) {
-        this._context.globalState.update('codify_userName',account);
+    public refresh() {
+        // this._view!.webview.html = this._getHtmlForWebview(this._view!.webview);
+        // vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+    }
+
+    public runLogin() {
         this._view!.webview.postMessage({
 			command: "login",
-            value: account
+            value: global.userLogged
 		});
+        // vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     }
 
 	public addHistory(intent: string) {
@@ -184,7 +195,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         <a tabindex="-1" href="${url}" id="login">Login / Register</a>
                         <button tabindex="-1" id="settings">Settings</button>
                         <button tabindex="-1" id="logout">Logout</button>
-                        <button tabindex="-1" id="bug">Bug Report</button>
+                        <button tabindex="-1" id="bug">Bug Report…</button>
                     </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>

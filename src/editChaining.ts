@@ -119,6 +119,9 @@ export async function runEditChaining(animation: boolean): Promise<String>
     if (json.detail) {
         let detail = json.detail;
         console.log(["ERROR", detail]);
+        if(detail === "Could not verify your API key") {
+            global.menu.apiError(detail);
+        }
         return "";
     }
     state.showing_diff_edit_chain = sensitive_area;

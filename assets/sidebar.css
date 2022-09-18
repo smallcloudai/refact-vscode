@@ -99,13 +99,15 @@ body.vscode-light .presets-title {
 }
 .sidebar-controls {
     position: absolute;
-    bottom: 20px;
+    bottom: 0px;
+    padding-bottom: 20px;
     display: flex;
     justify-content: flex-start;
     flex-direction: column;
     align-items: center;
     width: 90%;
     box-sizing: border-box;
+    background-color: var(--vscode-sideBar-background) !important;
     
 }
 #bug {
@@ -113,7 +115,7 @@ body.vscode-light .presets-title {
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
-    background: transparent;
+    background: inherit;
     cursor: pointer;
     box-sizing: border-box;
     display: none;
@@ -130,7 +132,7 @@ body.vscode-light #bug {
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
-    background: transparent;
+    background-color: inherit;
     cursor: pointer;
     box-sizing: border-box;
     display: block;
@@ -166,7 +168,7 @@ body.vscode-light #login {
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
-    background: transparent;
+    background: vscode-dark;
     cursor: pointer;
     box-sizing: border-box;
     text-decoration: none;

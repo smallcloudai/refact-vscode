@@ -76,5 +76,11 @@ import * as vscode from 'vscode';
         }
         return state;
     }
+
+    apiError(msg: string) {
+        global.menu.statusbarError(true);
+        global.userLogged = false;
+        vscode.window.showErrorMessage(msg);
+    }
 }
 export default StatusBarMenu;

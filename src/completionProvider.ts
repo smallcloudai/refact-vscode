@@ -82,6 +82,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             if (json.detail) {
                 let detail = json.detail;
                 console.log(["ERROR", detail]);
+                if(detail === "Could not verify your API key") {
+                    global.menu.apiError(detail);
+                }
                 return;
             }
             modif_doc = json["choices"][0]["files"][file_name];

@@ -119,14 +119,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...disposables);
 
 
-    global.panelProvider = new PanelWebview(context);
-    let view = vscode.window.registerWebviewViewProvider(
-        'codify-presets',
-        global.panelProvider,
-    );
-    context.subscriptions.push(view);
-
-    const auth = checkAuth(context);
+    const auth = checkAuth();
     if(!auth) {
         global.menu.statusbarGuest(true);
         const header = "Please login";
@@ -136,6 +129,20 @@ export function activate(context: vscode.ExtensionContext)
             }
         });
     }
+    else {
+        global.menu.statusbarGuest(false);
+        if(global.panelProvider) { 
+            global.panelProvider.runLogin();
+        }
+    }
+
+    global.panelProvider = new PanelWebview(context);
+    let view = vscode.window.registerWebviewViewProvider(
+        'codify-presets',
+        global.panelProvider,
+    );
+    context.subscriptions.push(view);
+
 
 
     let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
@@ -168,7 +175,6 @@ export function activate(context: vscode.ExtensionContext)
         });
         if(global.panelProvider) {
             global.panelProvider.runLogout();
-            vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
         }
     });
     context.subscriptions.push(logout);
@@ -220,10 +226,11 @@ export async function askIntent()
     // vscode.window.showInformationMessage(`Got: ${result}`);
 }
 
-export function checkAuth(context:any) {
+export function checkAuth() {
     let apiKey = getApiKey();
-    if(apiKey === false || apiKey === '') { return false; }
-    return {'apiKey': apiKey };
+    if(!global.userLogged && !apiKey) { return false; }
+    // if(apiKey === false || apiKey === '') { return false; }
+    return true;
 }
 
 export function getApiKey() {
@@ -273,6 +280,7 @@ export async function status_bar_clicked()
             global.menu.statusbarLang(false);
             console.log(["enable", lang]);
         } else if (selection === "Bug Report...") {
+            vscode.commands.executeCommand("codify.openBug");
             console.log(["bug report!!!"]);
         }
     }

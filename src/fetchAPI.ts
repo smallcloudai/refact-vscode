@@ -228,15 +228,18 @@ export async function login() {
                 global.userLogged = json.account;
                 global.menu.statusbarGuest(false);
                 if(global.panelProvider) { 
-                    vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+                    global.panelProvider.runLogin();
                 }
             }
             if(json.retcode === 'FAILED') {
-                vscode.window.showErrorMessage(json.human_readable_message);
+                // global.menu.apiError(json.human_readable_message);
             }
         });
     }).catch((error) => {
         console.log(["login", "error", error]);
+        global.menu.statusbarError(true);
+        global.userLogged = false;
+        vscode.window.showErrorMessage(error);
     });
     return promise;
 }

@@ -60,6 +60,7 @@
                 break;
             case "alreadyLogged":
                 if (message.value) {
+                    console.log('already logged message  ==============++>>>>>');
                     let login = document.querySelector('#login');
                     login.style.display = 'none'; 
                     let bug = document.querySelector('#bug');

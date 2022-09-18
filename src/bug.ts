@@ -111,22 +111,16 @@ export class BugPage {
                     </header>
                     <div class="s-body">
                         <div class="s-body__item">
-                            <label>Intent</label>
-                            <input id="intent" class="s-body__input" value="${intent}" type="text" name="intent"  />
-                            <div class="s-body__note">Current Intent</div>
-                        </div>
-                        <div class="s-body__item">
-                            <label>Source</label>
-                            <textarea id="source" class="s-body__textarea" name="Source">${source}</textarea>
-                            <div class="s-body__note">Current File</div>
-                        </div>
-
-                        <div class="s-body__item">
                             <label>Comment</label>
-                            <textarea id="comment" class="s-body__textarea" name="comment"></textarea>
-                            <div class="s-body__note">Optional Comments</div>
-                        </div>
- 
+                            <textarea id="comment" class="s-body__textarea" name="comment">
+I'm using
+"${intent}" and I typed "${intent}",
+the expceted outcome is ...
+What it really does is ...
+Environment: Visual Code (${os.platform()}) - ${vscode.version}
+Plugin Version: ${cnt.extension.packageJSON.version}
+                            </textarea>
+                        </div> 
                     </div>
                     <div class="s-footer">
                         <button class="s-submit">Submit Bug Report</button>
