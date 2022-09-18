@@ -29,6 +29,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
     global.menu =  new StatusBarMenu();
     global.menu.createStatusBarBlock(context);
+    global.menu.statusbarGuest(false);
 
     let docSelector = {
         scheme: "file"

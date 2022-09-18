@@ -30,6 +30,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
         if(global.userLogged) {
             webviewView.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
         }
+        console.log('PANEL RELOAD ========================++>>>>>>>>>>>>>>>>>>>');
 
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {

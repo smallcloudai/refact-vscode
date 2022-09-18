@@ -226,6 +226,7 @@ export async function login() {
                 vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
                 vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
                 global.userLogged = json.account;
+                global.menu.statusbarGuest(false);
                 if(global.panelProvider) { 
                     vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
                 }
