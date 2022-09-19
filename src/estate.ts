@@ -90,6 +90,16 @@ export class StateOfEditor {
 let editor2state = new Map<vscode.TextEditor, StateOfEditor>();
 
 
+export function lang_name(document: vscode.TextDocument): string
+{
+    let lang = langDB.language_from_filename(document.fileName);
+    if (lang === undefined) {
+        return "";
+    }
+    return lang;
+}
+
+
 export function is_lang_enabled(document: vscode.TextDocument): boolean
 {
     let lang = langDB.language_from_filename(document.fileName);

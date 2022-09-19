@@ -49,16 +49,12 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     hl_animation_start(editor, editor.selection);
     let json: any;
     try {
-        global.menu.statusbarError(false);
-        global.menu.statusbarLoading(true);
         json = await request.apiPromise;
     } finally {
         global.menu.statusbarLoading(false);
     }
     if (json.detail) {
-        let detail = json.detail;
-        console.log(["ERROR", detail]);
-        global.menu.statusbarSocket(true);
+        global.menu.statusbarSocket(true, json.detail);
         return;
     }
     state.highlight_json_backup = json;

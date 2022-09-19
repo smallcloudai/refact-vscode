@@ -3,13 +3,14 @@ import * as vscode from 'vscode';
 import {MyInlineCompletionProvider} from "./completionProvider";
 import * as highlight from "./highlight";
 import * as storeVersions from "./storeVersions";
-import StatusBarMenu from "./statusBar";
+import * as statusBar from "./statusBar";
 import LensProvider from "./codeLens";
 import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 import * as fetch from "./fetchAPI";
 import * as langDB from "./langDB";
+import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
 import PanelWebview from "./panel";
 import BugPage from "./bug";
@@ -26,12 +27,15 @@ declare global {
 }
 
 
+let global_context: vscode.ExtensionContext|undefined = undefined;
+
+
 export function activate(context: vscode.ExtensionContext)
 {
+    global_context = context;
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
-    global.menu =  new StatusBarMenu();
+    global.menu = new statusBar.StatusBarMenu();
     global.menu.createStatusBarBlock(context);
-    global.menu.statusbarGuest(false);
 
     let docSelector = {
         scheme: "file"
@@ -54,9 +58,6 @@ export function activate(context: vscode.ExtensionContext)
     //     new LensProvider()
     // );
     // context.subscriptions.push(codeLensProviderDisposable);
-
-    global.userTicket = getTicket(context);
-    isLangaugeDisabled();
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
@@ -120,33 +121,12 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable2);
     context.subscriptions.push(...disposables);
 
-
-    const auth = checkAuth(context);
-    if(!auth) {
-        global.menu.statusbarGuest(true);
-        const header = "Please login";
-        vscode.window.showInformationMessage('Please Login to Codify','Login').then((selection) => {
-            if(selection === 'Login') {
-                vscode.commands.executeCommand('plugin-vscode.login');
-            }
-        });
-    }
-    else {
-        global.menu.statusbarGuest(false);
-        global.userLogged = context.globalState.get('codify_userName');
-        if(global.panelProvider) { 
-            global.panelProvider.runLogin();
-        }
-    }
-
     global.panelProvider = new PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
         'codify-presets',
         global.panelProvider,
     );
     context.subscriptions.push(view);
-
-
 
     let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
         vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.codify' );
@@ -159,28 +139,33 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(bugCommand);
 
     let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
+        global.userTicket = userLogin.generateTicket(context);
         vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/login?token=${global.userTicket}`));
+        setTimeout(() => {
+            fetch.login();
+        }, 5000);
     });
+
     context.subscriptions.push(login);
 
     let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
-        context.globalState.update('codifyFirstRun',false,);
-        context.globalState.update('codify_userName',null);
+        context.globalState.update('codifyFirstRun', false);
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
         vscode.workspace.getConfiguration().update('codify.fineTune', false,vscode.ConfigurationTarget.Global);
-        global.menu.statusbarGuest(true);
         global.userLogged = false;
-        const header = "Please login";
-        vscode.window.showInformationMessage('Please Login to Codify','Login').then((selection) => {
-            if(selection === 'Login') {
-                vscode.commands.executeCommand('plugin-vscode.login');
-            }
-        });
+        global.menu.choose_color();
         if(global.panelProvider) {
             global.panelProvider.runLogout();
         }
     });
+
     context.subscriptions.push(logout);
+    context.subscriptions.push(...statusBar.status_bar_init());
+
+    setTimeout(() => {
+        fetch.login();
+        global.menu.choose_color();
+    }, 100);
 }
 
 // export function pluginFirstRun(context: vscode.ExtensionContext) {
@@ -191,6 +176,7 @@ export function activate(context: vscode.ExtensionContext)
 //         return false;
 //     }
 // }
+
 
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
@@ -229,35 +215,21 @@ export async function askIntent()
     // vscode.window.showInformationMessage(`Got: ${result}`);
 }
 
-export function checkAuth(context: any) {
-    let apiKey = getApiKey();
-    let userName = context.globalState.get('codify_userName');
-    if(!userName && !apiKey) { return false; }
-    // if(apiKey === false || apiKey === '') { return false; }
-    return true;
-}
-
-export function getApiKey() {
-    const apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
-    if(!apiKey) { return false; }
-    return apiKey;
-}
-
-export function getTicket(context: any) {
-    const store = context.globalState;
-    let token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
-    return token;
-}
 
 //
 export function deactivate(context: vscode.ExtensionContext)
 {
+    global_context = undefined;
 }
 
 
 export async function status_bar_clicked()
 {
     let editor = vscode.window.activeTextEditor;
+    if (!userLogin.checkAuth(global_context)) {
+        userLogin.login_message();
+        return;
+    }
     // no login
     // "It takes two clicks to join the waitlist"
     // - login
@@ -271,8 +243,9 @@ export async function status_bar_clicked()
     let enabled = langDB.is_language_enabled(lang);
     if (enabled) {
         await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
-        global.menu.statusbarLang(true);
         console.log(["disable", lang]);
+        global.menu.statusbarLang(true, lang);
+        global.menu.choose_color();
     } else {
         let selection = await vscode.window.showInformationMessage(
             "Enable Codify for the programming language \"" + lang + "\"?",
@@ -281,22 +254,12 @@ export async function status_bar_clicked()
         );
         if (selection === "Enable") {
             await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
-            global.menu.statusbarLang(false);
             console.log(["enable", lang]);
+            global.menu.statusbarLang(false, lang);
+            global.menu.choose_color();
         } else if (selection === "Bug Report...") {
             vscode.commands.executeCommand("codify.openBug");
             console.log(["bug report!!!"]);
         }
-    }
-}
-
-export async function isLangaugeDisabled() {
-    let editor = vscode.window.activeTextEditor;
-    if(editor) {
-        let lang = langDB.language_from_filename(editor.document.fileName);
-        let enabled = langDB.is_language_enabled(lang);
-        if(!enabled) {
-            global.menu.statusbarLang(true);
-        }   
     }
 }

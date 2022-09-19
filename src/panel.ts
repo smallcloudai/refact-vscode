@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as highlight from "./highlight";
 import * as estate from "./estate";
 import * as interactiveDiff from "./interactiveDiff";
 import { fetch } from 'fetch-h2';
-import { checkAuth } from './extension';
+import * as userLogin from "./userLogin";
+
 
 class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
@@ -17,22 +19,13 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		_token: vscode.CancellationToken
 	) {
 		this._view = webviewView;
-        
+
 		webviewView.webview.options = {
             enableScripts: true,
 			localResourceRoots: [this._context.extensionUri],
 		};
-        
+
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-
-        // if(this._context.globalState.get('codify_userName')) {
-        //     this._view?.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
-        // }
-
-        // const auth = checkAuth(this._context);
-        // if(global.userLogged) {
-        //     webviewView.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
-        // }
 
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
@@ -114,7 +107,11 @@ class PanelWebview implements vscode.WebviewViewProvider {
         // vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     }
 
-    public runLogin() {
+    public login_success()
+    {
+        if (!this._view) {
+            return;
+        }
         this._view!.webview.postMessage({
 			command: "login",
             value: global.userLogged

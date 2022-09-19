@@ -22,14 +22,14 @@
 	settingsButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "openSettings" });
 	});
-  
+
     const reportButton = document.querySelector("#bug");
 	reportButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "openBug" });
-	});  
+	});
 	const loginButton = document.querySelector("#login");
 	// loginButton.addEventListener("click", () => {
-    //     vscode.postMessage({ type: "runLogin" });
+    //     vscode.postMessage({ type: "login_success" });
 	// });
 
 	window.addEventListener("message", (event) => {
@@ -48,40 +48,40 @@
             case "login":
                 if (message.value) {
                     let login = document.querySelector('#login');
-                    login.style.display = 'none'; 
+                    login.style.display = 'none';
                     let bug = document.querySelector('#bug');
-                    bug.style.display = 'block'; 
+                    bug.style.display = 'block';
                     let logout = document.querySelector('#logout');
-                    bug.style.display = 'block'; 
+                    bug.style.display = 'block';
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
-                    info.style.display = 'block'; 
+                    info.style.display = 'block';
                 }
                 break;
             case "alreadyLogged":
                 if (message.value) {
                     let login = document.querySelector('#login');
-                    login.style.display = 'none'; 
+                    login.style.display = 'none';
                     let bug = document.querySelector('#bug');
-                    bug.style.display = 'block'; 
+                    bug.style.display = 'block';
                     let logout = document.querySelector('#logout');
-                    bug.style.display = 'block'; 
+                    bug.style.display = 'block';
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
-                    info.style.display = 'block'; 
+                    info.style.display = 'block';
                 }
                 break;
             case "logout":
                     if (message.value) {
                         let login = document.querySelector('#login');
-                        login.style.display = 'block'; 
+                        login.style.display = 'block';
                         let bug = document.querySelector('#bug');
-                        bug.style.display = 'none'; 
+                        bug.style.display = 'none';
                         let logout = document.querySelector('#logout');
-                        bug.style.display = 'none'; 
+                        bug.style.display = 'none';
                         let info = document.querySelector('.sidebar-logged');
                         document.querySelector('.sidebar-logged span').innerHTML = '';
-                        info.style.display = 'none'; 
+                        info.style.display = 'none';
                         console.log("...................... sidebar.js logout");
                     }
                     break;

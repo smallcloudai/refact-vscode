@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
-import { getApiKey } from './extension';
+import * as userLogin from "./userLogin";
+
 
 let globalSeq = 100;
 
@@ -23,7 +24,7 @@ export class PendingRequest {
     {
         h2stream.catch((error) => {
             if (!error.message.includes("aborted")) {
-                console.log(["STREAM ERROR2", this.seq, error]);
+                global.menu.statusbarSocketError(true, `STREAM ERROR2: ${error}`);
             } else {
             }
             return;
@@ -36,11 +37,13 @@ export class PendingRequest {
                 }).catch((error) => {
                     // this happens!
                     console.log(["JSON ERROR", this.seq, error]);
+                    global.menu.statusbarSocketError(true, `JSON ERROR: ${error}`);
                     reject(error);
                 });
             }).catch((error) => {
                 if (!error.message.includes("aborted")) {
-                    console.log(["STREAM ERROR1", this.seq, error]);
+                    console.log(["STREAM ERROR", this.seq, error]);
+                    global.menu.statusbarSocketError(true, `STREAM ERROR3: ${error}`);
                 }
                 reject(error);
             });
@@ -49,12 +52,18 @@ export class PendingRequest {
             if (index >= 0) {
                 globalRequests.splice(index, 1);
             }
+            if (globalRequests.length === 0) {
+                global.menu.statusbarSocketError(false);
+                global.menu.statusbarLoading(false);
+            }
             // console.log(["--pendingRequests", globalRequests.length, request.seq]);
         }).catch((error) => {
-            // just print message
-            console.log(["API ERROR", this.seq, error]);
+            if (!error.message.includes("aborted")) {
+                global.menu.statusbarSocketError(true, `API ERROR: ${error}`);
+            }
         });
         globalRequests.push(this);
+        global.menu.statusbarLoading(true);
         // console.log(["++pendingRequests", globalRequests.length, request.seq]);
     }
 }
@@ -128,12 +137,11 @@ export function fetchAPI(
         "max_edits": maxEdits,
         "stop": stop_tokens,
     });
-    const apiKey = getApiKey();
+    const apiKey = userLogin.getApiKey();
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
     };
-    global.menu.statusbarSocket(false);
     let req = new fetchH2.Request(url, {
         method: "POST",
         headers: headers,
@@ -180,10 +188,10 @@ export async function report_to_mothership(
         "cursor1": cursor_pos1,
     });
     global.modelFunction = functionName;
-    const apiKey = getApiKey();
+    const apiKey = userLogin.getApiKey();
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
@@ -202,16 +210,32 @@ export async function report_to_mothership(
     return promise;
 }
 
-export async function login() {
-    if(global.userLogged) {
-        return 'ok';
+
+let complain_once: boolean = true;
+
+
+export async function login()
+{
+    const apiKey = userLogin.getApiKey();
+    if (global.userLogged && apiKey) {
+        return "OK";
     }
     const url = "https://max.smallcloud.ai/v1/api-activate";
-    const ticket = global.userTicket;
-    const headers = {
+    let headers = {
         "Content-Type": "application/json",
-        "Authorization": `codify-${ticket}`,
+        "Authorization": "",
     };
+    const ticket = global.userTicket;
+    if (ticket) {
+        headers.Authorization = `codify-${ticket}`;
+        global.userTicket = "";
+    } else {
+        if (!global.userLogged) {
+            headers.Authorization = `Bearer ${apiKey}`;
+        } else {
+            return "";
+        }
+    }
     let req = new fetchH2.Request(url, {
         method: "GET",
         headers: headers,
@@ -219,26 +243,34 @@ export async function login() {
         cache: "no-cache",
         referrer: "no-referrer",
     });
-    let promise = fetchH2.fetch(req);
-    promise.then((result) => {
-        result.json().then((json) => {
-            console.log(["login", result.status, json]);
-            if(json.retcode === 'OK') {
-                vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
-                vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
-                global.userLogged = json.account;
-                global.menu.statusbarGuest(false);
-                if(global.panelProvider) { 
-                    global.panelProvider.runLogin();
-                }
+    console.log(["LOGIN", headers.Authorization]);
+    try {
+        let result = await fetchH2.fetch(req);
+        let json: any = await result.json();
+        console.log(["login", result.status, json]);
+        if (json.retcode === 'OK') {
+            await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
+            global.userLogged = json.account;
+            if(global.panelProvider) {
+                global.panelProvider.login_success();
             }
-            if(json.retcode === 'FAILED') {
-                global.menu.apiError(json.human_readable_message);
+            global.menu.choose_color();
+
+        } else if (json.retcode === 'FAILED') {
+            global.menu.statusbarSocketError(true, json.human_readable_message);
+            if (complain_once) {
+                complain_once = false;
+                // userLogin.login_message();
             }
-        });
-    }).catch((error) => {
-        console.log(["login", "error", error]);
-        global.menu.socketError();
-    });
-    return promise;
+            return "";
+        } else {
+            console.log(["login bug"]);
+            return "";
+        }
+    } catch (error) {
+        global.menu.statusbarSocketError(true, error);
+        return "";
+    }
+    return "OK";
 }

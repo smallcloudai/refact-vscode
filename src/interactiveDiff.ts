@@ -92,11 +92,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             return;
         }
         if (json.detail) {
-            let detail = json.detail;
-            console.log(["ERROR", detail]);
-            if(detail === "Could not verify your API key") {
-                global.menu.apiError(detail);
-            }
+            global.menu.statusbarSocket(true, json.detail);
             if (state.get_mode() === estate.Mode.DiffWait) {
                 estate.switch_mode(state, estate.Mode.Normal);
             }

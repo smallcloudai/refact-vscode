@@ -80,9 +80,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             ));
             let json: any = await request.apiPromise;
             if (json.detail) {
-                let detail = json.detail;
-                console.log(["ERROR", detail]);
-                global.menu.socketError();
+                global.menu.statusbarSocketError(true, json.detail);
                 return;
             }
             modif_doc = json["choices"][0]["files"][file_name];
