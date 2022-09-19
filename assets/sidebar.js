@@ -60,7 +60,6 @@
                 break;
             case "alreadyLogged":
                 if (message.value) {
-                    console.log('already logged message  ==============++>>>>>');
                     let login = document.querySelector('#login');
                     login.style.display = 'none'; 
                     let bug = document.querySelector('#bug');
@@ -83,6 +82,7 @@
                         let info = document.querySelector('.sidebar-logged');
                         document.querySelector('.sidebar-logged span').innerHTML = '';
                         info.style.display = 'none'; 
+                        console.log("...................... sidebar.js logout");
                     }
                     break;
 			case "updateHistory":

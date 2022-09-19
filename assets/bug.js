@@ -16,11 +16,18 @@
     });
 
     buttonSubmit.addEventListener("click",(event) => {
-        let _intent = document.querySelector('#intent').value;
-        let _source = document.querySelector('#source').value;
+        let _text = document.querySelector('#comment');
+        let _intent = _text.getAttribute('data-intent');
+        let _funct = _text.getAttribute('data-function');
         let _comment = document.querySelector('#comment').value;
+        let _source = '';
+        const file = document.querySelector('#source');
+        if(file.checked) {
+            _source = true;
+        }
         let data = {
             intent: _intent,
+            function: _funct,
             source: _source,
             comment: _comment
         };

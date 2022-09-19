@@ -58,9 +58,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     if (json.detail) {
         let detail = json.detail;
         console.log(["ERROR", detail]);
-        if(detail === "Could not verify your API key") {
-            global.menu.apiError(detail);
-        }
+        global.menu.statusbarSocket(true);
         return;
     }
     state.highlight_json_backup = json;

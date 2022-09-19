@@ -13,6 +13,7 @@ import * as langDB from "./langDB";
 import { Mode } from "./estate";
 import PanelWebview from "./panel";
 import BugPage from "./bug";
+import { glob } from 'glob';
 
 
 declare global {
@@ -21,6 +22,7 @@ declare global {
     var settingsPage: any;
     var userTicket: string;
     var userLogged: any;
+    var modelFunction: string;
 }
 
 
@@ -119,7 +121,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...disposables);
 
 
-    const auth = checkAuth();
+    const auth = checkAuth(context);
     if(!auth) {
         global.menu.statusbarGuest(true);
         const header = "Please login";
@@ -131,6 +133,7 @@ export function activate(context: vscode.ExtensionContext)
     }
     else {
         global.menu.statusbarGuest(false);
+        global.userLogged = context.globalState.get('codify_userName');
         if(global.panelProvider) { 
             global.panelProvider.runLogin();
         }
@@ -226,9 +229,10 @@ export async function askIntent()
     // vscode.window.showInformationMessage(`Got: ${result}`);
 }
 
-export function checkAuth() {
+export function checkAuth(context: any) {
     let apiKey = getApiKey();
-    if(!global.userLogged && !apiKey) { return false; }
+    let userName = context.globalState.get('codify_userName');
+    if(!userName && !apiKey) { return false; }
     // if(apiKey === false || apiKey === '') { return false; }
     return true;
 }

@@ -79,6 +79,10 @@ export class BugPage {
         let intent = estate.global_intent;
         let source; 
         let editor = this._editor;
+        let func = global.modelFunction;
+        if(func === 'undefined' || func === undefined){
+            func = 'completion';
+        }
 
         if(editor) {
             let doc = editor.document;
@@ -112,15 +116,19 @@ export class BugPage {
                     <div class="s-body">
                         <div class="s-body__item">
                             <label>Comment</label>
-                            <textarea id="comment" class="s-body__textarea" name="comment">
-I'm using
-"${intent}" and I typed "${intent}",
+                            <textarea data-function="${func}" data-intent="${intent}" id="comment" class="s-body__textarea" name="comment">
+I'm using "${func}"
+and I typed "${intent}",
 the expceted outcome is ...
 What it really does is ...
 Environment: Visual Code (${os.platform()}) - ${vscode.version}
 Plugin Version: ${cnt.extension.packageJSON.version}
                             </textarea>
                         </div> 
+                            <div class="s-body__item s-body__item--inline">
+                            <input type="checkbox" id="source" name="source">
+                            <label for="source">Attach source code</label>
+                            </div>
                     </div>
                     <div class="s-footer">
                         <button class="s-submit">Submit Bug Report</button>
@@ -141,8 +149,17 @@ Plugin Version: ${cnt.extension.packageJSON.version}
         return text;
     }
     static async sendBugs(data: any, cnt: any,panel: any) {
+        let code = '';
+        if(data.source === true) {
+            let editor = vscode.window.activeTextEditor;
+            if(editor) {
+                let doc = editor.document;
+                code = doc.getText();
+            }
+        }
+        
         var store = cnt.globalState;
-        const slackMsg = `name: ${store.get('codify_clientName')}\napiKey: ${store.get('codify_apiKey')}\nplugin: ${cnt.extension.packageJSON.version}\nintent: ${data.intent}\nsource: ${data.source}\ncomment: ${data.comment}\nplatform: ${os.platform()}\nversion ${vscode.version}`;
+        const slackMsg = `name: ${store.get('codify_clientName')}\nintent: ${data.intent}\nfunction: ${data.function}\nthe_rest_json: {"comment" : ${data.comment}, "source": ${code}}`;
         const headers = {
             "Content-Type": "application/json"
         };
@@ -156,28 +173,24 @@ Plugin Version: ${cnt.extension.packageJSON.version}
             console.log('Slack Error',error);
         });
 
-        const dataToSend = JSON.stringify({
-            name: store.get('codify_clientName'),
-            apiKey: store.get('codify_apiKey'),
-            platform: os.platform(),
-            version: vscode.version,
-            plugin: cnt.extension.packageJSON.version,
-            ...data
-        });
+        // const dataToSend = JSON.stringify({
+        //     name: store.get('codify_clientName'),
+        //     ...data
+        // });
 
-        const response = await fetch( 'https://max.smallcloud.ai/codify-bug', { 
-            method: "POST",
-            headers: headers,
-            body: dataToSend,
-            redirect: "follow",
-            cache: "no-cache",
-            referrer: "no-referrer", 
-        }).then((response) => {
-            console.log('Bug Request Response',response);
-            panel.webview.postMessage({ command: "sendResponse" });
-        }).catch(function(error) {
-            console.log('Bug Request Error',error);
-        });
+        // const response = await fetch( 'https://max.smallcloud.ai/codify-bug', { 
+        //     method: "POST",
+        //     headers: headers,
+        //     body: dataToSend,
+        //     redirect: "follow",
+        //     cache: "no-cache",
+        //     referrer: "no-referrer", 
+        // }).then((response) => {
+        //     console.log('Bug Request Response',response);
+        //     panel.webview.postMessage({ command: "sendResponse" });
+        // }).catch(function(error) {
+        //     console.log('Bug Request Error',error);
+        // });
 
     }
 }

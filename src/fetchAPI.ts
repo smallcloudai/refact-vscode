@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import { getApiKey } from './extension';
 
-
 let globalSeq = 100;
 
 
@@ -134,6 +133,7 @@ export function fetchAPI(
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
     };
+    global.menu.statusbarSocket(false);
     let req = new fetchH2.Request(url, {
         method: "POST",
         headers: headers,
@@ -179,6 +179,7 @@ export async function report_to_mothership(
         "cursor0": cursor_pos0,
         "cursor1": cursor_pos1,
     });
+    global.modelFunction = functionName;
     const apiKey = getApiKey();
     const headers = {
         "Content-Type": "application/json",
@@ -232,14 +233,12 @@ export async function login() {
                 }
             }
             if(json.retcode === 'FAILED') {
-                // global.menu.apiError(json.human_readable_message);
+                global.menu.apiError(json.human_readable_message);
             }
         });
     }).catch((error) => {
         console.log(["login", "error", error]);
-        global.menu.statusbarError(true);
-        global.userLogged = false;
-        vscode.window.showErrorMessage(error);
+        global.menu.socketError();
     });
     return promise;
 }

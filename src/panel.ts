@@ -20,16 +20,14 @@ class PanelWebview implements vscode.WebviewViewProvider {
         
 		webviewView.webview.options = {
             enableScripts: true,
-            
 			localResourceRoots: [this._context.extensionUri],
 		};
         
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-        if(global.userLogged) {
-            console.log("logged panel check");
-            this._view?.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
-        }
+        // if(this._context.globalState.get('codify_userName')) {
+        //     this._view?.webview.postMessage({ command: "alreadyLogged", value: global.userLogged});
+        // }
 
         // const auth = checkAuth(this._context);
         // if(global.userLogged) {

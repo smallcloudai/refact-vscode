@@ -77,6 +77,18 @@ import * as vscode from 'vscode';
         return state;
     }
 
+    statusbarSocket(state: boolean) {
+        if(state) {
+            this.menu.text = `$(debug-disconnect) codify`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        }
+        else {
+            this.menu.text = `$(codify-logo) codify`;
+            this.menu.backgroundColor = undefined;
+        }
+        return state;
+    }
+
     apiError(msg: string) {
         global.menu.statusbarError(true);
         global.userLogged = false;
