@@ -3,13 +3,17 @@
   "displayName": "Codify",
   "description": "AI autocomplete, refactoring and advanced code generation",
   "publisher": "smallcloud",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/smallcloudai/plugin-vscode"
+  },
   "icon": "logo-small.png",
   "galleryBanner": {
     "color": "#C80000",
     "theme": "dark"
   },
   "author": "Codify <codify@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "engines": {
     "vscode": "^1.69.0"
   },
@@ -17,17 +21,17 @@
     "Programming Languages",
     "Snippets",
     "Other"
- ],
+  ],
   "activationEvents": [
     "onStartupFinished",
     "onView:codify-presets"
   ],
   "badges": [
-        {
-            "url": "https://img.shields.io/github/stars/smallcloudai/plugin-vscode?style=social",
-            "description": "Github Stars",
-            "href": "https://smallcloud.ai"
-        }
+    {
+      "url": "https://img.shields.io/github/stars/smallcloudai/plugin-vscode?style=social",
+      "description": "Github Stars",
+      "href": "https://smallcloud.ai"
+    }
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -36,28 +40,28 @@
       "title": "Codify",
       "properties": {
         "codify.fineTune": {
-            "type": "boolean",
-            "default": null,
-            "description": "Fine-tune: use the changes to code that I accept or reject to personalize for me and generally improve the model behind Codify"
+          "type": "boolean",
+          "default": null,
+          "description": "Fine-tune: use the changes to code that I accept or reject to personalize for me and generally improve the model behind Codify"
         },
         "codify.apiKey": {
-            "type": "string",
-            "default": null,
-            "description": "API Key"
+          "type": "string",
+          "default": null,
+          "description": "API Key"
         },
         "codify.lang": {
-            "*": {
-                "type": "boolean",
-                "default": true,
-                "description": "Enable plugin for this language"
-            }
+          "*": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable plugin for this language"
+          }
         },
         "codify.temperature": {
-            "type": "number",
-            "default": 0.2,
-            "minimum": 0.0,
-            "maximum": 0.8,
-            "description": "Temperature (0.0 - 0.8)"
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0,
+          "maximum": 0.8,
+          "description": "Temperature (0.0 - 0.8)"
         }
       }
     },
@@ -118,31 +122,31 @@
       }
     ],
     "viewsContainers": {
-        "activitybar": [
-          {
-            "id": "codify-pane",
-            "title": "Codify",
-            "icon": "$(codify-logo)"
-          }
-        ]
+      "activitybar": [
+        {
+          "id": "codify-pane",
+          "title": "Codify",
+          "icon": "$(codify-logo)"
+        }
+      ]
     },
     "views": {
-        "codify-pane": [
-            {
-                "type": "webview",
-                "id": "codify-presets",
-                "name": "Presets"
-            }
-        ]
+      "codify-pane": [
+        {
+          "type": "webview",
+          "id": "codify-presets",
+          "name": "Presets"
+        }
+      ]
     },
     "icons": {
-        "codify-logo": {
-            "description": "codify logo",
-            "default": {
-                "fontPath": "./assets/codify.woff",
-                "fontCharacter": "\\41"
-            }
+      "codify-logo": {
+        "description": "codify logo",
+        "default": {
+          "fontPath": "./assets/codify.woff",
+          "fontCharacter": "\\41"
         }
+      }
     }
   },
   "scripts": {
@@ -153,10 +157,6 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js"
   },
-  "dependencies": {
-    "diff": "^5.0.0",
-    "fetch-h2": "2"
-  },
   "devDependencies": {
     "@types/glob": "^7.2.0",
     "@types/mocha": "^9.1.1",
@@ -164,11 +164,10 @@
     "@typescript-eslint/eslint-plugin": "^5.30.0",
     "@typescript-eslint/parser": "^5.30.0",
     "@vscode/test-electron": "^2.1.5",
-    "diff": "^5.0.0",
     "eslint": "^8.18.0",
-    "fetch-h2": "2",
     "glob": "^8.0.3",
     "mocha": "^10.0.0",
     "typescript": "^4.7.4"
   }
 }
+

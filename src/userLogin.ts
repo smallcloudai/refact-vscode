@@ -12,6 +12,16 @@ export async function login_message()
     global.menu.choose_color();
 }
 
+export async function welcome_message()
+{
+    // const header = "Welcome to Codify, please login to use our extension";
+    let selection = await vscode.window.showInformationMessage("Welcome to Codify, please login to start using our extension", "Login");
+    if(selection === "Login") {
+        vscode.commands.executeCommand('plugin-vscode.login');
+    }
+    global.menu.choose_color();
+}
+
 
 export function checkAuth(context: any)
 {

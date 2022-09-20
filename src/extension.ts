@@ -43,14 +43,10 @@ export function activate(context: vscode.ExtensionContext)
 
     context.subscriptions.push(vscode.commands.registerCommand(global.menu.command, status_bar_clicked));
 
-    // const pluginRun = pluginFirstRun(context);
-    // if(!pluginRun) {
-    //     let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
-    //         docSelector,
-    //         new LensProvider()
-    //     );
-    //     context.subscriptions.push(codeLensProviderDisposable);
-    // }
+    const pluginRun = pluginFirstRun(context);
+    if(!pluginRun) {
+        userLogin.welcome_message();   
+    }
 
     // Register our CodeLens provider
     // let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
@@ -168,15 +164,14 @@ export function activate(context: vscode.ExtensionContext)
     }, 100);
 }
 
-// export function pluginFirstRun(context: vscode.ExtensionContext) {
-//     const firstRun = context.globalState.get('codifyFirstRun');
-//     if (firstRun !== undefined && firstRun) { return true; }
-//     else {
-//         context.globalState.update('codifyFirstRun', true);
-//         return false;
-//     }
-// }
-
+export function pluginFirstRun(context: vscode.ExtensionContext) {
+    const firstRun = context.globalState.get('codifyFirstRun');
+    if (!firstRun && firstRun === undefined) { 
+        context.globalState.update('codifyFirstRun', true);
+        return true; 
+    }
+    return false;
+}
 
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
