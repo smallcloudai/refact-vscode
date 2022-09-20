@@ -119,12 +119,11 @@ export class BugPage {
                             <textarea data-function="${func}" data-intent="${intent}" id="comment" class="s-body__textarea" name="comment">
 I'm using "${func}"
 and I typed "${intent}",
-the expceted outcome is ...
+the expected outcome is ...
 What it really does is ...
 
 Environment: Visual Code (${os.platform()}) - ${vscode.version}
-Plugin Version: ${cnt.extension.packageJSON.version}
-                            </textarea>
+Plugin Version: ${cnt.extension.packageJSON.version}</textarea>
                         </div> 
                             <div class="s-body__item s-body__item--inline">
                             <input type="checkbox" id="source" name="source">

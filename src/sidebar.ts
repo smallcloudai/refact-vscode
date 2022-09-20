@@ -183,9 +183,9 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="sidebar-controls">
                         <div class="sidebar-logged">Logged as <span></span></div>
                         <a tabindex="-1" href="${url}" id="login">Login / Register</a>
-                        <button tabindex="-1" id="settings">Settings</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="bug">Bug Report…</button>
+                        <button tabindex="-1" id="settings">Settings</button>
                     </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
