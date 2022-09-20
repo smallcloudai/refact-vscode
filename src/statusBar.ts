@@ -39,7 +39,7 @@ import * as estate from './estate';
             this.menu.text = `$(debug-disconnect) codify`;
             this.menu.backgroundColor = undefined;
             this.menu.tooltip = `Cannot reach the Codify server`;
-        } else if (this.lang) {
+        } else if (this.lang && this.language_name) {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = `Codify is not enabled for "${this.language_name}"`;
