@@ -254,7 +254,7 @@ export async function login()
         let result = await fetchH2.fetch(req);
         let json: any = await result.json();
         console.log(["login", result.status, json]);
-        if (json.retcode === 'OK') {
+        if (json.retcode === "TICKET-SAVEKEY") {
             await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('codify.fineTune', json.fine_tune, vscode.ConfigurationTarget.Global);
             global.userLogged = json.account;
