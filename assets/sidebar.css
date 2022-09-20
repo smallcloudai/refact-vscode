@@ -170,7 +170,7 @@ body.vscode-light #login {
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
-    background: vscode-dark;
+    background: transparent;
     cursor: pointer;
     box-sizing: border-box;
     text-decoration: none;
@@ -184,6 +184,7 @@ body.vscode-light #logout {
     color: var(--secondary);
     border-color: var(--secondary);
 }
+
 
 .sidebar-logged {
     display: none;

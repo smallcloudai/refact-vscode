@@ -278,7 +278,7 @@ export async function login()
         console.log(["login", result.status, json]);
         if (json.retcode === "TICKET-SAVEKEY") {
             await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('codify.personalize_and_improve', json.fine_tune, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', json.fine_tune, vscode.ConfigurationTarget.Global);
             global.userLogged = json.account;
             if(global.panelProvider) {
                 global.panelProvider.login_success();

@@ -143,7 +143,7 @@ export function activate(context: vscode.ExtensionContext)
     let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
         context.globalState.update('codifyFirstRun', false);
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
-        vscode.workspace.getConfiguration().update('codify.personalize_and_improve', false,vscode.ConfigurationTarget.Global);
+        vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', false,vscode.ConfigurationTarget.Global);
         global.userLogged = false;
         global.menu.choose_color();
         if(global.panelProvider) {

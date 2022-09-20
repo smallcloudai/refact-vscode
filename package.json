@@ -39,7 +39,7 @@
       "type": "object",
       "title": "Codify",
       "properties": {
-        "codify.personalize_and_improve": {
+        "codify.personalizeAndImprove": {
           "type": "boolean",
           "default": null,
           "description": "Personalize / Improve model: use the changes to code that I accept or reject to personalize for me and generally improve the model behind Codify"
