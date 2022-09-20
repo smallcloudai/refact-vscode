@@ -262,7 +262,12 @@ export async function login()
                 global.panelProvider.login_success();
             }
             global.menu.choose_color();
-
+        } else if (json.retcode === 'OK') {
+            global.userLogged = json.account;
+            if(global.panelProvider) {
+                global.panelProvider.login_success();
+            }
+            global.menu.choose_color();
         } else if (json.retcode === 'FAILED') {
             global.menu.statusbarSocketError(true, json.human_readable_message);
             if (complain_once) {
