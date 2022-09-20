@@ -39,10 +39,10 @@
       "type": "object",
       "title": "Codify",
       "properties": {
-        "codify.fineTune": {
+        "codify.personalize_and_improve": {
           "type": "boolean",
           "default": null,
-          "description": "Fine-tune: use the changes to code that I accept or reject to personalize for me and generally improve the model behind Codify"
+          "description": "Personalize / Improve model: use the changes to code that I accept or reject to personalize for me and generally improve the model behind Codify"
         },
         "codify.apiKey": {
           "type": "string",
