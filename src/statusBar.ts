@@ -68,7 +68,7 @@ import * as estate from './estate';
         if (detail && typeof detail === "object") {
             detail = JSON.stringify(detail);
         }
-        console.log(["OOPS", detail]);
+        console.log(["SOCKETERROR", error, detail]);
         this.socketerror = error;
         this.choose_color();
     }

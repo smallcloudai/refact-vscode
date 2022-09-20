@@ -117,7 +117,13 @@ export function fetchAPI(
     maxEdits: number,
     stop_tokens: string[],
 ) {
-    const url = "https://inference.smallcloud.ai/v1/contrast";
+    let tmp = vscode.workspace.getConfiguration().get('codify.infurl');
+    let url: string;
+    if(typeof tmp === 'undefined' || tmp === null || tmp === '') {
+        url = "https://inference.smallcloud.ai/v1/contrast";
+    } else {
+        url = `${tmp}`;
+    }
     let model = vscode.workspace.getConfiguration().get('codify.model');
     if(typeof model === 'undefined' || model === null || model === '') {
         model = 'CONTRASTcode/stable';
@@ -220,7 +226,7 @@ export async function login()
     if (global.userLogged && apiKey) {
         return "OK";
     }
-    const url = "https://max.smallcloud.ai/v1/api-activate";
+    const url = "https://www.smallcloud.ai/v1/api-activate";
     let headers = {
         "Content-Type": "application/json",
         "Authorization": "",
@@ -230,7 +236,7 @@ export async function login()
         headers.Authorization = `codify-${ticket}`;
         global.userTicket = "";
     } else {
-        if (!global.userLogged) {
+        if (!global.userLogged && apiKey) {
             headers.Authorization = `Bearer ${apiKey}`;
         } else {
             return "";
