@@ -26,6 +26,12 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		};
 
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        if(global.userLogged) {
+            this.login_success();
+        }
+        if(!global.userLogged) {
+            this.logout_success();
+        }
 
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
@@ -86,20 +92,13 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		this._view!.webview.postMessage({ command: "updateQuery", value: intent });
 	}
 
-    // async runLogin(context: any) {
-    //     const url = 'https://max.smallcloud.ai/codify/apikey/' + global.userTicket;
-    //     const response = await fetch(url);
-    //     const responseText = await response.text();
-    //     console.log('status ======> ',response.status);
-    //     console.log('data ======> ',responseText);
-	// }
-
-    public runLogout() {
-        global.userLogged = false;
+    public logout_success() {
+        if (!this._view) {
+            return;
+        }
         this._view!.webview.postMessage({
 			command: "logout"
 		});
-        // vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     }
 
     public refresh() {
@@ -116,7 +115,6 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			command: "login",
             value: global.userLogged
 		});
-        // vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     }
 
 	public addHistory(intent: string) {

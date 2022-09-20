@@ -43,10 +43,7 @@ export function activate(context: vscode.ExtensionContext)
 
     context.subscriptions.push(vscode.commands.registerCommand(global.menu.command, status_bar_clicked));
 
-    const pluginRun = pluginFirstRun(context);
-    if(!pluginRun) {
-        userLogin.welcome_message();   
-    }
+    pluginFirstRun(context);
 
     // Register our CodeLens provider
     // let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
@@ -151,8 +148,9 @@ export function activate(context: vscode.ExtensionContext)
         global.userLogged = false;
         global.menu.choose_color();
         if(global.panelProvider) {
-            global.panelProvider.runLogout();
+            global.panelProvider.logout_success();
         }
+        vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     });
 
     context.subscriptions.push(logout);
@@ -166,11 +164,9 @@ export function activate(context: vscode.ExtensionContext)
 
 export function pluginFirstRun(context: vscode.ExtensionContext) {
     const firstRun = context.globalState.get('codifyFirstRun');
-    if (!firstRun && firstRun === undefined) { 
-        context.globalState.update('codifyFirstRun', true);
-        return true; 
-    }
-    return false;
+    if (firstRun) { return; };
+    context.globalState.update('codifyFirstRun', true);
+    userLogin.welcome_message();
 }
 
 
