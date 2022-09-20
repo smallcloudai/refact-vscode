@@ -51,11 +51,9 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     try {
         json = await request.apiPromise;
     } finally {
-        global.menu.statusbarLoading(false);
-    }
-    if (json.detail) {
-        global.menu.statusbarSocket(true, json.detail);
-        return;
+        if (fetch.look_for_common_errors(json)) {
+            return;
+        }
     }
     state.highlight_json_backup = json;
     estate.switch_mode(state, Mode.Highlight);

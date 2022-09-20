@@ -115,10 +115,13 @@ export async function runEditChaining(animation: boolean): Promise<String>
     // if ((state.mode === estate.Mode.DiffWait) && !cancelToken.isCancellationRequested) {
     //     state.mode = estate.Mode.Normal;
     // }
-    let json: any = await request.apiPromise;
-    if (json.detail) {
-        global.menu.statusbarSocketError(true, json.detail);
-        return "";
+    let json: any;
+    try {
+        json = await request.apiPromise;
+    } finally {
+        if (fetch.look_for_common_errors(json)) {
+            return "";
+        }
     }
     state.showing_diff_edit_chain = sensitive_area;
     state.edit_chain_modif_doc = json["choices"][0]["files"][file_name];

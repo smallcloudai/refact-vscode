@@ -84,19 +84,16 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         state.report_to_mothership_cursor_file = file_name;
         state.report_to_mothership_cursor_pos0 = doc.offsetAt(sensitive_area.start);
         state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
-        let json: any = await request.apiPromise;
-        if (json === undefined) {
-            if (state.get_mode() === estate.Mode.DiffWait) {
-                estate.switch_mode(state, estate.Mode.Normal);
+        let json: any;
+        try {
+            json = await request.apiPromise;
+        } finally {
+            if (fetch.look_for_common_errors(json)) {
+                if (state.get_mode() === estate.Mode.DiffWait) {
+                    estate.switch_mode(state, estate.Mode.Normal);
+                }
+                return;
             }
-            return;
-        }
-        if (json.detail) {
-            global.menu.statusbarSocket(true, json.detail);
-            if (state.get_mode() === estate.Mode.DiffWait) {
-                estate.switch_mode(state, estate.Mode.Normal);
-            }
-            return;
         }
         cache.json = json;
         state.area2cache.set(cache_key, cache);

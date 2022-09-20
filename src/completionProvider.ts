@@ -78,10 +78,13 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 max_edits,
                 stop_tokens,
             ));
-            let json: any = await request.apiPromise;
-            if (json.detail) {
-                global.menu.statusbarSocketError(true, json.detail);
-                return;
+            let json: any;
+            try {
+                json = await request.apiPromise;
+            } finally {
+                if (fetch.look_for_common_errors(json)) {
+                    return;
+                }
             }
             modif_doc = json["choices"][0]["files"][file_name];
             let before_cursor1 = whole_doc.substring(0, cursor);

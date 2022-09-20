@@ -33,11 +33,12 @@ export class PendingRequest {
             h2stream.then((result_stream) => {
                 let json = result_stream.json();
                 json.then((result) => {
+                    global.menu.statusbarSocketError(false);
                     resolve(result);
                 }).catch((error) => {
                     // this happens!
                     console.log(["JSON ERROR", this.seq, error]);
-                    global.menu.statusbarSocketError(true, `JSON ERROR: ${error}`);
+                    // global.menu.statusbarSocketError(true, `JSON ERROR: ${error}`);
                     reject(error);
                 });
             }).catch((error) => {
@@ -53,7 +54,6 @@ export class PendingRequest {
                 globalRequests.splice(index, 1);
             }
             if (globalRequests.length === 0) {
-                global.menu.statusbarSocketError(false);
                 global.menu.statusbarLoading(false);
             }
             // console.log(["--pendingRequests", globalRequests.length, request.seq]);
@@ -168,6 +168,28 @@ export function fetchAPI(
     }
     let promise = fetchH2.fetch(req, init);
     return promise;
+}
+
+
+export function look_for_common_errors(json: any): boolean
+{
+    if (json === undefined) {
+        // undefined means error is already handled
+        return true;
+    }
+    if (json.detail) {
+        global.menu.statusbarSocketError(true, json.detail);
+        return true;
+    }
+    if (json.retcode && json.retcode !== "OK") {
+        global.menu.statusbarSocketError(true, json.human_readable_message);
+        return true;
+    }
+    if (json.error) {
+        global.menu.statusbarSocketError(true, json.error.message);
+        return true;
+    }
+    return false;
 }
 
 
