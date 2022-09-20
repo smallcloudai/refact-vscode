@@ -3,8 +3,6 @@ import * as vscode from "vscode";
 import * as highlight from "./highlight";
 import * as estate from "./estate";
 import * as interactiveDiff from "./interactiveDiff";
-import { fetch } from 'fetch-h2';
-import * as userLogin from "./userLogin";
 
 
 class PanelWebview implements vscode.WebviewViewProvider {
@@ -99,11 +97,6 @@ class PanelWebview implements vscode.WebviewViewProvider {
         this._view!.webview.postMessage({
 			command: "logout"
 		});
-    }
-
-    public refresh() {
-        // this._view!.webview.html = this._getHtmlForWebview(this._view!.webview);
-        // vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     }
 
     public login_success()

@@ -14,7 +14,6 @@ import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
 import PanelWebview from "./panel";
 import BugPage from "./bug";
-import { glob } from 'glob';
 
 
 declare global {
