@@ -26,7 +26,11 @@
 	reportButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "openBug" });
 	});
-	const loginButton = document.querySelector("#login");
+
+	const logoutButton = document.querySelector("#logout");
+    logoutButton.addEventListener("click", () => {
+		vscode.postMessage({ type: "logout" });
+	});
 
 	window.addEventListener("message", (event) => {
 		const message = event.data;
@@ -48,6 +52,7 @@
                     let bug = document.querySelector('#bug');
                     bug.style.display = 'block';
                     let logout = document.querySelector('#logout');
+                    logout.style.display = 'block';
                     bug.style.display = 'block';
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
@@ -61,6 +66,7 @@
                     let bug = document.querySelector('#bug');
                     bug.style.display = 'block';
                     let logout = document.querySelector('#logout');
+                    logout.style.display = 'block';
                     bug.style.display = 'block';
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
@@ -74,6 +80,7 @@
                         let bug = document.querySelector('#bug');
                         bug.style.display = 'none';
                         let logout = document.querySelector('#logout');
+                        logout.style.display = 'none';
                         bug.style.display = 'none';
                         let info = document.querySelector('.sidebar-logged');
                         document.querySelector('.sidebar-logged span').innerHTML = '';

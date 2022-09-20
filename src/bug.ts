@@ -153,7 +153,6 @@ Plugin Version: ${cnt.extension.packageJSON.version}
         // let code = '';
         // let source; 
         // if(data.source) {
-        // // let editor = BugPage._editor;
         // // if(editor) {
         // //     let doc = editor.document;
         // //     source = doc.getText();

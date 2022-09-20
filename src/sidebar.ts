@@ -54,6 +54,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     this.presetIntent(data.value);
 					break;
 				}
+                case "logout": {
+                    vscode.commands.executeCommand("plugin-vscode.logout");
+                    break;
+                }
                 case "openBug": {
                     vscode.commands.executeCommand("plugin-vscode.openBug");
                     break;
