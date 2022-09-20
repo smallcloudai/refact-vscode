@@ -100,14 +100,16 @@ body.vscode-light .presets-title {
 .sidebar-controls {
     position: absolute;
     bottom: 0px;
-    padding-bottom: 20px;
+    left: 0;
+    right: 0;
     display: flex;
     justify-content: flex-start;
     flex-direction: column;
     align-items: center;
-    width: 90%;
+    width: 100%;
     box-sizing: border-box;
     background-color: var(--vscode-sideBar-background) !important;
+    padding: 0 20px 20px;
     
 }
 #bug {
@@ -186,7 +188,23 @@ body.vscode-light #logout {
 .sidebar-logged {
     display: none;
     margin-bottom: 5px;
+    padding: 0 20px;
+    width: 100%;
+    justify-content: center;
 }
 
 .sidebar-logged span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 4px;
+}
+
+@media only screen and (max-width: 300px) {
+    .sidebar-logged {
+        flex-direction: column;
+    }
+    .sidebar-logged span {
+        margin-left: 0;
+    }
 }

@@ -20,7 +20,7 @@
         let _intent = _text.getAttribute('data-intent');
         let _funct = _text.getAttribute('data-function');
         let _comment = document.querySelector('#comment').value;
-        let _source = '';
+        let _source = false;
         const file = document.querySelector('#source');
         if(file.checked) {
             _source = true;

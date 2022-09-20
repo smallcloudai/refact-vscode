@@ -7,9 +7,13 @@ body.vscode-dark {
 	--color: #FFF; 
     --secondary: rgba(255,255,255,0.5);
 }
-
+* {
+    box-sizing: border-box;
+}
 .container {
 	max-width: 900px;
+    width: 100%;
+    overflow: hidden;
 }
 .s-header {
     margin-top: 20px;
@@ -74,6 +78,7 @@ body.vscode-light .s-header__logowhite {
     align-items: flex-start;
     margin-bottom: 20px;
     width: 100%;
+    min-width: 100%;
 }
 .s-body__inline {
     display: flex;
@@ -134,7 +139,7 @@ body.vscode-light .s-header__logowhite {
     border: 1px solid var(--secondary);
     color: var(--color);
     padding: 8px 16px;
-    max-width: 450px;
+    max-width: 100%;
     width: 100%;
 }
 .s-body__textarea {
@@ -142,9 +147,8 @@ body.vscode-light .s-header__logowhite {
     border: 1px solid var(--secondary);
     color: var(--color);
     padding: 8px 16px;
-    max-width: 450px;
     width: 100%;
-    height: 150px;
+    height: 250px;
     font-size: 16px;
     line-height: 1.3;
 }
@@ -166,7 +170,6 @@ body.vscode-light .s-header__logowhite {
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
-    letter-spacing: 1px;
     background: transparent;
     cursor: pointer;
     box-sizing: border-box;

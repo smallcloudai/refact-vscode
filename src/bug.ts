@@ -121,6 +121,7 @@ I'm using "${func}"
 and I typed "${intent}",
 the expceted outcome is ...
 What it really does is ...
+
 Environment: Visual Code (${os.platform()}) - ${vscode.version}
 Plugin Version: ${cnt.extension.packageJSON.version}
                             </textarea>
@@ -149,29 +150,31 @@ Plugin Version: ${cnt.extension.packageJSON.version}
         return text;
     }
     static async sendBugs(data: any, cnt: any,panel: any) {
-        let code = '';
-        if(data.source === true) {
-            let editor = vscode.window.activeTextEditor;
-            if(editor) {
-                let doc = editor.document;
-                code = doc.getText();
-            }
-        }
+        // let code = '';
+        // let source; 
+        // if(data.source) {
+        // // let editor = BugPage._editor;
+        // // if(editor) {
+        // //     let doc = editor.document;
+        // //     source = doc.getText();
+        // // }
+        // console.log(data.source);
+        // console.log('code', code);
         
-        var store = cnt.globalState;
-        const slackMsg = `name: ${store.get('codify_clientName')}\nintent: ${data.intent}\nfunction: ${data.function}\nthe_rest_json: {"comment" : ${data.comment}, "source": ${code}}`;
-        const headers = {
-            "Content-Type": "application/json"
-        };
-        const slack = await fetch("https://hooks.slack.com/services/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", { 
-            method: "POST",
-            body: JSON.stringify({text: slackMsg}),
-            headers: headers,
-        }).then(response => {
-            console.log('Slack Response',response);
-        }).catch(function(error) {
-            console.log('Slack Error',error);
-        });
+        // var store = cnt.globalState;
+        // const slackMsg = `name: ${store.get('codify_clientName')}; intent: ${data.intent}; function: ${data.function}; the_rest_json: {"comment" : ${data.comment}, "source": ${code}}`;
+        // const headers = {
+        //     "Content-Type": "application/json"
+        // };
+        // const slack = await fetch("https://hooks.slack.com/services/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", { 
+        //     method: "POST",
+        //     body: JSON.stringify({text: slackMsg}),
+        //     headers: headers,
+        // }).then(response => {
+        //     console.log('Slack Response',response);
+        // }).catch(function(error) {
+        //     console.log('Slack Error',error);
+        // });
 
         // const dataToSend = JSON.stringify({
         //     name: store.get('codify_clientName'),

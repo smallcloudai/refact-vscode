@@ -12,7 +12,7 @@ import * as fetch from "./fetchAPI";
 import * as langDB from "./langDB";
 import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
-import PanelWebview from "./panel";
+import PanelWebview from "./sidebar";
 import BugPage from "./bug";
 
 

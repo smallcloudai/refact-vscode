@@ -1,7 +1,6 @@
 (function () {
 	const vscode = acquireVsCodeApi();
 	let presets = document.querySelectorAll(".presets li");
-    // let token = 'r2kv3sxwj9e-3glml41tuzp';
 
 	document.querySelector("#sidebar").addEventListener("click", (event) => {
 		if (event.target && event.target.nodeName === "LI") {
@@ -28,9 +27,6 @@
 		vscode.postMessage({ type: "openBug" });
 	});
 	const loginButton = document.querySelector("#login");
-	// loginButton.addEventListener("click", () => {
-    //     vscode.postMessage({ type: "login_success" });
-	// });
 
 	window.addEventListener("message", (event) => {
 		const message = event.data;
@@ -55,7 +51,7 @@
                     bug.style.display = 'block';
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
-                    info.style.display = 'block';
+                    info.style.display = 'flex';
                 }
                 break;
             case "alreadyLogged":
@@ -68,7 +64,7 @@
                     bug.style.display = 'block';
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
-                    info.style.display = 'block';
+                    info.style.display = 'flex';
                 }
                 break;
             case "logout":
@@ -82,7 +78,6 @@
                         let info = document.querySelector('.sidebar-logged');
                         document.querySelector('.sidebar-logged span').innerHTML = '';
                         info.style.display = 'none';
-                        console.log("...................... sidebar.js logout");
                     }
                     break;
 			case "updateHistory":
