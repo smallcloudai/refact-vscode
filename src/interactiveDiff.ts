@@ -84,6 +84,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         state.report_to_mothership_cursor_file = file_name;
         state.report_to_mothership_cursor_pos0 = doc.offsetAt(sensitive_area.start);
         state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
+        state.report_to_mothership_ts = Date.now();
         let json: any;
         try {
             json = await request.apiPromise;
@@ -413,6 +414,7 @@ export async function rollback(editor: vscode.TextEditor)
                 state.report_to_mothership_cursor_file,
                 state.report_to_mothership_cursor_pos0,
                 state.report_to_mothership_cursor_pos1,
+                state.report_to_mothership_ts,
             );
         }
         state.report_to_mothership_cursor_file = "";
@@ -471,6 +473,7 @@ export async function accept(editor: vscode.TextEditor)
                 state.report_to_mothership_cursor_file,
                 state.report_to_mothership_cursor_pos0,
                 state.report_to_mothership_cursor_pos1,
+                state.report_to_mothership_ts,
             );
             state.report_to_mothership_cursor_file = "";
         }

@@ -202,7 +202,7 @@ export async function report_to_mothership(
     cursor_file: string,
     cursor_pos0: number,
     cursor_pos1: number,
-    // TODO: user thought for N seconds
+    arrived_ts: number,
 ) {
     const url = "https://www.smallcloud.ai/v1/report-to-mothership";
     const body = JSON.stringify({
@@ -214,6 +214,7 @@ export async function report_to_mothership(
         "cursor_file": cursor_file,
         "cursor0": cursor_pos0,
         "cursor1": cursor_pos1,
+        "ponder_time_ms": Math.round(Date.now() - arrived_ts),
     });
     global.modelFunction = functionName;
     const apiKey = userLogin.getApiKey();

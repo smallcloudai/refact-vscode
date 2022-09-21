@@ -70,6 +70,7 @@ export class StateOfEditor {
     public report_to_mothership_cursor_file: string = "";
     public report_to_mothership_cursor_pos0: number = 0;
     public report_to_mothership_cursor_pos1: number = 0;
+    public report_to_mothership_ts: number = 0;
 
     constructor(editor: vscode.TextEditor)
     {
