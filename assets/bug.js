@@ -22,7 +22,7 @@
         let _comment = document.querySelector('#comment').value;
         let _source = false;
         const file = document.querySelector('#source');
-        if(file.checked) {
+        if(file && file.checked) {
             _source = true;
         }
         let data = {

@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as estate from "./estate";
-import { fetch } from 'fetch-h2';
 import * as os from 'os';
+import * as userLogin from "./userLogin";
+import { fetch } from 'fetch-h2';
 
 export class BugPage {
     public static currentPanel: BugPage | undefined;
@@ -77,18 +78,17 @@ export class BugPage {
         const nonce = this.getNonce();
 
         let intent = estate.global_intent;
-        let source; 
-        let editor = this._editor;
         let func = global.modelFunction;
         if(func === 'undefined' || func === undefined){
             func = 'completion';
         }
-
-        if(editor) {
-            let doc = editor.document;
-            source = doc.getText();
+        const lastEditor =  global.lastEditor;
+        let file = null;
+        let fileBlock = '';
+        if(lastEditor) {
+            file = global.lastEditor.fileName.split("/");
+            fileBlock = `<div class="s-body__item s-body__item--inline"><input type="checkbox" id="source" name="source"><label for="source">Attach ${file[file.length - 1]}</label></div>`;
         }
-
 
         return `<!DOCTYPE html>
             <html lang="en">
@@ -125,10 +125,7 @@ What it really does is ...
 Environment: Visual Code (${os.platform()}) - ${vscode.version}
 Plugin Version: ${cnt.extension.packageJSON.version}</textarea>
                         </div> 
-                            <div class="s-body__item s-body__item--inline">
-                            <input type="checkbox" id="source" name="source">
-                            <label for="source">Attach source code</label>
-                            </div>
+                            ${fileBlock}
                     </div>
                     <div class="s-footer">
                         <button class="s-submit">Submit Bug Report</button>
@@ -149,50 +146,53 @@ Plugin Version: ${cnt.extension.packageJSON.version}</textarea>
         return text;
     }
     static async sendBugs(data: any, cnt: any,panel: any) {
-        // let code = '';
-        // let source; 
-        // if(data.source) {
-        // // if(editor) {
-        // //     let doc = editor.document;
-        // //     source = doc.getText();
-        // // }
-        // console.log(data.source);
-        // console.log('code', code);
-        
-        // var store = cnt.globalState;
-        // const slackMsg = `name: ${store.get('codify_clientName')}; intent: ${data.intent}; function: ${data.function}; the_rest_json: {"comment" : ${data.comment}, "source": ${code}}`;
-        // const headers = {
-        //     "Content-Type": "application/json"
-        // };
-        // const slack = await fetch("https://hooks.slack.com/services/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", { 
-        //     method: "POST",
-        //     body: JSON.stringify({text: slackMsg}),
-        //     headers: headers,
-        // }).then(response => {
-        //     console.log('Slack Response',response);
-        // }).catch(function(error) {
-        //     console.log('Slack Error',error);
-        // });
+        const lastEditor =  await global.lastEditor;
+        let file = null;
+        let code = null;
+        if(lastEditor) {
+            let fname = lastEditor.fileName.split("/");
+            file = fname[fname.length - 1];
+            code = lastEditor.getText();
+        }
+        const name = await global.userLogged;
+        const apiKey = userLogin.getApiKey();
 
-        // const dataToSend = JSON.stringify({
-        //     name: store.get('codify_clientName'),
-        //     ...data
-        // });
+        const headers = {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+        };
 
-        // const response = await fetch( 'https://max.smallcloud.ai/codify-bug', { 
-        //     method: "POST",
-        //     headers: headers,
-        //     body: dataToSend,
-        //     redirect: "follow",
-        //     cache: "no-cache",
-        //     referrer: "no-referrer", 
-        // }).then((response) => {
-        //     console.log('Bug Request Response',response);
-        //     panel.webview.postMessage({ command: "sendResponse" });
-        // }).catch(function(error) {
-        //     console.log('Bug Request Error',error);
-        // });
+        const dataToSend = JSON.stringify({
+            tenant_name: name,
+            platform: os.platform() + ' ' + vscode.version,
+            plugin_version: cnt.extension.packageJSON.version,
+            comment: data.comment,
+            intent: data.intent,
+            file_name: file,
+            code: code
+        });
 
+        try {
+            const response = await fetch( 'https://www.smallcloud.ai/v1/codify-bug-report', { 
+                method: "POST",
+                headers: headers,
+                body: dataToSend,
+                redirect: "follow",
+                cache: "no-cache",
+                referrer: "no-referrer", 
+            });
+            let json = await response.json();
+            if (json.retcode === "OK") {
+                panel.webview.postMessage({ command: "sendResponse" });
+            }
+            if (json.retcode === "FAILED") {
+                console.log('DEBUG', json.human_readable_message);
+            }
+
+        }
+        catch (error) {
+            console.log('Bug Request Error',error);
+        }
     }
 }
 export default BugPage;

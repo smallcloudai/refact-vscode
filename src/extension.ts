@@ -23,6 +23,7 @@ declare global {
     var userTicket: string;
     var userLogged: any;
     var modelFunction: string;
+    var lastEditor: any;
 }
 
 
