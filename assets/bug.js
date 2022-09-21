@@ -2,7 +2,7 @@
 	const vscode = acquireVsCodeApi();
     const buttonSubmit = document.querySelector('.s-submit');
 
-    const thankYou = `<div class="s-body__thankyou"><h3>Thank you!</h3><div>Your bug report has been received! You helping us to make codify better!</div></div>`;
+    const thankYou = `<div class="s-body__thankyou"><h3>Thank you!</h3><div>Your bug report has been received! 🙇</div></div>`;
 
     window.addEventListener("message", (event) => {
 		const message = event.data;
