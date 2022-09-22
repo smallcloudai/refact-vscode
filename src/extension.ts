@@ -249,7 +249,7 @@ export async function status_bar_clicked()
             global.menu.statusbarLang(false, lang);
             global.menu.choose_color();
         } else if (selection === "Bug Report...") {
-            vscode.commands.executeCommand("codify.openBug");
+            vscode.commands.executeCommand("plugin-vscode.openBug");
             console.log(["bug report!!!"]);
         }
     }
