@@ -26,7 +26,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         let whole_doc = document.getText();
         let cursor = document.offsetAt(position);
-        let file_name = document.fileName;
+        let file_name = fetch.filename_from_document(document);
         if (context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) {
             // sleep 100ms, in a hope request will be cancelled
             await new Promise(resolve => setTimeout(resolve, 10));

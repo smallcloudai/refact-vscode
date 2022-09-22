@@ -56,7 +56,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     if (cancelToken.isCancellationRequested) {
         return;
     }
-    let file_name = doc.fileName;
+    let file_name = fetch.filename_from_document(doc);
 
     if (cache.json === undefined) {
         estate.switch_mode(state, estate.Mode.DiffWait);

@@ -105,6 +105,22 @@ export function cancelAllRequests()
 }
 
 
+export function filename_from_document(document: vscode.TextDocument): string
+{
+    let file_name = document.fileName;
+    let project_dir = vscode.workspace.getWorkspaceFolder(document.uri)?.uri.fsPath;
+    if (project_dir !== undefined && file_name.startsWith(project_dir)) {
+        // this prevents unnecessary user name and directory details from leaking
+        let relative_file_name = file_name.substring(project_dir.length);
+        if (relative_file_name.startsWith("/")) {
+            relative_file_name = relative_file_name.substring(1);
+        }
+        return relative_file_name;
+    }
+    return file_name;
+}
+
+
 export function fetchAPI(
     cancelToken: vscode.CancellationToken,
     sources: { [key: string]: string },

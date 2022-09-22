@@ -2,7 +2,6 @@
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
 import * as storeVersions from './storeVersions';
-import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from './estate';
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
@@ -34,7 +33,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     let position: vscode.Position = editor.selection.active;
     let line_n = position.line;
     let cursor = doc.offsetAt(position);
-    let file_name = doc.fileName;
+    let file_name = fetch.filename_from_document(doc);
 
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
@@ -52,9 +51,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
         return "";
     }
 
-    let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
-    sources[file_name] = whole_doc;
     let max_tokens = 50;
     let max_edits = 1;
     // let current_line = document.lineAt(position.line);
@@ -200,18 +197,18 @@ export async function acceptEditChain(document: vscode.TextDocument, pos: vscode
 {
     let state2 = estate.state_of_document(document);
     if (!state2) {
-        console.log(["Accepted but no state"]);
+        console.log(["EC Ref Accepted but no state"]);
         return;
     }
-    console.log(["Accepted", pos.line, pos.character]);
+    console.log(["EC Ref Accepted", pos.line, pos.character]);
     let editor = state2.editor;
     let next_line_pos = new vscode.Position(pos.line + 1, 0);
     let next_next_line_pos = new vscode.Position(pos.line + 2, 0);
     await editor.edit((e) => {
-        console.log(["Accepted deleting..."]);
+        console.log(["EC Ref Accepted deleting..."]);
         e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
-        console.log(["Accepted done"]);
+        console.log(["EC REf Accepted done"]);
         if (!editor || !state2) {
             return;
         }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as estate from './estate';
-import * as interactiveDiff from "./interactiveDiff";
+import * as fetch from "./fetchAPI";
 
 
 let fn2textlist = new Map<string, string[]>();
@@ -29,9 +29,10 @@ export function fnGetRevisions(fn: string)
     return result;
 }
 
+
 function fnReset(document: vscode.TextDocument, line0: number)
 {
-    let fn = document.fileName;
+    let fn = fetch.filename_from_document(document);
     let whole_doc = document.getText();
     let version = document.version;
     fn2textlist.set(fn, [whole_doc]);
@@ -39,6 +40,7 @@ function fnReset(document: vscode.TextDocument, line0: number)
     fn2line.set(fn, line0);
     console.log(["fnReset", fn, "version", version, "line0", line0]);
 }
+
 
 function fnSaveChange(document: vscode.TextDocument, line0: number, force: boolean = false)
 {
@@ -48,7 +50,7 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
             return;
         }
     }
-    let fn = document.fileName;
+    let fn = fetch.filename_from_document(document);
     let version = document.version;
     let textlist = fn2textlist.get(fn);
     if (!textlist) {
