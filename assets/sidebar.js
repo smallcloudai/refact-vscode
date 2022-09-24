@@ -32,6 +32,11 @@
 		vscode.postMessage({ type: "logout" });
 	});
 
+    const loginButton = document.querySelector("#login");
+    loginButton.addEventListener("click", () => {
+		vscode.postMessage({ type: "login" });
+	});
+
 	window.addEventListener("message", (event) => {
 		const message = event.data;
 		switch (message.command) {

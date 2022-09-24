@@ -54,6 +54,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     this.presetIntent(data.value);
 					break;
 				}
+                case "login": {
+                    vscode.commands.executeCommand('plugin-vscode.login');
+                    break;
+                }
                 case "logout": {
                     vscode.commands.executeCommand("plugin-vscode.logout");
                     break;
@@ -130,8 +134,6 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
 		);
 
-        let url = `https://codify.smallcloud.ai/login?token=${global.userTicket}`;
-
 		const nonce = this.getNonce();
 
 		return `<!DOCTYPE html>
@@ -182,7 +184,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     </div>
                     <div class="sidebar-controls">
                         <div class="sidebar-logged">Logged as <span></span></div>
-                        <a tabindex="-1" href="${url}" id="login">Login / Register</a>
+                        <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="bug">Bug Report…</button>
                         <button tabindex="-1" id="settings">Settings</button>
