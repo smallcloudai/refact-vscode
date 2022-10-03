@@ -271,9 +271,9 @@ export async function login()
         "Authorization": "",
     };
     const ticket = global.userTicket;
-    if (ticket) {
+    if (ticket && !global.userLogged) {
         headers.Authorization = `codify-${ticket}`;
-        global.userTicket = "";
+        // global.userTicket = "";
     } else {
         if (!global.userLogged && apiKey) {
             headers.Authorization = `Bearer ${apiKey}`;
@@ -297,12 +297,14 @@ export async function login()
             await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', json.fine_tune, vscode.ConfigurationTarget.Global);
             global.userLogged = json.account;
+            global.userTicket = "";
             if(global.panelProvider) {
                 global.panelProvider.login_success();
             }
             global.menu.choose_color();
         } else if (json.retcode === 'OK') {
             global.userLogged = json.account;
+            global.userTicket = "";
             if(global.panelProvider) {
                 global.panelProvider.login_success();
             }

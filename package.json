@@ -13,7 +13,7 @@
     "theme": "dark"
   },
   "author": "Codify <codify@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "0.0.15",
+  "version": "0.0.17",
   "engines": {
     "vscode": "^1.69.0"
   },
