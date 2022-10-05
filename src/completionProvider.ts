@@ -24,8 +24,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!estate.is_lang_enabled(document)) {
             return;
         }
-        let whole_doc = document.getText();
-        let cursor = document.offsetAt(position);
         let file_name = fetch.filename_from_document(document);
         if (context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) {
             // sleep 100ms, in a hope request will be cancelled
@@ -38,9 +36,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             console.log(["444 on inline"]);
             return;
         }
-
         let sources: { [key: string]: string } = {};
-        sources[file_name] = whole_doc;
         let request = new fetch.PendingRequest(undefined, cancelToken);
         let max_tokens = 50;
         let max_edits = 1;
@@ -48,6 +44,19 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
         let left_all_spaces = left_of_cursor.replace(/\s/g, "").length === 0;
+        let cursor = document.offsetAt(position);
+        let whole_doc = document.getText();
+        // let left_of_cursor
+        let text_left = whole_doc.substring(0, cursor);
+        let text_right = whole_doc.substring(cursor);
+        let deleted_spaces_left = 0;
+        while (text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
+            text_left = text_left.substring(0, text_left.length - 1);
+            cursor -= 1;
+            deleted_spaces_left += 1;
+        }
+        whole_doc = text_left + whole_doc.substring(cursor);
+        sources[file_name] = whole_doc;
         let multiline = left_all_spaces;
         let stop_tokens: string[];
         if (multiline) {
@@ -129,13 +138,14 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         // let end_of_line = new vscode.Position(position.line, current_line.text.length);
         let chain = false;
         if (fail || completion === right_of_cursor) {
-            let summary = await editChaining.runEditChaining(false);
-            if (!summary) {
-                return;
-            }
-            completion = right_of_cursor + "\n" + summary;
-            // multiline = true;
-            chain = true;
+            return;
+            // let summary = await editChaining.runEditChaining(false);
+            // if (!summary) {
+            //     return;
+            // }
+            // completion = right_of_cursor + "\n" + summary;
+            // // multiline = true;
+            // chain = true;
         }
         let completion_length = completion.length;
         let index_of_slash_n = completion.indexOf("\n");
@@ -146,7 +156,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             completion,
             // new vscode.Range(position, position.translate(0, completion_length))
             // new vscode.Range(position, position),
-            new vscode.Range(position, eol_pos),
+            new vscode.Range(position.translate(0, -deleted_spaces_left), eol_pos),
             // new vscode.Range(position, eol_pos.translate(0, 1))
                //.translate(0, completion_length))
         );
