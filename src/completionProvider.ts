@@ -49,8 +49,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         // let left_of_cursor
         let text_left = whole_doc.substring(0, cursor);
         let text_right = whole_doc.substring(cursor);
+        let all_spaces_left = text_left.replace(/\s/g, "").length === 0;
         let deleted_spaces_left = 0;
-        while (text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
+        while (all_spaces_left && text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
             text_left = text_left.substring(0, text_left.length - 1);
             cursor -= 1;
             deleted_spaces_left += 1;
