@@ -26,12 +26,11 @@ export async function runEditChaining(animation: boolean): Promise<String>
     if (!state) {
         return "";
     }
-    if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
+    if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight && state.get_mode() !== estate.Mode.DiffWait) {
         return "";
     }
     let doc = editor.document;
     let position: vscode.Position = editor.selection.active;
-    let line_n = position.line;
     let cursor = doc.offsetAt(position);
     let file_name = fetch.filename_from_document(doc);
 
@@ -93,6 +92,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     send_revisions[first_time_a_lot_of_changes] = more_revisions[first_time_a_lot_of_changes];
     send_revisions[file_name] = whole_doc;
     let stop_tokens: string[] = [];
+    let line_n = position.line;
     let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
     if (animation) {
         interactiveDiff.animationStart(editor, sensitive_area);

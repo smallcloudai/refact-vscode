@@ -101,10 +101,7 @@ export function activate(context: vscode.ExtensionContext)
         }
     });
 
-    // let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining', () => {
-    //     runEditChaining();
-    // });
-
+    let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining',  manual_edit_chaining);
 
     let disposables = storeVersions.storeVersionsInit();
 
@@ -112,6 +109,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
     context.subscriptions.push(disposable2);
+    context.subscriptions.push(disposable8);
     context.subscriptions.push(...disposables);
 
     global.panelProvider = new PanelWebview(context);
@@ -168,11 +166,45 @@ export function activate(context: vscode.ExtensionContext)
     }, 100);
 }
 
+
 export function pluginFirstRun(context: vscode.ExtensionContext) {
     const firstRun = context.globalState.get('codifyFirstRun');
     if (firstRun) { return; };
     context.globalState.update('codifyFirstRun', true);
     userLogin.welcome_message();
+}
+
+
+export async function manual_edit_chaining()
+{
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+    let state = estate.state_of_editor(editor);
+    if (state) {
+        if (state.get_mode() === Mode.Diff) {
+            await rollback_and_regen(editor);
+            return;
+        }
+        estate.switch_mode(state, estate.Mode.DiffWait);
+        try {
+            let s = await editChaining.runEditChaining(true);
+            if (!s) {
+                return;
+            }
+        } finally {
+            estate.back_to_normal(state);
+        }
+        let modif_doc = state.edit_chain_modif_doc;
+        if (modif_doc) {
+            state.showing_diff_modif_doc = modif_doc;
+            state.showing_diff_move_cursor = true;
+            state.showing_diff_for_function = "edit-chain";
+            state.showing_diff_for_range = undefined;
+            estate.switch_mode(state, estate.Mode.Diff);
+        }
+    }
 }
 
 

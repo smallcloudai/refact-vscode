@@ -111,6 +111,10 @@
         "key": "F1"
       },
       {
+        "command": "plugin-vscode.editChaining",
+        "key": "Ctrl+Q"
+      },
+      {
         "command": "plugin-vscode.esc",
         "key": "escape",
         "when": "codify.runEsc"
