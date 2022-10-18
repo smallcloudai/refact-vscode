@@ -131,7 +131,7 @@ export function activate(context: vscode.ExtensionContext)
 
     let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
         global.userTicket = userLogin.generateTicket(context);
-        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/login?token=${global.userTicket}`));
+        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.userTicket}`));
         let i = 0;
         let interval = setInterval(() => {
             if (global.userLogged || i === 5) {
