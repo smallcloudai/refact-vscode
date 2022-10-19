@@ -161,6 +161,10 @@
     "lint": "eslint src --ext ts",
     "test": "node ./out/test/runTest.js"
   },
+  "dependencies": {
+    "diff": "^5.1.0",
+    "fetch-h2": "^3.0.2"
+  },
   "devDependencies": {
     "@types/glob": "^7.2.0",
     "@types/mocha": "^9.1.1",
@@ -174,4 +178,3 @@
     "typescript": "^4.7.4"
   }
 }
-
