@@ -10,6 +10,16 @@
 		}
 	});
 
+    document.querySelector("#sidebar").addEventListener("keyup", (event) => {
+		if(event.key === "Enter") {
+            if (event.target && event.target.nodeName === "LI") {
+                let text = event.target.innerText;
+                quickInput.value = text;
+                vscode.postMessage({ type: "presetSelected", value: text });
+            }
+		}
+	});
+
 	const quickInput = document.querySelector("#quickinput");
 	quickInput.addEventListener("keyup", ({ key }) => {
 		if (key === "Enter") {

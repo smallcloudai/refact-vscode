@@ -134,7 +134,7 @@ export function activate(context: vscode.ExtensionContext)
         vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.userTicket}`));
         let i = 0;
         let interval = setInterval(() => {
-            if (global.userLogged || i === 5) {
+            if (global.userLogged || i === 10) {
                 clearInterval(interval);
                 return;
             }
@@ -172,6 +172,7 @@ export function pluginFirstRun(context: vscode.ExtensionContext) {
     if (firstRun) { return; };
     context.globalState.update('codifyFirstRun', true);
     userLogin.welcome_message();
+    userLogin.hints();
 }
 
 

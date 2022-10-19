@@ -153,30 +153,30 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			<body>
                 <div class="sidebar">
                     <div id="quickbar">
-                        <input type="text" name="quickinput" id="quickinput" value="${estate.global_intent}">
-                        <button id="quicksubmit">⏎</button>
+                        <input tabindex="0" type="text" name="quickinput" id="quickinput" value="${estate.global_intent}">
+                        <button tabindex="1" id="quicksubmit">⏎</button>
                     </div>
                     <div id="sidebar">
                         <h3 class="presets-title">Works Well</h3>
                         <ul class="presets links-menu">
-                            <li>Add type hints</li>
-                            <li>Remove type hints</li>
-                            <li>Convert to list comprehension</li>
-                            <li>Add docstrings</li>
-                            <li>Convert dict to class</li>
-                            <li>Fix typos</li>
-                            <li>Fix bugs</li>
+                            <li tabindex="2">Add type hints</li>
+                            <li tabindex="3">Remove type hints</li>
+                            <li tabindex="4">Convert to list comprehension</li>
+                            <li tabindex="5">Add docstrings</li>
+                            <li tabindex="6">Convert dict to class</li>
+                            <li tabindex="7">Fix typos</li>
+                            <li tabindex="8">Fix bugs</li>
                         </ul>
                         <h3 class="presets-title">Ideas</h3>
                         <ul class="presets links-menu">
-                            <li>Fix unclear names</li>
-                            <li>Make variables shorter</li>
-                            <li>Make code shorter</li>
-                            <li>Improve performance</li>
-                            <li>Code cleanup</li>
-                            <li>Make formatting consistent</li>
-                            <li>Remove python 2 support</li>
-                            <li>Convert to numpy</li>
+                            <li tabindex="9">Fix unclear names</li>
+                            <li tabindex="10">Make variables shorter</li>
+                            <li tabindex="11">Make code shorter</li>
+                            <li tabindex="12">Improve performance</li>
+                            <li tabindex="13">Code cleanup</li>
+                            <li tabindex="14">Make formatting consistent</li>
+                            <li tabindex="15">Remove python 2 support</li>
+                            <li tabindex="16">Convert to numpy</li>
                         </ul>
                         <h3 class="history-title">History</h3>
                         <ul class="history links-menu">
