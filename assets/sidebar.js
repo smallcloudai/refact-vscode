@@ -10,6 +10,7 @@
 		}
 	});
 
+    let listItems = document.querySelectorAll(".presets li");
     document.querySelector("#sidebar").addEventListener("keyup", (event) => {
 		if(event.key === "Enter") {
             if (event.target && event.target.nodeName === "LI") {
@@ -18,6 +19,18 @@
                 vscode.postMessage({ type: "presetSelected", value: text });
             }
 		}
+        if(event.key === "ArrowUp") {
+            let index = Array.prototype.indexOf.call(listItems, event.target);
+            if(index > 0) {
+                listItems[index - 1].focus();
+            }
+        }
+        if(event.key === "ArrowDown") {
+            let index = Array.prototype.indexOf.call(listItems, event.target);
+            if(index < listItems.length - 1) {
+                listItems[index + 1].focus();
+            }
+        }
 	});
 
 	const quickInput = document.querySelector("#quickinput");

@@ -20,6 +20,12 @@ body.vscode-dark {
     font-size: 1.1em;
     line-height: 1.4em;
 }
+.presets li:focus {
+    font-weight: bold;
+    background-color: var(--secondary);
+    color: var(--dark);
+    outline: none !important;
+}
 .presets li:hover {
     color: var(--secondary);
 }
