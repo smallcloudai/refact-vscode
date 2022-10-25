@@ -51,8 +51,8 @@ export async function runEditChaining(animation: boolean): Promise<String>
     }
 
     let whole_doc = doc.getText();
-    let max_tokens = 50;
-    let max_edits = 1;
+    let max_tokens = 200;
+    let max_edits = 3;
     // let current_line = document.lineAt(position.line);
     // let left_of_cursor = current_line.text.substring(0, position.character);
     // let right_of_cursor = current_line.text.substring(position.character);

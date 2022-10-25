@@ -64,7 +64,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         let sources: { [key: string]: string } = {};
         let whole_doc = doc.getText();
         sources[file_name] = whole_doc;
-        let max_tokens = 150;
+        let max_tokens = 200;
         let stop_tokens: string[] = [];
         request.supplyStream(fetch.fetchAPI(
             cancelToken,

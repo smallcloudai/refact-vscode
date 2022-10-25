@@ -138,7 +138,7 @@ export function activate(context: vscode.ExtensionContext)
                 clearInterval(interval);
                 return;
             }
-            fetch.login(); 
+            fetch.login();
             i++;
         },10000);
     });
@@ -210,8 +210,12 @@ export async function manual_edit_chaining()
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
 {
-    await interactiveDiff.rollback(editor);
-    interactiveDiff.regen(editor);
+    // await interactiveDiff.rollback(editor);
+    let state = estate.state_of_editor(editor);
+    if (state) {
+        estate.switch_mode(state, Mode.Normal);
+        interactiveDiff.regen(editor);
+    }
 }
 
 
