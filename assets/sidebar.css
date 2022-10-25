@@ -22,8 +22,7 @@ body.vscode-dark {
 }
 .presets li:focus {
     font-weight: bold;
-    background-color: var(--secondary);
-    color: var(--dark);
+    /* background-color: var(--secondary); */
     outline: none !important;
 }
 .presets li:hover {
@@ -42,6 +41,10 @@ body.vscode-dark {
     padding: 0 10px;
     font-size: 1.05em;
     box-sizing: border-box;
+}
+#quickinput:focus {
+    outline: none;
+    border: 2px solid var(--secondary) !important;
 }
 body.vscode-light #quickinput {
 	border: 1px solid var(--secondary);

@@ -46,11 +46,11 @@ export function activate(context: vscode.ExtensionContext)
     pluginFirstRun(context);
 
     // Register our CodeLens provider
-    // let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
-    //     docSelector,
-    //     new LensProvider()
-    // );
-    // context.subscriptions.push(codeLensProviderDisposable);
+    let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
+        docSelector,
+        new LensProvider()
+    );
+    context.subscriptions.push(codeLensProviderDisposable);
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);

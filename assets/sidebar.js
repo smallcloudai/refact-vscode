@@ -9,10 +9,35 @@
 			vscode.postMessage({ type: "presetSelected", value: text });
 		}
 	});
+    
+    const quickInput = document.querySelector("#quickinput");
 
     let listItems = document.querySelectorAll(".presets li");
+    let groupItems = [];
+    listItems.forEach((element,index) => {
+        if(index === 0){
+            groupItems.push(quickInput);
+            groupItems.push(element);
+        }
+        else {
+            groupItems.push(element);
+        }
+    });
+
+    quickInput.addEventListener("keyup", ( event ) => {
+        if (event.key === "Enter") {
+            vscode.postMessage({ type: "quickInput", value: quickInput.value });
+        }
+        if(event.key === "ArrowDown") {
+            let index = Array.prototype.indexOf.call(groupItems, event.target);
+            if(index < groupItems.length - 1) {
+                groupItems[index + 1].focus();
+            }
+        }
+    });
+
     document.querySelector("#sidebar").addEventListener("keyup", (event) => {
-		if(event.key === "Enter") {
+        if(event.key === "Enter") {
             if (event.target && event.target.nodeName === "LI") {
                 let text = event.target.innerText;
                 quickInput.value = text;
@@ -20,25 +45,19 @@
             }
 		}
         if(event.key === "ArrowUp") {
-            let index = Array.prototype.indexOf.call(listItems, event.target);
+            let index = Array.prototype.indexOf.call(groupItems, event.target);
             if(index > 0) {
-                listItems[index - 1].focus();
+                groupItems[index - 1].focus();
             }
         }
         if(event.key === "ArrowDown") {
-            let index = Array.prototype.indexOf.call(listItems, event.target);
-            if(index < listItems.length - 1) {
-                listItems[index + 1].focus();
+            let index = Array.prototype.indexOf.call(groupItems, event.target);
+            if(index < groupItems.length - 1) {
+                groupItems[index + 1].focus();
             }
         }
 	});
-
-	const quickInput = document.querySelector("#quickinput");
-	quickInput.addEventListener("keyup", ({ key }) => {
-		if (key === "Enter") {
-			vscode.postMessage({ type: "quickInput", value: quickInput.value });
-		}
-	});
+    
 
 	const settingsButton = document.querySelector("#settings");
 	settingsButton.addEventListener("click", () => {
@@ -72,6 +91,9 @@
                 if (message.value) {
                     token = message.value;
                 }
+                break;
+            case "focus":
+                quickInput.focus();
                 break;
             case "login":
                 if (message.value) {

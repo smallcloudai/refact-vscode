@@ -31,6 +31,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
             this.logout_success();
         }
 
+        vscode.commands.registerCommand('workbench.action.focusSideBar',  () => {
+            webviewView.webview.postMessage({ command: "focus" });
+        });
+
 		webviewView.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
 				case "presetSelected": {
