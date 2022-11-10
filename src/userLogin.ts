@@ -22,6 +22,17 @@ export async function welcome_message()
     global.menu.choose_color();
 }
 
+export async function account_message(info: string, action: string, url: string) 
+{
+    let selection = await vscode.window.showInformationMessage(
+        info,
+        action,
+    );
+    if (selection === action) {
+        vscode.env.openExternal(vscode.Uri.parse(url));
+    }
+}
+
 // export async function hints()
 // {
 //     const header = "Codify Hints";

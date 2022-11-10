@@ -292,6 +292,7 @@ export async function login()
     try {
         let result = await fetchH2.fetch(req);
         let json: any = await result.json();
+        // handshake here;
         console.log(["login", result.status, json]);
         if (json.retcode === "TICKET-SAVEKEY") {
             await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
@@ -316,6 +317,8 @@ export async function login()
                 // userLogin.login_message();
             }
             return "";
+        } else if (json.retcode === 'MESSAGE') {
+            userLogin.account_message(json.human_readable_message, json.action, json.action_url);
         } else {
             console.log(["login bug"]);
             return "";
