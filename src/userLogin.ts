@@ -22,12 +22,12 @@ export async function welcome_message()
     global.menu.choose_color();
 }
 
-export async function hints()
-{
-    const header = "Codify Hints";
-    const options: vscode.MessageOptions = { detail: 'Hint1: select some code, press F1 and tell how to change it, for example "convert to list comprehension"\n\nHint2: press F1 and type an instruction for the whole file, for example "fix typos" or "add type hints". The plugin will highlight all the places that the instruction is applicable to.\n\nHint3: press F1 again to regenerate changes.', modal: true };
-    vscode.window.showInformationMessage(header, options);
-}
+// export async function hints()
+// {
+//     const header = "Codify Hints";
+//     const options: vscode.MessageOptions = { detail: 'Hint1: select some code, press F1 and tell how to change it, for example "convert to list comprehension"\n\nHint2: press F1 and type an instruction for the whole file, for example "fix typos" or "add type hints". The plugin will highlight all the places that the instruction is applicable to.\n\nHint3: press F1 again to regenerate changes.', modal: true };
+//     vscode.window.showInformationMessage(header, options);
+// }
 
 
 export function checkAuth(context: any)
