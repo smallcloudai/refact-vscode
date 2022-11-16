@@ -127,6 +127,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             completion = completion.replace(/\s+$/, "");
             console.log(["RTRIM", request.seq, completion]);
             fail = completion.match(/\n/g) !== null;
+        } else if (!fail && multiline) {
+            completion = completion.replace(/[ \t\n]+$/, "");
+            console.log(["MLINE RTRIM", request.seq, completion]);
         }
         if (!fail) {
             fail = completion.length === 0;
