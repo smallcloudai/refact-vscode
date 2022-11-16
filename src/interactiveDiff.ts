@@ -59,7 +59,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let file_name = fetch.filename_from_document(doc);
 
     if (cache.json === undefined) {
-        estate.switch_mode(state, estate.Mode.DiffWait);
+        await estate.switch_mode(state, estate.Mode.DiffWait);
         animationStart(editor, sensitive_area);
         let sources: { [key: string]: string } = {};
         let whole_doc = doc.getText();
@@ -91,7 +91,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         } finally {
             if (fetch.look_for_common_errors(json)) {
                 if (state.get_mode() === estate.Mode.DiffWait) {
-                    estate.switch_mode(state, estate.Mode.Normal);
+                    await estate.switch_mode(state, estate.Mode.Normal);
                 }
                 return;
             }
@@ -104,7 +104,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         }
         if (cancelToken.isCancellationRequested) {
             if (state.get_mode() === estate.Mode.DiffWait) {
-                estate.switch_mode(state, estate.Mode.Normal);
+                await estate.switch_mode(state, estate.Mode.Normal);
             }
             return;
         }
@@ -119,11 +119,11 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             state.showing_diff_for_function = model_function;
             state.showing_diff_edit_chain = undefined;
             state.showing_diff_modif_doc = modif_doc;
-            estate.switch_mode(state, estate.Mode.Diff);
+            await estate.switch_mode(state, estate.Mode.Diff);
         }
     }
     if (state.get_mode() === estate.Mode.DiffWait) {
-        estate.switch_mode(state, estate.Mode.Normal);
+        await estate.switch_mode(state, estate.Mode.Normal);
     }
 }
 

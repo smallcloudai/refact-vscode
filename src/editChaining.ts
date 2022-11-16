@@ -195,6 +195,7 @@ function generateDiffSummary(current_line: number, whole_doc: string, modif_doc:
 
 export async function acceptEditChain(document: vscode.TextDocument, pos: vscode.Position)
 {
+    // FIXME: this function might be a bad idea
     let state2 = estate.state_of_document(document);
     if (!state2) {
         console.log(["EC Ref Accepted but no state"]);
@@ -208,7 +209,7 @@ export async function acceptEditChain(document: vscode.TextDocument, pos: vscode
         console.log(["EC Ref Accepted deleting..."]);
         e.delete(new vscode.Range(next_line_pos, next_next_line_pos));
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
-        console.log(["EC REf Accepted done"]);
+        console.log(["EC Ref Accepted done"]);
         if (!editor || !state2) {
             return;
         }

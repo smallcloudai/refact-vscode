@@ -187,7 +187,7 @@ export async function manual_edit_chaining()
             await rollback_and_regen(editor);
             return;
         }
-        estate.switch_mode(state, estate.Mode.DiffWait);
+        await estate.switch_mode(state, estate.Mode.DiffWait);
         try {
             let s = await editChaining.runEditChaining(true);
             if (!s) {
@@ -202,7 +202,7 @@ export async function manual_edit_chaining()
             state.showing_diff_move_cursor = true;
             state.showing_diff_for_function = "edit-chain";
             state.showing_diff_for_range = undefined;
-            estate.switch_mode(state, estate.Mode.Diff);
+            await estate.switch_mode(state, estate.Mode.Diff);
         }
     }
 }
@@ -213,7 +213,7 @@ export async function rollback_and_regen(editor: vscode.TextEditor)
     // await interactiveDiff.rollback(editor);
     let state = estate.state_of_editor(editor);
     if (state) {
-        estate.switch_mode(state, Mode.Normal);
+        await estate.switch_mode(state, Mode.Normal);
         interactiveDiff.regen(editor);
     }
 }

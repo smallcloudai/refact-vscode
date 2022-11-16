@@ -193,7 +193,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
 
 export async function back_to_normal(state: StateOfEditor)
 {
-    switch_mode(state, Mode.Normal);
+    await switch_mode(state, Mode.Normal);
 }
 
 
