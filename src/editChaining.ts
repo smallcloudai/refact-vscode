@@ -38,7 +38,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     let cancelToken = cancellationTokenSource.token;
     let request = new fetch.PendingRequest(undefined, cancelToken);
 
-    fetch.cancelAllRequests();
+    await fetch.cancelAllRequests();
     // if (state.mode === interactiveDiff.Mode.DiffWait) {
     //     state.mode = interactiveDiff.Mode.Normal;
     // }

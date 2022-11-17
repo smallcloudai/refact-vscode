@@ -41,25 +41,18 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
 
 export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscode.Range, model_function: string)
 {
-    // We get there every time the cursor moves (very often).
     // NOT called from estate switch mode
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
     }
     let doc = editor.document;
-    // let cache_key = doc.offsetAt(sensitive_area.start) + 10000*doc.offsetAt(sensitive_area.end);
-    // let cache = state.area2cache.get(cache_key);
-    // if (!cache) {
-    //     cache = new estate.CacheEntity(editor, sensitive_area);
-    // }
 
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
     let request = new fetch.PendingRequest(undefined, cancelToken);
-    // cache.request = request;
 
-    fetch.cancelAllRequests();
+    await fetch.cancelAllRequests();
     estate.back_to_normal(state);
     request.cancellationTokenSource = cancellationTokenSource;
     let login: any = await fetch.login();
@@ -69,63 +62,53 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         return;
     }
     let file_name = fetch.filename_from_document(doc);
-
     let json: any;
-    // if (cache.json === undefined) {
-        await estate.switch_mode(state, estate.Mode.DiffWait);
-        animationStart(editor, sensitive_area);
-        let sources: { [key: string]: string } = {};
-        let whole_doc = doc.getText();
-        sources[file_name] = whole_doc;
-        let max_tokens = 200;
-        let stop_tokens: string[] = [];
-        request.supplyStream(fetch.fetchAPI(
-            cancelToken,
-            sources,
-            estate.global_intent,
-            model_function,
-            file_name,
-            doc.offsetAt(sensitive_area.start),
-            doc.offsetAt(sensitive_area.end),
-            max_tokens,
-            model_function==="diff-atcursor" ? 1 : 10,
-            stop_tokens,
-        ));
-        state.report_to_mothership_sources = sources;
-        state.report_to_mothership_intent = estate.global_intent;
-        state.report_to_mothership_function = model_function;
-        state.report_to_mothership_cursor_file = file_name;
-        state.report_to_mothership_cursor_pos0 = doc.offsetAt(sensitive_area.start);
-        state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
-        state.report_to_mothership_ts = Date.now();
-        try {
-            json = await request.apiPromise;
-        } finally {
-            if (fetch.look_for_common_errors(json)) {
-                if (state.get_mode() === estate.Mode.DiffWait) {
-                    await estate.switch_mode(state, estate.Mode.Normal);
-                }
-                return;
-            }
-        }
-        // cache.json = json;
-        // state.area2cache.set(cache_key, cache);
-        // console.log(["saving diff", cache_key, "size", state.area2cache.size]);
-        if (state.get_mode() !== estate.Mode.DiffWait) {
-            return;
-        }
-        if (cancelToken.isCancellationRequested) {
+    await estate.switch_mode(state, estate.Mode.DiffWait);
+    animationStart(editor, sensitive_area);
+    let sources: { [key: string]: string } = {};
+    let whole_doc = doc.getText();
+    sources[file_name] = whole_doc;
+    let max_tokens = 200;
+    let stop_tokens: string[] = [];
+    request.supplyStream(fetch.fetchAPI(
+        cancelToken,
+        sources,
+        estate.global_intent,
+        model_function,
+        file_name,
+        doc.offsetAt(sensitive_area.start),
+        doc.offsetAt(sensitive_area.end),
+        max_tokens,
+        model_function==="diff-atcursor" ? 1 : 10,
+        stop_tokens,
+    ));
+    state.report_to_mothership_sources = sources;
+    state.report_to_mothership_intent = estate.global_intent;
+    state.report_to_mothership_function = model_function;
+    state.report_to_mothership_cursor_file = file_name;
+    state.report_to_mothership_cursor_pos0 = doc.offsetAt(sensitive_area.start);
+    state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
+    state.report_to_mothership_ts = Date.now();
+    try {
+        json = await request.apiPromise;
+    } finally {
+        if (fetch.look_for_common_errors(json)) {
             if (state.get_mode() === estate.Mode.DiffWait) {
                 await estate.switch_mode(state, estate.Mode.Normal);
             }
             return;
         }
-    // } else {
-    //     console.log(["get cached diff", cache_key, "size", state.area2cache.size]);
-    // }
+    }
+    if (state.get_mode() !== estate.Mode.DiffWait) {
+        return;
+    }
+    if (cancelToken.isCancellationRequested) {
+        if (state.get_mode() === estate.Mode.DiffWait) {
+            await estate.switch_mode(state, estate.Mode.Normal);
+        }
+        return;
+    }
     if (!cancelToken.isCancellationRequested) {
-        // if (cache.json && cache.json["choices"]) {
-        //     let modif_doc = cache.json["choices"][0]["files"][file_name];
         if (json && json["choices"]) {
             let modif_doc = json["choices"][0]["files"][file_name];
             state.report_to_mothership_results = json["choices"][0]["files"];
@@ -465,7 +448,6 @@ export async function accept(editor: vscode.TextEditor)
         console.log(["TAB OFF DIFF"]);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
-        // state.area2cache.clear();
         if (state.highlight_json_backup) {
             state.highlight_json_backup = undefined;
             estate.back_to_normal(state);
@@ -510,7 +492,6 @@ export async function regen(editor: vscode.TextEditor)
     }
     if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined) {
         removeDeco(editor);
-        // state.area2cache.clear();
         queryDiff(editor, state.showing_diff_for_range, state.showing_diff_for_function);
     }
 }

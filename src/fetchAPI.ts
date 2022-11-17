@@ -94,7 +94,7 @@ export function anything_still_working()
     return false;
 }
 
-export function cancelAllRequests()
+export async function cancelAllRequests()
 {
     for (let i=0; i<globalRequests.length; i++) {
         let r = globalRequests[i];
@@ -102,6 +102,7 @@ export function cancelAllRequests()
             r.cancellationTokenSource.cancel();
         }
     }
+    await waitAllRequests();
 }
 
 
@@ -177,7 +178,7 @@ export function fetchAPI(
     if (cancelToken) {
         let abort = new fetchH2.AbortController();
         cancelToken.onCancellationRequested(() => {
-            // console.log(["Fetch cancelled"]);
+            console.log(["API fetch cancelled"]);
             abort.abort();
         });
         init.signal = abort.signal;

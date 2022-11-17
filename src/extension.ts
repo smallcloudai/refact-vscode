@@ -30,6 +30,42 @@ declare global {
 let global_context: vscode.ExtensionContext|undefined = undefined;
 
 
+async function pressed_escape()
+{
+    let editor = vscode.window.activeTextEditor;
+    if (editor) {
+        let state = estate.state_of_editor(editor);
+        if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
+            if (state.get_mode() === Mode.DiffWait) {
+                await fetch.cancelAllRequests();
+            }
+            if (state.highlight_json_backup !== undefined) {
+                await estate.switch_mode(state, Mode.Highlight);
+            } else {
+                await estate.switch_mode(state, Mode.Normal);
+            }
+        } else if (state && state.get_mode() === Mode.Highlight) {
+            await estate.back_to_normal(state);
+        }
+        if (state && state.get_mode() === Mode.Normal) {
+            vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+            console.log(["ESC OFF"]);
+        }
+    }
+}
+
+async function pressed_tab()
+{
+    let editor = vscode.window.activeTextEditor;
+    if (editor) {
+        let state = estate.state_of_editor(editor);
+        if (state && state.get_mode() === Mode.Diff) {
+            interactiveDiff.accept(editor);
+        }
+    }
+}
+
+
 export function activate(context: vscode.ExtensionContext)
 {
     global_context = context;
@@ -55,39 +91,8 @@ export function activate(context: vscode.ExtensionContext)
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
-    let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', () => {
-        let editor = vscode.window.activeTextEditor;
-        if (editor) {
-            let state = estate.state_of_editor(editor);
-            if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
-                if (state.get_mode() === Mode.DiffWait) {
-                    fetch.cancelAllRequests();
-                }
-                if (state.highlight_json_backup !== undefined) {
-                    estate.switch_mode(state, Mode.Highlight);
-                } else {
-                    estate.switch_mode(state, Mode.Normal);
-                }
-            } else if (state && state.get_mode() === Mode.Highlight) {
-                estate.back_to_normal(state);
-            }
-            if (state && state.get_mode() === Mode.Normal) {
-                vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
-                console.log(["ESC OFF"]);
-            }
-        }
-    });
-
-    let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', () => {
-        let editor = vscode.window.activeTextEditor;
-        if (editor) {
-            let state = estate.state_of_editor(editor);
-            if (state && state.get_mode() === Mode.Diff) {
-                interactiveDiff.accept(editor);
-            }
-        }
-    });
-
+    let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', pressed_escape);
+    let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', pressed_tab);
     let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', () => {
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
