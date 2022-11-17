@@ -5,6 +5,19 @@ import * as estate from "./estate";
 import * as editChaining from "./editChaining";
 
 
+class CacheEntry {
+    public completion;
+    public created_ts;
+    public constructor(completion: string, created_ts: number) {
+        this.completion = completion;
+        this.created_ts = created_ts;
+    }
+};
+
+const CACHE_STORE = 30;
+const CACHE_AHEAD = 10;
+
+
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
 {
     async provideInlineCompletionItems(
@@ -74,6 +87,29 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         return [completionItem];
     }
 
+    public cache: Map<string, CacheEntry> = new Map();
+
+    public cleanup_cache()
+    {
+        while (1) {
+            if (this.cache.size < CACHE_STORE) {
+                return;
+            }
+            let oldest_key = null;
+            let oldest_ts = null;
+            for (let [key, value] of this.cache) {
+                if (oldest_ts === null || value.created_ts < oldest_ts) {
+                    oldest_ts = value.created_ts;
+                    oldest_key = key;
+                }
+            }
+            if (oldest_key === null) {
+                return;
+            }
+            this.cache.delete(oldest_key);
+        }
+    }
+
     async cached_request(
         cancelToken: vscode.CancellationToken,
         delay_if_not_cached: boolean,
@@ -83,6 +119,15 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         multiline: boolean,
     ): Promise<string>
     {
+        let left = whole_doc.substring(0, cursor);
+        let cached = this.cache.get(left);
+        if (cached !== undefined) {
+            return cached.completion;
+        }
+        let few_chars = whole_doc.substring(Math.max(0, cursor - 20), cursor);
+        let cache_key = `${file_name}:${whole_doc.length}:${few_chars}:${cursor}`;
+        console.log(["cache_key", cache_key]);
+
         if (delay_if_not_cached) {
             // sleep 100ms, in a hope this request will be cancelled
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -169,6 +214,14 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!fail) {
             fail = completion.length === 0;
         }
+        for (let i = 0; i < Math.min(completion.length, CACHE_AHEAD); i++) {
+            let more_left = left + completion.substring(0, i);
+            this.cache.set(more_left, {
+                completion: completion.substring(i),
+                created_ts: Date.now(),
+            });
+        }
+        this.cleanup_cache();
         return completion;
     }
 }

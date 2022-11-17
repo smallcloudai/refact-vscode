@@ -167,7 +167,8 @@ export function activate(context: vscode.ExtensionContext)
 }
 
 
-export function pluginFirstRun(context: vscode.ExtensionContext) {
+export function pluginFirstRun(context: vscode.ExtensionContext)
+{
     const firstRun = context.globalState.get('codifyFirstRun');
     if (firstRun) { return; };
     context.globalState.update('codifyFirstRun', true);
