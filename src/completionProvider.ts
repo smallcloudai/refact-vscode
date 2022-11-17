@@ -17,32 +17,21 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let state = estate.state_of_document(document);
         if (state) {
             if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
-                console.log(["333 no inline", state.get_mode()]);
-                return;
+                console.log(["333 not inline", state.get_mode()]);
+                return [];
             }
         }
         if (!estate.is_lang_enabled(document)) {
-            return;
+            return [];
         }
         let file_name = fetch.filename_from_document(document);
-        if (context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) {
-            // sleep 100ms, in a hope request will be cancelled
-            await new Promise(resolve => setTimeout(resolve, 10));
-        }
-        let login: any = await fetch.login();
-        if (!login) { return; }
-        await fetch.waitAllRequests();
-        if (cancelToken.isCancellationRequested) {
-            console.log(["444 on inline"]);
-            return;
-        }
-        let sources: { [key: string]: string } = {};
-        let request = new fetch.PendingRequest(undefined, cancelToken);
-        let max_tokens = 50;
-        let max_edits = 1;
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
+        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r),."'\]]*$/));
+        if (!right_of_cursor_has_only_special_chars) {
+            return [];
+        }
         let left_all_spaces = left_of_cursor.replace(/\s/g, "").length === 0;
         let cursor = document.offsetAt(position);
         let whole_doc = document.getText();
@@ -53,26 +42,73 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             cursor -= 1;
             deleted_spaces_left += 1;
         }
+        let eol_pos = new vscode.Position(position.line, current_line.text.length);
         whole_doc = text_left + whole_doc.substring(cursor);
+
+        let delay_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
+
+        console.log(["INFILL", left_of_cursor, "|", right_of_cursor]);
+
+        let completion = await this.cached_request(
+            cancelToken,
+            delay_if_not_cached,
+            file_name,
+            whole_doc,
+            cursor,
+            left_all_spaces
+        );
+
+        let completion_length = completion.length;
+        let index_of_slash_n = completion.indexOf("\n");
+        if (index_of_slash_n !== -1) {
+            completion_length = index_of_slash_n;
+        }
+        // Undocumented brittle functionality, yes it's hard to describe what InlineCompletionItem does, trial and error...
+        let completionItem = new vscode.InlineCompletionItem(
+            completion,
+            // new vscode.Range(position, position.translate(0, completion_length))
+            new vscode.Range(position.translate(0, -deleted_spaces_left), eol_pos),
+            // new vscode.Range(position, eol_pos.translate(0, 1))
+               //.translate(0, completion_length))
+        );
+        return [completionItem];
+    }
+
+    async cached_request(
+        cancelToken: vscode.CancellationToken,
+        delay_if_not_cached: boolean,
+        file_name: string,
+        whole_doc: string,
+        cursor: number,
+        multiline: boolean,
+    ): Promise<string>
+    {
+        if (delay_if_not_cached) {
+            // sleep 100ms, in a hope this request will be cancelled
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        let login: any = await fetch.login();
+        if (!login) { return ""; }
+        await fetch.waitAllRequests();
+        if (cancelToken.isCancellationRequested) {
+            console.log(["444 inline cancelled"]);
+            return "";
+        }
+        let request = new fetch.PendingRequest(undefined, cancelToken);
+        let max_tokens = 50;
+        let max_edits = 1;
+        let sources: { [key: string]: string } = {};
         sources[file_name] = whole_doc;
-        let multiline = left_all_spaces;
         let stop_tokens: string[];
         if (multiline) {
             stop_tokens = ["\n\n"];
         } else {
             stop_tokens = ["\n", "\n\n"];
         }
-        let eol_pos = new vscode.Position(position.line, current_line.text.length);
-        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r),."'\]]*$/));
-        let fail = !right_of_cursor_has_only_special_chars;
-        if (!fail && state) {
-            fail = state.inline_prefer_edit_chaining;
-            state.inline_prefer_edit_chaining = false;
-        }
+        let fail = false;
         let stop_at = cursor;
         let modif_doc = whole_doc;
         if (!fail) {
-            console.log(["INFILL", left_of_cursor, "|", right_of_cursor]);
             request.supplyStream(fetch.fetchAPI(
                 cancelToken,
                 sources,
@@ -90,7 +126,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 json = await request.apiPromise;
             } finally {
                 if (fetch.look_for_common_errors(json)) {
-                    return;
+                    return "";
                 }
             }
             modif_doc = json["choices"][0]["files"][file_name];
@@ -98,7 +134,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let before_cursor2 = modif_doc.substring(0, cursor);
             if (before_cursor1 !== before_cursor2) {
                 console.log("before_cursor1 != before_cursor2");
-                return;
+                return "";
             }
             stop_at = 0;
             let any_different = false;
@@ -115,7 +151,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                     break;
                 }
             }
-            // fail = stop_at === 0;
             fail = !any_different;
         }
         let completion = "";
@@ -134,45 +169,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!fail) {
             fail = completion.length === 0;
         }
-        // completion === whole_doc.substring(cursor)
-        // console.log(["fail", fail]);
-        // let end_of_line = new vscode.Position(position.line, current_line.text.length);
-        let chain = false;
-        if (fail || completion === right_of_cursor) {
-            return;
-            // let summary = await editChaining.runEditChaining(false);
-            // if (!summary) {
-            //     return;
-            // }
-            // completion = right_of_cursor + "\n" + summary;
-            // // multiline = true;
-            // chain = true;
-        }
-        let completion_length = completion.length;
-        let index_of_slash_n = completion.indexOf("\n");
-        if (index_of_slash_n !== -1) {
-            completion_length = index_of_slash_n;
-        }
-        let completionItem = new vscode.InlineCompletionItem(
-            completion,
-            // new vscode.Range(position, position.translate(0, completion_length))
-            // new vscode.Range(position, position),
-            new vscode.Range(position.translate(0, -deleted_spaces_left), eol_pos),
-            // new vscode.Range(position, eol_pos.translate(0, 1))
-               //.translate(0, completion_length))
-        );
-        // if (!multiline) {
-            // completionItem.filterText = completion + right_of_cursor;
-        // } else {
-            // completionItem.filterText = completion;
-        // }
-        if (chain) {
-            completionItem.command = {
-                title: "hello world",
-                command: "plugin-vscode.inlineAccepted",
-                arguments: [document, position]
-            };
-        }
-        return [completionItem];
+        return completion;
     }
 }

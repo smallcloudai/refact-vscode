@@ -7,16 +7,28 @@ import * as estate from './estate';
 import * as highlight from "./highlight";
 
 
+let global_nav_counter: number = 0;
+
+
 export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
     }
+    global_nav_counter += 1;
     for (let i = 0; i < state.sensitive_ranges.length; i++) {
         const element = state.sensitive_ranges[i];
         if (element.range.contains(pos)) {
-            queryDiff(editor, element.range, "diff-atcursor");
+            let my_counter = global_nav_counter;
+            setTimeout(() => {
+                if (!state) {
+                    return;
+                }
+                if (global_nav_counter === my_counter) {
+                    queryDiff(editor, element.range, "diff-atcursor");
+                }
+            }, 300);
         }
     }
     let selection = editor.selection;
@@ -36,16 +48,16 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         return;
     }
     let doc = editor.document;
-    let cache_key = doc.offsetAt(sensitive_area.start) + 10000*doc.offsetAt(sensitive_area.end);
-    let cache = state.area2cache.get(cache_key);
-    if (!cache) {
-        cache = new estate.CacheEntity(editor, sensitive_area);
-    }
+    // let cache_key = doc.offsetAt(sensitive_area.start) + 10000*doc.offsetAt(sensitive_area.end);
+    // let cache = state.area2cache.get(cache_key);
+    // if (!cache) {
+    //     cache = new estate.CacheEntity(editor, sensitive_area);
+    // }
 
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
     let request = new fetch.PendingRequest(undefined, cancelToken);
-    cache.request = request;
+    // cache.request = request;
 
     fetch.cancelAllRequests();
     estate.back_to_normal(state);
@@ -58,7 +70,8 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     }
     let file_name = fetch.filename_from_document(doc);
 
-    if (cache.json === undefined) {
+    let json: any;
+    // if (cache.json === undefined) {
         await estate.switch_mode(state, estate.Mode.DiffWait);
         animationStart(editor, sensitive_area);
         let sources: { [key: string]: string } = {};
@@ -85,7 +98,6 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         state.report_to_mothership_cursor_pos0 = doc.offsetAt(sensitive_area.start);
         state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
         state.report_to_mothership_ts = Date.now();
-        let json: any;
         try {
             json = await request.apiPromise;
         } finally {
@@ -96,9 +108,9 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
                 return;
             }
         }
-        cache.json = json;
-        state.area2cache.set(cache_key, cache);
-        console.log(["saving diff", cache_key, "size", state.area2cache.size]);
+        // cache.json = json;
+        // state.area2cache.set(cache_key, cache);
+        // console.log(["saving diff", cache_key, "size", state.area2cache.size]);
         if (state.get_mode() !== estate.Mode.DiffWait) {
             return;
         }
@@ -108,13 +120,15 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
             }
             return;
         }
-    } else {
-        console.log(["get cached diff", cache_key, "size", state.area2cache.size]);
-    }
+    // } else {
+    //     console.log(["get cached diff", cache_key, "size", state.area2cache.size]);
+    // }
     if (!cancelToken.isCancellationRequested) {
-        if (cache.json && cache.json["choices"]) {
-            let modif_doc = cache.json["choices"][0]["files"][file_name];
-            state.report_to_mothership_results = cache.json["choices"][0]["files"];
+        // if (cache.json && cache.json["choices"]) {
+        //     let modif_doc = cache.json["choices"][0]["files"][file_name];
+        if (json && json["choices"]) {
+            let modif_doc = json["choices"][0]["files"][file_name];
+            state.report_to_mothership_results = json["choices"][0]["files"];
             state.showing_diff_for_range = sensitive_area;
             state.showing_diff_for_function = model_function;
             state.showing_diff_edit_chain = undefined;
@@ -451,7 +465,7 @@ export async function accept(editor: vscode.TextEditor)
         console.log(["TAB OFF DIFF"]);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
-        state.area2cache.clear();
+        // state.area2cache.clear();
         if (state.highlight_json_backup) {
             state.highlight_json_backup = undefined;
             estate.back_to_normal(state);
@@ -496,7 +510,7 @@ export async function regen(editor: vscode.TextEditor)
     }
     if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined) {
         removeDeco(editor);
-        state.area2cache.clear();
+        // state.area2cache.clear();
         queryDiff(editor, state.showing_diff_for_range, state.showing_diff_for_function);
     }
 }
@@ -504,6 +518,7 @@ export async function regen(editor: vscode.TextEditor)
 
 export function handsOff(editor: vscode.TextEditor)
 {
+    // Don't delete anything, user has already started same edit, leave it alone
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;

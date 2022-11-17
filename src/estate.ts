@@ -18,17 +18,22 @@ export enum Mode {
 };
 
 
-export class CacheEntity {
-    public editor: vscode.TextEditor;
-    public sensitive_area: vscode.Range;
-    public request: fetch.PendingRequest | undefined;
-    public json: any;
+// export class CacheEntity {
+//     public editor: vscode.TextEditor;
+//     public sensitive_area: vscode.Range;
+//     public request: fetch.PendingRequest | undefined;
+//     public json: any;
 
-    public constructor(editor: vscode.TextEditor, sensitive_area: vscode.Range) {
-        this.editor = editor;
-        this.sensitive_area = sensitive_area;
-    }
-}
+//     public constructor(editor: vscode.TextEditor, sensitive_area: vscode.Range) {
+//         this.editor = editor;
+//         this.sensitive_area = sensitive_area;
+//     }
+// }
+
+
+// export class CompletionCacheEntity {
+//     public json: any;
+// }
 
 
 export class StateOfEditor {
@@ -39,7 +44,9 @@ export class StateOfEditor {
         return this._mode;
     }
 
-    public inline_prefer_edit_chaining: boolean = false;
+    // public completion_cache = new Map<Number, string>();
+
+    public inline_prefer_edit_chaining: boolean = false; // Delete?
 
     public highlights: any = [];
 
@@ -49,7 +56,11 @@ export class StateOfEditor {
     public diffAddedLines: any = [];
 
     public sensitive_ranges: vscode.DecorationOptions[] = [];
-    public area2cache = new Map<Number, CacheEntity>();
+    // public sensitive_cursornav_proceed: number = -1;
+    // public sensitive_range_cursor_nav_n: Number = -1;   // index in sensitive_ranges
+    // public sensitive_range_cursor_nav_ts: Number = -1;  // timestamp
+
+    // public area2cache = new Map<Number, CacheEntity>();
     public showing_diff_modif_doc: string | undefined;
     public showing_diff_move_cursor: boolean = false;
     public showing_diff_for_range: vscode.Range | undefined = undefined;
@@ -80,7 +91,7 @@ export class StateOfEditor {
     public cache_clear()
     {
         // call on text edited, intent change
-        this.area2cache.clear();
+        // this.area2cache.clear();
         this.highlight_json_backup = undefined;
         this.sensitive_ranges.length = 0;
         this.highlights.length = 0;
@@ -109,7 +120,7 @@ export function is_lang_enabled(document: vscode.TextDocument): boolean
 }
 
 
-export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEditor|undefined
+export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEditor | undefined
 {
     if (!editor) {
         return undefined;
@@ -252,15 +263,15 @@ export function onTextEdited(editor: vscode.TextEditor)
         console.log(["text edited mode", state._mode, "hands off"]);
         interactiveDiff.handsOff(editor);
         state.highlight_json_backup = undefined;
-        state.area2cache.clear();
+        // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Highlight) {
         highlight.clearHighlight(editor);
         state.highlight_json_backup = undefined;
-        state.area2cache.clear();
+        // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Normal) {
-        state.area2cache.clear();
+        // state.area2cache.clear();
         state.highlight_json_backup = undefined;
     }
 }
@@ -271,7 +282,7 @@ export function saveIntent(intent: string)
     if (global_intent !== intent) {
         global_intent = intent;
         for (const [editor, state] of editor2state) {
-            state.area2cache.clear();
+            // state.area2cache.clear();
             state.highlight_json_backup = undefined;
         }
     }
