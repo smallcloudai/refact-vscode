@@ -198,6 +198,10 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
     highlight.clearHighlight(editor);
     let document = editor.document;
     let whole_doc = document.getText();
+    let no_newline = whole_doc[whole_doc.length-1] !== "\n";
+    if (no_newline) {   // server side always adds the missing newline, client side diff gets confused
+        whole_doc += "\n";
+    }
     const diff = Diff.diffLines(whole_doc, modif_doc);
     let green_bg_ranges: vscode.Range[] = [];
     let red_bg_ranges: vscode.Range[] = [];
@@ -207,6 +211,9 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
     state.diffAddedLines = [];
     state.diff_changing_doc = true;
     await editor.edit((e: vscode.TextEditorEdit) => {
+        if (no_newline) {
+            e.insert(new vscode.Position(document.lineCount, 0), "\n");
+        }
         let line_n = 0;
         let line_n_insert = 0;
         let chunk_remember_removed = '';
@@ -290,9 +297,9 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
                     });
                 }
             } else {
+                // console.log(["unchanged", span.length]);
                 line_n += span_lines_count;
                 line_n_insert += span_lines_count;
-                // console.log(["unchanged", span.length]);
                 chunk_remember_removed = "";
             }
         });
