@@ -219,10 +219,11 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         if (!editor || editor !== ev_editor) {
             return;
         }
+        let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
         let pos1 = editor.selection.active;
         let pos2 = editor.selection.anchor;
         if (pos1.line === pos2.line && pos1.character === pos2.character) {
-            interactiveDiff.onCursorMoved(editor, pos1);
+            interactiveDiff.onCursorMoved(editor, pos1, is_mouse);
         }
     });
     state.text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {

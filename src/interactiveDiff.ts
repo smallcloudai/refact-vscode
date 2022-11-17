@@ -10,7 +10,7 @@ import * as highlight from "./highlight";
 let global_nav_counter: number = 0;
 
 
-export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
+export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position, is_mouse: boolean)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
@@ -28,7 +28,7 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position)
                 if (global_nav_counter === my_counter) {
                     queryDiff(editor, element.range, "diff-atcursor");
                 }
-            }, 300);
+            }, is_mouse ? 0 : 300);
         }
     }
     let selection = editor.selection;
