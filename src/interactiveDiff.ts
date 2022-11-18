@@ -369,9 +369,7 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
         state.diffDecos.push(very_green_type);
         state.diffDecos.push(very_red_type);
     });
-    let min1 = Math.min(...state.diffAddedLines);
-    let min2 = Math.max(...state.diffDeletedLines);
-    state.code_lens_pos = Math.min(min1, min2, state.code_lens_pos);
+    state.code_lens_pos = Math.min(state.code_lens_pos, ...state.diffAddedLines, ...state.diffDeletedLines);
     codeLens.quick_refresh();
 }
 

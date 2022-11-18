@@ -9,11 +9,18 @@ class ExperimentalLens extends vscode.CodeLens {
         msg: string,
         arg0: string,
     ) {
-        super(range, {
-            title: msg,
-            command: 'plugin-vscode.codeLensClicked',
-            arguments: [arg0]
-        });
+        if (arg0.length > 0) {
+            super(range, {
+                title: msg,
+                command: 'plugin-vscode.codeLensClicked',
+                arguments: [arg0]
+            });
+        } else {
+            super(range, {
+                title: msg,
+                command: ''
+            });
+        }
     }
 }
 
@@ -40,11 +47,10 @@ export class LensProvider implements vscode.CodeLensProvider
         let lenses: vscode.CodeLens[] = [];
         if (state.code_lens_pos < document.lineCount) {
             let range = new vscode.Range(state.code_lens_pos, 0, state.code_lens_pos, 0);
-            // let range = new vscode.Range(max+1, 0, max+1, 0);
             lenses.push(new ExperimentalLens(range, "👍 Approve (Tab)", "APPROVE"));
             lenses.push(new ExperimentalLens(range, "👎 Reject (Esc)", "REJECT"));
-            lenses.push(new ExperimentalLens(range, "↻ Rerun (F1)", "RERUN"));  // 🔃
-            lenses.push(new ExperimentalLens(range, "🐶 Teach", "TEACH"));
+            lenses.push(new ExperimentalLens(range, "↻ Rerun \"" + estate.global_intent + "\" (F1)", "RERUN"));  // 🔃
+            // lenses.push(new ExperimentalLens(range, "🐶 Teach", "TEACH"));
         }
         return lenses;
     }
