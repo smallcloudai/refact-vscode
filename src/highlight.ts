@@ -101,7 +101,7 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
             overviewRulerLane: vscode.OverviewRulerLane.Full,
             overviewRulerColor: 'rgba(255, 255, 0, ' + element[2] + ')',
             backgroundColor: 'rgba(255, 255, 0, ' + element[2] + ')',
-            // color: 'black'
+            isWholeLine: true,
         });
         // console.log(["opacity", element[2], "16text", doc.getText(range)]);
         state.highlights.push(deco_type);
