@@ -55,6 +55,8 @@ export class StateOfEditor {
     public diffDeletedLines: any = [];
     public diffAddedLines: any = [];
 
+    public code_lens_pos: number = Number.MAX_SAFE_INTEGER;
+
     public sensitive_ranges: vscode.DecorationOptions[] = [];
     // public sensitive_cursornav_proceed: number = -1;
     // public sensitive_range_cursor_nav_n: Number = -1;   // index in sensitive_ranges

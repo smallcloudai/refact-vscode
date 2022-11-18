@@ -5,6 +5,7 @@ const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsd
 import * as editChaining from "./editChaining";
 import * as estate from './estate';
 import * as highlight from "./highlight";
+import * as codeLens from "./codeLens";
 
 
 let global_nav_counter: number = 0;
@@ -65,6 +66,8 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let json: any;
     await estate.switch_mode(state, estate.Mode.DiffWait);
     animationStart(editor, sensitive_area);
+    state.code_lens_pos = sensitive_area.start.line;
+    codeLens.quick_refresh();
     let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
     sources[file_name] = whole_doc;
@@ -366,6 +369,10 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
         state.diffDecos.push(very_green_type);
         state.diffDecos.push(very_red_type);
     });
+    let min1 = Math.min(...state.diffAddedLines);
+    let min2 = Math.max(...state.diffDeletedLines);
+    state.code_lens_pos = Math.min(min1, min2, state.code_lens_pos);
+    codeLens.quick_refresh();
 }
 
 
@@ -433,6 +440,7 @@ export async function accept(editor: vscode.TextEditor)
         return;
     }
     state.diff_changing_doc = true;
+    state.code_lens_pos = Number.MAX_SAFE_INTEGER;
     let thenable = editor.edit((e) => {
         if (!state) {
             return;

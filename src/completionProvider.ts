@@ -87,7 +87,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         return [completionItem];
     }
 
-    public cache: Map<string, CacheEntry> = new Map();
+    public cache: Map<string, CacheEntry> = new Map();  // LRUCache?
 
     public cleanup_cache()
     {

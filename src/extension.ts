@@ -4,7 +4,7 @@ import {MyInlineCompletionProvider} from "./completionProvider";
 import * as highlight from "./highlight";
 import * as storeVersions from "./storeVersions";
 import * as statusBar from "./statusBar";
-import LensProvider from "./codeLens";
+import * as codeLens from "./codeLens";
 import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
@@ -24,6 +24,7 @@ declare global {
     var userLogged: any;
     var modelFunction: string;
     var lastEditor: any;
+    var codeLensProvider: codeLens.LensProvider | undefined;
 }
 
 
@@ -35,6 +36,10 @@ async function pressed_escape()
     let editor = vscode.window.activeTextEditor;
     if (editor) {
         let state = estate.state_of_editor(editor);
+        if (state) {
+            state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+            codeLens.quick_refresh();
+        }
         if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
             if (state.get_mode() === Mode.DiffWait) {
                 await fetch.cancelAllRequests();
@@ -67,27 +72,39 @@ async function pressed_tab()
 }
 
 
+async function code_lens_clicked(arg0: any)
+{
+    let editor = vscode.window.activeTextEditor;
+    if (editor) {
+        if (arg0 === "APPROVE") {
+            await interactiveDiff.accept(editor);
+        } else if (arg0 === "REJECT") {
+            await pressed_escape();  // might return to highlight
+        } else if (arg0 === "RERUN") {
+            await rollback_and_regen(editor);
+        } else {
+            console.log(["code_lens_clicked: can't do", arg0]);
+        }
+    }
+}
+
+
 export function activate(context: vscode.ExtensionContext)
 {
     global_context = context;
-    let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
+    // let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
+    let disposable2 = vscode.commands.registerCommand('plugin-vscode.codeLensClicked', code_lens_clicked);
     global.menu = new statusBar.StatusBarMenu();
     global.menu.createStatusBarBlock(context);
-
-    let docSelector = {
-        scheme: "file"
-    };
 
     context.subscriptions.push(vscode.commands.registerCommand(global.menu.command, status_bar_clicked));
 
     pluginFirstRun(context);
 
-    // Register our CodeLens provider
-    // let codeLensProviderDisposable = vscode.languages.registerCodeLensProvider(
-    //     docSelector,
-    //     new LensProvider()
-    // );
-    // context.subscriptions.push(codeLensProviderDisposable);
+    codeLens.save_provider(new codeLens.LensProvider());
+    if (codeLens.global_provider) {
+        context.subscriptions.push(vscode.languages.registerCodeLensProvider({ scheme: "file" }, codeLens.global_provider));
+    }
 
     const comp = new MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
@@ -190,6 +207,7 @@ export async function manual_edit_chaining()
     }
     let state = estate.state_of_editor(editor);
     if (state) {
+        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
         if (state.get_mode() === Mode.Diff) {
             await rollback_and_regen(editor);
             return;
@@ -221,7 +239,7 @@ export async function rollback_and_regen(editor: vscode.TextEditor)
     let state = estate.state_of_editor(editor);
     if (state) {
         await estate.switch_mode(state, Mode.Normal);
-        interactiveDiff.regen(editor);
+        await interactiveDiff.regen(editor);
     }
 }
 
