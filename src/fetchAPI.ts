@@ -221,6 +221,9 @@ export async function report_to_mothership(
     cursor_pos1: number,
     arrived_ts: number,
 ) {
+    if (sources[cursor_file] === undefined || results[cursor_file] === undefined || sources[cursor_file] === results[cursor_file]) {
+        return;
+    }
     const url = "https://www.smallcloud.ai/v1/report-to-mothership";
     const body = JSON.stringify({
         "positive": positive,

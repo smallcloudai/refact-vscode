@@ -73,6 +73,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     sources[file_name] = whole_doc;
     let max_tokens = 550;
     let stop_tokens: string[] = [];
+    let max_edits = model_function==="diff-atcursor" ? 1 : 10;
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
         sources,
@@ -82,7 +83,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         doc.offsetAt(sensitive_area.start),
         doc.offsetAt(sensitive_area.end),
         max_tokens,
-        model_function==="diff-atcursor" ? 1 : 10,
+        max_edits,
         stop_tokens,
     ));
     state.report_to_mothership_sources = sources;
@@ -204,6 +205,9 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
     let no_newline = whole_doc[whole_doc.length-1] !== "\n";
     if (no_newline) {   // server side always adds the missing newline, client side diff gets confused
         whole_doc += "\n";
+    }
+    if (whole_doc === modif_doc) {
+        // no change, but go on because we want UI to be the same
     }
     const diff = Diff.diffLines(whole_doc, modif_doc);
     let green_bg_ranges: vscode.Range[] = [];

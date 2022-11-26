@@ -165,7 +165,7 @@ export function state_of_document(doc: vscode.TextDocument): StateOfEditor | und
     if (candidates_list.length === 1) {
         return candidates_list[0];
     }
-    console.log(["multiple editors/states for the same document"]);
+    console.log(["multiple editors/states for the same document", doc.fileName]);
     return undefined;
 }
 
@@ -277,6 +277,7 @@ export function onTextEdited(editor: vscode.TextEditor)
         console.log(["text edited mode", state._mode, "hands off"]);
         interactiveDiff.handsOff(editor);
         state.highlight_json_backup = undefined;
+        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Highlight) {
