@@ -61,7 +61,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
 
 export function showHighlight(editor: vscode.TextEditor, json: any)
 {
-    if (json.highlight === undefined) {
+    if (json.highlight_tokens === undefined) {
         return;
     }
     let state = estate.state_of_editor(editor);
@@ -69,8 +69,8 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         return;
     }
     let doc = editor.document;
-    for (let index = 0; index < json.highlight.length; index++) {
-        const element = json.highlight[index];
+    for (let index = 0; index < json.highlight_tokens.length; index++) {
+        const element = json.highlight_tokens[index];
         const start = doc.positionAt(element[0]);
         const end = doc.positionAt(element[1]);
         let range = new vscode.Range(start, end);
@@ -88,8 +88,8 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
         state.highlights.push(deco_type);
         editor.setDecorations(deco_type, range_list);
     }
-    for (let index = 0; index < json.highlight16.length; index++) {
-        const element = json.highlight16[index];
+    for (let index = 0; index < json.highlight_lines.length; index++) {
+        const element = json.highlight_lines[index];
         const start = doc.positionAt(element[0]);
         const end = doc.positionAt(element[1]);
         let range = new vscode.Range(start, end);
