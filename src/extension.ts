@@ -268,11 +268,13 @@ export async function askIntent()
     } else {
         if (intent) {
             estate.saveIntent(intent);
-            editor.selection = new vscode.Selection(selection.start, selection.start);
+            editor.selection = new vscode.Selection(selection.start, selection.start);  // this clears the selection, moves cursor up
+            if (selection.end.line > selection.start.line && selection.end.character === 0) {
+                selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
+            }
             interactiveDiff.queryDiff(editor, selection, "diff-selection");
         }
     }
-    // vscode.window.showInformationMessage(`Got: ${result}`);
 }
 
 

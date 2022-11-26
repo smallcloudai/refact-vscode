@@ -34,7 +34,7 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position, i
     }
     let selection = editor.selection;
     let is_empty = selection.anchor.line === selection.active.line && selection.anchor.character === selection.active.character;
-    if (!is_empty && !state.diff_changing_doc) {;
+    if (!is_empty && !state.diff_changing_doc) {
         handsOff(editor);
     }
 }
