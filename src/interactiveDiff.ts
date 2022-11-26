@@ -221,6 +221,8 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
         let line_n_insert = 0;
         let chunk_remember_removed = '';
         let chunk_remember_removed_line = -1;
+        let chunk_remember_added = '';
+        let chunk_remember_added_line = -1;
         diff.forEach((part: any) => {
             if (!state) {
                 return;
@@ -254,31 +256,31 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
                 for (let i=0; i<span_lines_count; i++) {
                     state.diffAddedLines.push(line_n + i);
                 }
-                let chunk_remember_added = span;
-                let chunk_remember_added_line = line_n;
+                chunk_remember_added = span;
+                chunk_remember_added_line = line_n;
                 line_n += span_lines_count;
                 if (chunk_remember_removed) {
-                    const diff_char = Diff.diffWords(chunk_remember_removed, chunk_remember_added);
+                    const diff_char = Diff.diffChars(chunk_remember_removed, chunk_remember_added);
                     let char_del_line = chunk_remember_removed_line;
                     let char_ins_line = chunk_remember_added_line;
                     let char_del_pos = 0;
                     let char_ins_pos = 0;
                     diff_char.forEach((part_char: any) => {
-                        let span_char = part_char.value;
+                        let txt = part_char.value;
                         if (part_char.removed) {
                             very_red_bg_ranges.push(new vscode.Range(
                                 new vscode.Position(char_del_line, char_del_pos),
-                                new vscode.Position(char_del_line, char_del_pos + span_char.length),
+                                new vscode.Position(char_del_line, char_del_pos + txt.length),
                             ));
                         } else if (part_char.added) {
                             very_green_bg_ranges.push(new vscode.Range(
                                 new vscode.Position(char_ins_line, char_ins_pos),
-                                new vscode.Position(char_ins_line, char_ins_pos + span_char.length),
+                                new vscode.Position(char_ins_line, char_ins_pos + txt.length),
                             ));
                         }
                         if (part_char.removed || part_char.added === undefined) {
-                            for (let c=0; c<span_char.length; c++) {
-                                if (span_char[c] === '\n') {
+                            for (let c=0; c<txt.length; c++) {
+                                if (txt[c] === '\n') {
                                     char_del_line++;
                                     char_del_pos = 0;
                                 } else {
@@ -287,8 +289,8 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
                             }
                         }
                         if (part_char.added || part_char.removed === undefined) {
-                            for (let c=0; c<span_char.length; c++) {
-                                if (span_char[c] === '\n') {
+                            for (let c=0; c<txt.length; c++) {
+                                if (txt[c] === '\n') {
                                     char_ins_line++;
                                     char_ins_pos = 0;
                                 } else {
@@ -296,7 +298,6 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
                                 }
                             }
                         }
-                        // console.log(["char", span_char]);
                     });
                 }
             } else {
