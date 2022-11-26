@@ -48,6 +48,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let left_all_spaces = left_of_cursor.replace(/\s/g, "").length === 0;
         let cursor = document.offsetAt(position);
         let whole_doc = document.getText();
+        if (whole_doc.length > 0 && whole_doc[whole_doc.length - 1] !== "\n") {
+            whole_doc += "\n";
+        }
         let text_left = whole_doc.substring(0, cursor);
         let deleted_spaces_left = 0;
         while (left_all_spaces && text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
