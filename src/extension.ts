@@ -67,6 +67,8 @@ async function pressed_tab()
         let state = estate.state_of_editor(editor);
         if (state && state.get_mode() === Mode.Diff) {
             interactiveDiff.accept(editor);
+        } else {
+            vscode.commands.executeCommand("setContext", "codify.runTab", false);
         }
     }
 }

@@ -43,8 +43,7 @@ export class StateOfEditor {
     public get_mode(): Mode {
         return this._mode;
     }
-
-    // public completion_cache = new Map<Number, string>();
+    public last_used_ts: number = 0;
 
     public inline_prefer_edit_chaining: boolean = false; // Delete?
 
@@ -58,11 +57,7 @@ export class StateOfEditor {
     public code_lens_pos: number = Number.MAX_SAFE_INTEGER;
 
     public sensitive_ranges: vscode.DecorationOptions[] = [];
-    // public sensitive_cursornav_proceed: number = -1;
-    // public sensitive_range_cursor_nav_n: Number = -1;   // index in sensitive_ranges
-    // public sensitive_range_cursor_nav_ts: Number = -1;  // timestamp
 
-    // public area2cache = new Map<Number, CacheEntity>();
     public showing_diff_modif_doc: string | undefined;
     public showing_diff_move_cursor: boolean = false;
     public showing_diff_for_range: vscode.Range | undefined = undefined;
@@ -130,31 +125,47 @@ export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEdi
     if (!is_lang_enabled(editor.document)) {
         return undefined;
     }
+    if (editor2state.size > 3) {
+        let oldest_ts = Number.MAX_SAFE_INTEGER;
+        let oldest_state: StateOfEditor | undefined = undefined;
+        for (let [_, state] of editor2state) {
+            if (state.last_used_ts < oldest_ts) {
+                oldest_ts = state.last_used_ts;
+                oldest_state = state;
+            }
+        }
+        if (!oldest_state) {
+            throw new Error("Internal error");
+        }
+        console.log(["forget state of", oldest_state.editor.document.fileName]);
+        switch_mode(oldest_state, Mode.Normal);
+        editor2state.delete(oldest_state.editor);
+    }
     let state = editor2state.get(editor);
     if (!state) {
         state = new StateOfEditor(editor);
         editor2state.set(editor, state);
     }
-    if (editor2state.size > 2) {
-        let oldest_editor = editor2state.keys().next().value;
-        console.log(["forget state of", oldest_editor.document.fileName]);
-        let oldest_state = editor2state.get(oldest_editor);
-        if (oldest_state) {
-            switch_mode(oldest_state, Mode.Normal);
-        }
-        editor2state.delete(oldest_editor);
-    }
+    state.last_used_ts = Date.now();
     return state;
 }
 
 
 export function state_of_document(doc: vscode.TextDocument): StateOfEditor | undefined
 {
+    let candidates_list = [];
     for (const [editor, state] of editor2state) {
         if (editor.document === doc) {
-            return state_of_editor(editor);
+            candidates_list.push(state);
         }
     }
+    if (candidates_list.length === 0) {
+        return undefined;
+    }
+    if (candidates_list.length === 1) {
+        return candidates_list[0];
+    }
+    console.log(["multiple editors/states for the same document"]);
     return undefined;
 }
 

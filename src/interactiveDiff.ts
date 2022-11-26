@@ -71,7 +71,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
     sources[file_name] = whole_doc;
-    let max_tokens = 200;
+    let max_tokens = 550;
     let stop_tokens: string[] = [];
     request.supplyStream(fetch.fetchAPI(
         cancelToken,
@@ -370,6 +370,7 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
         state.diffDecos.push(very_red_type);
     });
     state.code_lens_pos = Math.min(state.code_lens_pos, ...state.diffAddedLines, ...state.diffDeletedLines);
+    console.log(["code_lens_pos", state.code_lens_pos]);
     codeLens.quick_refresh();
 }
 
@@ -468,9 +469,9 @@ export async function accept(editor: vscode.TextEditor)
         } else {
             state.highlight_json_backup = undefined;
             estate.back_to_normal(state);
-            console.log(["TRIGGER SUGGEST"]);
-            state.inline_prefer_edit_chaining = true;
-            vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
+            // console.log(["TRIGGER SUGGEST"]);
+            // state.inline_prefer_edit_chaining = true;
+            // vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         }
         if (state.report_to_mothership_cursor_file) {
             fetch.report_to_mothership(
@@ -486,6 +487,7 @@ export async function accept(editor: vscode.TextEditor)
             );
             state.report_to_mothership_cursor_file = "";
         }
+        codeLens.quick_refresh();
     });
     await thenable;
 }

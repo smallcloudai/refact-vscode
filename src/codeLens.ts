@@ -45,6 +45,7 @@ export class LensProvider implements vscode.CodeLensProvider
             return [];
         }
         let lenses: vscode.CodeLens[] = [];
+        console.log(["see code_lens_pos", state.code_lens_pos]);
         if (state.code_lens_pos < document.lineCount) {
             let range = new vscode.Range(state.code_lens_pos, 0, state.code_lens_pos, 0);
             lenses.push(new ExperimentalLens(range, "👍 Approve (Tab)", "APPROVE"));
