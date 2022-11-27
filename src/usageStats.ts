@@ -4,7 +4,6 @@ import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
 
 
-
 export async function report_success(
     positive: boolean,
     scope: string,
@@ -17,6 +16,6 @@ export async function report_success(
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";
     }
-    global.menu.statusbarSocketError(!positive, `${scope}: ${error_message}`);
+    global.menu.statusbarSocketError(!positive, `${error_message}`);
 }
 
