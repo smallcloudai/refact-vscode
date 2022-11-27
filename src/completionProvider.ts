@@ -123,8 +123,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             return cached.completion;
         }
         if (delay_if_not_cached) {
-            // sleep 100ms, in a hope this request will be cancelled
-            await new Promise(resolve => setTimeout(resolve, 100));
+            let sleep = 30;  // In a hope this request will be cancelled
+            await new Promise(resolve => setTimeout(resolve, sleep));
         }
         let login: any = await fetch.login();
         if (!login) { return ""; }
