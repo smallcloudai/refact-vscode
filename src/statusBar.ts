@@ -64,18 +64,14 @@ import * as estate from './estate';
         this.choose_color();
     }
 
-    statusbarSocketError(error: boolean, detail: any = undefined)
+    statusbarSocketError(error: boolean, detail: string|undefined)
     {
-        if (detail && typeof detail === "object") {
-            detail = JSON.stringify(detail);
-        }
-        console.log(["SOCKETERROR", error, detail]);
         this.socketerror = error;
         if (typeof detail === "string") {
             if (detail.length > 100) {
                 detail = detail.substring(0, 100) + "...";
             }
-            this.socketerror_msg = `\nError: ${detail}`;
+            this.socketerror_msg = `\n${detail}`;
         } else {
             this.socketerror_msg = "";
         }

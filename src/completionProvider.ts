@@ -152,6 +152,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let t0 = Date.now();
             request.supply_stream(...fetch.fetch_api_promise(
                 cancelToken,
+                "CompletionProvider", // scope
                 sources,
                 "Infill", // intent
                 "infill", // scratchpad function
@@ -166,7 +167,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             try {
                 json = await request.apiPromise;
             } finally {
-                if (fetch.look_for_common_errors(json, "completionProvider")) {
+                if (fetch.look_for_common_errors(json, request.api_fields)) {
                     // Network failure: return empty string, but don't cache it
                     return "";
                 }

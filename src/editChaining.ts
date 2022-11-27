@@ -100,6 +100,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     }
     request.supply_stream(...fetch.fetch_api_promise(
         cancelToken,
+        "runEditChaining",
         send_revisions,
         estate.global_intent,
         "edit-chain",
@@ -117,7 +118,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     try {
         json = await request.apiPromise;
     } finally {
-        if (fetch.look_for_common_errors(json, "runEditChaining")) {
+        if (fetch.look_for_common_errors(json, request.api_fields)) {
             return "";
         }
     }

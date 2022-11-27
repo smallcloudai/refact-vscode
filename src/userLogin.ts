@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
+import * as usageStats from "./usageStats";
 
 
 export async function login_message()
@@ -119,18 +120,19 @@ export async function login()
             if(global.panelProvider) {
                 global.panelProvider.login_success();
             }
+            usageStats.report_success(true, "login", url, "");
             global.menu.choose_color();
         } else if (json.retcode === 'FAILED') {
-            global.menu.statusbarSocketError(true, `login error (1): ${json.human_readable_message}`);
+            usageStats.report_success(false, "login (1)", url, json.retcode);
             return "";
         } else if (json.retcode === 'MESSAGE') {
             userLogin.account_message(json.human_readable_message, json.action, json.action_url);
         } else {
-            global.menu.statusbarSocketError(true, `login error (2): unrecognized json`);
+            usageStats.report_success(false, "login (2)", url, "unrecognized response");
             return "";
         }
     } catch (error) {
-        global.menu.statusbarSocketError(true, `login error (3): ${error}`);
+        usageStats.report_success(false, "login (3)", url, error);
         return "";
     }
     return "OK";

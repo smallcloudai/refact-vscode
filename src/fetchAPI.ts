@@ -25,6 +25,7 @@ export class ApiFields {
 export class PendingRequest {
     seq: number;
     apiPromise: Promise<any> | undefined;
+    api_fields: ApiFields | undefined;
     cancelToken: vscode.CancellationToken;
     cancellationTokenSource: vscode.CancellationTokenSource | undefined;
 
@@ -37,10 +38,10 @@ export class PendingRequest {
 
     supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: ApiFields)
     {
+        this.api_fields = api_fields;
         h2stream.catch((error) => {
             if (!error.message.includes("aborted")) {
-                global.menu.statusbarSocketError(true, `h2stream error(1): ${error}`);
-                // usageStats.report_success(false, "h2stream (1)", error);
+                usageStats.report_success(false, "h2stream (1)", api_fields.url, error);
             } else {
                 // Totally normal, user cancelled the request.
             }
@@ -50,18 +51,15 @@ export class PendingRequest {
             h2stream.then((result_stream) => {
                 let json = result_stream.json();
                 json.then((result) => {
-                    global.menu.statusbarSocketError(false);
+                    usageStats.report_success(true, api_fields.scope, api_fields.url, "");
                     resolve(result);
                 }).catch((error) => {
-                    // this happens!
-                    console.log(["JSON ERROR", this.seq, error]);
-                    global.menu.statusbarSocketError(true, `h2stream error(2): ${error}`);
+                    usageStats.report_success(false, "h2stream (2)", api_fields.url, error);
                     reject(error);
                 });
             }).catch((error) => {
                 if (!error.message.includes("aborted")) {
-                    console.log(["STREAM ERROR", this.seq, error]);
-                    global.menu.statusbarSocketError(true, `h2stream error(3): ${error}`);
+                    usageStats.report_success(false, "h2stream (3)", api_fields.url, error);
                 }
                 reject(error);
             });
@@ -76,7 +74,7 @@ export class PendingRequest {
             // console.log(["--pendingRequests", globalRequests.length, request.seq]);
         }).catch((error) => {
             if (!error.message.includes("aborted")) {
-                global.menu.statusbarSocketError(true, `h2stream error(4): ${error}`);
+                usageStats.report_success(false, "h2stream (4)", api_fields.url, error);
             }
         });
         globalRequests.push(this);
@@ -125,6 +123,7 @@ export async function cancelAllRequests()
 
 export function fetch_api_promise(
     cancelToken: vscode.CancellationToken,
+    scope: string,
     sources: { [key: string]: string },
     intent: string,
     functionName: string,
@@ -153,6 +152,7 @@ export function fetch_api_promise(
     let temp = vscode.workspace.getConfiguration().get('codify.temperature');
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     let api_fields = new ApiFields();
+    api_fields.scope = scope;
     api_fields.url = url;
     api_fields.model = model;
     api_fields.sources = sources;
@@ -203,22 +203,28 @@ export function fetch_api_promise(
 }
 
 
-export function look_for_common_errors(json: any, scope: string): boolean
+export function look_for_common_errors(json: any, api_fields: ApiFields | undefined): boolean
 {
     if (json === undefined) {
         // undefined means error is already handled, do nothing
         return true;
     }
+    let scope = "unknown";
+    let url = "unknown";
+    if (api_fields !== undefined) {
+        scope = api_fields.scope;
+        url = api_fields.url;
+    }
     if (json.detail) {
-        global.menu.statusbarSocketError(true, `${scope}: ${json.detail}`);
+        usageStats.report_success(false, scope, url, json.detail);
         return true;
     }
     if (json.retcode && json.retcode !== "OK") {
-        global.menu.statusbarSocketError(true, `${scope}: ${json.human_readable_message}`);
+        usageStats.report_success(false, scope, url, json.human_readable_message);
         return true;
     }
     if (json.error) {
-        global.menu.statusbarSocketError(true, `${scope}: ${json.error.message}`);
+        usageStats.report_success(false, scope, url, json.error.message);
         return true;
     }
     return false;

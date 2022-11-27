@@ -35,9 +35,10 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     let max_tokens = 0;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
+        "runHighlight",  // scope
         sources,
         intent,
-        "highlight",
+        "highlight",     // scratchpad function
         fn,
         cursor,
         cursor,
@@ -50,7 +51,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     try {
         json = await request.apiPromise;
     } finally {
-        if (fetchAPI.look_for_common_errors(json, "runHighlight")) {
+        if (fetchAPI.look_for_common_errors(json, request.api_fields)) {
             return;
         }
     }

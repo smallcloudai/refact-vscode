@@ -78,6 +78,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let max_edits = model_function==="diff-atcursor" ? 1 : 10;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
+        "queryDiff",  // scope
         sources,
         estate.global_intent,
         model_function,
@@ -98,7 +99,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     try {
         json = await request.apiPromise;
     } finally {
-        if (fetchAPI.look_for_common_errors(json, "queryDiff")) {
+        if (fetchAPI.look_for_common_errors(json, request.api_fields)) {
             if (state.get_mode() === estate.Mode.DiffWait) {
                 await estate.switch_mode(state, estate.Mode.Normal);
             }

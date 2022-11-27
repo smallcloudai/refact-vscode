@@ -17,16 +17,6 @@ export async function report_success(
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";
     }
-
-}
-
-export function statusbarSocketError(
-    problem: boolean,
-    location: string,
-    detail: any = undefined
-) {
-
-
-
+    global.menu.statusbarSocketError(!positive, `${scope}: ${error_message}`);
 }
 
