@@ -37,7 +37,7 @@ export class BugPage {
 
         BugPage.currentPanel = new BugPage(panel, context.extensionUri, context);
 
-        
+
         panel.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
 				case "buttonSubmit": {
@@ -100,7 +100,7 @@ export class BugPage {
                 -->
                 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}';">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                
+
                 <title>Bug Report</title>
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
@@ -124,7 +124,7 @@ What it really does is ...
 
 Environment: Visual Code (${os.platform()}) - ${vscode.version}
 Plugin Version: ${cnt.extension.packageJSON.version}</textarea>
-                        </div> 
+                        </div>
                             ${fileBlock}
                     </div>
                     <div class="s-footer">
@@ -156,6 +156,7 @@ Plugin Version: ${cnt.extension.packageJSON.version}</textarea>
         }
         const name = await global.userLogged;
         const apiKey = userLogin.getApiKey();
+        // FIXME: check apiKey
 
         const headers = {
             "Authorization": `Bearer ${apiKey}`,
@@ -173,13 +174,13 @@ Plugin Version: ${cnt.extension.packageJSON.version}</textarea>
         });
 
         try {
-            const response = await fetch( 'https://www.smallcloud.ai/v1/codify-bug-report', { 
+            const response = await fetch( 'https://www.smallcloud.ai/v1/codify-bug-report', {
                 method: "POST",
                 headers: headers,
                 body: dataToSend,
                 redirect: "follow",
                 cache: "no-cache",
-                referrer: "no-referrer", 
+                referrer: "no-referrer",
             });
             let json = await response.json();
             if (json.retcode === "OK") {

@@ -120,19 +120,19 @@ export async function login()
             if(global.panelProvider) {
                 global.panelProvider.login_success();
             }
-            usageStats.report_success(true, "login", url, "");
+            usageStats.report_success_or_failure(true, "login", url, "");
             global.menu.choose_color();
         } else if (json.retcode === 'FAILED') {
-            usageStats.report_success(false, "login (1)", url, json.retcode);
+            usageStats.report_success_or_failure(false, "login (1)", url, json.retcode);
             return "";
         } else if (json.retcode === 'MESSAGE') {
             userLogin.account_message(json.human_readable_message, json.action, json.action_url);
         } else {
-            usageStats.report_success(false, "login (2)", url, "unrecognized response");
+            usageStats.report_success_or_failure(false, "login (2)", url, "unrecognized response");
             return "";
         }
     } catch (error) {
-        usageStats.report_success(false, "login (3)", url, error);
+        usageStats.report_success_or_failure(false, "login (3)", url, error);
         return "";
     }
     return "OK";

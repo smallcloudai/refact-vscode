@@ -17,18 +17,16 @@ import BugPage from "./bug";
 
 
 declare global {
-    var menu: any;
+    var menu: statusBar.StatusBarMenu;
     var panelProvider: any;
     var settingsPage: any;
     var userTicket: string;
     var userLogged: any;
     var modelFunction: string;
     var lastEditor: any;
-    var codeLensProvider: codeLens.LensProvider | undefined;
+    var codeLensProvider: codeLens.LensProvider|undefined;
+    var global_context: vscode.ExtensionContext|undefined;
 }
-
-
-let global_context: vscode.ExtensionContext|undefined = undefined;
 
 
 async function pressed_escape()
@@ -93,7 +91,7 @@ async function code_lens_clicked(arg0: any)
 
 export function activate(context: vscode.ExtensionContext)
 {
-    global_context = context;
+    global.global_context = context;
     // let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.codeLensClicked', code_lens_clicked);
     global.menu = new statusBar.StatusBarMenu();
@@ -282,14 +280,14 @@ export async function askIntent()
 //
 export function deactivate(context: vscode.ExtensionContext)
 {
-    global_context = undefined;
+    global.global_context = undefined;
 }
 
 
 export async function status_bar_clicked()
 {
     let editor = vscode.window.activeTextEditor;
-    if (!userLogin.checkAuth(global_context)) {
+    if (!userLogin.checkAuth(global.global_context)) {
         userLogin.login_message();
         return;
     }

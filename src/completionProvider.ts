@@ -164,13 +164,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 stop_tokens,
             ));
             let json: any;
-            try {
-                json = await request.apiPromise;
-            } finally {
-                if (fetch.look_for_common_errors(json, request.api_fields)) {
-                    // Network failure: return empty string, but don't cache it
-                    return "";
-                }
+            json = await request.apiPromise;
+            if (json === undefined) {
+                return "";
             }
             let t1 = Date.now();
             let ms_int = Math.round(t1 - t0);

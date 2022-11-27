@@ -48,12 +48,9 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     ));
     hl_animation_start(editor, editor.selection);
     let json: any;
-    try {
-        json = await request.apiPromise;
-    } finally {
-        if (fetchAPI.look_for_common_errors(json, request.api_fields)) {
-            return;
-        }
+    json = await request.apiPromise;
+    if (json === undefined) {
+        return;
     }
     state.highlight_json_backup = json;
     estate.switch_mode(state, Mode.Highlight);

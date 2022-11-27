@@ -115,12 +115,9 @@ export async function runEditChaining(animation: boolean): Promise<String>
     //     state.mode = estate.Mode.Normal;
     // }
     let json: any;
-    try {
-        json = await request.apiPromise;
-    } finally {
-        if (fetch.look_for_common_errors(json, request.api_fields)) {
-            return "";
-        }
+    json = await request.apiPromise;
+    if (json === undefined) {
+        return "";
     }
     state.showing_diff_edit_chain = sensitive_area;
     state.edit_chain_modif_doc = json["choices"][0]["files"][file_name];
