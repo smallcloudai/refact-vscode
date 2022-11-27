@@ -141,6 +141,7 @@ export function activate(context: vscode.ExtensionContext)
     let view = vscode.window.registerWebviewViewProvider(
         'codify-presets',
         global.panelProvider,
+        {webviewOptions: {retainContextWhenHidden: true}}
     );
     context.subscriptions.push(view);
 
