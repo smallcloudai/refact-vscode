@@ -147,6 +147,7 @@ export function fetchAPI(
     }
     let temp = vscode.workspace.getConfiguration().get('codify.temperature');
     // console.log(["fetchAPI", model]);
+    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     const body = JSON.stringify({
         "model": model,
         "sources": sources,
@@ -159,6 +160,7 @@ export function fetchAPI(
         "max_tokens": maxTokens,
         "max_edits": maxEdits,
         "stop": stop_tokens,
+        "client": `vscode-${client_version}`,
     });
     const apiKey = userLogin.getApiKey();
     const headers = {
