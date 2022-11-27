@@ -8,6 +8,7 @@ import * as estate from './estate';
     menu: any = {};
     command: string = 'plugin-vscode.statusBarClick';
     socketerror: boolean = false;
+    socketerror_msg: string = '';
     lang: boolean = true;
     spinner: boolean = false;
     language_name: string = "";
@@ -38,7 +39,7 @@ import * as estate from './estate';
         } else if (this.socketerror) {
             this.menu.text = `$(debug-disconnect) codify`;
             this.menu.backgroundColor = undefined;
-            this.menu.tooltip = `Cannot reach the Codify server`;
+            this.menu.tooltip = `Cannot reach the Codify server` + this.socketerror_msg;
         } else if (this.lang && this.language_name) {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
@@ -70,6 +71,14 @@ import * as estate from './estate';
         }
         console.log(["SOCKETERROR", error, detail]);
         this.socketerror = error;
+        if (typeof detail === "string") {
+            if (detail.length > 100) {
+                detail = detail.substring(0, 100) + "...";
+            }
+            this.socketerror_msg = `\nError: ${detail}`;
+        } else {
+            this.socketerror_msg = "";
+        }
         this.choose_color();
     }
 
