@@ -9,6 +9,7 @@ import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 import * as fetchAPI from "./fetchAPI";
+import * as usageStats from "./usageStats";
 import * as langDB from "./langDB";
 import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
@@ -157,6 +158,7 @@ export function activate(context: vscode.ExtensionContext)
         global.userTicket = userLogin.generateTicket(context);
         vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.userTicket}`));
         let i = 0;
+        // ten attempts to login, 10 seconds apart
         let interval = setInterval(() => {
             if (global.userLogged || i === 10) {
                 clearInterval(interval);
@@ -164,8 +166,18 @@ export function activate(context: vscode.ExtensionContext)
             }
             userLogin.login();
             i++;
-        },10000);
+        }, 10000);
     });
+
+    let stats_timer = setInterval(() => {
+        usageStats.report_usage_stats();
+        clearInterval(stats_timer);
+        // Yes we at SMC need to know quickly if there is any widespread problems people are having,
+        // please look inside there is really not much being sent.
+        stats_timer = setInterval(() => {
+            usageStats.report_usage_stats();
+        }, 86400000); // Change to 24 hours
+    }, 60000);
 
     context.subscriptions.push(login);
 
