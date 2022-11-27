@@ -74,12 +74,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             left_all_spaces
         );
 
-        let completion_length = completion.length;
-        let index_of_slash_n = completion.indexOf("\n");
-        if (index_of_slash_n !== -1) {
-            completion_length = index_of_slash_n;
-        }
-        // Undocumented brittle functionality, yes it's hard to describe what InlineCompletionItem does, trial and error...
+        // Undocumented brittle functionality, it's hard to describe what InlineCompletionItem exactly does, trial and error...
         let completionItem = new vscode.InlineCompletionItem(
             completion,
             // new vscode.Range(position, position.translate(0, completion_length))
@@ -127,10 +122,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (cached !== undefined) {
             return cached.completion;
         }
-        let few_chars = whole_doc.substring(Math.max(0, cursor - 20), cursor);
-        let cache_key = `${file_name}:${whole_doc.length}:${few_chars}:${cursor}`;
-        console.log(["cache_key", cache_key]);
-
         if (delay_if_not_cached) {
             // sleep 100ms, in a hope this request will be cancelled
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -157,11 +148,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let stop_at = cursor;
         let modif_doc = whole_doc;
         if (!fail) {
+            let t0 = Date.now();
             request.supplyStream(fetch.fetchAPI(
                 cancelToken,
                 sources,
-                "Infill", // message
-                "infill", // api function
+                "Infill", // intent
+                "infill", // scratchpad function
                 file_name,
                 cursor,
                 cursor,
@@ -174,9 +166,13 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 json = await request.apiPromise;
             } finally {
                 if (fetch.look_for_common_errors(json)) {
+                    // Network failure: return empty string, but don't cache it
                     return "";
                 }
             }
+            let t1 = Date.now();
+            let ms_int = Math.round(t1 - t0);
+            console.log([`API request ${ms_int}ms`]);
             modif_doc = json["choices"][0]["files"][file_name];
             let before_cursor1 = whole_doc.substring(0, cursor);
             let before_cursor2 = modif_doc.substring(0, cursor);
@@ -202,6 +198,10 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             fail = !any_different;
         }
         let completion = "";
+        if (!fail) {
+            fail = cursor >= modif_doc.length + stop_at;
+            console.log([`FAIL cursor ${cursor} < ${modif_doc.length} + ${stop_at}`]);
+        }
         if (!fail) {
             completion = modif_doc.substring(cursor, modif_doc.length + stop_at);
             console.log(["SUCCESS", request.seq, completion]);
