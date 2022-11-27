@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
+import * as fetchH2 from 'fetch-h2';
+import * as userLogin from "./userLogin";
 
 
 export async function login_message()
@@ -12,6 +14,7 @@ export async function login_message()
     global.menu.choose_color();
 }
 
+
 export async function welcome_message()
 {
     // const header = "Welcome to Codify, please login to use our extension";
@@ -22,7 +25,8 @@ export async function welcome_message()
     global.menu.choose_color();
 }
 
-export async function account_message(info: string, action: string, url: string) 
+
+export async function account_message(info: string, action: string, url: string)
 {
     let selection = await vscode.window.showInformationMessage(
         info,
@@ -63,4 +67,71 @@ export function generateTicket(context: any)
     const store = context.globalState;
     let token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
     return token;
+}
+
+
+export async function login()
+{
+    const apiKey = userLogin.getApiKey();
+    if (global.userLogged && apiKey) {
+        return "OK";
+    }
+    const url = "https://www.smallcloud.ai/v1/api-activate";
+    let headers = {
+        "Content-Type": "application/json",
+        "Authorization": "",
+    };
+    const ticket = global.userTicket;
+    if (ticket && !global.userLogged) {
+        headers.Authorization = `codify-${ticket}`;
+        // global.userTicket = "";
+    } else {
+        if (!global.userLogged && apiKey) {
+            headers.Authorization = `Bearer ${apiKey}`;
+        } else {
+            return "";
+        }
+    }
+    let req = new fetchH2.Request(url, {
+        method: "GET",
+        headers: headers,
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    });
+    console.log(["LOGIN", headers.Authorization]);
+    try {
+        let result = await fetchH2.fetch(req);
+        let json: any = await result.json();
+        console.log(["login", result.status, json]);
+        if (json.retcode === "TICKET-SAVEKEY") {
+            await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', json.fine_tune, vscode.ConfigurationTarget.Global);
+            global.userLogged = json.account;
+            global.userTicket = "";
+            if(global.panelProvider) {
+                global.panelProvider.login_success();
+            }
+            global.menu.choose_color();
+        } else if (json.retcode === 'OK') {
+            global.userLogged = json.account;
+            global.userTicket = "";
+            if(global.panelProvider) {
+                global.panelProvider.login_success();
+            }
+            global.menu.choose_color();
+        } else if (json.retcode === 'FAILED') {
+            global.menu.statusbarSocketError(true, `login error (1): ${json.human_readable_message}`);
+            return "";
+        } else if (json.retcode === 'MESSAGE') {
+            userLogin.account_message(json.human_readable_message, json.action, json.action_url);
+        } else {
+            global.menu.statusbarSocketError(true, `login error (2): unrecognized json`);
+            return "";
+        }
+    } catch (error) {
+        global.menu.statusbarSocketError(true, `login error (3): ${error}`);
+        return "";
+    }
+    return "OK";
 }

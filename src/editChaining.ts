@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
+import * as userLogin from "./userLogin";
 import * as storeVersions from './storeVersions';
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from './estate';
@@ -32,7 +33,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     let doc = editor.document;
     let position: vscode.Position = editor.selection.active;
     let cursor = doc.offsetAt(position);
-    let file_name = fetch.filename_from_document(doc);
+    let file_name = storeVersions.filename_from_document(doc);
 
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
@@ -43,7 +44,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     //     state.mode = interactiveDiff.Mode.Normal;
     // }
     request.cancellationTokenSource = cancellationTokenSource;
-    let login: any = await fetch.login();
+    let login: any = await userLogin.login();
     if (!login) { return ""; }
     await fetch.waitAllRequests();
     if (cancelToken.isCancellationRequested) {
@@ -97,7 +98,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     if (animation) {
         interactiveDiff.animationStart(editor, sensitive_area);
     }
-    request.supplyStream(fetch.fetchAPI(
+    request.supply_stream(...fetch.fetch_api_promise(
         cancelToken,
         send_revisions,
         estate.global_intent,
@@ -116,7 +117,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     try {
         json = await request.apiPromise;
     } finally {
-        if (fetch.look_for_common_errors(json)) {
+        if (fetch.look_for_common_errors(json, "runEditChaining")) {
             return "";
         }
     }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as fetch from "./fetchAPI";
-import * as interactiveDiff from "./interactiveDiff";
+import * as fetchAPI from "./fetchAPI";
+import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
 import * as estate from "./estate";
 
@@ -26,15 +26,14 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     sources[fn] = whole_doc;
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
-    let login: any = await fetch.login();
+    let login: any = await userLogin.login();
     if (!login) { return; }
-    await fetch.waitAllRequests();
-    let request = new fetch.PendingRequest(undefined, cancelToken);
+    await fetchAPI.waitAllRequests();
+    let request = new fetchAPI.PendingRequest(undefined, cancelToken);
     let stop_tokens: string[] = [];
     global.menu.statusbarLoading(true);
     let max_tokens = 0;
-
-    request.supplyStream(fetch.fetchAPI(
+    request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         sources,
         intent,
@@ -51,7 +50,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     try {
         json = await request.apiPromise;
     } finally {
-        if (fetch.look_for_common_errors(json)) {
+        if (fetchAPI.look_for_common_errors(json, "runHighlight")) {
             return;
         }
     }
@@ -134,7 +133,7 @@ export async function hl_animation_start(editor: vscode.TextEditor, sensitive_ar
     let line0 = sensitive_area.start.line;
     let line1 = sensitive_area.end.line;
     try {
-        while (fetch.anything_still_working()) {
+        while (fetchAPI.anything_still_working()) {
             await new Promise(resolve => setTimeout(resolve, 100));
             animation_ranges.length = 0;
             if (line0 >= 0) {

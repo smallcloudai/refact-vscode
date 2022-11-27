@@ -8,7 +8,7 @@ import * as codeLens from "./codeLens";
 import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
-import * as fetch from "./fetchAPI";
+import * as fetchAPI from "./fetchAPI";
 import * as langDB from "./langDB";
 import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
@@ -42,7 +42,7 @@ async function pressed_escape()
         }
         if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
             if (state.get_mode() === Mode.DiffWait) {
-                await fetch.cancelAllRequests();
+                await fetchAPI.cancelAllRequests();
             }
             if (state.highlight_json_backup !== undefined) {
                 await estate.switch_mode(state, Mode.Highlight);
@@ -163,7 +163,7 @@ export function activate(context: vscode.ExtensionContext)
                 clearInterval(interval);
                 return;
             }
-            fetch.login();
+            userLogin.login();
             i++;
         },10000);
     });
@@ -186,7 +186,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...statusBar.status_bar_init());
 
     setTimeout(() => {
-        fetch.login();
+        userLogin.login();
         global.menu.choose_color();
     }, 100);
 }

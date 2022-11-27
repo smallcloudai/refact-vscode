@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as fetch from "./fetchAPI";
+import * as fetchAPI from "./fetchAPI";
+import * as userLogin from "./userLogin";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 import * as editChaining from "./editChaining";
+import * as storeVersions from './storeVersions';
 import * as estate from './estate';
 import * as highlight from "./highlight";
 import * as codeLens from "./codeLens";
@@ -51,18 +53,18 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
 
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
-    let request = new fetch.PendingRequest(undefined, cancelToken);
+    let request = new fetchAPI.PendingRequest(undefined, cancelToken);
 
-    await fetch.cancelAllRequests();
+    await fetchAPI.cancelAllRequests();
     estate.back_to_normal(state);
     request.cancellationTokenSource = cancellationTokenSource;
-    let login: any = await fetch.login();
+    let login: any = await userLogin.login();
     if (!login) { return; }
-    await fetch.waitAllRequests();
+    await fetchAPI.waitAllRequests();
     if (cancelToken.isCancellationRequested) {
         return;
     }
-    let file_name = fetch.filename_from_document(doc);
+    let file_name = storeVersions.filename_from_document(doc);
     let json: any;
     await estate.switch_mode(state, estate.Mode.DiffWait);
     animationStart(editor, sensitive_area);
@@ -74,7 +76,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let max_tokens = 550;
     let stop_tokens: string[] = [];
     let max_edits = model_function==="diff-atcursor" ? 1 : 10;
-    request.supplyStream(fetch.fetchAPI(
+    request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         sources,
         estate.global_intent,
@@ -96,7 +98,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     try {
         json = await request.apiPromise;
     } finally {
-        if (fetch.look_for_common_errors(json)) {
+        if (fetchAPI.look_for_common_errors(json, "queryDiff")) {
             if (state.get_mode() === estate.Mode.DiffWait) {
                 await estate.switch_mode(state, estate.Mode.Normal);
             }
@@ -420,7 +422,7 @@ export async function rollback(editor: vscode.TextEditor)
         state.diff_changing_doc = false;
         removeDeco(editor);
         if (state.report_to_mothership_cursor_file) {
-            fetch.report_to_mothership(
+            fetchAPI.report_to_mothership(
                 false,
                 state.report_to_mothership_sources,
                 state.report_to_mothership_results,
@@ -479,7 +481,7 @@ export async function accept(editor: vscode.TextEditor)
             // vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         }
         if (state.report_to_mothership_cursor_file) {
-            fetch.report_to_mothership(
+            fetchAPI.report_to_mothership(
                 true,
                 state.report_to_mothership_sources,
                 state.report_to_mothership_results,

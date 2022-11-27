@@ -2,9 +2,24 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
+import * as usageStats from "./usageStats";
 
 
 let globalSeq = 100;
+
+
+export class ApiFields {
+    scope: string = "";
+    url: string = "";
+    model: string = "";
+    sources: { [key: string]: string } = {};
+    results: { [key: string]: string } = {};
+    intent: string = "";
+    function: string = "";
+    cursor_file: string = "";
+    cursor0: number = 0;
+    cursor1: number = 0;
+}
 
 
 export class PendingRequest {
@@ -20,12 +35,14 @@ export class PendingRequest {
         this.cancelToken = cancelToken;
     }
 
-    supplyStream(h2stream: Promise<fetchH2.Response>)
+    supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: ApiFields)
     {
         h2stream.catch((error) => {
             if (!error.message.includes("aborted")) {
-                global.menu.statusbarSocketError(true, `STREAM ERROR2: ${error}`);
+                global.menu.statusbarSocketError(true, `h2stream error(1): ${error}`);
+                // usageStats.report_success(false, "h2stream (1)", error);
             } else {
+                // Totally normal, user cancelled the request.
             }
             return;
         });
@@ -38,13 +55,13 @@ export class PendingRequest {
                 }).catch((error) => {
                     // this happens!
                     console.log(["JSON ERROR", this.seq, error]);
-                    // global.menu.statusbarSocketError(true, `JSON ERROR: ${error}`);
+                    global.menu.statusbarSocketError(true, `h2stream error(2): ${error}`);
                     reject(error);
                 });
             }).catch((error) => {
                 if (!error.message.includes("aborted")) {
                     console.log(["STREAM ERROR", this.seq, error]);
-                    global.menu.statusbarSocketError(true, `STREAM ERROR3: ${error}`);
+                    global.menu.statusbarSocketError(true, `h2stream error(3): ${error}`);
                 }
                 reject(error);
             });
@@ -59,7 +76,7 @@ export class PendingRequest {
             // console.log(["--pendingRequests", globalRequests.length, request.seq]);
         }).catch((error) => {
             if (!error.message.includes("aborted")) {
-                global.menu.statusbarSocketError(true, `API ERROR: ${error}`);
+                global.menu.statusbarSocketError(true, `h2stream error(4): ${error}`);
             }
         });
         globalRequests.push(this);
@@ -106,23 +123,7 @@ export async function cancelAllRequests()
 }
 
 
-export function filename_from_document(document: vscode.TextDocument): string
-{
-    let file_name = document.fileName;
-    let project_dir = vscode.workspace.getWorkspaceFolder(document.uri)?.uri.fsPath;
-    if (project_dir !== undefined && file_name.startsWith(project_dir)) {
-        // this prevents unnecessary user name and directory details from leaking
-        let relative_file_name = file_name.substring(project_dir.length);
-        if (relative_file_name.startsWith("/")) {
-            relative_file_name = relative_file_name.substring(1);
-        }
-        return relative_file_name;
-    }
-    return file_name;
-}
-
-
-export function fetchAPI(
+export function fetch_api_promise(
     cancelToken: vscode.CancellationToken,
     sources: { [key: string]: string },
     intent: string,
@@ -133,21 +134,33 @@ export function fetchAPI(
     maxTokens: number,
     maxEdits: number,
     stop_tokens: string[],
-) {
-    let tmp = vscode.workspace.getConfiguration().get('codify.infurl');
+): [Promise<fetchH2.Response>, ApiFields]
+{
+    let url_ = vscode.workspace.getConfiguration().get('codify.infurl');
     let url: string;
-    if(typeof tmp === 'undefined' || tmp === null || tmp === '') {
+    if(typeof url_ !== 'string' || url_ === '') {
         url = "https://inference.smallcloud.ai/v1/contrast";
     } else {
-        url = `${tmp}`;
+        url = `${url_}`;
     }
-    let model = vscode.workspace.getConfiguration().get('codify.model');
-    if(typeof model === 'undefined' || model === null || model === '') {
+    let model_ = vscode.workspace.getConfiguration().get('codify.model');
+    let model: string;
+    if (typeof model_ !== 'string' || model_ === '') {
         model = 'CONTRASTcode/stable';
+    } else {
+        model = `${model_}`;
     }
     let temp = vscode.workspace.getConfiguration().get('codify.temperature');
-    // console.log(["fetchAPI", model]);
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let api_fields = new ApiFields();
+    api_fields.url = url;
+    api_fields.model = model;
+    api_fields.sources = sources;
+    api_fields.intent = intent;
+    api_fields.function = functionName;
+    api_fields.cursor_file = cursorFile;
+    api_fields.cursor0 = cursor0;
+    api_fields.cursor1 = cursor1;
     const body = JSON.stringify({
         "model": model,
         "sources": sources,
@@ -186,26 +199,26 @@ export function fetchAPI(
         init.signal = abort.signal;
     }
     let promise = fetchH2.fetch(req, init);
-    return promise;
+    return [promise, api_fields];
 }
 
 
-export function look_for_common_errors(json: any): boolean
+export function look_for_common_errors(json: any, scope: string): boolean
 {
     if (json === undefined) {
-        // undefined means error is already handled
+        // undefined means error is already handled, do nothing
         return true;
     }
     if (json.detail) {
-        global.menu.statusbarSocketError(true, json.detail);
+        global.menu.statusbarSocketError(true, `${scope}: ${json.detail}`);
         return true;
     }
     if (json.retcode && json.retcode !== "OK") {
-        global.menu.statusbarSocketError(true, json.human_readable_message);
+        global.menu.statusbarSocketError(true, `${scope}: ${json.human_readable_message}`);
         return true;
     }
     if (json.error) {
-        global.menu.statusbarSocketError(true, json.error.message);
+        global.menu.statusbarSocketError(true, `${scope}: ${json.error.message}`);
         return true;
     }
     return false;
@@ -259,79 +272,4 @@ export async function report_to_mothership(
         console.log(["report_to_mothership", "error", error]);
     });
     return promise;
-}
-
-
-let complain_once: boolean = true;
-
-
-export async function login()
-{
-    const apiKey = userLogin.getApiKey();
-    if (global.userLogged && apiKey) {
-        return "OK";
-    }
-    const url = "https://www.smallcloud.ai/v1/api-activate";
-    let headers = {
-        "Content-Type": "application/json",
-        "Authorization": "",
-    };
-    const ticket = global.userTicket;
-    if (ticket && !global.userLogged) {
-        headers.Authorization = `codify-${ticket}`;
-        // global.userTicket = "";
-    } else {
-        if (!global.userLogged && apiKey) {
-            headers.Authorization = `Bearer ${apiKey}`;
-        } else {
-            return "";
-        }
-    }
-    let req = new fetchH2.Request(url, {
-        method: "GET",
-        headers: headers,
-        redirect: "follow",
-        cache: "no-cache",
-        referrer: "no-referrer",
-    });
-    console.log(["LOGIN", headers.Authorization]);
-    try {
-        let result = await fetchH2.fetch(req);
-        let json: any = await result.json();
-        // handshake here;
-        console.log(["login", result.status, json]);
-        if (json.retcode === "TICKET-SAVEKEY") {
-            await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', json.fine_tune, vscode.ConfigurationTarget.Global);
-            global.userLogged = json.account;
-            global.userTicket = "";
-            if(global.panelProvider) {
-                global.panelProvider.login_success();
-            }
-            global.menu.choose_color();
-        } else if (json.retcode === 'OK') {
-            global.userLogged = json.account;
-            global.userTicket = "";
-            if(global.panelProvider) {
-                global.panelProvider.login_success();
-            }
-            global.menu.choose_color();
-        } else if (json.retcode === 'FAILED') {
-            global.menu.statusbarSocketError(true, json.human_readable_message);
-            if (complain_once) {
-                complain_once = false;
-                // userLogin.login_message();
-            }
-            return "";
-        } else if (json.retcode === 'MESSAGE') {
-            userLogin.account_message(json.human_readable_message, json.action, json.action_url);
-        } else {
-            console.log(["login bug"]);
-            return "";
-        }
-    } catch (error) {
-        global.menu.statusbarSocketError(true, error);
-        return "";
-    }
-    return "OK";
 }

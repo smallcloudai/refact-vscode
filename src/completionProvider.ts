@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetch from "./fetchAPI";
+import * as userLogin from "./userLogin";
 import * as estate from "./estate";
-import * as editChaining from "./editChaining";
+import * as storeVersions from "./storeVersions";
 
 
 class CacheEntry {
@@ -37,7 +38,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!estate.is_lang_enabled(document)) {
             return [];
         }
-        let file_name = fetch.filename_from_document(document);
+        let file_name = storeVersions.filename_from_document(document);
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
@@ -126,7 +127,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let sleep = 30;  // In a hope this request will be cancelled
             await new Promise(resolve => setTimeout(resolve, sleep));
         }
-        let login: any = await fetch.login();
+        let login: any = await userLogin.login();
         if (!login) { return ""; }
         await fetch.waitAllRequests();
         if (cancelToken.isCancellationRequested) {
@@ -149,7 +150,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let modif_doc = whole_doc;
         if (!fail) {
             let t0 = Date.now();
-            request.supplyStream(fetch.fetchAPI(
+            request.supply_stream(...fetch.fetch_api_promise(
                 cancelToken,
                 sources,
                 "Infill", // intent
@@ -165,7 +166,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             try {
                 json = await request.apiPromise;
             } finally {
-                if (fetch.look_for_common_errors(json)) {
+                if (fetch.look_for_common_errors(json, "completionProvider")) {
                     // Network failure: return empty string, but don't cache it
                     return "";
                 }

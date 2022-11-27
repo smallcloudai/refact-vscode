@@ -1,13 +1,33 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as estate from './estate';
-import * as fetch from "./fetchAPI";
 
 
 let fn2textlist = new Map<string, string[]>();
 let fn2versionlist = new Map<string, number[]>();
 let fn2line = new Map<string, number>();
 const N = 5;
+
+
+export function filename_from_document(document: vscode.TextDocument): string
+{
+    let file_name = document.fileName;
+    let project_dir = vscode.workspace.getWorkspaceFolder(document.uri)?.uri.fsPath;
+    if (project_dir !== undefined && file_name.startsWith(project_dir)) {
+        // This prevents unnecessary user name and directory details from leaking
+        let relative_file_name = file_name.substring(project_dir.length);
+        if (relative_file_name.startsWith("/")) {
+            relative_file_name = relative_file_name.substring(1);
+        }
+        return relative_file_name;
+    }
+    // As a fallback, return the full file name without any directory
+    let last_slash = file_name.lastIndexOf("/");
+    if (last_slash >= 0) {
+        return file_name.substring(last_slash+1);
+    }
+    return file_name;
+}
 
 
 export function fnGetRevisions(fn: string)
@@ -32,7 +52,7 @@ export function fnGetRevisions(fn: string)
 
 function fnReset(document: vscode.TextDocument, line0: number)
 {
-    let fn = fetch.filename_from_document(document);
+    let fn = filename_from_document(document);
     let whole_doc = document.getText();
     let version = document.version;
     fn2textlist.set(fn, [whole_doc]);
@@ -50,7 +70,7 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
             return;
         }
     }
-    let fn = fetch.filename_from_document(document);
+    let fn = filename_from_document(document);
     let version = document.version;
     let textlist = fn2textlist.get(fn);
     if (!textlist) {

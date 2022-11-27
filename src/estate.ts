@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as fetch from "./fetchAPI";
-const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 import * as langDB from "./langDB";
@@ -16,24 +14,6 @@ export enum Mode {
     Diff,
     DiffWait,
 };
-
-
-// export class CacheEntity {
-//     public editor: vscode.TextEditor;
-//     public sensitive_area: vscode.Range;
-//     public request: fetch.PendingRequest | undefined;
-//     public json: any;
-
-//     public constructor(editor: vscode.TextEditor, sensitive_area: vscode.Range) {
-//         this.editor = editor;
-//         this.sensitive_area = sensitive_area;
-//     }
-// }
-
-
-// export class CompletionCacheEntity {
-//     public json: any;
-// }
 
 
 export class StateOfEditor {
