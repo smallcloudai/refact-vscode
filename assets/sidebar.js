@@ -124,18 +124,16 @@
                 }
                 break;
             case "logout":
-                    if (message.value) {
-                        let login = document.querySelector('#login');
-                        login.style.display = 'block';
-                        let bug = document.querySelector('#bug');
-                        bug.style.display = 'none';
-                        let logout = document.querySelector('#logout');
-                        logout.style.display = 'none';
-                        bug.style.display = 'none';
-                        let info = document.querySelector('.sidebar-logged');
-                        document.querySelector('.sidebar-logged span').innerHTML = '';
-                        info.style.display = 'none';
-                    }
+                    let login = document.querySelector('#login');
+                    login.style.display = 'block';
+                    let bug = document.querySelector('#bug');
+                    bug.style.display = 'none';
+                    let logout = document.querySelector('#logout');
+                    logout.style.display = 'none';
+                    bug.style.display = 'none';
+                    let info = document.querySelector('.sidebar-logged');
+                    document.querySelector('.sidebar-logged span').innerHTML = '';
+                    info.style.display = 'none';
                     break;
 			case "updateHistory":
 				if (message.value && message.value.length > 0) {

@@ -17,6 +17,11 @@ export async function report_success_or_failure(
         error_message = error_message.substring(0, 200) + "…";
     }
     global.menu.statusbarSocketError(!positive, `${error_message}`);
+    if(positive) {
+        global.panelProvider.login_success();
+    } else {
+        global.panelProvider.logout_success();
+    }
     let msg = `${positive ? "1" : "0"} ${scope} ${related_url} "${error_message}"`;
     // Typical msg:
     // 1 CompletionProvider https://inference.smallcloud.ai/v1/contrast ""
