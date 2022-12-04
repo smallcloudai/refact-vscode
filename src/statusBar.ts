@@ -9,9 +9,10 @@ import * as estate from './estate';
     command: string = 'plugin-vscode.statusBarClick';
     socketerror: boolean = false;
     socketerror_msg: string = '';
-    lang: boolean = true;
+    disable_lang: boolean = true;
     spinner: boolean = false;
     language_name: string = "";
+    last_model_name: string = "";
 
     createStatusBarBlock(context: vscode.ExtensionContext)
     {
@@ -36,25 +37,35 @@ import * as estate from './estate';
             this.menu.text = `$(account) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
             this.menu.tooltip = `Please login to Codify`;
-        } else if (this.socketerror) {
-            this.menu.text = `$(debug-disconnect) codify`;
-            this.menu.backgroundColor = undefined;
-            this.menu.tooltip = `Cannot reach the Codify server` + this.socketerror_msg;
-        } else if (this.lang && this.language_name) {
+        } else if (this.disable_lang && this.language_name) {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = `Codify is not enabled for "${this.language_name}"`;
+        } else if (this.socketerror) {
+            this.menu.text = `$(debug-disconnect) codify`;
+            this.menu.backgroundColor = undefined;
+            if (this.socketerror_msg.indexOf("no model") !== -1) {
+                this.menu.tooltip = `Either an outage on the server side, or your settings might be outdated:\n${this.socketerror_msg}`;
+            } else {
+                this.menu.tooltip = `Cannot reach the Codify server:\n` + this.socketerror_msg;
+            }
         } else if (this.spinner) {
             this.menu.text = `$(sync~spin) codify`;
             this.menu.backgroundColor = undefined;
         } else {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = undefined;
-            if (this.language_name) {
-                this.menu.tooltip = `Click to disable Codify for "${this.language_name}"`;
-            } else {
-                this.menu.tooltip = "";
+            let msg: string = "";
+            if (this.last_model_name) {
+                msg += `Connection to server works well. Last used model:\n${this.last_model_name}`;
             }
+            if (this.language_name) {
+                if (msg) {
+                    msg += "\n";
+                }
+                msg += `Click to disable Codify for "${this.language_name}"`;
+            }
+            this.menu.tooltip = msg;
         }
     }
 
@@ -71,17 +82,26 @@ import * as estate from './estate';
             if (detail.length > 100) {
                 detail = detail.substring(0, 100) + "...";
             }
-            this.socketerror_msg = `\n${detail}`;
+            this.socketerror_msg = `${detail}`;
         } else {
             this.socketerror_msg = "";
+        }
+        if (this.socketerror) {
+            this.last_model_name = "";
         }
         this.choose_color();
     }
 
     statusbarLang(state: boolean, language_name: string)
     {
-        this.lang = state;
+        this.disable_lang = state;
         this.language_name = language_name;
+        this.choose_color();
+    }
+
+    model_worked(model_name: string)
+    {
+        this.last_model_name = model_name;
         this.choose_color();
     }
 

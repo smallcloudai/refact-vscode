@@ -41,7 +41,7 @@ export class PendingRequest {
         this.api_fields = api_fields;
         h2stream.catch((error) => {
             if (!error.message.includes("aborted")) {
-                usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, `${error}`);
+                usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, `${error}`, "");
             } else {
                 // Totally normal, user cancelled the request.
             }
@@ -55,15 +55,15 @@ export class PendingRequest {
                         reject();
                         return;
                     }
-                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "");
+                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
                     resolve(json_arrived);
                 }).catch((error) => {
-                    usageStats.report_success_or_failure(false, "h2stream (2)", api_fields.url, `${error}`);
+                    usageStats.report_success_or_failure(false, "h2stream (2)", api_fields.url, `${error}`, "");
                     reject(error);
                 });
             }).catch((error) => {
                 if (!error.message.includes("aborted")) {
-                    usageStats.report_success_or_failure(false, "h2stream (3)", api_fields.url, `${error}`);
+                    usageStats.report_success_or_failure(false, "h2stream (3)", api_fields.url, `${error}`, "");
                 }
                 reject(error);
             });
@@ -78,7 +78,7 @@ export class PendingRequest {
             // console.log(["--pendingRequests", globalRequests.length, request.seq]);
         }).catch((error) => {
             if (!error.message.includes("aborted")) {
-                usageStats.report_success_or_failure(false, "h2stream (4)", api_fields.url, `${error}`);
+                usageStats.report_success_or_failure(false, "h2stream (4)", api_fields.url, `${error}`, "");
             }
         });
         globalRequests.push(this);
@@ -227,15 +227,15 @@ export function look_for_common_errors(json: any, api_fields: ApiFields | undefi
         url = api_fields.url;
     }
     if (json.detail) {
-        usageStats.report_success_or_failure(false, scope, url, json.detail);
+        usageStats.report_success_or_failure(false, scope, url, json.detail, "");
         return true;
     }
     if (json.retcode && json.retcode !== "OK") {
-        usageStats.report_success_or_failure(false, scope, url, json.human_readable_message);
+        usageStats.report_success_or_failure(false, scope, url, json.human_readable_message, "");
         return true;
     }
     if (json.error) {
-        usageStats.report_success_or_failure(false, scope, url, json.error.message);
+        usageStats.report_success_or_failure(false, scope, url, json.error.message, "");
         return true;
     }
     return false;
