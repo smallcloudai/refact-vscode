@@ -129,6 +129,15 @@ export async function cancelAllRequests()
 }
 
 
+let global_inference_url_from_login = "";
+
+
+export function save_url_from_login(url: string)
+{
+    global_inference_url_from_login = url;
+}
+
+
 export function fetch_api_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
@@ -146,7 +155,7 @@ export function fetch_api_promise(
     let url_ = vscode.workspace.getConfiguration().get('codify.infurl');
     let url: string;
     if(typeof url_ !== 'string' || url_ === '') {
-        url = "https://inference.smallcloud.ai/v1/contrast";
+        url = global_inference_url_from_login + "v1/contrast";
     } else {
         url = `${url_}`;
     }

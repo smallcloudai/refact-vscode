@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
-import * as userLogin from "./userLogin";
+import * as fetchAPI from "./fetchAPI";
 import * as usageStats from "./usageStats";
 
 
@@ -73,7 +73,7 @@ export function generateTicket(context: any)
 
 export async function login()
 {
-    const apiKey = userLogin.getApiKey();
+    const apiKey = getApiKey();
     if (global.userLogged && apiKey) {
         return "OK";
     }
@@ -108,25 +108,20 @@ export async function login()
         if (json.retcode === "TICKET-SAVEKEY") {
             await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', json.fine_tune, vscode.ConfigurationTarget.Global);
+        }
+        if (json.retcode === "TICKET-SAVEKEY" || json.retcode === "OK") {
             global.userLogged = json.account;
             global.userTicket = "";
-            if(global.panelProvider) {
-                global.panelProvider.login_success();
-            }
-            global.menu.choose_color();
-        } else if (json.retcode === 'OK') {
-            global.userLogged = json.account;
-            global.userTicket = "";
+            fetchAPI.save_url_from_login(json.inference_url);
             if(global.panelProvider) {
                 global.panelProvider.login_success();
             }
             usageStats.report_success_or_failure(true, "login", url, "", "");
-            global.menu.choose_color();
         } else if (json.retcode === 'FAILED') {
             usageStats.report_success_or_failure(false, "login (1)", url, json.retcode, "");
             return "";
         } else if (json.retcode === 'MESSAGE') {
-            userLogin.account_message(json.human_readable_message, json.action, json.action_url);
+            account_message(json.human_readable_message, json.action, json.action_url);
         } else {
             usageStats.report_success_or_failure(false, "login (2)", url, "unrecognized response", "");
             return "";

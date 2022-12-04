@@ -12,6 +12,7 @@ import * as estate from './estate';
     disable_lang: boolean = true;
     spinner: boolean = false;
     language_name: string = "";
+    last_url: string = "";
     last_model_name: string = "";
 
     createStatusBarBlock(context: vscode.ExtensionContext)
@@ -57,7 +58,13 @@ import * as estate from './estate';
             this.menu.backgroundColor = undefined;
             let msg: string = "";
             if (this.last_model_name) {
-                msg += `Connection to server works well. Last used model:\n${this.last_model_name}`;
+                msg += `Connection to server works well.\nLast used model:\n    ${this.last_model_name}`;
+            }
+            if (this.last_url) {
+                if (msg) {
+                    msg += "\n";
+                }
+                msg += `Last used URL:\n    ${this.last_url}`;
             }
             if (this.language_name) {
                 if (msg) {
@@ -99,8 +106,9 @@ import * as estate from './estate';
         this.choose_color();
     }
 
-    model_worked(model_name: string)
+    url_and_model_worked(url: string, model_name: string)
     {
+        this.last_url = url;
         this.last_model_name = model_name;
         this.choose_color();
     }

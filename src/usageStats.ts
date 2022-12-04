@@ -26,7 +26,7 @@ export async function report_success_or_failure(
         error_message = error_message.substring(0, 200) + "…";
     }
     if (model_name) {
-        global.menu.model_worked(model_name);
+        global.menu.url_and_model_worked(related_url, model_name);
     }
     global.menu.statusbarSocketError(!positive, `${error_message}`);
     if (positive) {
