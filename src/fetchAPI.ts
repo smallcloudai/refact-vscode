@@ -162,7 +162,7 @@ export function fetch_api_promise(
     let model_ = vscode.workspace.getConfiguration().get('codify.model');
     let model: string;
     if (typeof model_ !== 'string' || model_ === '') {
-        model = 'CONTRASTcode/stable';
+        model = 'CONTRASTcode';
     } else {
         model = `${model_}`;
     }
