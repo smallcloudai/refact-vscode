@@ -219,10 +219,10 @@ body.vscode-light #logout {
 }
 
 .sidebar-plan {
+    display: none;
     margin-bottom: 5px;
     padding: 0 20px;
     width: 100%;
-    display: flex;
     justify-content: center;
 }
 

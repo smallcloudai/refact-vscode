@@ -112,6 +112,8 @@
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
                     info.style.display = 'flex';
+                    let plan = document.querySelector('.sidebar-plan');
+                    plan.style.display = 'flex';
                 }
                 break;
             case "alreadyLogged":
@@ -126,6 +128,8 @@
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = message.value;
                     info.style.display = 'flex';
+                    let plan = document.querySelector('.sidebar-plan');
+                    plan.style.display = 'flex';
                 }
                 break;
             case "logout":
@@ -139,6 +143,8 @@
                     let info = document.querySelector('.sidebar-logged');
                     document.querySelector('.sidebar-logged span').innerHTML = '';
                     info.style.display = 'none';
+                    let plan = document.querySelector('.sidebar-plan');
+                    plan.style.display = 'none';
                     break;
 			case "updateHistory":
 				if (message.value && message.value.length > 0) {
