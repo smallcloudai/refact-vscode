@@ -143,10 +143,13 @@ export function inference_url(addthis: string)
 {
     let url_ = vscode.workspace.getConfiguration().get('codify.infurl');
     let url: string;
-    if(typeof url_ !== 'string' || url_ === '') {
+    if (typeof url_ !== 'string' || url_ === '' || !url_) {
         url = global_inference_url_from_login;
     } else {
         url = `${url_}`;
+    }
+    if (!url) {
+        return url;
     }
     while (url.endsWith("/")) {
         url = url.slice(0, -1);

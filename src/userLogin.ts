@@ -124,7 +124,9 @@ export async function login()
         if (json.retcode === "OK") {
             global.userLogged = json.account;
             // "inference": "CLOUD"
-            fetchAPI.save_url_from_login(json.inference_url);
+            if (json.inference_url) {
+                fetchAPI.save_url_from_login(json.inference_url);
+            }
             if (global.panelProvider) {
                 global.panelProvider.login_success();
             }
