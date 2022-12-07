@@ -128,6 +128,10 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		});
     }
 
+    public plan_update(txt: string) {
+		this._view!.webview.postMessage({ command: "updatePlan", value: txt });
+	}
+
 	public addHistory(intent: string) {
 		this._history.push(intent);
 		this._view!.webview.postMessage({
@@ -194,7 +198,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     </div>
                     <div class="sidebar-controls">
                         <div class="sidebar-logged">Logged as <span></span></div>
-                        <div class="sidebar-plan">Active Plan: <span>Cloud Inference</span><button class="sidebar-plan-button">⟳</button></div>
+                        <div class="sidebar-plan">Active Plan: <span></span><button class="sidebar-plan-button">⟳</button></div>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="bug">Bug Report…</button>

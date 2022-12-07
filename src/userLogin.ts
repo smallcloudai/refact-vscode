@@ -20,7 +20,7 @@ export async function login_message()
 export async function welcome_message()
 {
     // const header = "Welcome to Codify, please login to use our extension";
-    let selection = await vscode.window.showInformationMessage("Welcome to Codify, please login to start using our extension", "Login");
+    let selection = await vscode.window.showInformationMessage("Welcome to Codify!\nPress login to start.", "Login");
     if(selection === "Login") {
         vscode.commands.executeCommand('plugin-vscode.login');
     }
@@ -65,9 +65,8 @@ export function getApiKey(): string
 }
 
 
-export function generateTicket(context: any)
+export function generateTicket()
 {
-    const store = context.globalState;
     let token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
     return token;
 }
@@ -99,13 +98,13 @@ export async function login()
             let json: any = await result.json();
             if (json.retcode === "OK") {
                 apiKey = json.secret_key;
+                global.streamlined_login_ticket = "";
                 await vscode.workspace.getConfiguration().update('codify.apiKey', apiKey, vscode.ConfigurationTarget.Global);
                 usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
-                global.streamlined_login_ticket = "";
                 // fall through
             } else {
                 usageStats.report_success_or_failure(false, "recall (1)", recall_url, json, "");
-                return;
+                // fall through, maybe normal login will work
             }
         } catch (error) {
             usageStats.report_success_or_failure(false, "recall (2)", recall_url, error, "");
@@ -125,7 +124,7 @@ export async function login()
         let json: any = await result.json();
         if (json.retcode === "OK") {
             global.userLogged = json.account;
-            // "inference": "CLOUD"
+            global.streamlined_login_ticket = "";
             if (json.inference_url) {
                 fetchAPI.save_url_from_login(json.inference_url);
             }
@@ -134,6 +133,10 @@ export async function login()
             }
             if (global.panelProvider) {
                 global.panelProvider.login_success();
+                global.panelProvider.plan_update(json.inference);
+            }
+            if (json.inference === "DISABLED") {
+                fetchAPI.save_url_from_login("");
             }
             usageStats.report_success_or_failure(true, "login", login_url, "", "");
             inference_login_force_retry();
@@ -142,12 +145,20 @@ export async function login()
             return "";
         } else if (json.retcode === 'FAILED') {
             // Login failed, but the request was a success.
-            global.userLogged = "";
+            if (global.panelProvider) {
+                global.userLogged = "";
+                global.panelProvider.plan_update("");
+            }
             usageStats.report_success_or_failure(true, "login-failed", login_url, json.human_readable_message, "");
             return "";
         // } else if (json.retcode === 'MESSAGE') {
         //     account_message(json.human_readable_message, json.action, json.action_url);
         } else {
+            global.userLogged = "";
+            if (global.panelProvider) {
+                global.userLogged = "";
+                global.panelProvider.plan_update("");
+            }
             usageStats.report_success_or_failure(false, "login (2)", login_url, "unrecognized response", "");
             return "";
         }
@@ -208,6 +219,9 @@ export async function inference_login(): Promise<boolean>
         if (json.retcode === "OK") {
             usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
             _last_inference_login_cached_result = true;
+        } else if (json.detail) {
+            usageStats.report_success_or_failure(false, "inference_login", report_this_url, json.detail, "");
+            _last_inference_login_cached_result = false;
         } else {
             usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
             _last_inference_login_cached_result = false;

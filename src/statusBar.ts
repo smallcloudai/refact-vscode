@@ -68,14 +68,14 @@ export class StatusBarMenu {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = undefined;
             let msg: string = "";
-            if (this.last_model_name) {
-                msg += `Connection to server works well.\nLast used model:\n    ${this.last_model_name}`;
-            }
             if (this.last_url) {
+                msg += `⚡ ${this.last_url}`;
+            }
+            if (this.last_model_name) {
                 if (msg) {
                     msg += "\n";
                 }
-                msg += `Last used URL:\n    ${this.last_url}`;
+                msg += `🗒️ ${this.last_model_name}`;
             }
             if (this.language_name) {
                 if (msg) {
@@ -136,15 +136,6 @@ export class StatusBarMenu {
         this.inference_attempted = true;
         this.choose_color();
     }
-
-    // apiError(msg: string)
-    // {
-    //     global.menu.statusbarError(true);
-    //     global.userLogged = false;
-    //     if (msg) {
-    //         vscode.window.showErrorMessage(msg);
-    //     }
-    // }
 }
 
 

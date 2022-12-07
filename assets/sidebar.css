@@ -1,11 +1,11 @@
 body.vscode-light {
-	--color: #000; 
+	--color: #000;
     --secondary: rgba(0,0,0,0.5);
     --dark: rgba(0,0,0,0.7);
 }
 
 body.vscode-dark {
-	--color: #FFF; 
+	--color: #FFF;
     --secondary: rgba(255,255,255,0.5);
     --dark: rgba(255,255,255,0.7);
 }
@@ -118,7 +118,7 @@ body.vscode-light .presets-title {
     box-sizing: border-box;
     background-color: var(--vscode-sideBar-background) !important;
     padding: 0 20px 20px;
-    
+
 }
 #bug {
     font-size: 13px;
@@ -199,7 +199,7 @@ body.vscode-light #logout {
     margin-bottom: 5px;
     padding: 0 20px;
     width: 100%;
-    justify-content: center;
+    justify-content: left;
 }
 
 .sidebar-logged span {
@@ -209,21 +209,13 @@ body.vscode-light #logout {
     margin-left: 4px;
 }
 
-@media only screen and (max-width: 300px) {
-    .sidebar-logged {
-        flex-direction: column;
-    }
-    .sidebar-logged span {
-        margin-left: 0;
-    }
-}
 
 .sidebar-plan {
     display: none;
     margin-bottom: 5px;
     padding: 0 20px;
     width: 100%;
-    justify-content: center;
+    justify-content: left;
 }
 
 .sidebar-plan span {
@@ -246,4 +238,14 @@ body.vscode-light #logout {
     font-size: 22px;
     cursor: pointer;
     margin-left: 5px;
+}
+
+
+@media only screen and (max-width: 300px) {
+    .sidebar-logged {
+        flex-direction: column;
+    }
+    .sidebar-logged span {
+        margin-left: 0;
+    }
 }

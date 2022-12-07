@@ -90,6 +90,27 @@ async function code_lens_clicked(arg0: any)
 }
 
 
+async function login_clicked()
+{
+    let gotit = await userLogin.login();
+    if (gotit === "OK") {
+        return;
+    }
+    global.streamlined_login_ticket = userLogin.generateTicket();
+    await vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
+    let i = 0;
+    // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
+    let interval = setInterval(() => {
+        if (global.userLogged || i === 10) {
+            clearInterval(interval);
+            return;
+        }
+        userLogin.login();
+        i++;
+    }, 30000);
+}
+
+
 export function activate(context: vscode.ExtensionContext)
 {
     global.global_context = context;
@@ -154,20 +175,7 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(bugCommand);
 
-    let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
-        global.streamlined_login_ticket = userLogin.generateTicket(context);
-        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
-        let i = 0;
-        // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
-        let interval = setInterval(() => {
-            if (global.userLogged || i === 10) {
-                clearInterval(interval);
-                return;
-            }
-            userLogin.login();
-            i++;
-        }, 30000);
-    });
+    let login = vscode.commands.registerCommand('plugin-vscode.login', login_clicked);
 
     let stats_timer = setInterval(() => {
         usageStats.report_usage_stats();

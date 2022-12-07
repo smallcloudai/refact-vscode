@@ -9,7 +9,7 @@
 			vscode.postMessage({ type: "presetSelected", value: text });
 		}
 	});
-    
+
     const quickInput = document.querySelector("#quickinput");
 
     let listItems = document.querySelectorAll(".presets li");
@@ -57,7 +57,7 @@
             }
         }
 	});
-    
+
 
 	const settingsButton = document.querySelector("#settings");
 	settingsButton.addEventListener("click", () => {
@@ -132,6 +132,16 @@
                     plan.style.display = 'flex';
                 }
                 break;
+            case "updatePlan":
+                if (message.value) {
+                    let plan = document.querySelector('.sidebar-plan');
+                    document.querySelector('.sidebar-plan span').innerHTML = message.value;
+                    plan.style.display = 'flex';
+                } else {
+                    let plan = document.querySelector('.sidebar-plan');
+                    document.querySelector('.sidebar-plan span').innerHTML = '';
+                    plan.style.display = 'none';
+                }
             case "logout":
                     let login = document.querySelector('#login');
                     login.style.display = 'block';
