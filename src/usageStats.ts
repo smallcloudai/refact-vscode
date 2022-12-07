@@ -31,6 +31,8 @@ export async function report_success_or_failure(
     global.menu.statusbarSocketError(!positive, `${error_message}`);
     if (positive) {
         _global_last_useful_result_ts = Date.now();
+    }
+    if (userLogin.checkAuth()) {
         global.panelProvider.login_success();
     } else {
         global.panelProvider.logout_success();

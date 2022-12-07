@@ -158,33 +158,32 @@ export function activate(context: vscode.ExtensionContext)
         global.streamlined_login_ticket = userLogin.generateTicket(context);
         vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
         let i = 0;
-        // ten attempts to login, 10 seconds apart
+        // Ten attempts to login, 60 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
         let interval = setInterval(() => {
-            if (global.userLogged || i === 10) {
+            if (global.userLogged || i === 0) {
                 clearInterval(interval);
                 return;
             }
             userLogin.login();
             i++;
-        }, 10000);
+        }, 60000);
     });
 
     let stats_timer = setInterval(() => {
         usageStats.report_usage_stats();
         clearInterval(stats_timer);
-        // Yes we at SMC need to know quickly if there is any widespread problems people are having,
-        // please look inside there is really not much being sent.
+        // We at SMC need to know quickly if there is any widespread problems,
+        // please look inside: there is not much being sent.
         stats_timer = setInterval(() => {
             usageStats.report_usage_stats();
-        }, 86400000); // Change to 24 hours
-    }, 60000);
+        }, 86400000);
+    }, 60000); // Start with 1 minute, change to 24 hours
 
     context.subscriptions.push(login);
 
     let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
         context.globalState.update('codifyFirstRun', false);
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
-        vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', false,vscode.ConfigurationTarget.Global);
         global.userLogged = false;
         global.menu.choose_color();
         if(global.panelProvider) {
@@ -198,7 +197,6 @@ export function activate(context: vscode.ExtensionContext)
 
     setTimeout(() => {
         userLogin.login();
-        global.menu.choose_color();
     }, 100);
 }
 
@@ -289,7 +287,6 @@ export async function askIntent()
 }
 
 
-//
 export function deactivate(context: vscode.ExtensionContext)
 {
     global.global_context = undefined;
@@ -299,7 +296,7 @@ export function deactivate(context: vscode.ExtensionContext)
 export async function status_bar_clicked()
 {
     let editor = vscode.window.activeTextEditor;
-    if (!userLogin.checkAuth(global.global_context)) {
+    if (!userLogin.checkAuth()) {
         userLogin.login_message();
         return;
     }

@@ -102,6 +102,7 @@ export async function waitAllRequests()
     }
     if (usageStats.get_global_last_useful_result_ts() < Date.now() - 60 * 1000) {
         console.log(["disconnect http session, last useful result too old"]);
+        // this helps with broken sessions
         await fetchH2.disconnectAll();
     }
 }
@@ -129,12 +130,29 @@ export async function cancelAllRequests()
 }
 
 
-let global_inference_url_from_login = "";
+export let global_inference_url_from_login = "";
 
 
 export function save_url_from_login(url: string)
 {
     global_inference_url_from_login = url;
+}
+
+
+export function inference_url(addthis: string)
+{
+    let url_ = vscode.workspace.getConfiguration().get('codify.infurl');
+    let url: string;
+    if(typeof url_ !== 'string' || url_ === '') {
+        url = global_inference_url_from_login;
+    } else {
+        url = `${url_}`;
+    }
+    while (url.endsWith("/")) {
+        url = url.slice(0, -1);
+    }
+    url += addthis;
+    return url;
 }
 
 
@@ -152,13 +170,7 @@ export function fetch_api_promise(
     stop_tokens: string[],
 ): [Promise<fetchH2.Response>, ApiFields]
 {
-    let url_ = vscode.workspace.getConfiguration().get('codify.infurl');
-    let url: string;
-    if(typeof url_ !== 'string' || url_ === '') {
-        url = global_inference_url_from_login + "v1/contrast";
-    } else {
-        url = `${url_}`;
-    }
+    let url = inference_url("/v1/contrast");
     let model_ = vscode.workspace.getConfiguration().get('codify.model');
     let model: string;
     if (typeof model_ !== 'string' || model_ === '') {

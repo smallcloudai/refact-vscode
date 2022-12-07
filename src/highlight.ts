@@ -26,7 +26,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     sources[fn] = whole_doc;
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
-    let login: any = await userLogin.login();
+    let login = await userLogin.inference_login();
     if (!login) { return; }
     await fetchAPI.waitAllRequests();
     let request = new fetchAPI.PendingRequest(undefined, cancelToken);

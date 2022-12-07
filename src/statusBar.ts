@@ -14,6 +14,7 @@ import * as estate from './estate';
     language_name: string = "";
     last_url: string = "";
     last_model_name: string = "";
+    inference_attempted: boolean = false;
 
     createStatusBarBlock(context: vscode.ExtensionContext)
     {
@@ -32,13 +33,7 @@ import * as estate from './estate';
 
     choose_color()
     {
-        const apiKey = userLogin.getApiKey();
-        let guest = !(global.userLogged && apiKey);
-        if (guest) {
-            this.menu.text = `$(account) codify`;
-            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-            this.menu.tooltip = `Please login to Codify`;
-        } else if (this.disable_lang && this.language_name) {
+        if (this.disable_lang && this.language_name) {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = `Codify is not enabled for "${this.language_name}"`;
@@ -53,7 +48,7 @@ import * as estate from './estate';
         } else if (this.spinner) {
             this.menu.text = `$(sync~spin) codify`;
             this.menu.backgroundColor = undefined;
-        } else {
+        } else if (this.inference_attempted) {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = undefined;
             let msg: string = "";
@@ -73,6 +68,14 @@ import * as estate from './estate';
                 msg += `Click to disable Codify for "${this.language_name}"`;
             }
             this.menu.tooltip = msg;
+        } else if (!(global.userLogged && userLogin.getApiKey())) {
+            this.menu.text = `$(account) codify`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+            this.menu.tooltip = `Please login to Codify`;
+        } else {
+            this.menu.text = `$(codify-logo) codify`;
+            this.menu.backgroundColor = undefined;
+            this.menu.tooltip = "";
         }
     }
 
@@ -110,6 +113,7 @@ import * as estate from './estate';
     {
         this.last_url = url;
         this.last_model_name = model_name;
+        this.inference_attempted = true;
         this.choose_color();
     }
 

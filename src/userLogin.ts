@@ -46,7 +46,7 @@ export async function account_message(info: string, action: string, url: string)
 // }
 
 
-export function checkAuth(context: any)
+export function checkAuth()
 {
     let apiKey = getApiKey();
     let userName = global.userLogged;
@@ -55,11 +55,12 @@ export function checkAuth(context: any)
 }
 
 
-export function getApiKey()
+export function getApiKey(): string
 {
-    const apiKey = vscode.workspace.getConfiguration().get('codify.apiKey');
-    if(!apiKey) { return false; }
-    return apiKey;
+    const key = vscode.workspace.getConfiguration().get('codify.apiKey');
+    if (!key) { return ""; }
+    if (typeof key !== 'string') { return ""; }
+    return key;
 }
 
 
@@ -97,7 +98,7 @@ export async function login()
             let json: any = await result.json();
             if (json.retcode === "OK") {
                 apiKey = json.secret_key;
-                await vscode.workspace.getConfiguration().update('codify.apiKey', apiKey);
+                await vscode.workspace.getConfiguration().update('codify.apiKey', apiKey, vscode.ConfigurationTarget.Global);
                 usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
                 global.streamlined_login_ticket = "";
                 // fall through
@@ -120,14 +121,15 @@ export async function login()
         let req = new fetchH2.Request(login_url, init);
         let result = await fetchH2.fetch(req);
         let json: any = await result.json();
-        console.log(["login", result.status, json]);
         if (json.retcode === "OK") {
             global.userLogged = json.account;
+            // "inference": "CLOUD"
             fetchAPI.save_url_from_login(json.inference_url);
             if (global.panelProvider) {
                 global.panelProvider.login_success();
             }
             usageStats.report_success_or_failure(true, "login", login_url, "", "");
+            inference_login_force_retry();
         } else if (json.retcode === 'FAILED') {
             usageStats.report_success_or_failure(false, "login (1)", login_url, json.retcode, "");
             return "";
@@ -142,4 +144,67 @@ export async function login()
         return "";
     }
     return "OK";
+}
+
+
+let _last_inference_login_cached_result = false;
+let _last_inference_login_key = "";
+let _last_inference_login_ts = 0;
+
+
+export function inference_login_force_retry()
+{
+    _last_inference_login_ts = 0;
+}
+
+
+export async function inference_login(): Promise<boolean>
+{
+    let apiKey = getApiKey();
+    if (_last_inference_login_ts + 3600*1000 > Date.now() && _last_inference_login_key === apiKey && apiKey !== "") {
+        return _last_inference_login_cached_result;
+    }
+    let url = fetchAPI.inference_url("/v1/secret-key-activate");
+    if (!url) {
+        return false;
+    }
+    if (!apiKey) {
+        _last_inference_login_key = "";
+        _last_inference_login_ts = 0;
+        _last_inference_login_cached_result = false;
+        return _last_inference_login_cached_result;
+    }
+    let report_this_url = "private_url";
+    if (url.indexOf("smallcloud") > 0) {
+        report_this_url = url;
+    } // else might be private
+    let headers = {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + apiKey,
+    };
+    let init: any = {
+        method: "GET",
+        headers: headers,
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    };
+    try {
+        let req = new fetchH2.Request(url, init);
+        let result = await fetchH2.fetch(req);
+        let json: any = await result.json();
+        if (json.retcode === "OK") {
+            usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
+            _last_inference_login_cached_result = true;
+        } else {
+            usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
+            _last_inference_login_cached_result = false;
+        }
+    } catch (error) {
+        usageStats.report_success_or_failure(false, "inference_login", report_this_url, error, "");
+        _last_inference_login_cached_result = false;
+    }
+    _last_inference_login_key = apiKey;
+    _last_inference_login_ts = Date.now();
+    return _last_inference_login_cached_result;
 }

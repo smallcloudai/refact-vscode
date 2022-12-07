@@ -127,7 +127,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let sleep = 30;  // In a hope this request will be cancelled
             await new Promise(resolve => setTimeout(resolve, sleep));
         }
-        let login: any = await userLogin.login();
+        let login: any = await userLogin.inference_login();
         if (!login) { return ""; }
         await fetch.waitAllRequests();
         if (cancelToken.isCancellationRequested) {
