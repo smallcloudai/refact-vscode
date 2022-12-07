@@ -158,15 +158,15 @@ export function activate(context: vscode.ExtensionContext)
         global.streamlined_login_ticket = userLogin.generateTicket(context);
         vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
         let i = 0;
-        // Ten attempts to login, 60 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
+        // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
         let interval = setInterval(() => {
-            if (global.userLogged || i === 0) {
+            if (global.userLogged || i === 10) {
                 clearInterval(interval);
                 return;
             }
             userLogin.login();
             i++;
-        }, 60000);
+        }, 30000);
     });
 
     let stats_timer = setInterval(() => {

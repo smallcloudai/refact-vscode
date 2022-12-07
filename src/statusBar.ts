@@ -84,10 +84,10 @@ export class StatusBarMenu {
                 msg += `Click to disable Codify for "${this.language_name}"`;
             }
             this.menu.tooltip = msg;
-        } else if (!(global.userLogged && userLogin.getApiKey())) {
+        } else if (!userLogin.checkAuth()) { // condition here must be the same as in status_bar_clicked()
             this.menu.text = `$(account) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-            this.menu.tooltip = _website_message || `Please login to Codify`;
+            this.menu.tooltip = _website_message || `Click to login`;
         } else {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = undefined;

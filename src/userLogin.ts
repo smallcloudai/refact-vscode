@@ -9,7 +9,7 @@ import * as statusBar from "./statusBar";
 export async function login_message()
 {
     const header = "Please login";
-    let selection = await vscode.window.showInformationMessage("Please login to Codify", "Login");
+    let selection = await vscode.window.showInformationMessage("Click to login to Codify", "Login");
     if(selection === "Login") {
         vscode.commands.executeCommand('plugin-vscode.login');
     }
@@ -119,6 +119,7 @@ export async function login()
     const login_url = "https://www.smallcloud.ai/v1/login";
     headers.Authorization = `Bearer ${apiKey}`;
     try {
+        statusBar.set_website_message("");
         let req = new fetchH2.Request(login_url, init);
         let result = await fetchH2.fetch(req);
         let json: any = await result.json();
@@ -130,19 +131,22 @@ export async function login()
             }
             if (json.codify_message) {
                 statusBar.set_website_message(json.codify_message);
-            } else {
-                statusBar.set_website_message("");
             }
             if (global.panelProvider) {
                 global.panelProvider.login_success();
             }
             usageStats.report_success_or_failure(true, "login", login_url, "", "");
             inference_login_force_retry();
-        } else if (json.retcode === 'FAILED') {
-            usageStats.report_success_or_failure(false, "login (1)", login_url, json.retcode, "");
+        } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("rate limit")) {
+            usageStats.report_success_or_failure(false, "login-failed", login_url, json.human_readable_message, "");
             return "";
-        } else if (json.retcode === 'MESSAGE') {
-            account_message(json.human_readable_message, json.action, json.action_url);
+        } else if (json.retcode === 'FAILED') {
+            // Login failed, but the request was a success.
+            global.userLogged = "";
+            usageStats.report_success_or_failure(true, "login-failed", login_url, json.human_readable_message, "");
+            return "";
+        // } else if (json.retcode === 'MESSAGE') {
+        //     account_message(json.human_readable_message, json.action, json.action_url);
         } else {
             usageStats.report_success_or_failure(false, "login (2)", login_url, "unrecognized response", "");
             return "";
