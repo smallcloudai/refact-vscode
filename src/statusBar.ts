@@ -4,7 +4,23 @@ import * as userLogin from "./userLogin";
 import * as estate from './estate';
 
 
- export class StatusBarMenu {
+let _website_message = "";
+let _inference_message = "";
+
+
+export function set_website_message(msg: string)
+{
+    _website_message = msg;
+}
+
+
+export function set_inference_message(msg: string)
+{
+    _inference_message = msg;
+}
+
+
+export class StatusBarMenu {
     menu: any = {};
     command: string = 'plugin-vscode.statusBarClick';
     socketerror: boolean = false;
@@ -71,11 +87,11 @@ import * as estate from './estate';
         } else if (!(global.userLogged && userLogin.getApiKey())) {
             this.menu.text = `$(account) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-            this.menu.tooltip = `Please login to Codify`;
+            this.menu.tooltip = _website_message || `Please login to Codify`;
         } else {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = undefined;
-            this.menu.tooltip = "";
+            this.menu.tooltip = _website_message || _inference_message;
         }
     }
 
@@ -92,7 +108,11 @@ import * as estate from './estate';
             if (detail.length > 100) {
                 detail = detail.substring(0, 100) + "...";
             }
-            this.socketerror_msg = `${detail}`;
+            if (detail !== "{}") {
+                this.socketerror_msg = `${detail}`;
+            } else {
+                this.socketerror_msg = "";
+            }
         } else {
             this.socketerror_msg = "";
         }

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
 import * as usageStats from "./usageStats";
+import * as statusBar from "./statusBar";
 
 
 export async function login_message()
@@ -126,6 +127,11 @@ export async function login()
             // "inference": "CLOUD"
             if (json.inference_url) {
                 fetchAPI.save_url_from_login(json.inference_url);
+            }
+            if (json.codify_message) {
+                statusBar.set_website_message(json.codify_message);
+            } else {
+                statusBar.set_website_message("");
             }
             if (global.panelProvider) {
                 global.panelProvider.login_success();

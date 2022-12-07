@@ -28,7 +28,7 @@ export async function report_success_or_failure(
     if (model_name) {
         global.menu.url_and_model_worked(related_url, model_name);
     }
-    global.menu.statusbarSocketError(!positive, `${error_message}`);
+    global.menu.statusbarSocketError(!positive, error_message);
     if (positive) {
         _global_last_useful_result_ts = Date.now();
     }
