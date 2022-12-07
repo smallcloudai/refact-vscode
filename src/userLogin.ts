@@ -73,61 +73,72 @@ export function generateTicket(context: any)
 
 export async function login()
 {
-    const apiKey = getApiKey();
-    if (global.userLogged && apiKey) {
+    let apiKey = getApiKey();
+    if (global.userLogged && getApiKey()) {
         return "OK";
     }
-    const url = "https://www.smallcloud.ai/v1/api-activate";
     let headers = {
         "Content-Type": "application/json",
         "Authorization": "",
     };
-    const ticket = global.userTicket;
-    if (ticket && !global.userLogged) {
-        headers.Authorization = `codify-${ticket}`;
-        // global.userTicket = "";
-    } else {
-        if (!global.userLogged && apiKey) {
-            headers.Authorization = `Bearer ${apiKey}`;
-        } else {
-            return "";
-        }
-    }
-    let req = new fetchH2.Request(url, {
+    let init: any = {
         method: "GET",
         headers: headers,
         redirect: "follow",
         cache: "no-cache",
         referrer: "no-referrer",
-    });
-    console.log(["LOGIN", headers.Authorization]);
+    };
+    if (global.streamlined_login_ticket && !global.userLogged) {
+        const recall_url = "https://www.smallcloud.ai/v1/streamlined-login-recall-ticket";
+        headers.Authorization = `codify-${global.streamlined_login_ticket}`;
+        try {
+            let req = new fetchH2.Request(recall_url, init);
+            let result = await fetchH2.fetch(req);
+            let json: any = await result.json();
+            if (json.retcode === "OK") {
+                apiKey = json.secret_key;
+                await vscode.workspace.getConfiguration().update('codify.apiKey', apiKey);
+                usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
+                global.streamlined_login_ticket = "";
+                // fall through
+            } else {
+                usageStats.report_success_or_failure(false, "recall (1)", recall_url, json, "");
+                return;
+            }
+        } catch (error) {
+            usageStats.report_success_or_failure(false, "recall (2)", recall_url, error, "");
+            return;
+        }
+    }
+    if (!apiKey) {
+        // wait until user clicks the login button
+        return;
+    }
+    const login_url = "https://www.smallcloud.ai/v1/login";
+    headers.Authorization = `Bearer ${apiKey}`;
     try {
+        let req = new fetchH2.Request(login_url, init);
         let result = await fetchH2.fetch(req);
         let json: any = await result.json();
         console.log(["login", result.status, json]);
-        if (json.retcode === "TICKET-SAVEKEY") {
-            await vscode.workspace.getConfiguration().update('codify.apiKey', json.secret_api_key, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('codify.personalizeAndImprove', json.fine_tune, vscode.ConfigurationTarget.Global);
-        }
-        if (json.retcode === "TICKET-SAVEKEY" || json.retcode === "OK") {
+        if (json.retcode === "OK") {
             global.userLogged = json.account;
-            global.userTicket = "";
             fetchAPI.save_url_from_login(json.inference_url);
-            if(global.panelProvider) {
+            if (global.panelProvider) {
                 global.panelProvider.login_success();
             }
-            usageStats.report_success_or_failure(true, "login", url, "", "");
+            usageStats.report_success_or_failure(true, "login", login_url, "", "");
         } else if (json.retcode === 'FAILED') {
-            usageStats.report_success_or_failure(false, "login (1)", url, json.retcode, "");
+            usageStats.report_success_or_failure(false, "login (1)", login_url, json.retcode, "");
             return "";
         } else if (json.retcode === 'MESSAGE') {
             account_message(json.human_readable_message, json.action, json.action_url);
         } else {
-            usageStats.report_success_or_failure(false, "login (2)", url, "unrecognized response", "");
+            usageStats.report_success_or_failure(false, "login (2)", login_url, "unrecognized response", "");
             return "";
         }
     } catch (error) {
-        usageStats.report_success_or_failure(false, "login (3)", url, error, "");
+        usageStats.report_success_or_failure(false, "login (3)", login_url, error, "");
         return "";
     }
     return "OK";

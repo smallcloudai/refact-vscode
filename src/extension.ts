@@ -21,7 +21,7 @@ declare global {
     var menu: statusBar.StatusBarMenu;
     var panelProvider: any;
     var settingsPage: any;
-    var userTicket: string;
+    var streamlined_login_ticket: string;
     var userLogged: any;
     var modelFunction: string;
     var lastEditor: any;
@@ -155,8 +155,8 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(bugCommand);
 
     let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
-        global.userTicket = userLogin.generateTicket(context);
-        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.userTicket}`));
+        global.streamlined_login_ticket = userLogin.generateTicket(context);
+        vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
         let i = 0;
         // ten attempts to login, 10 seconds apart
         let interval = setInterval(() => {
