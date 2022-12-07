@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import * as highlight from "./highlight";
 import * as estate from "./estate";
 import * as interactiveDiff from "./interactiveDiff";
+import * as userLogin from "./userLogin";
 
 
 class PanelWebview implements vscode.WebviewViewProvider {
@@ -68,6 +69,11 @@ class PanelWebview implements vscode.WebviewViewProvider {
                 }
                 case "openBug": {
                     vscode.commands.executeCommand("plugin-vscode.openBug");
+                    break;
+                }
+                case "refreshPlan": {
+                    global.userLogged = "";
+                    userLogin.login();
                     break;
                 }
 				case "openSettings": {
@@ -188,6 +194,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     </div>
                     <div class="sidebar-controls">
                         <div class="sidebar-logged">Logged as <span></span></div>
+                        <div class="sidebar-plan">Active Plan: <span>Cloud Inference</span><button class="sidebar-plan-button">⟳</button></div>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="bug">Bug Report…</button>

@@ -217,3 +217,33 @@ body.vscode-light #logout {
         margin-left: 0;
     }
 }
+
+.sidebar-plan {
+    margin-bottom: 5px;
+    padding: 0 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.sidebar-plan span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 4px;
+}
+
+.sidebar-plan-button {
+    background-color: transparent !important;
+    height: 16px;
+    width: 16px;
+    display: inline-flex;
+    border: 0;
+    color: var(--secondary);
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 22px;
+    cursor: pointer;
+    margin-left: 5px;
+}

@@ -79,6 +79,11 @@
 		vscode.postMessage({ type: "login" });
 	});
 
+    const refreshButton = document.querySelector(".sidebar-plan-button");
+    refreshButton.addEventListener("click", () => {
+		vscode.postMessage({ type: "refreshPlan" });
+	});
+
 	window.addEventListener("message", (event) => {
 		const message = event.data;
 		switch (message.command) {
