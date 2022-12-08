@@ -106,6 +106,9 @@ class PanelWebview implements vscode.WebviewViewProvider {
     }
 
 	public updateQuery(intent: string) {
+        if (!this._view) {
+            return;
+        }
 		this._view!.webview.postMessage({ command: "updateQuery", value: intent });
 	}
 
@@ -130,10 +133,16 @@ class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     public plan_update(txt: string) {
+        if (!this._view) {
+            return;
+        }
 		this._view!.webview.postMessage({ command: "updatePlan", value: txt });
 	}
 
 	public addHistory(intent: string) {
+        if (!this._view) {
+            return;
+        }
 		this._history.push(intent);
 		this._view!.webview.postMessage({
 			command: "updateHistory",

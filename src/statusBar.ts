@@ -148,7 +148,7 @@ function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
     }
     let document = editor.document;
     global.lastEditor = document;
-    let language = estate.lang_name(document);
+    let language = document.languageId;
     if (!estate.is_lang_enabled(document)) {
         global.menu.statusbarLang(true, language);
     } else {

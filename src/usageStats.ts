@@ -20,7 +20,11 @@ export async function report_success_or_failure(
     model_name: string | undefined,
 ) {
     if (typeof error_message !== "string") {
-        error_message = JSON.stringify(error_message);
+        if (error_message instanceof Error) {
+            error_message = error_message.message;
+        } else {
+            error_message = JSON.stringify(error_message);
+        }
     }
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";

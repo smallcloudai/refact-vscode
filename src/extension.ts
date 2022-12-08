@@ -10,7 +10,6 @@ import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 import * as fetchAPI from "./fetchAPI";
 import * as usageStats from "./usageStats";
-import * as langDB from "./langDB";
 import * as userLogin from "./userLogin";
 import * as usabilityHints from "./usabilityHints";
 import { Mode } from "./estate";
@@ -325,8 +324,8 @@ export async function status_bar_clicked()
         // - file bug report
         return;
     }
-    let lang = langDB.language_from_filename(editor.document.fileName);
-    let enabled = langDB.is_language_enabled(lang);
+    let lang = editor.document.languageId;
+    let enabled = estate.is_lang_enabled(editor.document);
     if (enabled) {
         await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
         console.log(["disable", lang]);
