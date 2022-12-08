@@ -49,7 +49,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let multiline = left_of_cursor.replace(/\s/g, "").length === 0;
         let cursor = document.offsetAt(position);
         let whole_doc = document.getText();
-        if (whole_doc.length > 180*1024) { // Too big, this is <1% of all files, everything becomes too big: network traffic, cache
+        if (whole_doc.length > 180*1024) { // Too big (180k is ~0.2% of all files on our dataset) everything becomes heavy: network traffic, cache, cpu
             return [];
         }
         if (whole_doc.length > 0 && whole_doc[whole_doc.length - 1] !== "\n") {
