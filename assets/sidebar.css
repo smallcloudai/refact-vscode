@@ -137,6 +137,9 @@ body.vscode-light #bug {
     color: var(--secondary);
     border-color: var(--secondary);
 }
+#bug span {
+    font-size: 10px !important;
+}
 #settings {
     font-size: 13px;
     border: 1px solid var(--secondary);

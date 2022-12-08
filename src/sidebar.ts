@@ -68,7 +68,8 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "openBug": {
-                    vscode.commands.executeCommand("plugin-vscode.openBug");
+                    vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/account`));
+                    // vscode.commands.executeCommand("plugin-vscode.openBug");
                     break;
                 }
                 case "refreshPlan": {
@@ -201,7 +202,7 @@ class PanelWebview implements vscode.WebviewViewProvider {
                         <div class="sidebar-plan">Active Plan: <span></span><button class="sidebar-plan-button">⟳</button></div>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
-                        <button tabindex="-1" id="bug">Bug Report…</button>
+                        <button tabindex="-1" id="bug"><span>🔗</span> Your account...</button>
                         <button tabindex="-1" id="settings">Settings</button>
                     </div>
                 </div>
