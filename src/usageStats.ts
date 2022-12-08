@@ -36,6 +36,7 @@ export async function report_success_or_failure(
         global.panelProvider.login_success();
     } else {
         global.panelProvider.logout_success();
+        global.menu.url_and_model_worked("", "");
     }
     let msg = `${positive ? "1" : "0"} ${scope} ${related_url} "${error_message}"`;
     // Typical msg:

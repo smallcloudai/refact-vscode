@@ -133,7 +133,7 @@ export class StatusBarMenu {
     {
         this.last_url = url;
         this.last_model_name = model_name;
-        this.inference_attempted = true;
+        this.inference_attempted = url !== "";
         this.choose_color();
     }
 }
