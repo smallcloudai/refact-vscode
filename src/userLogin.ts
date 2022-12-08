@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
 import * as usageStats from "./usageStats";
+import * as usabilityHints from "./usabilityHints";
 import * as statusBar from "./statusBar";
 
 
@@ -19,7 +20,6 @@ export async function login_message()
 
 export async function welcome_message()
 {
-    // const header = "Welcome to Codify, please login to use our extension";
     let selection = await vscode.window.showInformationMessage("Welcome to Codify!\nPress login to start.", "Login");
     if(selection === "Login") {
         vscode.commands.executeCommand('plugin-vscode.login');
@@ -131,6 +131,9 @@ export async function login()
             if (json.inference === "DISABLED") {
                 fetchAPI.save_url_from_login("");
             }
+            if (json.login_message) {
+                await usabilityHints.show_message_from_server("LoginServer", json.login_message);
+            }
             usageStats.report_success_or_failure(true, "login", login_url, "", "");
             inference_login_force_retry();
         } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("rate limit")) {
@@ -211,6 +214,9 @@ export async function inference_login(): Promise<boolean>
         let json: any = await result.json();
         if (json.retcode === "OK") {
             usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
+            if (json.inference_message) {
+                usabilityHints.show_message_from_server("InferenceServer", json.inference_message);
+            }
             _last_inference_login_cached_result = true;
         } else if (json.detail) {
             usageStats.report_success_or_failure(false, "inference_login", report_this_url, json.detail, "");

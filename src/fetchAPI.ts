@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
 import * as usageStats from "./usageStats";
+import * as usabilityHints from "./usabilityHints";
 
 
 let globalSeq = 100;
@@ -51,6 +52,11 @@ export class PendingRequest {
             h2stream.then((result_stream) => {
                 let json = result_stream.json();
                 json.then((json_arrived) => {
+                    if (json_arrived.inference_message) {
+                        // It's async, potentially two messages might appear if requests are fast, but we don't launch new requests
+                        // until the previous one is finished, should be fine...
+                        usabilityHints.show_message_from_server("InferenceServer", json_arrived.inference_message);
+                    }
                     if (look_for_common_errors(json_arrived, api_fields)) {
                         reject();
                         return;

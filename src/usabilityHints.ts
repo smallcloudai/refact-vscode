@@ -12,7 +12,7 @@ async function _countdown(key: string, start: number)
         return false;
     }
     let context = context_ as vscode.ExtensionContext;
-    let countdown_ = await context.globalState.get<string>(key);
+    let countdown_ = context.globalState.get<string>(key);
     let countdown: number;
     if (countdown_ === undefined) {
         countdown = start;
@@ -34,12 +34,10 @@ async function _countdown(key: string, start: number)
 }
 
 
-const hint1_key = "codify.countdownHint1";
-
 
 export async function hint_after_successful_completion()
 {
-    let fire = await _countdown(hint1_key, 5);
+    let fire = await _countdown("codify.countdownHint1", 5);
     if (fire) {
         await show_hint1();
     }
@@ -53,18 +51,14 @@ async function show_hint1()
         "Good examples:  " +
         "convert to list comprehension,  " +
         "translate to python,  " +
+        "add docstring,  " +
         "use numpy.";
     const options: vscode.MessageOptions = {
         modal: false,
         detail: "Hello world",
     };
-    await vscode.window.showInformationMessage(header, options, "OK").then(hint_button_clicked);
+    let selection = await vscode.window.showInformationMessage(header, options, "OK");
     // , "No more hints!"
-}
-
-
-async function hint_button_clicked(selection: string | undefined)
-{
     let context_: vscode.ExtensionContext | undefined = global.global_context;
     if (context_ === undefined) {
         return;
@@ -74,4 +68,27 @@ async function hint_button_clicked(selection: string | undefined)
         console.log("OK");
     // } else if (selection === "No more hints!") {
     }
+}
+
+
+export async function show_message_from_server(kind_of_message: string, msg: string)
+{
+    // Show a message from the server, but only once.
+    let context_: vscode.ExtensionContext | undefined = global.global_context;
+    if (context_ === undefined) {
+        return false;
+    }
+    let context = context_ as vscode.ExtensionContext;
+    let already_seen = context.globalState.get<string>(`codify.servermsg${kind_of_message}`);
+    if (already_seen === undefined) {
+        already_seen = "";
+    }
+    if (already_seen === msg) {
+        return false;
+    }
+    if (msg === "") {
+        return false;
+    }
+    await context.globalState.update(`codify.servermsg${kind_of_message}`, msg);
+    let selection = await vscode.window.showInformationMessage(msg, "OK");
 }
