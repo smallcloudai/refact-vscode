@@ -15,8 +15,8 @@ class CacheEntry {
     }
 };
 
-const CACHE_STORE = 30;
-const CACHE_AHEAD = 10;
+const CACHE_STORE = 160;
+const CACHE_AHEAD = 50;
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -46,15 +46,18 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!right_of_cursor_has_only_special_chars) {
             return [];
         }
-        let left_all_spaces = left_of_cursor.replace(/\s/g, "").length === 0;
+        let multiline = left_of_cursor.replace(/\s/g, "").length === 0;
         let cursor = document.offsetAt(position);
         let whole_doc = document.getText();
+        if (whole_doc.length > 180*1024) { // Too big, this is <1% of all files, everything becomes too big: network traffic, cache
+            return [];
+        }
         if (whole_doc.length > 0 && whole_doc[whole_doc.length - 1] !== "\n") {
             whole_doc += "\n";
         }
         let text_left = whole_doc.substring(0, cursor);
         let deleted_spaces_left = 0;
-        while (left_all_spaces && text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
+        while (multiline && text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
             text_left = text_left.substring(0, text_left.length - 1);
             cursor -= 1;
             deleted_spaces_left += 1;
@@ -72,7 +75,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             file_name,
             whole_doc,
             cursor,
-            left_all_spaces
+            multiline
         );
 
         let command = {
@@ -222,7 +225,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!fail) {
             fail = completion.length === 0;
         }
-        for (let i = 0; i < Math.min(completion.length, CACHE_AHEAD); i++) {
+        for (let i = 0; i < Math.min(completion.length + 1, CACHE_AHEAD); i++) {
             let more_left = left + completion.substring(0, i);
             this.cache.set(more_left, {
                 completion: completion.substring(i),
