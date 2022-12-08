@@ -2,7 +2,6 @@
 import * as vscode from 'vscode';
 import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
-import * as langDB from "./langDB";
 
 
 export let global_intent: string = "Fix";
