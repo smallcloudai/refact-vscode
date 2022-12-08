@@ -37,9 +37,13 @@ export async function report_success_or_failure(
         _global_last_useful_result_ts = Date.now();
     }
     if (userLogin.checkAuth()) {
-        global.panelProvider.login_success();
+        if (global.side_panel) {
+            global.side_panel.update_webview();
+        }
     } else {
-        global.panelProvider.logout_success();
+        if (global.side_panel) {
+            global.side_panel.update_webview();
+        }
         global.menu.url_and_model_worked("", "");
     }
     let msg = `${positive ? "1" : "0"} ${scope} ${related_url} "${error_message}"`;

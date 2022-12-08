@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as highlight from "./highlight";
 import * as estate from "./estate";
-import * as interactiveDiff from "./interactiveDiff";
 import * as userLogin from "./userLogin";
 
 
-class PanelWebview implements vscode.WebviewViewProvider {
+export class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
 	_history: string[] = [];
 
@@ -25,12 +23,14 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		};
 
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
-        if(global.userLogged) {
-            this.login_success();
-        }
-        if(!global.userLogged) {
-            this.logout_success();
-        }
+
+        this.update_webview();
+        // if(global.userLogged) {
+        //     this.login_success();
+        // }
+        // if(!global.userLogged) {
+        //     this.logout_success();
+        // }
 
         vscode.commands.registerCommand('workbench.action.focusSideBar',  () => {
             webviewView.webview.postMessage({ command: "focus" });
@@ -44,21 +44,21 @@ class PanelWebview implements vscode.WebviewViewProvider {
 						return;
 					}
 					// vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
-					this.addHistory(data.value);
+					// this.addHistory(data.value);
 					estate.saveIntent(data.value);
-                    this.presetIntent(data.value);
+                    // this.presetIntent(data.value);
 					break;
 				}
-				case "quickInput": {
-					let editor = vscode.window.activeTextEditor;
-					if (!editor) {
-						return;
-					}
-					this.addHistory(data.value);
-					estate.saveIntent(data.value);
-                    this.presetIntent(data.value);
-					break;
-				}
+				// case "quickInput": {
+				// 	let editor = vscode.window.activeTextEditor;
+				// 	if (!editor) {
+				// 		return;
+				// 	}
+				// 	// this.addHistory(data.value);
+				// 	estate.saveIntent(data.value);
+                //     // this.presetIntent(data.value);
+				// 	break;
+				// }
                 case "login": {
                     vscode.commands.executeCommand('plugin-vscode.login');
                     break;
@@ -67,13 +67,14 @@ class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand("plugin-vscode.logout");
                     break;
                 }
-                case "openBug": {
+                case "js2ts_goto_profile": {
                     vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/account`));
-                    // vscode.commands.executeCommand("plugin-vscode.openBug");
                     break;
                 }
                 case "refreshPlan": {
-                    global.userLogged = "";
+                    global.user_logged_in = "";
+                    global.user_active_plan = "";
+                    this.update_webview();
                     userLogin.login();
                     break;
                 }
@@ -84,71 +85,84 @@ class PanelWebview implements vscode.WebviewViewProvider {
 		});
 	}
 
-    public async presetIntent(intent: string) {
-        let editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return;
-        }
-        let selection = editor.selection;
-        let selectionEmpty = selection.isEmpty;
-
-        if (selectionEmpty) {
-            if (intent) {
-                highlight.runHighlight(editor, intent);
-            }
-        } else {
-            if (intent) {
-                estate.saveIntent(intent);
-                editor.selection = new vscode.Selection(selection.start, selection.start);
-                interactiveDiff.queryDiff(editor, selection, "diff-selection");
-            }
-        }
-    }
-
-	public updateQuery(intent: string) {
-        if (!this._view) {
-            return;
-        }
-		this._view!.webview.postMessage({ command: "updateQuery", value: intent });
-	}
-
-    public logout_success() {
-        if (!this._view) {
-            return;
-        }
-        this._view!.webview.postMessage({
-			command: "logout"
-		});
-    }
-
-    public login_success()
+    public update_webview()
     {
         if (!this._view) {
             return;
         }
         this._view!.webview.postMessage({
-			command: "login",
-            value: global.userLogged
-		});
+            command: "ts2web",
+            ts2web_user: global.user_logged_in,
+            ts2web_plan: global.user_active_plan,
+        });
     }
 
-    public plan_update(txt: string) {
-        if (!this._view) {
-            return;
-        }
-		this._view!.webview.postMessage({ command: "updatePlan", value: txt });
-	}
 
-	public addHistory(intent: string) {
-        if (!this._view) {
-            return;
-        }
-		this._history.push(intent);
-		this._view!.webview.postMessage({
-			command: "updateHistory",
-			value: this._history,
-		});
-	}
+    // public async presetIntent(intent: string) {
+    //     let editor = vscode.window.activeTextEditor;
+    //     if (!editor) {
+    //         return;
+    //     }
+    //     let selection = editor.selection;
+    //     let selectionEmpty = selection.isEmpty;
+
+    //     if (selectionEmpty) {
+    //         if (intent) {
+    //             highlight.runHighlight(editor, intent);
+    //         }
+    //     } else {
+    //         if (intent) {
+    //             estate.saveIntent(intent);
+    //             editor.selection = new vscode.Selection(selection.start, selection.start);
+    //             interactiveDiff.queryDiff(editor, selection, "diff-selection");
+    //         }
+    //     }
+    // }
+
+	// public updateQuery(intent: string) {
+    //     if (!this._view) {
+    //         return;
+    //     }
+	// 	this._view!.webview.postMessage({ command: "updateQuery", value: intent });
+	// }
+
+    // public logout_success() {
+    //     if (!this._view) {
+    //         return;
+    //     }
+    //     this._view!.webview.postMessage({
+	// 		command: "logout"
+	// 	});
+    // }
+
+    // public login_success()
+    // {
+    //     if (!this._view) {
+    //         return;
+    //     }
+    //     this._view!.webview.postMessage({
+	// 		command: "login",
+    //         value: global.userLogged
+	// 	});
+    // }
+
+    // public plan_update(txt: string) {
+    //     if (!this._view) {
+    //         return;
+    //     }
+	// 	this._view!.webview.postMessage({ command: "updatePlan", value: txt });
+	// }
+
+	// public addHistory(intent: string) {
+    //     if (!this._view) {
+    //         return;
+    //     }
+	// 	this._history.push(intent);
+	// 	this._view!.webview.postMessage({
+	// 		command: "updateHistory",
+	// 		value: this._history,
+	// 	});
+	// }
 
 	private _getHtmlForWebview(webview: vscode.Webview) {
 		const scriptUri = webview.asWebviewUri(
@@ -176,42 +190,21 @@ class PanelWebview implements vscode.WebviewViewProvider {
 			</head>
 			<body>
                 <div class="sidebar">
-                    <div id="quickbar">
-                        <input tabindex="0" type="text" name="quickinput" id="quickinput" value="${estate.global_intent}">
-                        <button tabindex="1" id="quicksubmit">⏎</button>
-                    </div>
                     <div id="sidebar">
-                        <h3 class="presets-title">Works Well</h3>
+                        <h3 class="presets-title">Select & refactor: Press F1</h3>
                         <ul class="presets links-menu">
                             <li tabindex="2">Add type hints</li>
                             <li tabindex="3">Remove type hints</li>
                             <li tabindex="4">Convert to list comprehension</li>
                             <li tabindex="5">Add docstrings</li>
-                            <li tabindex="6">Convert dict to class</li>
-                            <li tabindex="7">Fix typos</li>
-                            <li tabindex="8">Fix bugs</li>
-                        </ul>
-                        <h3 class="presets-title">Ideas</h3>
-                        <ul class="presets links-menu">
-                            <li tabindex="9">Fix unclear names</li>
-                            <li tabindex="10">Make variables shorter</li>
-                            <li tabindex="11">Make code shorter</li>
-                            <li tabindex="12">Improve performance</li>
-                            <li tabindex="13">Code cleanup</li>
-                            <li tabindex="14">Make formatting consistent</li>
-                            <li tabindex="15">Remove python 2 support</li>
-                            <li tabindex="16">Convert to numpy</li>
-                        </ul>
-                        <h3 class="history-title">History</h3>
-                        <ul class="history links-menu">
                         </ul>
                     </div>
                     <div class="sidebar-controls">
-                        <div class="sidebar-logged">Logged as <span></span></div>
+                        <div class="sidebar-logged">Account: <span></span></div>
                         <div class="sidebar-plan">Active Plan: <span></span><button class="sidebar-plan-button">⟳</button></div>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
-                        <button tabindex="-1" id="bug"><span>🔗</span> Your account...</button>
+                        <button tabindex="-1" id="profile"><span>🔗</span> Your Account...</button>
                         <button tabindex="-1" id="settings">Settings</button>
                     </div>
                 </div>

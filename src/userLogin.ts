@@ -43,8 +43,7 @@ export async function account_message(info: string, action: string, url: string)
 export function checkAuth()
 {
     let apiKey = getApiKey();
-    let userName = global.userLogged;
-    if (!userName || !apiKey) { return false; }
+    if (!global.user_logged_in || !apiKey) { return false; }
     return true;
 }
 
@@ -68,7 +67,7 @@ export function generateTicket()
 export async function login()
 {
     let apiKey = getApiKey();
-    if (global.userLogged && getApiKey()) {
+    if (global.user_logged_in && getApiKey()) {
         return "OK";
     }
     let headers = {
@@ -82,7 +81,7 @@ export async function login()
         cache: "no-cache",
         referrer: "no-referrer",
     };
-    if (global.streamlined_login_ticket && !global.userLogged) {
+    if (global.streamlined_login_ticket && !global.user_logged_in) {
         const recall_url = "https://www.smallcloud.ai/v1/streamlined-login-recall-ticket";
         headers.Authorization = `codify-${global.streamlined_login_ticket}`;
         try {
@@ -116,7 +115,7 @@ export async function login()
         let result = await fetchH2.fetch(req);
         let json: any = await result.json();
         if (json.retcode === "OK") {
-            global.userLogged = json.account;
+            global.user_logged_in = json.account;
             global.streamlined_login_ticket = "";
             if (json.inference_url) {
                 fetchAPI.save_url_from_login(json.inference_url);
@@ -124,9 +123,9 @@ export async function login()
             if (json.codify_message) {
                 statusBar.set_website_message(json.codify_message);
             }
-            if (global.panelProvider) {
-                global.panelProvider.login_success();
-                global.panelProvider.plan_update(json.inference);
+            global.user_active_plan = json.inference;
+            if (global.side_panel) {
+                global.side_panel.update_webview();
             }
             if (json.inference === "DISABLED") {
                 fetchAPI.save_url_from_login("");
@@ -141,19 +140,18 @@ export async function login()
             return "";
         } else if (json.retcode === 'FAILED') {
             // Login failed, but the request was a success.
-            if (global.panelProvider) {
-                global.userLogged = "";
-                global.panelProvider.plan_update("");
+            global.user_logged_in = "";
+            global.user_active_plan = "";
+            if (global.side_panel) {
+                global.side_panel.update_webview();
             }
             usageStats.report_success_or_failure(true, "login-failed", login_url, json.human_readable_message, "");
             return "";
-        // } else if (json.retcode === 'MESSAGE') {
-        //     account_message(json.human_readable_message, json.action, json.action_url);
         } else {
-            global.userLogged = "";
-            if (global.panelProvider) {
-                global.userLogged = "";
-                global.panelProvider.plan_update("");
+            global.user_logged_in = "";
+            global.user_active_plan = "";
+            if (global.side_panel) {
+                global.side_panel.update_webview();
             }
             usageStats.report_success_or_failure(false, "login (2)", login_url, "unrecognized response", "");
             return "";

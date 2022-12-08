@@ -302,7 +302,6 @@ export async function report_to_mothership(
         "cursor1": cursor_pos1,
         "ponder_time_ms": Math.round(Date.now() - arrived_ts),
     });
-    global.modelFunction = functionName;
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,

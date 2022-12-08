@@ -11,21 +11,18 @@ import * as estate from "./estate";
 import * as fetchAPI from "./fetchAPI";
 import * as usageStats from "./usageStats";
 import * as userLogin from "./userLogin";
+import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import { Mode } from "./estate";
-import PanelWebview from "./sidebar";
-import BugPage from "./bug";
 
 
 declare global {
     var menu: statusBar.StatusBarMenu;
-    var panelProvider: any;
-    var settingsPage: any;
+    var side_panel: sidebar.PanelWebview|undefined;
     var streamlined_login_ticket: string;
-    var userLogged: any;
-    var modelFunction: string;
-    var lastEditor: any;
-    var codeLensProvider: codeLens.LensProvider|undefined;
+    var user_logged_in: string;
+    var user_active_plan: string;
+    // var code_lens_provider: codeLens.LensProvider|undefined;
     var global_context: vscode.ExtensionContext|undefined;
 }
 
@@ -101,7 +98,7 @@ async function login_clicked()
     let i = 0;
     // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
     let interval = setInterval(() => {
-        if (global.userLogged || i === 10) {
+        if (global.user_logged_in || i === 10) {
             clearInterval(interval);
             return;
         }
@@ -164,10 +161,10 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable8);
     context.subscriptions.push(...disposables);
 
-    global.panelProvider = new PanelWebview(context);
+    global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
         'codify-presets',
-        global.panelProvider,
+        global.side_panel,
         {webviewOptions: {retainContextWhenHidden: true}}
     );
     context.subscriptions.push(view);
@@ -176,11 +173,6 @@ export function activate(context: vscode.ExtensionContext)
         vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.codify' );
     });
     context.subscriptions.push(settingsCommand);
-
-    let bugCommand = vscode.commands.registerCommand('plugin-vscode.openBug', () => {
-        BugPage.render(context);
-    });
-    context.subscriptions.push(bugCommand);
 
     let login = vscode.commands.registerCommand('plugin-vscode.login', login_clicked);
 
@@ -199,10 +191,11 @@ export function activate(context: vscode.ExtensionContext)
     let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
         context.globalState.update('codifyFirstRun', false);
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
-        global.userLogged = false;
+        global.user_logged_in = "";
+        global.user_active_plan = "";
         global.menu.choose_color();
-        if(global.panelProvider) {
-            global.panelProvider.logout_success();
+        if(global.side_panel) {
+            global.side_panel.update_webview();
         }
         vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     });

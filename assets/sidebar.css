@@ -27,7 +27,7 @@ body.vscode-dark {
 .presets li:hover {
     color: var(--secondary);
 }
-#quickbar {
+/* #quickbar {
     display: inline;
     width: 100%;
 }
@@ -66,7 +66,7 @@ body.vscode-light #quickinput {
 }
 body.vscode-light #quicksubmit {
     color: var(--dark);
-}
+} */
 .presets-title {
     font-size: 14px;
     padding-bottom: 5px;
@@ -78,32 +78,6 @@ body.vscode-light #quicksubmit {
 }
 body.vscode-light .presets-title {
     border-bottom: 1px solid var(--secondary);
-}
-.history-title {
-    margin-top: 20px;
-    font-size: 14px;
-    padding-bottom: 5px;
-    font-weight: bold;
-    margin-bottom: 5px;
-    border-bottom: 1px solid var(--secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    display: none;
-}
-.history {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: none;
-}
-.history li {
-    list-style: none;
-    cursor: pointer;
-    font-size: 1.25em;
-    line-height: 1.5em;
-}
-.history li:hover {
-    color: var(--secondary);
 }
 .sidebar-controls {
     position: absolute;
@@ -120,8 +94,9 @@ body.vscode-light .presets-title {
     padding: 0 20px 20px;
 
 }
-#bug {
+#profile {
     font-size: 13px;
+    overflow: hidden;
     border: 1px solid var(--secondary);
     padding: 8px 20px;
     color: var(--secondary);
@@ -133,12 +108,13 @@ body.vscode-light .presets-title {
     text-align: center;
     margin: 5px 0;
 }
-body.vscode-light #bug {
+body.vscode-light #profile {
     color: var(--secondary);
     border-color: var(--secondary);
 }
-#bug span {
+#profile span {
     font-size: 10px !important;
+    overflow: hidden;
 }
 #settings {
     font-size: 13px;
@@ -198,6 +174,8 @@ body.vscode-light #logout {
 
 
 .sidebar-logged {
+    white-space: nowrap;
+    overflow: hidden;
     display: none;
     margin-bottom: 5px;
     padding: 0 20px;
@@ -214,6 +192,8 @@ body.vscode-light #logout {
 
 
 .sidebar-plan {
+    white-space: nowrap;
+    overflow: hidden;
     display: none;
     margin-bottom: 5px;
     padding: 0 20px;
@@ -241,14 +221,4 @@ body.vscode-light #logout {
     font-size: 22px;
     cursor: pointer;
     margin-left: 5px;
-}
-
-
-@media only screen and (max-width: 300px) {
-    .sidebar-logged {
-        flex-direction: column;
-    }
-    .sidebar-logged span {
-        margin-left: 0;
-    }
 }
