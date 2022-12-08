@@ -75,6 +75,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             left_all_spaces
         );
 
+        let command = {
+            command: "plugin-vscode.inlineAccepted",
+            title: "inlineAccepted",
+            arguments: []
+        };
+
         // Undocumented brittle functionality, it's hard to describe what InlineCompletionItem exactly does, trial and error...
         let completionItem = new vscode.InlineCompletionItem(
             completion,
@@ -82,6 +88,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             new vscode.Range(position.translate(0, -deleted_spaces_left), eol_pos),
             // new vscode.Range(position, eol_pos.translate(0, 1))
                //.translate(0, completion_length))
+            command,
         );
         return [completionItem];
     }

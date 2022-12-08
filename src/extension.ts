@@ -12,6 +12,7 @@ import * as fetchAPI from "./fetchAPI";
 import * as usageStats from "./usageStats";
 import * as langDB from "./langDB";
 import * as userLogin from "./userLogin";
+import * as usabilityHints from "./usabilityHints";
 import { Mode } from "./estate";
 import PanelWebview from "./sidebar";
 import BugPage from "./bug";
@@ -111,10 +112,16 @@ async function login_clicked()
 }
 
 
+export async function inline_accepted()
+{
+    await usabilityHints.hint_after_successful_completion();
+}
+
+
 export function activate(context: vscode.ExtensionContext)
 {
     global.global_context = context;
-    // let disposable2 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', editChaining.acceptEditChain);
+    let disposable1 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.codeLensClicked', code_lens_clicked);
     global.menu = new statusBar.StatusBarMenu();
     global.menu.createStatusBarBlock(context);
@@ -153,6 +160,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
+    context.subscriptions.push(disposable1);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable8);
     context.subscriptions.push(...disposables);

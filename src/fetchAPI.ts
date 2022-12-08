@@ -185,7 +185,7 @@ export function fetch_api_promise(
     if (!apiKey) {
         return [Promise.reject("No API key"), new ApiFields()];
     }
-    let temp = vscode.workspace.getConfiguration().get('codify.temperature');
+    let temp = 0.2;  // vscode.workspace.getConfiguration().get('codify.temperature');
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     let api_fields = new ApiFields();
     api_fields.scope = scope;

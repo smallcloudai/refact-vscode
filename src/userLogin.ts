@@ -39,13 +39,6 @@ export async function account_message(info: string, action: string, url: string)
     }
 }
 
-// export async function hints()
-// {
-//     const header = "Codify Hints";
-//     const options: vscode.MessageOptions = { detail: 'Hint1: select some code, press F1 and tell how to change it, for example "convert to list comprehension"\n\nHint2: press F1 and type an instruction for the whole file, for example "fix typos" or "add type hints". The plugin will highlight all the places that the instruction is applicable to.\n\nHint3: press F1 again to regenerate changes.', modal: true };
-//     vscode.window.showInformationMessage(header, options);
-// }
-
 
 export function checkAuth()
 {
