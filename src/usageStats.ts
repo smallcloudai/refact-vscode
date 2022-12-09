@@ -106,5 +106,5 @@ export async function report_usage_stats()
         console.log([response.status, url]);
         return;
     }
-    await global_context.globalState.update("report_usage_stats", {});
+    await global_context.globalState.update("usage_stats", {});
 }
