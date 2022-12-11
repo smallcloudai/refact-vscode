@@ -69,6 +69,11 @@
 		vscode.postMessage({ type: "js2ts_goto_profile" });
 	});
 
+    const dataButton = document.querySelector("#datacollection");
+	dataButton.addEventListener("click", () => {
+		vscode.postMessage({ type: "js2ts_goto_datacollection" });
+	});
+
 	const logoutButton = document.querySelector("#logout");
     logoutButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "logout" });
@@ -95,6 +100,7 @@
             let plan = document.querySelector('.sidebar-plan');
             let login = document.querySelector('#login');
             let profile = document.querySelector('#profile');
+            let data = document.querySelector('#datacollection');
             let logout = document.querySelector('#logout');
             info.style.display = message.ts2web_user ? 'flex' : '';
             plan.style.display = message.ts2web_plan ? 'flex' : '';
@@ -103,6 +109,7 @@
             login.style.display = message.ts2web_user ? 'none' : 'block';
             profile.style.display = message.ts2web_user ? 'block' : 'none';
             logout.style.display = message.ts2web_user ? 'block' : 'none';
+            data.style.display = message.ts2web_user ? 'block' : 'none';
             break;
 		}
 	});

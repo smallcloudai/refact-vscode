@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import * as estate from "./estate";
 import * as userLogin from "./userLogin";
+import * as dataCollectionPage from "./dataCollectionPage";
 
 
 export class PanelWebview implements vscode.WebviewViewProvider {
@@ -69,6 +70,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 }
                 case "js2ts_goto_profile": {
                     vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/account`));
+                    break;
+                }
+                case "js2ts_goto_datacollection": {
+                    if (global.global_context !== undefined) {
+                        dataCollectionPage.DataReviewPage.render(global.global_context);
+                    }
                     break;
                 }
                 case "refreshPlan": {
@@ -202,6 +209,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="sidebar-controls">
                         <div class="sidebar-logged">Account: <span></span></div>
                         <div class="sidebar-plan">Active Plan: <span></span><button class="sidebar-plan-button">⟳</button></div>
+                        <button tabindex="-1" id="datacollection">Review Data...</button>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="profile"><span>🔗</span> Your Account...</button>

@@ -15,6 +15,19 @@ export enum Mode {
 };
 
 
+export class DataCollectStruct {
+    public positive: boolean = false;
+    public sources: { [key: string]: string } = {};
+    public results: { [key: string]: string } = {};
+    public intent: string = "";
+    public function: string = "";
+    public cursor_file: string = "";
+    public cursor_pos0: number = 0;
+    public cursor_pos1: number = 0;
+    public ts: number = 0;
+};
+
+
 export class StateOfEditor {
     public editor: vscode.TextEditor;
 
@@ -26,7 +39,9 @@ export class StateOfEditor {
 
     public inline_prefer_edit_chaining: boolean = false; // Delete?
 
+    public highlight_json_backup: any = undefined;
     public highlights: any = [];
+    public sensitive_ranges: vscode.DecorationOptions[] = [];
 
     public diff_changing_doc: boolean = false;
     public diffDecos: any = [];
@@ -34,8 +49,6 @@ export class StateOfEditor {
     public diffAddedLines: any = [];
 
     public code_lens_pos: number = Number.MAX_SAFE_INTEGER;
-
-    public sensitive_ranges: vscode.DecorationOptions[] = [];
 
     public showing_diff_modif_doc: string | undefined;
     public showing_diff_move_cursor: boolean = false;
@@ -45,19 +58,10 @@ export class StateOfEditor {
 
     public edit_chain_modif_doc: string | undefined = undefined;
 
-    public highlight_json_backup: any = undefined;
-
     public cursor_move_event: any = undefined;
     public text_edited_event: any = undefined;
 
-    public report_to_mothership_sources: { [key: string]: string } = {};
-    public report_to_mothership_results: { [key: string]: string } = {};
-    public report_to_mothership_intent: string = "";
-    public report_to_mothership_function: string = "";
-    public report_to_mothership_cursor_file: string = "";
-    public report_to_mothership_cursor_pos0: number = 0;
-    public report_to_mothership_cursor_pos1: number = 0;
-    public report_to_mothership_ts: number = 0;
+    public data_feedback_candidate: DataCollectStruct|undefined = undefined;
 
     constructor(editor: vscode.TextEditor)
     {

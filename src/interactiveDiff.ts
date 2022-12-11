@@ -8,6 +8,7 @@ import * as storeVersions from './storeVersions';
 import * as estate from './estate';
 import * as highlight from "./highlight";
 import * as codeLens from "./codeLens";
+import * as dataCollection from "./dataCollection";
 
 
 let global_nav_counter: number = 0;
@@ -37,6 +38,7 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position, i
     let selection = editor.selection;
     let is_empty = selection.anchor.line === selection.active.line && selection.anchor.character === selection.active.character;
     if (!is_empty && !state.diff_changing_doc) {
+        // TODO: doesn't work, check again
         handsOff(editor);
     }
 }
@@ -56,7 +58,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let request = new fetchAPI.PendingRequest(undefined, cancelToken);
 
     await fetchAPI.cancelAllRequests();
-    estate.back_to_normal(state);
+    await estate.back_to_normal(state);
     request.cancellationTokenSource = cancellationTokenSource;
     let login = await userLogin.inference_login();
     if (!login) { return; }
@@ -75,7 +77,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     sources[file_name] = whole_doc;
     let max_tokens = 550;
     let stop_tokens: string[] = [];
-    let max_edits = model_function==="diff-atcursor" ? 1 : 10;
+    let max_edits = model_function==="diff-atcursor" ? 1 : 10; // the other is "diff-selection"
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         "queryDiff",  // scope
@@ -89,13 +91,16 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
         max_edits,
         stop_tokens,
     ));
-    state.report_to_mothership_sources = sources;
-    state.report_to_mothership_intent = estate.global_intent;
-    state.report_to_mothership_function = model_function;
-    state.report_to_mothership_cursor_file = file_name;
-    state.report_to_mothership_cursor_pos0 = doc.offsetAt(sensitive_area.start);
-    state.report_to_mothership_cursor_pos1 = doc.offsetAt(sensitive_area.end);
-    state.report_to_mothership_ts = Date.now();
+    let feedback = state.data_feedback_candidate;
+    if (feedback) {
+        feedback.sources = sources;
+        feedback.intent = estate.global_intent;
+        feedback.function = model_function;
+        feedback.cursor_file = file_name;
+        feedback.cursor_pos0 = doc.offsetAt(sensitive_area.start);
+        feedback.cursor_pos1 = doc.offsetAt(sensitive_area.end);
+        feedback.ts = Date.now();
+    }
     json = await request.apiPromise;
     if (json === undefined) {
         if (state.get_mode() === estate.Mode.DiffWait) {
@@ -115,7 +120,10 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     if (!cancelToken.isCancellationRequested) {
         if (json && json["choices"]) {
             let modif_doc = json["choices"][0]["files"][file_name];
-            state.report_to_mothership_results = json["choices"][0]["files"];
+            if (feedback) {
+                feedback.results = json["choices"][0]["files"];
+                feedback.ts = Date.now();
+            }
             state.showing_diff_for_range = sensitive_area;
             state.showing_diff_for_function = model_function;
             state.showing_diff_edit_chain = undefined;
@@ -413,26 +421,18 @@ export async function rollback(editor: vscode.TextEditor)
                 new vscode.Position(state.diffAddedLines[i] + 1, 0),
             ));
         }
-    }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
+    }, { undoStopBefore: false, undoStopAfter: false }).then(async () => {
         if (!state) {
             return;
         }
         state.diff_changing_doc = false;
         removeDeco(editor);
-        if (state.report_to_mothership_cursor_file) {
-            fetchAPI.report_to_mothership(
-                false,
-                state.report_to_mothership_sources,
-                state.report_to_mothership_results,
-                state.report_to_mothership_intent,
-                state.report_to_mothership_function,
-                state.report_to_mothership_cursor_file,
-                state.report_to_mothership_cursor_pos0,
-                state.report_to_mothership_cursor_pos1,
-                state.report_to_mothership_ts,
-            );
+        let feedback = state.data_feedback_candidate;
+        if (feedback && feedback.cursor_file) {
+            feedback.positive = false;
+            await dataCollection.data_collection_save_record(feedback);
         }
-        state.report_to_mothership_cursor_file = "";
+        dataCollection.data_collection_reset(state);
     });
 }
 
@@ -457,7 +457,7 @@ export async function accept(editor: vscode.TextEditor)
             // console.log(["accept", state.diffDeletedLines[i]]);
         }
     }, { undoStopBefore: false, undoStopAfter: true });
-    thenable.then(() => {
+    thenable.then(async () => {
         if (!state) {
             return;
         }
@@ -469,30 +469,22 @@ export async function accept(editor: vscode.TextEditor)
         console.log(["ESC OFF DIFF"]);
         if (state.highlight_json_backup) {
             state.highlight_json_backup = undefined;
-            estate.back_to_normal(state);
+            await estate.back_to_normal(state);
             highlight.runHighlight(editor, undefined);
         } else {
             state.highlight_json_backup = undefined;
-            estate.back_to_normal(state);
+            await estate.back_to_normal(state);
             // console.log(["TRIGGER SUGGEST"]);
             // state.inline_prefer_edit_chaining = true;
             // vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         }
-        if (state.report_to_mothership_cursor_file) {
-            fetchAPI.report_to_mothership(
-                true,
-                state.report_to_mothership_sources,
-                state.report_to_mothership_results,
-                state.report_to_mothership_intent,
-                state.report_to_mothership_function,
-                state.report_to_mothership_cursor_file,
-                state.report_to_mothership_cursor_pos0,
-                state.report_to_mothership_cursor_pos1,
-                state.report_to_mothership_ts,
-            );
-            state.report_to_mothership_cursor_file = "";
-        }
         codeLens.quick_refresh();
+        let feedback = state.data_feedback_candidate;
+        if (feedback && feedback.cursor_file) {
+            feedback.positive = true;
+            await dataCollection.data_collection_save_record(feedback);
+        }
+        dataCollection.data_collection_reset(state);
     });
     await thenable;
 }

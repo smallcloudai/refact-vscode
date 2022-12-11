@@ -22,7 +22,6 @@ declare global {
     var streamlined_login_ticket: string;
     var user_logged_in: string;
     var user_active_plan: string;
-    // var code_lens_provider: codeLens.LensProvider|undefined;
     var global_context: vscode.ExtensionContext|undefined;
 }
 
@@ -328,16 +327,15 @@ export async function status_bar_clicked()
         let selection = await vscode.window.showInformationMessage(
             "Enable Codify for the programming language \"" + lang + "\"?",
             "Enable",
-            "Bug Report..."
+            // "Bug Report..."
         );
         if (selection === "Enable") {
             await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
             console.log(["enable", lang]);
             global.menu.statusbarLang(false, lang);
             global.menu.choose_color();
-        } else if (selection === "Bug Report...") {
-            vscode.commands.executeCommand("plugin-vscode.openBug");
-            console.log(["bug report!!!"]);
+        // } else if (selection === "Bug Report...") {
+        //     vscode.commands.executeCommand("plugin-vscode.openBug");
         }
     }
 }
