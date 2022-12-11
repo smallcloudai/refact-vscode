@@ -88,11 +88,11 @@ async function code_lens_clicked(arg0: any)
 
 async function login_clicked()
 {
-    let gotit = await userLogin.login();
-    if (gotit === "OK") {
+    let got_it = await userLogin.login();
+    if (got_it === "OK") {
         return;
     }
-    global.streamlined_login_ticket = userLogin.generateTicket();
+    global.streamlined_login_ticket = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
     await vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
     let i = 0;
     // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
@@ -305,7 +305,7 @@ export function deactivate(context: vscode.ExtensionContext)
 export async function status_bar_clicked()
 {
     let editor = vscode.window.activeTextEditor;
-    if (!userLogin.checkAuth()) {
+    if (!userLogin.check_if_login_worked()) {
         userLogin.login_message();
         return;
     }

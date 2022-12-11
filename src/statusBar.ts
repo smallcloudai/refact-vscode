@@ -84,7 +84,7 @@ export class StatusBarMenu {
                 msg += `Click to disable Codify for "${this.language_name}"`;
             }
             this.menu.tooltip = msg;
-        } else if (!userLogin.checkAuth()) { // condition here must be the same as in status_bar_clicked()
+        } else if (!userLogin.check_if_login_worked()) { // condition here must be the same as in status_bar_clicked()
             this.menu.text = `$(account) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
             this.menu.tooltip = _website_message || `Click to login`;
@@ -101,7 +101,7 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    statusbarSocketError(error: boolean, detail: string|undefined)
+    set_socket_error(error: boolean, detail: string|undefined)
     {
         this.socketerror = error;
         if (typeof detail === "string") {

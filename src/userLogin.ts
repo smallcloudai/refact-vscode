@@ -39,15 +39,15 @@ export async function account_message(info: string, action: string, url: string)
 }
 
 
-export function checkAuth()
+export function check_if_login_worked()
 {
-    let apiKey = getApiKey();
+    let apiKey = secret_api_key();
     if (!global.user_logged_in || !apiKey) { return false; }
     return true;
 }
 
 
-export function getApiKey(): string
+export function secret_api_key(): string
 {
     const key = vscode.workspace.getConfiguration().get('codify.apiKey');
     if (!key) { return ""; }
@@ -56,17 +56,10 @@ export function getApiKey(): string
 }
 
 
-export function generateTicket()
-{
-    let token = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
-    return token;
-}
-
-
 export async function login()
 {
-    let apiKey = getApiKey();
-    if (global.user_logged_in && getApiKey()) {
+    let apiKey = secret_api_key();
+    if (global.user_logged_in && secret_api_key()) {
         return "OK";
     }
     let headers = {
@@ -176,7 +169,7 @@ export function inference_login_force_retry()
 
 export async function inference_login(): Promise<boolean>
 {
-    let apiKey = getApiKey();
+    let apiKey = secret_api_key();
     if (_last_inference_login_ts + 3600*1000 > Date.now() && _last_inference_login_key === apiKey && apiKey !== "") {
         return _last_inference_login_cached_result;
     }

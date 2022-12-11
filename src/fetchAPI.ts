@@ -187,7 +187,7 @@ export function fetch_api_promise(
     } else {
         model = `${model_}`;
     }
-    const apiKey = userLogin.getApiKey();
+    const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return [Promise.reject("No API key"), new ApiFields()];
     }

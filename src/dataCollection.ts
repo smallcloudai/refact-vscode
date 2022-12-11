@@ -80,7 +80,7 @@ export function data_collection_prepare_package_for_sidebar()
 
 export async function data_collection_hurray_send_to_mothership()
 {
-    const apiKey = userLogin.getApiKey();
+    const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return;
     }

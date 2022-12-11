@@ -36,7 +36,7 @@ export async function report_success_or_failure(
     if (positive) {
         _global_last_useful_result_ts = Date.now();
     }
-    if (userLogin.checkAuth()) {
+    if (userLogin.check_if_login_worked()) {
         if (global.side_panel) {
             global.side_panel.update_webview();
         }
@@ -84,7 +84,7 @@ export async function report_usage_stats()
     for (let key in count_msg) {
         usage += `${key} ${count_msg[key]}\n`;
     }
-    const apiKey = userLogin.getApiKey();
+    const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return;
     }
