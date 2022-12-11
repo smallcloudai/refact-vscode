@@ -141,8 +141,16 @@ export function state_of_document(doc: vscode.TextDocument): StateOfEditor | und
     if (candidates_list.length === 1) {
         return candidates_list[0];
     }
-    console.log(["multiple editors/states for the same document", doc.fileName]);
-    return undefined;
+    console.log(["multiple editors/states for the same document, taking the most recent...", doc.fileName]);
+    let most_recent_ts = 0;
+    let most_recent_state: StateOfEditor | undefined = undefined;
+    for (let state of candidates_list) {
+        if (state.last_used_ts > most_recent_ts) {
+            most_recent_ts = state.last_used_ts;
+            most_recent_state = state;
+        }
+    }
+    return most_recent_state;
 }
 
 

@@ -237,7 +237,7 @@ export async function manual_edit_chaining()
                 return;
             }
         } finally {
-            estate.back_to_normal(state);
+            await estate.back_to_normal(state);
         }
         let modif_doc = state.edit_chain_modif_doc;
         if (modif_doc) {

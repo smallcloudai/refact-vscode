@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import * as estate from "./estate";
 import * as userLogin from "./userLogin";
 import * as dataCollectionPage from "./dataCollectionPage";
+import * as dataCollection from "./dataCollection";
 
 
 export class PanelWebview implements vscode.WebviewViewProvider {
@@ -75,6 +76,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 case "js2ts_goto_datacollection": {
                     if (global.global_context !== undefined) {
                         dataCollectionPage.DataReviewPage.render(global.global_context);
+                        dataCollection.data_collection_prepare_package_for_sidebar();
                     }
                     break;
                 }

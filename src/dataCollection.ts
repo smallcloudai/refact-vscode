@@ -29,7 +29,7 @@ export async function data_collection_save_record(d: estate.DataCollectStruct)
         "cursor1": d.cursor_pos1,
         "ponder_time_ms": Math.round(Date.now() - d.ts),
     });
-    const same_situation_key = `${d.cursor_file} ${d.intent} ${d.cursor_pos0} ${d.cursor_pos1}` + d.sources[d.cursor_file];
+    const same_situation_key = `${d.intent} ${d.cursor_file}:${d.cursor_pos0}:${d.cursor_pos1} --` + d.sources[d.cursor_file];
     if (!global.global_context) {
         return;
     }
@@ -44,7 +44,9 @@ export async function data_collection_save_record(d: estate.DataCollectStruct)
     }
     let zero_padded = rec_count.toString().padStart(4, "0");
     await global_context.globalState.update(`data_collection_rec[${zero_padded}]`, [same_situation_key, payload]);
+    await global_context.globalState.update("data_collection_rec_count", rec_count + 1);
 }
+
 
 export function data_collection_prepare_package_for_sidebar()
 {
@@ -74,6 +76,7 @@ export function data_collection_prepare_package_for_sidebar()
     }
     return result;
 }
+
 
 export async function data_collection_hurray_send_to_mothership()
 {
