@@ -8,7 +8,7 @@ import * as estate from './estate';
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 
 
-export async function cleanupEditChaining(editor: vscode.TextEditor)
+export async function cleanup_edit_chaining_in_state(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
     if (state) {
@@ -17,7 +17,7 @@ export async function cleanupEditChaining(editor: vscode.TextEditor)
 }
 
 
-export async function runEditChaining(animation: boolean): Promise<String>
+export async function query_edit_chaining(animation: boolean): Promise<String>
 {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -39,14 +39,14 @@ export async function runEditChaining(animation: boolean): Promise<String>
     let cancelToken = cancellationTokenSource.token;
     let request = new fetch.PendingRequest(undefined, cancelToken);
 
-    await fetch.cancelAllRequests();
+    await fetch.cancel_all_requests_and_wait_until_finished();
     // if (state.mode === interactiveDiff.Mode.DiffWait) {
     //     state.mode = interactiveDiff.Mode.Normal;
     // }
     request.cancellationTokenSource = cancellationTokenSource;
     let login: any = await userLogin.login();
     if (!login) { return ""; }
-    await fetch.waitAllRequests();
+    await fetch.wait_until_all_requests_finished();
     if (cancelToken.isCancellationRequested) {
         return "";
     }
@@ -57,7 +57,7 @@ export async function runEditChaining(animation: boolean): Promise<String>
     // let current_line = document.lineAt(position.line);
     // let left_of_cursor = current_line.text.substring(0, position.character);
     // let right_of_cursor = current_line.text.substring(position.character);
-    let more_revisions: { [key: string]: string } = storeVersions.fnGetRevisions(file_name);
+    let more_revisions: { [key: string]: string } = storeVersions.get_revisions_for_file(file_name);
     let send_revisions: { [key: string]: string } = {};
     // let recent_but_different = "";
     let first_time_a_lot_of_changes = "";
@@ -96,11 +96,11 @@ export async function runEditChaining(animation: boolean): Promise<String>
     let line_n = position.line;
     let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
     if (animation) {
-        interactiveDiff.animationStart(editor, sensitive_area);
+        interactiveDiff.animation_start(editor, sensitive_area);
     }
     request.supply_stream(...fetch.fetch_api_promise(
         cancelToken,
-        "runEditChaining",
+        "edit-chain",
         send_revisions,
         estate.global_intent,
         "edit-chain",

@@ -122,7 +122,7 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    statusbarLang(state: boolean, language_name: string)
+    set_language_enabled(state: boolean, language_name: string)
     {
         this.disable_lang = state;
         this.language_name = language_name;
@@ -142,15 +142,15 @@ export class StatusBarMenu {
 function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
 {
     if (!editor) {
-        global.menu.statusbarLang(true, "");
+        global.status_bar.set_language_enabled(true, "");
         return;
     }
     let document = editor.document;
     let language = document.languageId;
     if (!estate.is_lang_enabled(document)) {
-        global.menu.statusbarLang(true, language);
+        global.status_bar.set_language_enabled(true, language);
     } else {
-        global.menu.statusbarLang(false, language);
+        global.status_bar.set_language_enabled(false, language);
     }
 }
 

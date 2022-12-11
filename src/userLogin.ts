@@ -9,12 +9,11 @@ import * as statusBar from "./statusBar";
 
 export async function login_message()
 {
-    const header = "Please login";
     let selection = await vscode.window.showInformationMessage("Click to login to Codify", "Login");
     if(selection === "Login") {
         vscode.commands.executeCommand('plugin-vscode.login');
     }
-    global.menu.choose_color();
+    global.status_bar.choose_color();
 }
 
 
@@ -24,7 +23,7 @@ export async function welcome_message()
     if(selection === "Login") {
         vscode.commands.executeCommand('plugin-vscode.login');
     }
-    global.menu.choose_color();
+    global.status_bar.choose_color();
 }
 
 

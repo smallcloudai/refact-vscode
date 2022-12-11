@@ -30,9 +30,9 @@ export async function report_success_or_failure(
         error_message = error_message.substring(0, 200) + "…";
     }
     if (model_name) {
-        global.menu.url_and_model_worked(related_url, model_name);
+        global.status_bar.url_and_model_worked(related_url, model_name);
     }
-    global.menu.statusbarSocketError(!positive, error_message);
+    global.status_bar.set_socket_error(!positive, error_message);
     if (positive) {
         _global_last_useful_result_ts = Date.now();
     }
@@ -44,7 +44,7 @@ export async function report_success_or_failure(
         if (global.side_panel) {
             global.side_panel.update_webview();
         }
-        global.menu.url_and_model_worked("", "");
+        global.status_bar.url_and_model_worked("", "");
     }
     let msg = `${positive ? "1" : "0"} ${scope} ${related_url} "${error_message}"`;
     // Typical msg:

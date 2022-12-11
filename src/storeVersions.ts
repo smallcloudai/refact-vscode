@@ -30,7 +30,7 @@ export function filename_from_document(document: vscode.TextDocument): string
 }
 
 
-export function fnGetRevisions(fn: string)
+export function get_revisions_for_file(fn: string)
 {
     let result: { [key: string]: string } = {};
     let textlist = fn2textlist.get(fn);
@@ -50,7 +50,7 @@ export function fnGetRevisions(fn: string)
 }
 
 
-function fnReset(document: vscode.TextDocument, line0: number)
+function reset_file_state_to_one_current_version(document: vscode.TextDocument, line0: number)
 {
     let fn = filename_from_document(document);
     let whole_doc = document.getText();
@@ -62,7 +62,7 @@ function fnReset(document: vscode.TextDocument, line0: number)
 }
 
 
-function fnSaveChange(document: vscode.TextDocument, line0: number, force: boolean = false)
+function _save_change(document: vscode.TextDocument, line0: number, force: boolean = false)
 {
     let state = estate.state_of_document(document);
     if (state) {
@@ -74,7 +74,7 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
     let version = document.version;
     let textlist = fn2textlist.get(fn);
     if (!textlist) {
-        fnReset(document, line0);
+        reset_file_state_to_one_current_version(document, line0);
         return;
     }
     let versionlist = fn2versionlist.get(fn);
@@ -105,11 +105,12 @@ function fnSaveChange(document: vscode.TextDocument, line0: number, force: boole
     }
 }
 
+
 function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
 {
     let document = event.document;
     if (!estate.is_lang_enabled(document)) {
-        fnReset(document, 0);
+        reset_file_state_to_one_current_version(document, 0);
         return;
     }
     let contentChanges = event.contentChanges;
@@ -117,11 +118,11 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
     if(contentChanges.length === 0) { return; };
     let line0 = contentChanges[0].range.start.line;
     if (reason === vscode.TextDocumentChangeReason.Redo) {
-        // fnReset(document, line0);
+        // reset_file_state_to_one_current_version(document, line0);
         return;
         // console.log(["onDidChangeTextDocument", "redo", v]);
     } else if (reason === vscode.TextDocumentChangeReason.Undo) {
-        // fnReset(document, line0);
+        // reset_file_state_to_one_current_version(document, line0);
         return;
         // console.log(["onDidChangeTextDocument", "undo", v]);
     } else {
@@ -139,8 +140,9 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
         line_max = Math.max(line_max, change.range.end.line);
     }
     let force = line_min !== line_max;
-    fnSaveChange(document, line0, force);
+    _save_change(document, line0, force);
 }
+
 
 function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
 {
@@ -150,20 +152,21 @@ function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
     let document = editor.document;
     let line0 = editor.selection.start.line;
     if (!estate.is_lang_enabled(document)) {
-        fnReset(document, 0);
+        reset_file_state_to_one_current_version(document, 0);
         return;
     }
     console.log(["onChangeActiveEditor"]);
-    fnSaveChange(document, line0);
+    _save_change(document, line0);
 }
 
-export function storeVersionsInit()
+
+export function store_versions_init()
 {
     let disposable6 = vscode.window.onDidChangeActiveTextEditor(onChangeActiveEditor);
     let disposable8 = vscode.workspace.onDidChangeTextDocument(onDidChangeTextDocument);
-    let currentEditor = vscode.window.activeTextEditor;
-    if (currentEditor) {
-        onChangeActiveEditor(currentEditor);
+    let editor = vscode.window.activeTextEditor;
+    if (editor) {
+        onChangeActiveEditor(editor);
     }
     return [disposable6, disposable8];
 }

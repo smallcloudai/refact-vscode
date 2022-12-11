@@ -74,33 +74,33 @@ export class PendingRequest {
                 reject(error);
             });
         }).finally(() => {
-            let index = globalRequests.indexOf(this);
+            let index = _global_reqs.indexOf(this);
             if (index >= 0) {
-                globalRequests.splice(index, 1);
+                _global_reqs.splice(index, 1);
             }
-            if (globalRequests.length === 0) {
-                global.menu.statusbarLoading(false);
+            if (_global_reqs.length === 0) {
+                global.status_bar.statusbarLoading(false);
             }
-            // console.log(["--pendingRequests", globalRequests.length, request.seq]);
+            // console.log(["--pendingRequests", _global_reqs.length, request.seq]);
         }).catch((error) => {
             if (!error.message.includes("aborted")) {
                 usageStats.report_success_or_failure(false, "h2stream (4)", api_fields.url, `${error}`, "");
             }
         });
-        globalRequests.push(this);
-        global.menu.statusbarLoading(true);
-        // console.log(["++pendingRequests", globalRequests.length, request.seq]);
+        _global_reqs.push(this);
+        global.status_bar.statusbarLoading(true);
+        // console.log(["++pendingRequests", _global_reqs.length, request.seq]);
     }
 }
 
 
-let globalRequests: PendingRequest[] = [];
+let _global_reqs: PendingRequest[] = [];
 
 
-export async function waitAllRequests()
+export async function wait_until_all_requests_finished()
 {
-    for (let i=0; i<globalRequests.length; i++) {
-        let r = globalRequests[i];
+    for (let i=0; i<_global_reqs.length; i++) {
+        let r = _global_reqs[i];
         if (r.apiPromise !== undefined) {
             let tmp = await r.apiPromise;
             console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
@@ -115,8 +115,8 @@ export async function waitAllRequests()
 
 export function anything_still_working()
 {
-    for (let i=0; i<globalRequests.length; i++) {
-        let r = globalRequests[i];
+    for (let i=0; i<_global_reqs.length; i++) {
+        let r = _global_reqs[i];
         if (!r.cancelToken.isCancellationRequested) {
             return true;
         }
@@ -124,15 +124,15 @@ export function anything_still_working()
     return false;
 }
 
-export async function cancelAllRequests()
+export async function cancel_all_requests_and_wait_until_finished()
 {
-    for (let i=0; i<globalRequests.length; i++) {
-        let r = globalRequests[i];
+    for (let i=0; i<_global_reqs.length; i++) {
+        let r = _global_reqs[i];
         if (r.cancellationTokenSource !== undefined) {
             r.cancellationTokenSource.cancel();
         }
     }
-    await waitAllRequests();
+    await wait_until_all_requests_finished();
 }
 
 

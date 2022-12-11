@@ -14,7 +14,7 @@ import * as dataCollection from "./dataCollection";
 let global_nav_counter: number = 0;
 
 
-export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position, is_mouse: boolean)
+export function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Position, is_mouse: boolean)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
@@ -30,7 +30,7 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position, i
                     return;
                 }
                 if (global_nav_counter === my_counter) {
-                    queryDiff(editor, element.range, "diff-atcursor");
+                    query_diff(editor, element.range, "diff-atcursor");
                 }
             }, is_mouse ? 0 : 300);
         }
@@ -38,13 +38,13 @@ export function onCursorMoved(editor: vscode.TextEditor, pos: vscode.Position, i
     let selection = editor.selection;
     let is_empty = selection.anchor.line === selection.active.line && selection.anchor.character === selection.active.character;
     if (!is_empty && !state.diff_changing_doc) {
-        // TODO: doesn't work, check again
-        handsOff(editor);
+        // TODO: this branch doesn't work, check again
+        hands_off_dont_remove_presentation(editor);
     }
 }
 
 
-export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscode.Range, model_function: string)
+export async function query_diff(editor: vscode.TextEditor, sensitive_area: vscode.Range, model_function: string)
 {
     // NOT called from estate switch mode
     let state = estate.state_of_editor(editor);
@@ -57,19 +57,19 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let cancelToken = cancellationTokenSource.token;
     let request = new fetchAPI.PendingRequest(undefined, cancelToken);
 
-    await fetchAPI.cancelAllRequests();
+    await fetchAPI.cancel_all_requests_and_wait_until_finished();
     await estate.back_to_normal(state);
     request.cancellationTokenSource = cancellationTokenSource;
     let login = await userLogin.inference_login();
     if (!login) { return; }
-    await fetchAPI.waitAllRequests();
+    await fetchAPI.wait_until_all_requests_finished();
     if (cancelToken.isCancellationRequested) {
         return;
     }
     let file_name = storeVersions.filename_from_document(doc);
     let json: any;
     await estate.switch_mode(state, estate.Mode.DiffWait);
-    animationStart(editor, sensitive_area);
+    animation_start(editor, sensitive_area);
     state.code_lens_pos = sensitive_area.start.line;
     codeLens.quick_refresh();
     let sources: { [key: string]: string } = {};
@@ -80,7 +80,7 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     let max_edits = model_function==="diff-atcursor" ? 1 : 10; // the other is "diff-selection"
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
-        "queryDiff",  // scope
+        "query_diff",  // scope
         sources,
         estate.global_intent,
         model_function,
@@ -136,9 +136,9 @@ export async function queryDiff(editor: vscode.TextEditor, sensitive_area: vscod
     }
 }
 
-export async function animationStart(editor: vscode.TextEditor, sensitive_area: vscode.Range)
+export async function animation_start(editor: vscode.TextEditor, sensitive_area: vscode.Range)
 {
-    highlight.clearHighlight(editor);
+    highlight.hl_clear(editor);
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
@@ -186,28 +186,14 @@ export async function animationStart(editor: vscode.TextEditor, sensitive_area: 
     }
 }
 
-export async function showEditChainDiff(editor: vscode.TextEditor)
+export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc: string, move_cursor: boolean)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
     }
-    let modif_doc = state.edit_chain_modif_doc;
-    if (modif_doc) {
-        state.showing_diff_for_range = undefined;
-        state.showing_diff_for_function = "edit-chain";
-        await offerDiff(editor, modif_doc, true);
-    }
-}
-
-export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, move_cursor: boolean)
-{
-    let state = estate.state_of_editor(editor);
-    if (!state) {
-        return;
-    }
-    removeDeco(editor);
-    highlight.clearHighlight(editor);
+    _remove_decoration(editor);
+    highlight.hl_clear(editor);
     let document = editor.document;
     let whole_doc = document.getText();
     let no_newline = whole_doc[whole_doc.length-1] !== "\n";
@@ -388,7 +374,7 @@ export async function offerDiff(editor: vscode.TextEditor, modif_doc: string, mo
 }
 
 
-export function removeDeco(editor: vscode.TextEditor)
+function _remove_decoration(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
@@ -403,9 +389,9 @@ export function removeDeco(editor: vscode.TextEditor)
 }
 
 
-export async function rollback(editor: vscode.TextEditor)
+export async function dislike_and_rollback(editor: vscode.TextEditor)
 {
-    editChaining.cleanupEditChaining(editor);
+    editChaining.cleanup_edit_chaining_in_state(editor);
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
@@ -426,7 +412,7 @@ export async function rollback(editor: vscode.TextEditor)
             return;
         }
         state.diff_changing_doc = false;
-        removeDeco(editor);
+        _remove_decoration(editor);
         let feedback = state.data_feedback_candidate;
         if (feedback && feedback.cursor_file) {
             feedback.positive = false;
@@ -437,7 +423,7 @@ export async function rollback(editor: vscode.TextEditor)
 }
 
 
-export async function accept(editor: vscode.TextEditor)
+export async function like_and_accept(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
@@ -454,7 +440,6 @@ export async function accept(editor: vscode.TextEditor)
                 new vscode.Position(state.diffDeletedLines[i], 0),
                 new vscode.Position(state.diffDeletedLines[i] + 1, 0),
             ));
-            // console.log(["accept", state.diffDeletedLines[i]]);
         }
     }, { undoStopBefore: false, undoStopAfter: true });
     thenable.then(async () => {
@@ -462,7 +447,7 @@ export async function accept(editor: vscode.TextEditor)
             return;
         }
         state.diff_changing_doc = false;
-        removeDeco(editor);
+        _remove_decoration(editor);
         vscode.commands.executeCommand('setContext', 'codify.runTab', false);
         console.log(["TAB OFF DIFF"]);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
@@ -470,7 +455,7 @@ export async function accept(editor: vscode.TextEditor)
         if (state.highlight_json_backup) {
             state.highlight_json_backup = undefined;
             await estate.back_to_normal(state);
-            highlight.runHighlight(editor, undefined);
+            highlight.query_highlight(editor, undefined);
         } else {
             state.highlight_json_backup = undefined;
             await estate.back_to_normal(state);
@@ -490,26 +475,31 @@ export async function accept(editor: vscode.TextEditor)
 }
 
 
-export async function regen(editor: vscode.TextEditor)
+export async function query_the_same_thing_again(editor: vscode.TextEditor)
 {
-    editChaining.cleanupEditChaining(editor);
+    editChaining.cleanup_edit_chaining_in_state(editor);
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
     }
     if (state.showing_diff_edit_chain !== undefined) {
-        await editChaining.runEditChaining(true);
-        await showEditChainDiff(editor);
+        await editChaining.query_edit_chaining(true);
+        let modif_doc = state.edit_chain_modif_doc;
+        if (modif_doc) {
+            state.showing_diff_for_range = undefined;
+            state.showing_diff_for_function = "edit-chain";
+            await present_diff_to_user(editor, modif_doc, true);
+        }
         return;
     }
     if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined) {
-        removeDeco(editor);
-        queryDiff(editor, state.showing_diff_for_range, state.showing_diff_for_function);
+        _remove_decoration(editor);
+        query_diff(editor, state.showing_diff_for_range, state.showing_diff_for_function);
     }
 }
 
 
-export function handsOff(editor: vscode.TextEditor)
+export function hands_off_dont_remove_presentation(editor: vscode.TextEditor)
 {
     // Don't delete anything, user has already started same edit, leave it alone
     let state = estate.state_of_editor(editor);
@@ -517,5 +507,5 @@ export function handsOff(editor: vscode.TextEditor)
         return;
     }
     state.edit_chain_modif_doc = undefined;
-    removeDeco(editor);
+    _remove_decoration(editor);
 }

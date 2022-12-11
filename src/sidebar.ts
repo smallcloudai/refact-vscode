@@ -117,13 +117,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     //     if (selectionEmpty) {
     //         if (intent) {
-    //             highlight.runHighlight(editor, intent);
+    //             highlight.query_highlight(editor, intent);
     //         }
     //     } else {
     //         if (intent) {
     //             estate.saveIntent(intent);
     //             editor.selection = new vscode.Selection(selection.start, selection.start);
-    //             interactiveDiff.queryDiff(editor, selection, "diff-selection");
+    //             interactiveDiff.query_diff(editor, selection, "diff-selection");
     //         }
     //     }
     // }

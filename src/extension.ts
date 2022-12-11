@@ -17,7 +17,7 @@ import { Mode } from "./estate";
 
 
 declare global {
-    var menu: statusBar.StatusBarMenu;
+    var status_bar: statusBar.StatusBarMenu;
     var side_panel: sidebar.PanelWebview|undefined;
     var streamlined_login_ticket: string;
     var user_logged_in: string;
@@ -37,7 +37,7 @@ async function pressed_escape()
         }
         if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
             if (state.get_mode() === Mode.DiffWait) {
-                await fetchAPI.cancelAllRequests();
+                await fetchAPI.cancel_all_requests_and_wait_until_finished();
             }
             if (state.highlight_json_backup !== undefined) {
                 await estate.switch_mode(state, Mode.Highlight);
@@ -61,7 +61,7 @@ async function pressed_tab()
     if (editor) {
         let state = estate.state_of_editor(editor);
         if (state && state.get_mode() === Mode.Diff) {
-            interactiveDiff.accept(editor);
+            interactiveDiff.like_and_accept(editor);
         } else {
             vscode.commands.executeCommand("setContext", "codify.runTab", false);
         }
@@ -74,7 +74,7 @@ async function code_lens_clicked(arg0: any)
     let editor = vscode.window.activeTextEditor;
     if (editor) {
         if (arg0 === "APPROVE") {
-            await interactiveDiff.accept(editor);
+            await interactiveDiff.like_and_accept(editor);
         } else if (arg0 === "REJECT") {
             await pressed_escape();  // might return to highlight
         } else if (arg0 === "RERUN") {
@@ -107,6 +107,21 @@ async function login_clicked()
 }
 
 
+async function f1_pressed()
+{
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+    let state = estate.state_of_editor(editor);
+    if (state && state.get_mode() === Mode.Diff) {
+        rollback_and_regen(editor);
+    } else {
+        ask_intent();
+    }
+}
+
+
 export async function inline_accepted()
 {
     await usabilityHints.hint_after_successful_completion();
@@ -118,12 +133,10 @@ export function activate(context: vscode.ExtensionContext)
     global.global_context = context;
     let disposable1 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.codeLensClicked', code_lens_clicked);
-    global.menu = new statusBar.StatusBarMenu();
-    global.menu.createStatusBarBlock(context);
+    global.status_bar = new statusBar.StatusBarMenu();
+    global.status_bar.createStatusBarBlock(context);
 
-    context.subscriptions.push(vscode.commands.registerCommand(global.menu.command, status_bar_clicked));
-
-    pluginFirstRun(context);
+    context.subscriptions.push(vscode.commands.registerCommand(global.status_bar.command, status_bar_clicked));
 
     codeLens.save_provider(new codeLens.LensProvider());
     if (codeLens.global_provider) {
@@ -135,22 +148,10 @@ export function activate(context: vscode.ExtensionContext)
 
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', pressed_tab);
-    let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', () => {
-        let editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return;
-        }
-        let state = estate.state_of_editor(editor);
-        if (state && state.get_mode() === Mode.Diff) {
-            rollback_and_regen(editor);
-        } else {
-            askIntent();
-        }
-    });
-
+    let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', f1_pressed);
     let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining',  manual_edit_chaining);
 
-    let disposables = storeVersions.storeVersionsInit();
+    let disposables = storeVersions.store_versions_init();
 
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
@@ -192,7 +193,7 @@ export function activate(context: vscode.ExtensionContext)
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
         global.user_logged_in = "";
         global.user_active_plan = "";
-        global.menu.choose_color();
+        global.status_bar.choose_color();
         if(global.side_panel) {
             global.side_panel.update_webview();
         }
@@ -205,10 +206,12 @@ export function activate(context: vscode.ExtensionContext)
     setTimeout(() => {
         userLogin.login();
     }, 100);
+
+    first_run_message(context);
 }
 
 
-export function pluginFirstRun(context: vscode.ExtensionContext)
+export function first_run_message(context: vscode.ExtensionContext)
 {
     const firstRun = context.globalState.get('codifyFirstRun');
     if (firstRun) { return; };
@@ -232,7 +235,7 @@ export async function manual_edit_chaining()
         }
         await estate.switch_mode(state, estate.Mode.DiffWait);
         try {
-            let s = await editChaining.runEditChaining(true);
+            let s = await editChaining.query_edit_chaining(true);
             if (!s) {
                 return;
             }
@@ -253,16 +256,15 @@ export async function manual_edit_chaining()
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
 {
-    // await interactiveDiff.rollback(editor);
     let state = estate.state_of_editor(editor);
     if (state) {
-        await estate.switch_mode(state, Mode.Normal);
-        await interactiveDiff.regen(editor);
+        await estate.switch_mode(state, Mode.Normal);  // dislike_and_rollback inside
+        await interactiveDiff.query_the_same_thing_again(editor);
     }
 }
 
 
-export async function askIntent()
+export async function ask_intent()
 {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -279,7 +281,7 @@ export async function askIntent()
     // global.panelProvider.updateQuery(intent);
     if (selection_empty) {
         if (intent) {
-            highlight.runHighlight(editor, intent);
+            highlight.query_highlight(editor, intent);
         }
     } else {
         if (intent) {
@@ -288,7 +290,7 @@ export async function askIntent()
             if (selection.end.line > selection.start.line && selection.end.character === 0) {
                 selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
             }
-            interactiveDiff.queryDiff(editor, selection, "diff-selection");
+            interactiveDiff.query_diff(editor, selection, "diff-selection");
         }
     }
 }
@@ -321,8 +323,8 @@ export async function status_bar_clicked()
     if (enabled) {
         await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
         console.log(["disable", lang]);
-        global.menu.statusbarLang(true, lang);
-        global.menu.choose_color();
+        global.status_bar.set_language_enabled(true, lang);
+        global.status_bar.choose_color();
     } else {
         let selection = await vscode.window.showInformationMessage(
             "Enable Codify for the programming language \"" + lang + "\"?",
@@ -332,8 +334,8 @@ export async function status_bar_clicked()
         if (selection === "Enable") {
             await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
             console.log(["enable", lang]);
-            global.menu.statusbarLang(false, lang);
-            global.menu.choose_color();
+            global.status_bar.set_language_enabled(false, lang);
+            global.status_bar.choose_color();
         // } else if (selection === "Bug Report...") {
         //     vscode.commands.executeCommand("plugin-vscode.openBug");
         }

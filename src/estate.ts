@@ -161,20 +161,20 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
     state._mode = new_mode;
 
     if (old_mode === Mode.Diff) {
-        await interactiveDiff.rollback(state.editor);
+        await interactiveDiff.dislike_and_rollback(state.editor);
         vscode.commands.executeCommand('setContext', 'codify.runTab', false);
         console.log(["TAB OFF DIFF"]);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
     } else if (old_mode === Mode.Highlight) {
-        highlight.clearHighlight(state.editor);
+        highlight.hl_clear(state.editor);
     } else if (old_mode === Mode.DiffWait) {
-        highlight.clearHighlight(state.editor);
+        highlight.hl_clear(state.editor);
     }
 
     if (new_mode === Mode.Diff) {
         if (state.showing_diff_modif_doc !== undefined) {
-            await interactiveDiff.offerDiff(state.editor, state.showing_diff_modif_doc, state.showing_diff_move_cursor);
+            await interactiveDiff.present_diff_to_user(state.editor, state.showing_diff_modif_doc, state.showing_diff_move_cursor);
             state.showing_diff_move_cursor = false;
             vscode.commands.executeCommand('setContext', 'codify.runTab', true);
             console.log(["TAB ON DIFF"]);
@@ -186,7 +186,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
     }
     if (new_mode === Mode.Highlight) {
         if (state.highlight_json_backup !== undefined) {
-            highlight.showHighlight(state.editor, state.highlight_json_backup);
+            highlight.hl_show(state.editor, state.highlight_json_backup);
         } else {
             console.log(["cannot enter highlight state, no hl json"]);
         }
@@ -195,7 +195,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         keyboard_events_on(state.editor);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
     }
-    // editChaining.cleanupEditChaining(editor);
+    // editChaining.cleanup_edit_chaining_in_state(editor);
 }
 
 
@@ -220,7 +220,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         let pos1 = editor.selection.active;
         let pos2 = editor.selection.anchor;
         if (pos1.line === pos2.line && pos1.character === pos2.character) {
-            interactiveDiff.onCursorMoved(editor, pos1, is_mouse);
+            interactiveDiff.on_cursor_moved(editor, pos1, is_mouse);
         }
     });
     state.text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
@@ -259,13 +259,13 @@ export function onTextEdited(editor: vscode.TextEditor)
     }
     if (state._mode === Mode.Diff || state._mode === Mode.DiffWait) {
         console.log(["text edited mode", state._mode, "hands off"]);
-        interactiveDiff.handsOff(editor);
+        interactiveDiff.hands_off_dont_remove_presentation(editor);
         state.highlight_json_backup = undefined;
         state.code_lens_pos = Number.MAX_SAFE_INTEGER;
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Highlight) {
-        highlight.clearHighlight(editor);
+        highlight.hl_clear(editor);
         state.highlight_json_backup = undefined;
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);

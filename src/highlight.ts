@@ -7,7 +7,7 @@ import * as estate from "./estate";
 
 
 
-export async function runHighlight(editor: vscode.TextEditor, intent: string | undefined)
+export async function query_highlight(editor: vscode.TextEditor, intent: string | undefined)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
@@ -28,14 +28,14 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     let cancelToken = cancellationTokenSource.token;
     let login = await userLogin.inference_login();
     if (!login) { return; }
-    await fetchAPI.waitAllRequests();
+    await fetchAPI.wait_until_all_requests_finished();
     let request = new fetchAPI.PendingRequest(undefined, cancelToken);
     let stop_tokens: string[] = [];
-    global.menu.statusbarLoading(true);
+    global.status_bar.statusbarLoading(true);
     let max_tokens = 0;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
-        "runHighlight",  // scope
+        "highlight",     // scope
         sources,
         intent,
         "highlight",     // scratchpad function
@@ -56,7 +56,7 @@ export async function runHighlight(editor: vscode.TextEditor, intent: string | u
     estate.switch_mode(state, Mode.Highlight);
 }
 
-export function showHighlight(editor: vscode.TextEditor, json: any)
+export function hl_show(editor: vscode.TextEditor, json: any)
 {
     if (json.highlight_tokens === undefined) {
         return;
@@ -107,7 +107,7 @@ export function showHighlight(editor: vscode.TextEditor, json: any)
 }
 
 
-export function clearHighlight(editor: vscode.TextEditor)
+export function hl_clear(editor: vscode.TextEditor)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {

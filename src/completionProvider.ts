@@ -139,7 +139,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         let login: any = await userLogin.inference_login();
         if (!login) { return ""; }
-        await fetch.waitAllRequests();
+        await fetch.wait_until_all_requests_finished();
         if (cancelToken.isCancellationRequested) {
             console.log(["444 inline cancelled"]);
             return "";
