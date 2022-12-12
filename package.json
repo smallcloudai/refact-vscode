@@ -13,7 +13,7 @@
     "theme": "dark"
   },
   "author": "Codify <codify@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "0.0.18",
+  "version": "0.5.26",
   "engines": {
     "vscode": "^1.69.0"
   },
@@ -58,8 +58,7 @@
         }
       }
     },
-    "properties": [
-    ],
+    "properties": [],
     "commands": [
       {
         "command": "plugin-vscode.highlight",
@@ -146,7 +145,10 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
   },
   "dependencies": {
     "diff": "^5.1.0",
@@ -159,6 +161,7 @@
     "@typescript-eslint/eslint-plugin": "^5.30.0",
     "@typescript-eslint/parser": "^5.30.0",
     "@vscode/test-electron": "^2.1.5",
+    "esbuild": "^0.16.3",
     "eslint": "^8.18.0",
     "glob": "^8.0.3",
     "mocha": "^10.0.0",
