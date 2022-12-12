@@ -34,7 +34,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         //     this.logout_success();
         // }
 
-        vscode.commands.registerCommand('workbench.action.focusSideBar',  () => {
+        vscode.commands.registerCommand('workbench.action.focusSideBar', () => {
             webviewView.webview.postMessage({ command: "focus" });
         });
 
@@ -80,7 +80,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
                     break;
                 }
-                case "refreshPlan": {
+                case "js2ts_refresh_login": {
                     global.user_logged_in = "";
                     global.user_active_plan = "";
                     this.update_webview();
@@ -99,10 +99,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
+        let plan_msg = global.user_active_plan;
+        if (!plan_msg && global.streamlined_login_countdown > -1) {
+            plan_msg = `Waiting for website login... ${global.streamlined_login_countdown}`;
+        } else if (plan_msg) {
+            plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
+        }
         this._view!.webview.postMessage({
             command: "ts2web",
             ts2web_user: global.user_logged_in,
-            ts2web_plan: global.user_active_plan,
+            ts2web_plan: plan_msg,
         });
     }
 
@@ -133,33 +139,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //         return;
     //     }
 	// 	this._view!.webview.postMessage({ command: "updateQuery", value: intent });
-	// }
-
-    // public logout_success() {
-    //     if (!this._view) {
-    //         return;
-    //     }
-    //     this._view!.webview.postMessage({
-	// 		command: "logout"
-	// 	});
-    // }
-
-    // public login_success()
-    // {
-    //     if (!this._view) {
-    //         return;
-    //     }
-    //     this._view!.webview.postMessage({
-	// 		command: "login",
-    //         value: global.userLogged
-	// 	});
-    // }
-
-    // public plan_update(txt: string) {
-    //     if (!this._view) {
-    //         return;
-    //     }
-	// 	this._view!.webview.postMessage({ command: "updatePlan", value: txt });
 	// }
 
 	// public addHistory(intent: string) {
@@ -209,9 +188,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </ul>
                     </div>
                     <div class="sidebar-controls">
-                        <div class="sidebar-logged">Account: <span></span></div>
-                        <div class="sidebar-plan">Active Plan: <span></span><button class="sidebar-plan-button">⟳</button></div>
                         <button tabindex="-1" id="datacollection">Review Data...</button>
+                        <div class="sidebar-logged">Account: <b><span></span></b></div>
+                        <div class="sidebar-plan"><span>Active Plan: </span><button class="sidebar-plan-button">⟳</button></div>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="profile"><span>🔗</span> Your Account...</button>

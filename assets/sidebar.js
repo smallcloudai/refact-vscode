@@ -86,7 +86,7 @@
 
     const refreshButton = document.querySelector(".sidebar-plan-button");
     refreshButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "refreshPlan" });
+		vscode.postMessage({ type: "js2ts_refresh_login" });
 	});
 
 	window.addEventListener("message", (event) => {

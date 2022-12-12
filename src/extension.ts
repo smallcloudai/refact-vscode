@@ -23,6 +23,7 @@ declare global {
     var user_logged_in: string;
     var user_active_plan: string;
     var global_context: vscode.ExtensionContext|undefined;
+    var streamlined_login_countdown: number;
 }
 
 
@@ -90,20 +91,30 @@ async function login_clicked()
 {
     let got_it = await userLogin.login();
     if (got_it === "OK") {
+        global.streamlined_login_countdown = -1;
         return;
     }
     global.streamlined_login_ticket = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
+    userLogin.inference_login_force_retry();
     await vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
     let i = 0;
     // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
     let interval = setInterval(() => {
-        if (global.user_logged_in || i === 10) {
+        global.streamlined_login_countdown = 30 - (i % 30);
+        if (global.user_logged_in || i % 30 === 0) {
+            userLogin.login();
+        } else {
+            if (global.side_panel) {
+                global.side_panel.update_webview();
+            }
+        }
+        if (global.user_logged_in || i === 300) {
+            global.streamlined_login_countdown = -1;
             clearInterval(interval);
             return;
         }
-        userLogin.login();
         i++;
-    }, 30000);
+    }, 1000);
 }
 
 

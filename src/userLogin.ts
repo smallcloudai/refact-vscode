@@ -86,6 +86,14 @@ export async function login()
                 await vscode.workspace.getConfiguration().update('codify.apiKey', apiKey, vscode.ConfigurationTarget.Global);
                 usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
                 // fall through
+            } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("The API key") && global.streamlined_login_countdown !== -1) {
+                // expected: do nothing
+                global.user_logged_in = "";
+                global.user_active_plan = "";
+                if (global.side_panel) {
+                    global.side_panel.update_webview();
+                }
+                return "";
             } else {
                 usageStats.report_success_or_failure(false, "recall (1)", recall_url, json, "");
                 // fall through, maybe normal login will work
@@ -169,6 +177,10 @@ export function inference_login_force_retry()
 
 export async function inference_login(): Promise<boolean>
 {
+    if (global.streamlined_login_countdown !== -1) {
+        await login();
+    }
+    // Without login it will still work, with inference URL in settings.
     let apiKey = secret_api_key();
     if (_last_inference_login_ts + 3600*1000 > Date.now() && _last_inference_login_key === apiKey && apiKey !== "") {
         return _last_inference_login_cached_result;
