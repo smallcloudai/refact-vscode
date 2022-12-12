@@ -190,7 +190,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
                         <div class="sidebar-logged">Account: <b><span></span></b></div>
-                        <div class="sidebar-plan"><span>Active Plan: </span><button class="sidebar-plan-button">⟳</button></div>
+                        <div class="sidebar-plan"><span></span><button class="sidebar-plan-button">⟳</button></div>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="profile"><span>🔗</span> Your Account...</button>

@@ -205,7 +205,6 @@ body.vscode-light #logout {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-left: 4px;
 }
 
 .sidebar-plan-button {
@@ -221,4 +220,7 @@ body.vscode-light #logout {
     font-size: 22px;
     cursor: pointer;
     margin-left: 5px;
+}
+#datacollection {
+    display: none !important;
 }
