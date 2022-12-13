@@ -2,13 +2,12 @@
 
 Codify from Small Magellanic Cloud is a coding assistant which uses the latest advances in Deep Learning and Large Language Models. It follows your instructions and provides suggestions on where exactly and how it proposes to change your code. For more key features, keep reading.
 ## Features
-- Supports 15+ programming languages
+- Supports 20+ programming languages
 - State of the art model (for the size)
 - Experimental code rewriting features
 - Local inference
 - Cloud inference
 - We are crowdsourcing data for RLHF (the method behind GPT models)
-- Don’t want your AI tools to be monopolized by big corporations? Support us on patreon.
 
 ## Installation
 1. Install the extension

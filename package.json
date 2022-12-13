@@ -12,8 +12,9 @@
     "color": "#000000",
     "theme": "dark"
   },
+  "homepage": "https://codify.smallcloud.ai",
   "author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "engines": {
     "vscode": "^1.69.0"
   },
