@@ -9,11 +9,11 @@
   },
   "icon": "logo-small.png",
   "galleryBanner": {
-    "color": "#C80000",
+    "color": "#000000",
     "theme": "dark"
   },
   "author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.69.0"
   },
