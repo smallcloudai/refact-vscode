@@ -12,8 +12,8 @@
     "color": "#C80000",
     "theme": "dark"
   },
-  "author": "Codify <codify@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "0.5.26",
+  "author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
+  "version": "1.0.o",
   "engines": {
     "vscode": "^1.69.0"
   },
@@ -25,13 +25,6 @@
   "activationEvents": [
     "onStartupFinished",
     "onView:codify-presets"
-  ],
-  "badges": [
-    {
-      "url": "https://img.shields.io/github/stars/smallcloudai/plugin-vscode?style=social",
-      "description": "Github Stars",
-      "href": "https://smallcloud.ai"
-    }
   ],
   "main": "./out/extension.js",
   "contributes": {

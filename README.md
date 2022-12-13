@@ -12,7 +12,7 @@ You can see the “codify” status on the right bottom corner of the screen. Th
 On the left bar, you can see the new Codify panel. It lets you explore new features and shows the history of the requests you sent to Codify.
 
 ## How to use
-To ask Codify to do something, press F1. It will ask you for your intent: what are you trying to do? Try "Add docstrings" or  "Add type hints". 
+To ask Codify to do something, press F1. It will ask you for your intent: what are you trying to do? Try "Add docstrings" or "Add type hints". 
 Change suggestions provided by the model with another press on F1.
 
 If you want to focus on a specific area of your code, just highlight it before asking Codify.
