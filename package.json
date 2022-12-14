@@ -3,10 +3,6 @@
   "displayName": "Codify",
   "description": "AI autocomplete, refactoring and advanced code generation",
   "publisher": "smallcloud",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/smallcloudai/plugin-vscode"
-  },
   "icon": "logo-small.png",
   "galleryBanner": {
     "color": "#000000",
@@ -14,7 +10,7 @@
   },
   "homepage": "https://codify.smallcloud.ai",
   "author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "engines": {
     "vscode": "^1.69.0"
   },
