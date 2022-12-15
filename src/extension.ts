@@ -275,7 +275,7 @@ export async function rollback_and_regen(editor: vscode.TextEditor)
 }
 
 
-export async function ask_intent()
+export async function ask_intent(sidebar: boolean = false)
 {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -283,12 +283,15 @@ export async function ask_intent()
     }
     let selection = editor.selection;
     let selection_empty = selection.isEmpty;
-    const intent = await vscode.window.showInputBox({
-        title: (selection_empty ? "What would you like to do? (this action highlights code first)" : "What would you like to do with the selected code?"),
-        value: estate.global_intent,
-        valueSelection: [0, 80],
-        placeHolder: 'Convert to list comprehension',
-    });
+    let intent:any = estate.global_intent;
+    if(!sidebar) {
+        intent = await vscode.window.showInputBox({
+            title: (selection_empty ? "What would you like to do? (this action highlights code first)" : "What would you like to do with the selected code?"),
+            value: estate.global_intent,
+            valueSelection: [0, 80],
+            placeHolder: 'Convert to list comprehension',
+        });
+    }
     // global.panelProvider.updateQuery(intent);
     if (selection_empty) {
         if (intent) {

@@ -4,7 +4,7 @@ import * as estate from "./estate";
 import * as userLogin from "./userLogin";
 import * as dataCollectionPage from "./dataCollectionPage";
 import * as dataCollection from "./dataCollection";
-
+import * as extension from "./extension";
 
 export class PanelWebview implements vscode.WebviewViewProvider {
 	_view?: vscode.WebviewView;
@@ -48,6 +48,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 					// vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
 					// this.addHistory(data.value);
 					estate.saveIntent(data.value);
+                    extension.ask_intent(true);
                     // this.presetIntent(data.value);
 					break;
 				}

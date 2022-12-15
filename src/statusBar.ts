@@ -55,7 +55,7 @@ export class StatusBarMenu {
             this.menu.tooltip = `Codify is not enabled for "${this.language_name}"`;
         } else if (this.socketerror) {
             this.menu.text = `$(debug-disconnect) codify`;
-            this.menu.backgroundColor = undefined;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             if (this.socketerror_msg.indexOf("no model") !== -1) {
                 this.menu.tooltip = `Either an outage on the server side, or your settings might be outdated:\n${this.socketerror_msg}`;
             } else {

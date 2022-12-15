@@ -5,7 +5,6 @@
 	document.querySelector("#sidebar").addEventListener("click", (event) => {
 		if (event.target && event.target.nodeName === "LI") {
 			let text = event.target.innerText;
-			quickInput.value = text;
 			vscode.postMessage({ type: "presetSelected", value: text });
 		}
 	});
