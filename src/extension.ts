@@ -134,7 +134,10 @@ async function f1_pressed()
     if (state && state.get_mode() === Mode.Diff) {
         rollback_and_regen(editor);
     } else {
-        ask_intent();
+        let success = await ask_and_save_intent();
+        if (success) {
+            await follow_intent(estate.global_intent);
+        }
     }
 }
 
@@ -281,37 +284,52 @@ export async function rollback_and_regen(editor: vscode.TextEditor)
 }
 
 
-export async function ask_intent(sidebar: boolean = false)
+export async function ask_and_save_intent(): Promise<boolean>
+{
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return false;
+    }
+    let selection = editor.selection;
+    let selection_empty = selection.isEmpty;
+    let intent: string | undefined = estate.global_intent;
+    if (!sidebar) {
+        intent = await vscode.window.showInputBox({
+            title: (selection_empty ?
+                "What would you like to do? (this action highlights code first)" :
+                "What would you like to do with the selected code?"),
+            value: estate.global_intent,
+            valueSelection: [0, 80],
+            placeHolder: 'Convert to list comprehension',
+        });
+        if (intent) {
+            estate.save_intent(intent);
+            return true;
+        }
+    }
+    return false;
+}
+
+
+export async function follow_intent(intent: string)
 {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
         return;
     }
+    if (!intent) {
+        return;
+    }
     let selection = editor.selection;
     let selection_empty = selection.isEmpty;
-    let intent:any = estate.global_intent;
-    if(!sidebar) {
-        intent = await vscode.window.showInputBox({
-            title: (selection_empty ? "What would you like to do? (this action highlights code first)" : "What would you like to do with the selected code?"),
-            value: estate.global_intent,
-            valueSelection: [0, 80],
-            placeHolder: 'Convert to list comprehension',
-        });
-    }
-    // global.panelProvider.updateQuery(intent);
     if (selection_empty) {
-        if (intent) {
-            highlight.query_highlight(editor, intent);
-        }
+        await highlight.query_highlight(editor, intent);
     } else {
-        if (intent) {
-            estate.saveIntent(intent);
-            editor.selection = new vscode.Selection(selection.start, selection.start);  // this clears the selection, moves cursor up
-            if (selection.end.line > selection.start.line && selection.end.character === 0) {
-                selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
-            }
-            interactiveDiff.query_diff(editor, selection, "diff-selection");
+        editor.selection = new vscode.Selection(selection.start, selection.start);  // this clears the selection, moves cursor up
+        if (selection.end.line > selection.start.line && selection.end.character === 0) {
+            selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
         }
+        await interactiveDiff.query_diff(editor, selection, "diff-selection");
     }
 }
 

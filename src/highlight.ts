@@ -16,7 +16,7 @@ export async function query_highlight(editor: vscode.TextEditor, intent: string 
     if (intent === undefined) {
         intent = estate.global_intent;
     } else {
-        estate.saveIntent(intent);
+        estate.save_intent(intent);  // need it to return to previous selection
     }
     let doc = editor.document;
     let cursor = doc.offsetAt(editor.selection.active);

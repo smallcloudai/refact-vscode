@@ -27,12 +27,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
         this.update_webview();
-        // if(global.userLogged) {
-        //     this.login_success();
-        // }
-        // if(!global.userLogged) {
-        //     this.logout_success();
-        // }
 
         vscode.commands.registerCommand('workbench.action.focusSideBar', () => {
             webviewView.webview.postMessage({ command: "focus" });
@@ -45,23 +39,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 					if (!editor) {
 						return;
 					}
-					// vscode.commands.executeCommand("workbench.action.quickOpen", ">Codify: " + data.value);
-					// this.addHistory(data.value);
-					estate.saveIntent(data.value);
-                    extension.ask_intent(true);
-                    // this.presetIntent(data.value);
+                    extension.follow_intent(data.value);
 					break;
 				}
-				// case "quickInput": {
-				// 	let editor = vscode.window.activeTextEditor;
-				// 	if (!editor) {
-				// 		return;
-				// 	}
-				// 	// this.addHistory(data.value);
-				// 	estate.saveIntent(data.value);
-                //     // this.presetIntent(data.value);
-				// 	break;
-				// }
                 case "login": {
                     vscode.commands.executeCommand('plugin-vscode.login');
                     break;

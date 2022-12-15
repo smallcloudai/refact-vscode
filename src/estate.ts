@@ -276,7 +276,7 @@ export function onTextEdited(editor: vscode.TextEditor)
 }
 
 
-export function saveIntent(intent: string)
+export function save_intent(intent: string)
 {
     if (global_intent !== intent) {
         global_intent = intent;
