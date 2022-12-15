@@ -87,6 +87,9 @@ async function code_lens_clicked(arg0: any)
 }
 
 
+let global_autologin_timer: NodeJS.Timeout|undefined = undefined;
+
+
 async function login_clicked()
 {
     let got_it = await userLogin.login();
@@ -99,7 +102,10 @@ async function login_clicked()
     await vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}`));
     let i = 0;
     // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
-    let interval = setInterval(() => {
+    if (global_autologin_timer) {
+        clearInterval(global_autologin_timer);
+    }
+    global_autologin_timer = setInterval(() => {
         global.streamlined_login_countdown = 30 - (i % 30);
         if (global.user_logged_in || i % 30 === 0) {
             userLogin.login();
@@ -110,7 +116,7 @@ async function login_clicked()
         }
         if (global.user_logged_in || i === 300) {
             global.streamlined_login_countdown = -1;
-            clearInterval(interval);
+            clearInterval(global_autologin_timer);
             return;
         }
         i++;
