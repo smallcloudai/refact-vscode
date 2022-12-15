@@ -20,6 +20,9 @@ export async function report_success_or_failure(
     model_name: string | undefined,
 ) {
     if (typeof error_message !== "string") {
+        if (error_message.code.includes("INVALID_SESSION")) {
+            await fetchH2.disconnectAll();
+        }
         if (error_message instanceof Error) {
             error_message = error_message.message;
         } else {

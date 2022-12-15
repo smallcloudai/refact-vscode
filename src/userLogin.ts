@@ -84,7 +84,7 @@ export async function login()
                 apiKey = json.secret_key;
                 global.streamlined_login_ticket = "";
                 await vscode.workspace.getConfiguration().update('codify.apiKey', apiKey, vscode.ConfigurationTarget.Global);
-                usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
+                await usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
                 // fall through
             } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("The API key") && global.streamlined_login_countdown !== -1) {
                 // expected: do nothing
@@ -95,11 +95,11 @@ export async function login()
                 }
                 return "";
             } else {
-                usageStats.report_success_or_failure(false, "recall (1)", recall_url, json, "");
+                await usageStats.report_success_or_failure(false, "recall (1)", recall_url, json, "");
                 // fall through, maybe normal login will work
             }
         } catch (error) {
-            usageStats.report_success_or_failure(false, "recall (2)", recall_url, error, "");
+            await usageStats.report_success_or_failure(false, "recall (2)", recall_url, error, "");
             return;
         }
     }
@@ -133,10 +133,10 @@ export async function login()
             if (json.login_message) {
                 await usabilityHints.show_message_from_server("LoginServer", json.login_message);
             }
-            usageStats.report_success_or_failure(true, "login", login_url, "", "");
+            await usageStats.report_success_or_failure(true, "login", login_url, "", "");
             inference_login_force_retry();
         } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("rate limit")) {
-            usageStats.report_success_or_failure(false, "login-failed", login_url, json.human_readable_message, "");
+            await usageStats.report_success_or_failure(false, "login-failed", login_url, json.human_readable_message, "");
             return "";
         } else if (json.retcode === 'FAILED') {
             // Login failed, but the request was a success.
@@ -145,7 +145,7 @@ export async function login()
             if (global.side_panel) {
                 global.side_panel.update_webview();
             }
-            usageStats.report_success_or_failure(true, "login-failed", login_url, json.human_readable_message, "");
+            await usageStats.report_success_or_failure(true, "login-failed", login_url, json.human_readable_message, "");
             return "";
         } else {
             global.user_logged_in = "";
@@ -153,11 +153,11 @@ export async function login()
             if (global.side_panel) {
                 global.side_panel.update_webview();
             }
-            usageStats.report_success_or_failure(false, "login (2)", login_url, "unrecognized response", "");
+            await usageStats.report_success_or_failure(false, "login (2)", login_url, "unrecognized response", "");
             return "";
         }
     } catch (error) {
-        usageStats.report_success_or_failure(false, "login (3)", login_url, error, "");
+        await usageStats.report_success_or_failure(false, "login (3)", login_url, error, "");
         return "";
     }
     return "OK";
@@ -182,7 +182,7 @@ export async function inference_login(): Promise<boolean>
     }
     // Without login it will still work, with inference URL in settings.
     let apiKey = secret_api_key();
-    if (_last_inference_login_ts + 3600*1000 > Date.now() && _last_inference_login_key === apiKey && apiKey !== "") {
+    if (_last_inference_login_ts + 300*1000 > Date.now() && _last_inference_login_key === apiKey && apiKey !== "") {
         return _last_inference_login_cached_result;
     }
     let url = fetchAPI.inference_url("/v1/secret-key-activate");
@@ -215,20 +215,20 @@ export async function inference_login(): Promise<boolean>
         let result = await fetchH2.fetch(req);
         let json: any = await result.json();
         if (json.retcode === "OK") {
-            usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
+            await usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
             if (json.inference_message) {
                 usabilityHints.show_message_from_server("InferenceServer", json.inference_message);
             }
             _last_inference_login_cached_result = true;
         } else if (json.detail) {
-            usageStats.report_success_or_failure(false, "inference_login", report_this_url, json.detail, "");
+            await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json.detail, "");
             _last_inference_login_cached_result = false;
         } else {
-            usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
+            await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
             _last_inference_login_cached_result = false;
         }
     } catch (error) {
-        usageStats.report_success_or_failure(false, "inference_login", report_this_url, error, "");
+        await usageStats.report_success_or_failure(false, "inference_login", report_this_url, error, "");
         _last_inference_login_cached_result = false;
     }
     _last_inference_login_key = apiKey;
