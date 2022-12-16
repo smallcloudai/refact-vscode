@@ -1,4 +1,4 @@
-# Codify
+# Codify (BETA VERSION)
 
 Codify from Small Magellanic Cloud is a coding assistant which uses the latest advances in Deep Learning and Large Language Models. It follows your instructions and provides suggestions on where exactly and how it proposes to change your code. For more key features, keep reading.
 ## Features
