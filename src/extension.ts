@@ -293,19 +293,17 @@ export async function ask_and_save_intent(): Promise<boolean>
     let selection = editor.selection;
     let selection_empty = selection.isEmpty;
     let intent: string | undefined = estate.global_intent;
-    if (!sidebar) {
-        intent = await vscode.window.showInputBox({
-            title: (selection_empty ?
-                "What would you like to do? (this action highlights code first)" :
-                "What would you like to do with the selected code?"),
-            value: estate.global_intent,
-            valueSelection: [0, 80],
-            placeHolder: 'Convert to list comprehension',
-        });
-        if (intent) {
-            estate.save_intent(intent);
-            return true;
-        }
+    intent = await vscode.window.showInputBox({
+        title: (selection_empty ?
+            "What would you like to do? (this action highlights code first)" :
+            "What would you like to do with the selected code?"),
+        value: estate.global_intent,
+        valueSelection: [0, 80],
+        placeHolder: 'Convert to list comprehension',
+    });
+    if (intent) {
+        estate.save_intent(intent);
+        return true;
     }
     return false;
 }
