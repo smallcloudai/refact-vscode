@@ -59,7 +59,7 @@ export class StatusBarMenu {
             if (this.socketerror_msg.indexOf("no model") !== -1) {
                 this.menu.tooltip = `Either an outage on the server side, or your settings might be outdated:\n${this.socketerror_msg}`;
             } else {
-                this.menu.tooltip = `Cannot reach the Codify server:\n` + this.socketerror_msg;
+                this.menu.tooltip = `Cannot reach the server:\n` + this.socketerror_msg;
             }
         } else if (this.spinner) {
             this.menu.text = `$(sync~spin) codify`;

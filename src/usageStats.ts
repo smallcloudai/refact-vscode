@@ -23,7 +23,7 @@ export async function report_success_or_failure(
         if (error_message.code && error_message.code.includes("INVALID_SESSION")) {
             await fetchH2.disconnectAll();
         }
-        if (error_message instanceof Error) {
+        if (error_message instanceof Error && error_message.message) {
             error_message = error_message.message;
         } else {
             error_message = JSON.stringify(error_message);
