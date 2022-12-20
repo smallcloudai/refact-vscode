@@ -177,7 +177,7 @@ export function inference_login_force_retry()
 
 export async function inference_login(): Promise<boolean>
 {
-    if (global.streamlined_login_countdown !== -1) {
+    if (global.streamlined_login_countdown >= 0) {
         await login();
     }
     // Without login it will still work, with inference URL in settings.

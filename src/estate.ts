@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
+import * as codeLens from "./codeLens";
 
 
 export let global_intent: string = "Fix";
@@ -167,6 +168,8 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
     } else if (old_mode === Mode.Highlight) {
+        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+        codeLens.quick_refresh();
         highlight.hl_clear(state.editor);
     } else if (old_mode === Mode.DiffWait) {
         highlight.hl_clear(state.editor);

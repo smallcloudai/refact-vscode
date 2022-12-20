@@ -151,6 +151,7 @@ export async function inline_accepted()
 export function activate(context: vscode.ExtensionContext)
 {
     global.global_context = context;
+    global.streamlined_login_countdown = -1;
     let disposable1 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();

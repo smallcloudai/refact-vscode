@@ -32,14 +32,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             webviewView.webview.postMessage({ command: "focus" });
         });
 
-		webviewView.webview.onDidReceiveMessage((data) => {
+		webviewView.webview.onDidReceiveMessage(async (data) => {
 			switch (data.type) {
 				case "presetSelected": {
 					let editor = vscode.window.activeTextEditor;
 					if (!editor) {
 						return;
 					}
-                    extension.follow_intent(data.value);
+                    let state = estate.state_of_editor(editor);
+                    if (state) {
+                        await estate.switch_mode(state, estate.Mode.Normal);
+                    }
+                    await extension.follow_intent(data.value);
 					break;
 				}
                 case "login": {
@@ -65,7 +69,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     global.user_logged_in = "";
                     global.user_active_plan = "";
                     this.update_webview();
-                    userLogin.login();
+                    await userLogin.login();
                     break;
                 }
 				case "openSettings": {
