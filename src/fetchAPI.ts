@@ -64,14 +64,16 @@ export class PendingRequest {
                     usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
                     resolve(json_arrived);
                 }).catch((error) => {
-                    usageStats.report_success_or_failure(false, "h2stream (2)", api_fields.url, `${error}`, "");
-                    reject(error);
+                    if (error) {
+                        usageStats.report_success_or_failure(false, "h2stream (2)", api_fields.url, `${error}`, "");
+                    }
+                    reject();
                 });
             }).catch((error) => {
-                if (!error.message.includes("aborted")) {
+                if (error && !error.message.includes("aborted")) {
                     usageStats.report_success_or_failure(false, "h2stream (3)", api_fields.url, `${error}`, "");
                 }
-                reject(error);
+                reject();
             });
         }).finally(() => {
             let index = _global_reqs.indexOf(this);
@@ -83,7 +85,10 @@ export class PendingRequest {
             }
             // console.log(["--pendingRequests", _global_reqs.length, request.seq]);
         }).catch((error) => {
-            if (!error.message.includes("aborted")) {
+            if (error === undefined) {
+                // This is a result of reject() without parameters
+                return;
+            } else if (!error || !error.message || !error.message.includes("aborted")) {
                 usageStats.report_success_or_failure(false, "h2stream (4)", api_fields.url, `${error}`, "");
             }
         });

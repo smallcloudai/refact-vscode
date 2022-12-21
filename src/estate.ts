@@ -168,8 +168,6 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
         console.log(["ESC OFF DIFF"]);
     } else if (old_mode === Mode.Highlight) {
-        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
-        codeLens.quick_refresh();
         highlight.hl_clear(state.editor);
     } else if (old_mode === Mode.DiffWait) {
         highlight.hl_clear(state.editor);
@@ -188,11 +186,17 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         }
     }
     if (new_mode === Mode.Highlight) {
+        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+        codeLens.quick_refresh();
         if (state.highlight_json_backup !== undefined) {
             highlight.hl_show(state.editor, state.highlight_json_backup);
         } else {
             console.log(["cannot enter highlight state, no hl json"]);
         }
+    }
+    if (new_mode === Mode.Normal) {
+        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+        codeLens.quick_refresh();
     }
     if (new_mode !== Mode.Normal) {
         keyboard_events_on(state.editor);
