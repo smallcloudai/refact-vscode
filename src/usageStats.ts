@@ -22,6 +22,7 @@ export async function report_success_or_failure(
     if (typeof error_message !== "string") {
         if (error_message.code && error_message.code.includes("INVALID_SESSION")) {
             await fetchH2.disconnectAll();
+            userLogin.inference_login_force_retry();
         }
         if (error_message instanceof Error && error_message.message) {
             error_message = error_message.message;

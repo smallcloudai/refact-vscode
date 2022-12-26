@@ -198,11 +198,12 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         state.code_lens_pos = Number.MAX_SAFE_INTEGER;
         codeLens.quick_refresh();
     }
+    keyboard_events_on(state.editor);
     if (new_mode !== Mode.Normal) {
-        keyboard_events_on(state.editor);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+    } else {
+        keyboard_events_off(state);
     }
-    // editChaining.cleanup_edit_chaining_in_state(editor);
 }
 
 
