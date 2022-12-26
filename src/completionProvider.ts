@@ -31,7 +31,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let state = estate.state_of_document(document);
         if (state) {
             if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
-                console.log(["333 not inline", state.get_mode()]);
                 return [];
             }
         }
@@ -66,8 +65,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         whole_doc = text_left + whole_doc.substring(cursor);
 
         let delay_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
-
-        console.log(["INFILL", left_of_cursor, "|", right_of_cursor]);
 
         let completion = await this.cached_request(
             cancelToken,
@@ -141,7 +138,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!login) { return ""; }
         await fetch.wait_until_all_requests_finished();
         if (cancelToken.isCancellationRequested) {
-            console.log(["444 inline cancelled"]);
             return "";
         }
         let request = new fetch.PendingRequest(undefined, cancelToken);
@@ -185,7 +181,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let before_cursor1 = whole_doc.substring(0, cursor);
             let before_cursor2 = modif_doc.substring(0, cursor);
             if (before_cursor1 !== before_cursor2) {
-                console.log("before_cursor1 != before_cursor2");
+                console.log("completion before_cursor1 != before_cursor2");
                 return "";
             }
             stop_at = 0;
@@ -193,7 +189,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             for (let i = -1; i > -whole_doc.length; i--) {
                 let char1 = whole_doc.slice(i, i + 1);
                 let char2 = modif_doc.slice(i, i + 1);
-                // console.log("i", i, "char1", char1, "char2", char2);
                 if (char1 === "\n") {
                     stop_at = i + 1;
                 }
@@ -208,19 +203,17 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let completion = "";
         if (!fail) {
             fail = cursor >= modif_doc.length + stop_at;
-            console.log([`FAIL cursor ${cursor} < ${modif_doc.length} + ${stop_at}`]);
+            console.log([`completion modified before cursor ${cursor} < ${modif_doc.length} + ${stop_at}`]);
         }
         if (!fail) {
             completion = modif_doc.substring(cursor, modif_doc.length + stop_at);
-            console.log(["SUCCESS", request.seq, completion]);
+            console.log(["completion success", request.seq, completion]);
         }
         if (!fail && !multiline) {
             completion = completion.replace(/\s+$/, "");
-            console.log(["RTRIM", request.seq, completion]);
             fail = completion.match(/\n/g) !== null;
         } else if (!fail && multiline) {
             completion = completion.replace(/[ \t\n]+$/, "");
-            console.log(["MLINE RTRIM", request.seq, completion]);
         }
         if (!fail) {
             fail = completion.length === 0;

@@ -19,16 +19,36 @@ export async function report_success_or_failure(
     error_message: string | any,
     model_name: string | undefined,
 ) {
+    let invalid_session = false;
+    let timedout = false;
     if (typeof error_message !== "string") {
         if (error_message.code && error_message.code.includes("INVALID_SESSION")) {
-            await fetchH2.disconnectAll();
-            userLogin.inference_login_force_retry();
+            invalid_session = true;
+        }
+        if (error_message.code && error_message.code.includes("ETIMEDOUT")) {
+            timedout = true;
         }
         if (error_message instanceof Error && error_message.message) {
             error_message = error_message.message;
         } else {
             error_message = JSON.stringify(error_message);
         }
+    } else {
+        if (error_message.includes("INVALID_SESSION")) {
+            invalid_session = true;
+        }
+        if (error_message.includes("ETIMEDOUT") || error_message.includes("timed out")) {
+            timedout = true;
+        }
+    }
+    if (invalid_session) {
+        await fetchH2.disconnectAll();
+        userLogin.inference_login_force_retry();
+        console.log(["INVALID_SESSION => inference_login_force_retry"]);
+    }
+    if (timedout) {
+        await fetchH2.disconnectAll();
+        console.log(["ETIMEDOUT => disconnectAll"]);
     }
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";
@@ -50,7 +70,8 @@ export async function report_success_or_failure(
         }
         global.status_bar.url_and_model_worked("", "");
     }
-    let msg = `${positive ? "1" : "0"} ${scope} ${related_url} "${error_message}"`;
+    let error_message_json = JSON.stringify(error_message);
+    let msg = `${positive ? "1" : "0"} ${scope} ${related_url} ${error_message_json}`;
     // Typical msg:
     // 1 CompletionProvider https://inference.smallcloud.ai/v1/contrast ""
     // 0 CompletionProvider https://inference.smallcloud.ai/v1/contrast "Could not verify your API key (3)"
