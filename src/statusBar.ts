@@ -83,6 +83,10 @@ export class StatusBarMenu {
                 }
                 msg += `Click to disable Codify for "${this.language_name}"`;
             }
+            if (_website_message || _inference_message) {
+                msg += "\n";
+                msg += _website_message || _inference_message;
+            }
             this.menu.tooltip = msg;
         } else if (!userLogin.check_if_login_worked()) { // condition here must be the same as in status_bar_clicked()
             this.menu.text = `$(account) codify`;

@@ -120,8 +120,11 @@ export async function login()
             if (json.inference_url) {
                 fetchAPI.save_url_from_login(json.inference_url);
             }
-            if (json.codify_message) {
-                statusBar.set_website_message(json.codify_message);
+            if (json.tooltip_message) {
+                statusBar.set_website_message(json.tooltip_message);
+            }
+            if (json.login_message) {
+                await usabilityHints.show_message_from_server("LoginServer", json.login_message);
             }
             global.user_active_plan = json.inference;
             if (global.side_panel) {
@@ -129,9 +132,6 @@ export async function login()
             }
             if (json.inference === "DISABLED") {
                 fetchAPI.save_url_from_login("");
-            }
-            if (json.login_message) {
-                await usabilityHints.show_message_from_server("LoginServer", json.login_message);
             }
             await usageStats.report_success_or_failure(true, "login", login_url, "", "");
             inference_login_force_retry();
@@ -217,7 +217,10 @@ export async function inference_login(): Promise<boolean>
         if (json.retcode === "OK") {
             await usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
             if (json.inference_message) {
-                usabilityHints.show_message_from_server("InferenceServer", json.inference_message);
+                await usabilityHints.show_message_from_server("InferenceServer", json.inference_message);
+            }
+            if (json.tooltip_message) {
+                statusBar.set_inference_message(json.tooltip_message);
             }
             _last_inference_login_cached_result = true;
         } else if (json.detail) {
