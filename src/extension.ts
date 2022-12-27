@@ -328,6 +328,7 @@ export async function follow_intent(intent: string)
         if (selection.end.line > selection.start.line && selection.end.character === 0) {
             selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
         }
+        estate.save_intent(intent);
         await interactiveDiff.query_diff(editor, selection, "diff-selection");
     }
 }
