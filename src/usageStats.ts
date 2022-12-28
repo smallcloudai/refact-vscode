@@ -71,10 +71,10 @@ export async function report_success_or_failure(
         global.status_bar.url_and_model_worked("", "");
     }
     let error_message_json = JSON.stringify(error_message);
-    let msg = `${positive ? "1" : "0"} ${scope} ${related_url} ${error_message_json}`;
+    let msg = `${positive ? "1" : "0"}\t${scope}\t${related_url}\t${error_message_json}`;  // tabs for field separation, still human readable
     // Typical msg:
-    // 1 CompletionProvider https://inference.smallcloud.ai/v1/contrast ""
-    // 0 CompletionProvider https://inference.smallcloud.ai/v1/contrast "Could not verify your API key (3)"
+    // 1  "completion"  https://inference.smallcloud.ai/v1/contrast  ""
+    // 0  "completion"  https://inference.smallcloud.ai/v1/contrast  "Could not verify your API key (3)"
     console.log([msg]);
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context !== undefined) {

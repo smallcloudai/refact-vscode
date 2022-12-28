@@ -158,7 +158,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let t0 = Date.now();
             request.supply_stream(...fetch.fetch_api_promise(
                 cancelToken,
-                "CompletionProvider", // scope
+                "completion", // scope
                 sources,
                 "Infill", // intent
                 "infill", // scratchpad function
