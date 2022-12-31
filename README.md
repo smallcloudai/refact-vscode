@@ -11,7 +11,7 @@ Codify is a coding assistant from Small Magellanic Cloud AI Ltd. It uses the lat
 - Experimental features: select & refactor, highlight & fix.
 
 ## Code Completion
-As you type in code, this feature offers suggestions to increase your productivity. It can offer commonly used commands, programming patterns, libraries usage.
+As you type in code, this feature offers suggestions to increase your productivity. It can suggest commonly used programming patterns, libraries and APIs usage, and it helps with typing.
 
 By looking up and down the cursor, it can make more informed suggestions based on surrounding code, natural language comments, and other contextual information.
 
