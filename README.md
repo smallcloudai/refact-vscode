@@ -26,12 +26,12 @@ The plugin is open source: you can verify for yourself it cares about your data 
 ## Getting Started
 The sidebar on the left lets you explore new features. There is also a status icon on at the bottom of the screen, it reflects communication with AI inference server.
 
-## Cloud subscription
+## Cloud Subscription
 You can start with a free trial, switch to a paid subscription later. Alternatively, you can run your own self-hosted version.
 
-## Experimental features
-To ask Codify to do something, press F1. It will ask you for your intent: what are you trying to do? Try "add docstrings", "add type hints", "convert to list comprehension", "use lambda".
-
-Select & Refactor: select lines to change, press F1. The model will try to modify the selected lines only.
+## Experimental Features
+Select & Refactor: select lines to change, press F1. It will ask you for your intent: what are you trying to do? Try "add docstrings", "add type hints", "convert to list comprehension", "use lambda". The model will try to modify the selected lines only.
 
 Highlight & Fix: press F1 without selection. The model will highlight all the places it thinks your instruction is applicable to. Click on highlighted lines to generate changes.
+
+Stay tuned for more!
