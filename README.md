@@ -11,8 +11,11 @@ Codify is a coding assistant from Small Magellanic Cloud AI Ltd. It uses the lat
 - Cloud subscription and an open source self-hosted version.
 - Experimental features: select & refactor, highlight & fix.
 
-## Getting started
-The sidebar on the left lets you explore new features. There is also a status icon on at the bottom of the screen, it will reflect communication with the server.
+## Getting Started
+The sidebar on the left lets you explore new features. There is also a status icon on at the bottom of the screen, it reflects communication with AI inference server.
+
+## You Are In Control of Your Data
+We are not collecting data on server side (the inference server), see website for details.
 
 ## Open Source
 The plugin is open source: you can verify for yourself it cares about your data as advertised.
