@@ -1,40 +1,37 @@
-# Codify (BETA VERSION)
+# Codify strives to be the only AI coding assistant you'll ever need!
+Start with a free trial!
 
-Codify from Small Magellanic Cloud is a coding assistant which uses the latest advances in Deep Learning and Large Language Models. It follows your instructions and provides suggestions on where exactly and how it proposes to change your code. For more key features, keep reading.
+Codify is a coding assistant from Small Magellanic Cloud AI Ltd. It uses the latest advances in Deep Learning and Large Language Models.
+
+
 ## Features
-- Supports 20+ programming languages
-- State of the art model (for the size)
-- Experimental code rewriting features
-- Local inference
-- Cloud inference
-- We are crowdsourcing data for RLHF (the method behind GPT models)
-
-## Installation
-1. Install the extension
-2. Click through the login option and follow it to [codify.smallcloud.ai](https://codify.smallcloud.ai); we recommend using login with Google or GitHub to avoid email verification.
-3. Try out plugin.
+- Open source plugin.
+- State of the art code generation models (see website for details).
+- 20+ programming languages.
+- Cloud subscription and a free self-hosted version.
+- Experimental features: select & refactor, highlight & fix.
 
 ## Getting started
-You can see the “codify” status on the right bottom corner of the screen. The status will be updated when codify is communicating with the server.
+You can see the “codify” status on the right bottom corner of the screen. The status will be updated when codify is communicating with the server. The sidebar on the left lets you explore new features.
 
-On the left bar, you can see the new Codify panel. It lets you explore new features and shows the history of the requests you sent to Codify.
+## Open Source
+The plugin is open source: you can verify for yourself it cares about your data as advertised.
 
-## How to use
-To ask Codify to do something, press F1. It will ask you for your intent: what are you trying to do? Try "Add docstrings" or "Add type hints". 
-Change suggestions provided by the model with another press on F1.
+## Code Completion
+As you type in code, this feature offers suggestions to increase your productivity. It can offer commonly used commands, functions, and variables.
 
-If you want to focus on a specific area of your code, just highlight it before asking Codify.
+By looking up and down the cursor, it can make more informed suggestions based on surrounding code, natural language comments, and other contextual information.
 
-# Features
-## Autocompletion
-Accept suggestions about your next lines of code based on context & syntax both before and after the cursor.
-## Highlight and Fix (beta)
-Model highlights what is likely to change given an instruction. Click to generate changes. 
-## Select And Refactor (beta)
-Select specific code and tell the model what you want. 
-## Settings
-You can access the Codify Settings panel by going to the Extensions panel in VSCode, selecting the extension, and clicking on to Extension settings.
+It also works fast!
 
-Codify settings allow you to 
-- Enter your API key
-- Choose Temperature for the model. Lower temperature guides the model to select higher probability words, whereas higher temperature allows it to provide more variable suggestions.
+
+## Cloud subscription
+You can start with a free trial, switch to a paid subscription later. Alternatively, you can run your own self-hosted version.
+
+
+## Experimental features
+To ask Codify to do something, press F1. It will ask you for your intent: what are you trying to do? Try "add docstrings", "add type hints", "convert to list comprehension", "use lambda".
+
+Select & Refactor: select lines to change, press F1. The model will try to modify the selected lines only.
+
+Highlight & Fix: press F1 without selection. The model will highlight all the places it thinks your instruction is applicable to. Click on highlighted lines to generate changes.
