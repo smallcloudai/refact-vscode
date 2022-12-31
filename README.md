@@ -1,4 +1,4 @@
-# Codify strives to be the only AI coding assistant you'll ever need!
+# Codify strives to be the only AI coding assistant you'll ever need
 Start with a free trial!
 
 Codify is a coding assistant from Small Magellanic Cloud AI Ltd. It uses the latest advances in Deep Learning and Large Language Models.
@@ -8,11 +8,11 @@ Codify is a coding assistant from Small Magellanic Cloud AI Ltd. It uses the lat
 - Open source plugin.
 - State of the art code generation models (see website for details).
 - 20+ programming languages.
-- Cloud subscription and a free self-hosted version.
+- Cloud subscription and an open source self-hosted version.
 - Experimental features: select & refactor, highlight & fix.
 
 ## Getting started
-You can see the “codify” status on the right bottom corner of the screen. The status will be updated when codify is communicating with the server. The sidebar on the left lets you explore new features.
+The sidebar on the left lets you explore new features. There is also a status icon on at the bottom of the screen, it will reflect communication with the server.
 
 ## Open Source
 The plugin is open source: you can verify for yourself it cares about your data as advertised.
