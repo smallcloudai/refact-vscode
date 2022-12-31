@@ -27,7 +27,7 @@ The plugin is open source: you can verify for yourself it cares about your data 
 The sidebar on the left lets you explore new features. There is also a status icon on at the bottom of the screen, it reflects communication with AI inference server.
 
 ## Cloud Subscription
-You can start with a free trial, switch to a paid subscription later. Alternatively, you can run your own self-hosted version.
+You can start with a free trial, switch to a paid subscription later. Alternatively, you can run your own open source self-hosted version.
 
 ## Experimental Features
 Select & Refactor: select lines to change, press F1. It will ask you for your intent: what are you trying to do? Try "add docstrings", "add type hints", "convert to list comprehension", "use lambda". The model will try to modify the selected lines only.
