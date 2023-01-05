@@ -223,18 +223,24 @@ export async function inference_login(): Promise<boolean>
                 statusBar.set_inference_message(json.tooltip_message);
             }
             _last_inference_login_cached_result = true;
+            _last_inference_login_key = apiKey;
+            _last_inference_login_ts = Date.now();
         } else if (json.detail) {
+            _last_inference_login_cached_result = false;
+            _last_inference_login_key = apiKey;
+            _last_inference_login_ts = Date.now();
             await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json.detail, "");
-            _last_inference_login_cached_result = false;
         } else {
-            await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
             _last_inference_login_cached_result = false;
+            _last_inference_login_key = apiKey;
+            _last_inference_login_ts = Date.now();
+            await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
         }
     } catch (error) {
-        await usageStats.report_success_or_failure(false, "inference_login", report_this_url, error, "");
         _last_inference_login_cached_result = false;
+        _last_inference_login_key = apiKey;
+        _last_inference_login_ts = Date.now();
+        await usageStats.report_success_or_failure(false, "inference_login", report_this_url, error, "");
     }
-    _last_inference_login_key = apiKey;
-    _last_inference_login_ts = Date.now();
     return _last_inference_login_cached_result;
 }

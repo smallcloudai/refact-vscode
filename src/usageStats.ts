@@ -21,12 +21,16 @@ export async function report_success_or_failure(
 ) {
     let invalid_session = false;
     let timedout = false;
+    let conn_refused = false;
     if (typeof error_message !== "string") {
         if (error_message.code && error_message.code.includes("INVALID_SESSION")) {
             invalid_session = true;
         }
         if (error_message.code && error_message.code.includes("ETIMEDOUT")) {
             timedout = true;
+        }
+        if (error_message.code && error_message.code.includes("ECONNREFUSED")) {
+            conn_refused = true;
         }
         if (error_message instanceof Error && error_message.message) {
             error_message = error_message.message;
@@ -40,11 +44,14 @@ export async function report_success_or_failure(
         if (error_message.includes("ETIMEDOUT") || error_message.includes("timed out")) {
             timedout = true;
         }
+        if (error_message.includes("ECONNREFUSED")) {
+            conn_refused = true;
+        }
     }
-    if (invalid_session) {
+    if (invalid_session || conn_refused) {
         await fetchH2.disconnectAll();
         userLogin.inference_login_force_retry();
-        console.log(["INVALID_SESSION => inference_login_force_retry"]);
+        console.log(["INVALID_SESSION, ECONNREFUSED => inference_login_force_retry"]);
     }
     if (timedout) {
         await fetchH2.disconnectAll();
