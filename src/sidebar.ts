@@ -55,7 +55,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "js2ts_goto_profile": {
-                    vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/account`));
+                    vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
                     break;
                 }
                 case "js2ts_goto_datacollection": {
