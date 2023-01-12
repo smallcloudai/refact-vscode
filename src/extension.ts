@@ -330,8 +330,15 @@ export async function ask_and_save_intent(): Promise<boolean>
 }
 
 
-export async function follow_intent(intent: string)
+export async function follow_intent(intent: string, function_name: string = "", model_ins: string="")
 {
+    let functionName: string;
+    if (function_name) {
+        functionName = function_name;
+    } else {
+        functionName = "diff-selection";
+    }
+
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
         return;
@@ -349,7 +356,7 @@ export async function follow_intent(intent: string)
             selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
         }
         estate.save_intent(intent);
-        await interactiveDiff.query_diff(editor, selection, "diff-selection");
+        await interactiveDiff.query_diff(editor, selection, functionName, model_ins);
     }
 }
 

@@ -251,16 +251,21 @@ export function fetch_api_promise(
     maxEdits: number,
     stop_tokens: string[],
     stream: boolean,
+    model_ins: string = "",
 ): [Promise<fetchH2.Response>, ApiFields]
 {
     let url = inference_url("/v1/contrast");
     let model_ = vscode.workspace.getConfiguration().get('codify.model');
     let model: string;
+
     if (typeof model_ !== 'string' || model_ === '') {
-        model = 'CONTRASTcode';
-    } else {
-        model = `${model_}`;
+        model_ = 'CONTRASTcode';
     }
+    if (model_ins) {
+        model_ = model_ins;
+    }
+    model = `${model_}`;
+
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return [Promise.reject("No API key"), new ApiFields()];

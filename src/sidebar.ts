@@ -31,21 +31,46 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         vscode.commands.registerCommand('workbench.action.focusSideBar', () => {
             webviewView.webview.postMessage({ command: "focus" });
         });
-
-		webviewView.webview.onDidReceiveMessage(async (data) => {
-			switch (data.type) {
+    
+		webviewView.webview.onDidReceiveMessage(async (data) => {            
+			switch (data.type) {                
 				case "presetSelected": {
 					let editor = vscode.window.activeTextEditor;
 					if (!editor) {
 						return;
 					}
                     let state = estate.state_of_editor(editor);
+
+                    let function_name: string = "";
+                    let model_name: string = "";
+
+                    switch (data.class) {
+                        case "selection-required": {
+                            let selection = editor.selection;
+                            let selection_empty = selection.isEmpty;
+                            if (selection_empty) {
+                                return; 
+                            }
+                            
+                            switch (data.id) {
+                                case "dump-files": {
+                                    function_name = "dumpfiles";
+                                    model_name = "longthink/experimental";
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+
                     if (state) {
                         await estate.switch_mode(state, estate.Mode.Normal);
                     }
-                    await extension.follow_intent(data.value);
+
+                    await extension.follow_intent(data.value, function_name, model_name);
 					break;
 				}
+
                 case "login": {
                     vscode.commands.executeCommand('plugin-vscode.login');
                     break;
@@ -144,7 +169,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 		const styleMainUri = webview.asWebviewUri(
 			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
 		);
-
 		const nonce = this.getNonce();
 
 		return `<!DOCTYPE html>
@@ -166,10 +190,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div id="sidebar">
                         <h3 class="presets-title">Select & refactor: Press F1</h3>
                         <ul class="presets links-menu">
-                            <li tabindex="2">Add type hints</li>
-                            <li tabindex="3">Remove type hints</li>
-                            <li tabindex="4">Convert to list comprehension</li>
-                            <li tabindex="5">Add docstrings</li>
+                            <li tabindex="2" class="regular">Add type hints</li>
+                            <li tabindex="3" class="regular">Remove type hints</li>
+                            <li tabindex="4" class="regular">Convert to list comprehension</li>
+                            <li tabindex="5" class="regular">Add docstrings</li>
+                        </ul>
+                        <h3 class="presets-title">3rd Party</h3>
+                        <ul class="presets links-menu">
+                            <li tabindex="2" class="selection-required" id="dump-files">Dump files</li>
                         </ul>
                     </div>
                     <div class="sidebar-controls">

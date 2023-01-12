@@ -1,13 +1,22 @@
 (function () {
 	const vscode = acquireVsCodeApi();
-	let presets = document.querySelectorAll(".presets li");
+	// let presets = document.querySelectorAll(".presets li");
 
-	document.querySelector("#sidebar").addEventListener("click", (event) => {
-		if (event.target && event.target.nodeName === "LI") {
-			let text = event.target.innerText;
-			vscode.postMessage({ type: "presetSelected", value: text });
-		}
-	});
+    const sidebar = document.querySelector("#sidebar");
+
+    sidebar.querySelectorAll("li").forEach((userItem) => {
+        userItem.addEventListener("click", (event) => {
+            if (event.target) {
+                let text = event.target.innerText;
+                vscode.postMessage({ 
+                    type: "presetSelected", 
+                    value: text, 
+                    id: userItem.id, 
+                    class: userItem.className
+                });
+            }
+        });
+    });
 
     // const quickInput = document.querySelector("#quickinput");
 
@@ -110,6 +119,14 @@
             logout.style.display = message.ts2web_user ? 'block' : 'none';
             data.style.display = message.ts2web_user ? 'block' : 'none';
             break;
+
+        // case "display-inactive":
+        //     document.querySelector('.selection-required').style.opacity = 0.4;
+        //     break;
+		
+        // case "display-active":
+        //     document.querySelector('.selection-required').style.opacity = 1;
+        //     break;
 		}
 	});
 })();
