@@ -64,7 +64,7 @@ export class PendingRequest {
                     usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
                     resolve(json_arrived);
                 }).catch((error) => {
-                    if (error) {
+                    if (error && !error.message.includes("aborted")) {
                         usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, `${error}`, "");
                     }
                     reject();
