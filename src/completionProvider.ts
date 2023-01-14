@@ -4,6 +4,7 @@ import * as fetch from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import * as estate from "./estate";
 import * as storeVersions from "./storeVersions";
+import * as codeLens from "./codeLens";
 
 
 class CacheEntry {
@@ -74,6 +75,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             cursor,
             multiline
         );
+
+        if (state && completion && multiline) {
+            state.completion_lens_pos = position.line;
+            codeLens.quick_refresh();
+        }
 
         let command = {
             command: "plugin-vscode.inlineAccepted",

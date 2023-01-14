@@ -143,7 +143,7 @@ export class StatusBarMenu {
 }
 
 
-function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
+function on_change_active_editor(editor: vscode.TextEditor | undefined)
 {
     if (!editor) {
         global.status_bar.set_language_enabled(true, "");
@@ -161,10 +161,10 @@ function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
 
 export function status_bar_init()
 {
-    let disposable6 = vscode.window.onDidChangeActiveTextEditor(onChangeActiveEditor);
-    let currentEditor = vscode.window.activeTextEditor;
-    if (currentEditor) {
-        onChangeActiveEditor(currentEditor);
+    let disposable6 = vscode.window.onDidChangeActiveTextEditor(on_change_active_editor);
+    let current_editor = vscode.window.activeTextEditor;
+    if (current_editor) {
+        on_change_active_editor(current_editor);
     }
     return [disposable6];
 }

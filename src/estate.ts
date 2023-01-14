@@ -49,7 +49,10 @@ export class StateOfEditor {
     public diffDeletedLines: any = [];
     public diffAddedLines: any = [];
 
-    public code_lens_pos: number = Number.MAX_SAFE_INTEGER;
+    public diff_lens_pos: number = Number.MAX_SAFE_INTEGER;
+    public completion_lens_pos: number = Number.MAX_SAFE_INTEGER;
+    public completion_no_cache: number = 0;
+    public completion_reset_on_cursor_movement: boolean = false;
 
     public showing_diff_modif_doc: string | undefined;
     public showing_diff_move_cursor: boolean = false;
@@ -59,8 +62,8 @@ export class StateOfEditor {
 
     public edit_chain_modif_doc: string | undefined = undefined;
 
-    public cursor_move_event: any = undefined;
-    public text_edited_event: any = undefined;
+    public cursor_move_event: vscode.Disposable|undefined = undefined;
+    public text_edited_event: vscode.Disposable|undefined = undefined;
 
     public data_feedback_candidate: DataCollectStruct|undefined = undefined;
 
@@ -186,7 +189,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         }
     }
     if (new_mode === Mode.Highlight) {
-        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         codeLens.quick_refresh();
         if (state.highlight_json_backup !== undefined) {
             highlight.hl_show(state.editor, state.highlight_json_backup);
@@ -195,14 +198,14 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         }
     }
     if (new_mode === Mode.Normal) {
-        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         codeLens.quick_refresh();
     }
     keyboard_events_on(state.editor);
     if (new_mode !== Mode.Normal) {
         vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
     } else {
-        keyboard_events_off(state);
+        // keyboard_events_off(state);
     }
 }
 
@@ -219,6 +222,12 @@ export function keyboard_events_on(editor: vscode.TextEditor)
     if (!state) {
         return;
     }
+    if (state.cursor_move_event) {
+        state.cursor_move_event.dispose();
+    }
+    if (state.text_edited_event) {
+        state.text_edited_event.dispose();
+    }
     state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection((ev: vscode.TextEditorSelectionChangeEvent) => {
         let ev_editor = ev.textEditor;
         if (!editor || editor !== ev_editor) {
@@ -230,6 +239,10 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         if (pos1.line === pos2.line && pos1.character === pos2.character) {
             interactiveDiff.on_cursor_moved(editor, pos1, is_mouse);
         }
+        if (state && state.completion_reset_on_cursor_movement) {
+            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+            codeLens.quick_refresh();
+        }
     });
     state.text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
         let doc = ev.document;
@@ -237,7 +250,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         if (doc !== ev_doc) {
             return;
         }
-        onTextEdited(editor);
+        on_text_edited(editor);
     });
 }
 
@@ -255,7 +268,7 @@ function keyboard_events_off(state: StateOfEditor)
 }
 
 
-export function onTextEdited(editor: vscode.TextEditor)
+export function on_text_edited(editor: vscode.TextEditor)
 {
     let state = state_of_editor(editor);
     if (!state) {
@@ -269,7 +282,7 @@ export function onTextEdited(editor: vscode.TextEditor)
         console.log(["text edited mode", state._mode, "hands off"]);
         interactiveDiff.hands_off_dont_remove_presentation(editor);
         state.highlight_json_backup = undefined;
-        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Highlight) {
@@ -281,6 +294,39 @@ export function onTextEdited(editor: vscode.TextEditor)
         // state.area2cache.clear();
         state.highlight_json_backup = undefined;
     }
+}
+
+
+function on_change_active_editor(editor: vscode.TextEditor | undefined)
+{
+    if (global.current_editor_text_edited_event) {
+        global.current_editor_text_edited_event.dispose();
+        global.current_editor_text_edited_event = undefined;
+    }
+    global.current_editor_text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
+        if (!editor) {
+            return;
+        }
+        let state_stored = editor2state.get(editor);
+        if (!state_stored) {
+            let state = state_of_editor(editor);
+            if (state) {
+                // this does almost nothing, but the state will be there for inline completion to pick up
+                switch_mode(state, Mode.Normal);
+            }
+        }
+    });
+}
+
+
+export function estate_init()
+{
+    let disposable9 = vscode.window.onDidChangeActiveTextEditor(on_change_active_editor);
+    let current_editor = vscode.window.activeTextEditor;
+    if (current_editor) {
+        on_change_active_editor(current_editor);
+    }
+    return [disposable9];
 }
 
 

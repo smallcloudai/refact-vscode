@@ -70,7 +70,7 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
     let json: any;
     await estate.switch_mode(state, estate.Mode.DiffWait);
     animation_start(editor, sensitive_area);
-    state.code_lens_pos = sensitive_area.start.line;
+    state.diff_lens_pos = sensitive_area.start.line;
     codeLens.quick_refresh();
     let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
@@ -368,8 +368,8 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
         state.diffDecos.push(very_green_type);
         state.diffDecos.push(very_red_type);
     });
-    state.code_lens_pos = Math.min(state.code_lens_pos, ...state.diffAddedLines, ...state.diffDeletedLines);
-    console.log(["code_lens_pos", state.code_lens_pos]);
+    state.diff_lens_pos = Math.min(state.diff_lens_pos, ...state.diffAddedLines, ...state.diffDeletedLines);
+    console.log(["code_lens_pos", state.diff_lens_pos]);
     codeLens.quick_refresh();
 }
 
@@ -430,7 +430,7 @@ export async function like_and_accept(editor: vscode.TextEditor)
         return;
     }
     state.diff_changing_doc = true;
-    state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+    state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
     let thenable = editor.edit((e) => {
         if (!state) {
             return;

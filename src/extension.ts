@@ -24,6 +24,7 @@ declare global {
     var user_active_plan: string;
     var global_context: vscode.ExtensionContext|undefined;
     var streamlined_login_countdown: number;
+    var current_editor_text_edited_event: vscode.Disposable|undefined;
 }
 
 
@@ -33,7 +34,7 @@ async function pressed_escape()
     if (editor) {
         let state = estate.state_of_editor(editor);
         if (state) {
-            state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+            state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
             codeLens.quick_refresh();
         }
         if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
@@ -74,12 +75,28 @@ async function code_lens_clicked(arg0: any)
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
+        let state = estate.state_of_editor(editor);
+        if (!state) {
+            return;
+        }
         if (arg0 === "APPROVE") {
             await interactiveDiff.like_and_accept(editor);
         } else if (arg0 === "REJECT") {
             await pressed_escape();  // might return to highlight
         } else if (arg0 === "RERUN") {
             await rollback_and_regen(editor);
+        } else if (arg0 === "COMP_APPROVE") {
+            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+            codeLens.quick_refresh();
+            await vscode.commands.executeCommand('editor.action.inlineSuggest.commit');
+        } else if (arg0 === "COMP_REJECT") {
+            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+            codeLens.quick_refresh();
+            await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
+        } else if (arg0 === "COMP_THINK_LONGER") {
+            state.completion_no_cache = 1;
+            await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
+            await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         } else {
             console.log(["code_lens_clicked: can't do", arg0]);
         }
@@ -223,6 +240,7 @@ export function activate(context: vscode.ExtensionContext)
 
     context.subscriptions.push(logout);
     context.subscriptions.push(...statusBar.status_bar_init());
+    context.subscriptions.push(...estate.estate_init());
 
     setTimeout(() => {
         userLogin.login();
@@ -249,7 +267,7 @@ export async function manual_edit_chaining()
     }
     let state = estate.state_of_editor(editor);
     if (state) {
-        state.code_lens_pos = Number.MAX_SAFE_INTEGER;
+        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         if (state.get_mode() === Mode.Diff) {
             await rollback_and_regen(editor);
             return;
