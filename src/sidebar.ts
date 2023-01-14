@@ -58,6 +58,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                     model_name = "longthink/experimental";
                                     break;
                                 }
+                                case "explain-code": {
+                                    function_name = "explain-code";
+                                    model_name = "longthink/experimental";
+                                    break;
+                                }
                             }
                             break;
                         }
@@ -198,6 +203,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <h3 class="presets-title">3rd Party</h3>
                         <ul class="presets links-menu">
                             <li tabindex="2" class="selection-required" id="dump-files">Dump files</li>
+                            <li tabindex="2" class="selection-required" id="explain-code">Explain Code</li>
                         </ul>
                     </div>
                     <div class="sidebar-controls">
