@@ -75,9 +75,13 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             cursor,
             multiline
         );
-
-        if (state && completion && multiline) {
-            state.completion_lens_pos = position.line;
+        if (state) {
+            if  (state && completion && multiline) {
+                state.completion_lens_pos = position.line;
+                vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+            } else {
+                state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+            }
             codeLens.quick_refresh();
         }
 

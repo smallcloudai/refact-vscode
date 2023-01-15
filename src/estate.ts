@@ -167,9 +167,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
     if (old_mode === Mode.Diff) {
         await interactiveDiff.dislike_and_rollback(state.editor);
         vscode.commands.executeCommand('setContext', 'codify.runTab', false);
-        console.log(["TAB OFF DIFF"]);
         vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
-        console.log(["ESC OFF DIFF"]);
     } else if (old_mode === Mode.Highlight) {
         highlight.hl_clear(state.editor);
     } else if (old_mode === Mode.DiffWait) {
@@ -181,9 +179,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
             await interactiveDiff.present_diff_to_user(state.editor, state.showing_diff_modif_doc, state.showing_diff_move_cursor);
             state.showing_diff_move_cursor = false;
             vscode.commands.executeCommand('setContext', 'codify.runTab', true);
-            console.log(["TAB ON DIFF"]);
             vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
-            console.log(["ESC ON DIFF"]);
         } else {
             console.log(["cannot enter diff state, no diff modif doc"]);
         }

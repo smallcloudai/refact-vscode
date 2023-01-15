@@ -35,6 +35,7 @@ async function pressed_escape()
         let state = estate.state_of_editor(editor);
         if (state) {
             state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
             codeLens.quick_refresh();
         }
         if (state && (state.get_mode() === Mode.Diff || state.get_mode() === Mode.DiffWait)) {
@@ -50,7 +51,8 @@ async function pressed_escape()
             await estate.back_to_normal(state);
         }
         if (state && state.get_mode() === Mode.Normal) {
-            vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+            await vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+            await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
             console.log(["ESC OFF"]);
         }
     }
