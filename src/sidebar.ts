@@ -63,6 +63,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                     model_name = "longthink/experimental";
                                     break;
                                 }
+                                case "fix-bug": {
+                                    function_name = "fix-bug";
+                                    model_name = "longthink/experimental";
+                                    break;
+                                }
+                                case 'complete-selected-code': {
+                                    function_name = "complete-selected-code";
+                                    model_name = "longthink/experimental";
+                                    break;
+                                }
                             }
                             break;
                         }
@@ -202,8 +212,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </ul>
                         <h3 class="presets-title">3rd Party</h3>
                         <ul class="presets links-menu">
-                            <li tabindex="2" class="selection-required" id="dump-files">Dump files</li>
-                            <li tabindex="2" class="selection-required" id="explain-code">Explain Code</li>
+                            <li tabindex="2" class="selection-required" id="dump-files">Dump Files</li>
+                            <li tabindex="3" class="selection-required" id="explain-code">Explain Code</li>
+                            <li tabindex="4" class="selection-required" id="fix-bug">Fix Bug</li>
+                            <li tabindex="5" class="selection-required" id="complete-selected-code">Complete Selected Code</li>
                         </ul>
                     </div>
                     <div class="sidebar-controls">
