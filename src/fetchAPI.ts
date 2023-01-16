@@ -251,7 +251,7 @@ export function fetch_api_promise(
     maxEdits: number,
     stop_tokens: string[],
     stream: boolean,
-    model_ins: string = "",
+    model_force: string = "",
 ): [Promise<fetchH2.Response>, ApiFields]
 {
     let url = inference_url("/v1/contrast");
@@ -261,8 +261,8 @@ export function fetch_api_promise(
     if (typeof model_ !== 'string' || model_ === '') {
         model_ = 'CONTRASTcode';
     }
-    if (model_ins) {
-        model_ = model_ins;
+    if (model_force) {
+        model_ = model_force;
     }
     model = `${model_}`;
 

@@ -48,9 +48,9 @@ export async function query_diff(
     editor: vscode.TextEditor,
     sensitive_area: vscode.Range,
     model_function: string,
-    model_ins: string = "")
-{
-    console.log("query diff args -->", model_function, model_ins);
+    model: string = "",
+) {
+    console.log("query diff args -->", model_function, model);
 
     // NOT called from estate switch mode
     let state = estate.state_of_editor(editor);
@@ -174,7 +174,7 @@ export async function query_diff(
         max_edits,
         stop_tokens,
         stream,
-        model_ins = model_ins
+        model
     ));
 }
 
