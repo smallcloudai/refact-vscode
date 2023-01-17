@@ -96,7 +96,7 @@ async function code_lens_clicked(arg0: any)
             codeLens.quick_refresh();
             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
         } else if (arg0 === "COMP_THINK_LONGER") {
-            state.completion_no_cache = 1;
+            state.completion_longthink = 1;
             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
             await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         } else {

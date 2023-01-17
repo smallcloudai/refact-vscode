@@ -42,7 +42,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
-        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r),."'\]]*$/));
+        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r(),."'\]]*$/));
         if (!right_of_cursor_has_only_special_chars) {
             return [];
         }
@@ -67,14 +67,20 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 
         let delay_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
 
-        let completion = await this.cached_request(
-            cancelToken,
-            delay_if_not_cached,
-            file_name,
-            whole_doc,
-            cursor,
-            multiline
-        );
+        let completion = "";
+        if (state && state.completion_longthink) {
+            completion = "Hello world!\nHello line 2\nHello line 3";
+        } else {
+            completion = await this.cached_request(
+                cancelToken,
+                delay_if_not_cached,
+                file_name,
+                whole_doc,
+                cursor,
+                multiline
+            );
+        }
+
         if (state) {
             if  (state && completion && multiline) {
                 state.completion_lens_pos = position.line;

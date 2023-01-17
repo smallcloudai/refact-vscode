@@ -13,6 +13,7 @@ export enum Mode {
     Highlight,
     Diff,
     DiffWait,
+    Dispose,
 };
 
 
@@ -37,6 +38,7 @@ export class StateOfEditor {
         return this._mode;
     }
     public last_used_ts: number = 0;
+    public fn: string = "";
 
     public inline_prefer_edit_chaining: boolean = false; // Delete?
 
@@ -51,7 +53,7 @@ export class StateOfEditor {
 
     public diff_lens_pos: number = Number.MAX_SAFE_INTEGER;
     public completion_lens_pos: number = Number.MAX_SAFE_INTEGER;
-    public completion_no_cache: number = 0;
+    public completion_longthink: number = 0;
     public completion_reset_on_cursor_movement: boolean = false;
 
     public showing_diff_modif_doc: string | undefined;
@@ -111,19 +113,23 @@ export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEdi
         for (let [_, state] of editor2state) {
             if (state.last_used_ts < oldest_ts) {
                 oldest_ts = state.last_used_ts;
+                let ymd_hms = new Date(oldest_ts).toISOString().replace(/T/, ' ');
+                console.log(["  last used", ymd_hms, state.editor.document.fileName, state.fn]);
                 oldest_state = state;
             }
         }
         if (!oldest_state) {
             throw new Error("Internal error");
         }
-        console.log(["forget state of", oldest_state.editor.document.fileName]);
-        switch_mode(oldest_state, Mode.Normal);
+        console.log(["forget state of", oldest_state.editor.document.fileName, oldest_state.fn]);
+        switch_mode(oldest_state, Mode.Dispose);
         editor2state.delete(oldest_state.editor);
     }
     let state = editor2state.get(editor);
     if (!state) {
         state = new StateOfEditor(editor);
+        state.last_used_ts = Date.now();
+        state.fn = editor.document.fileName;
         editor2state.set(editor, state);
     }
     state.last_used_ts = Date.now();
@@ -197,7 +203,9 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         codeLens.quick_refresh();
     }
-    keyboard_events_on(state.editor);
+    if (new_mode !== Mode.Dispose) {
+        keyboard_events_on(state.editor);
+    }
     if (new_mode !== Mode.Normal) {
         vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
     } else {
@@ -237,6 +245,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         }
         if (state && state.completion_reset_on_cursor_movement) {
             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+            state.completion_longthink = 0;
             codeLens.quick_refresh();
         }
     });
