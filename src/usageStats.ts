@@ -37,7 +37,8 @@ export async function report_success_or_failure(
         } else {
             error_message = JSON.stringify(error_message);
         }
-    } else {
+    }
+    if (typeof error_message === "string") {
         if (error_message.includes("INVALID_SESSION")) {
             invalid_session = true;
         }
@@ -55,6 +56,7 @@ export async function report_success_or_failure(
     }
     if (timedout) {
         await fetchH2.disconnectAll();
+        userLogin.inference_login_force_retry();
         console.log(["ETIMEDOUT => disconnectAll"]);
     }
     if (error_message.length > 200) {

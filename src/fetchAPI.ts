@@ -42,7 +42,7 @@ export class PendingRequest {
         this.api_fields = api_fields;
         h2stream.catch((error) => {
             if (!error.message.includes("aborted")) {
-                usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, `${error}`, "");
+                usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, error, "");
             } else {
                 // Totally normal, user cancelled the request.
             }
@@ -65,13 +65,13 @@ export class PendingRequest {
                     resolve(json_arrived);
                 }).catch((error) => {
                     if (error && !error.message.includes("aborted")) {
-                        usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, `${error}`, "");
+                        usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
                     }
                     reject();
                 });
             }).catch((error) => {
                 if (error && !error.message.includes("aborted")) {
-                    usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, `${error}`, "");
+                    usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
                 }
                 reject();
             });
@@ -89,7 +89,7 @@ export class PendingRequest {
                 // This is a result of reject() without parameters
                 return;
             } else if (!error || !error.message || !error.message.includes("aborted")) {
-                usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, `${error}`, "");
+                usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
             }
         });
         _global_reqs.push(this);

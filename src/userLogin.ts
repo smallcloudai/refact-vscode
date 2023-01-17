@@ -167,6 +167,7 @@ export async function login()
 let _last_inference_login_cached_result = false;
 let _last_inference_login_key = "";
 let _last_inference_login_ts = 0;
+let _last_inference_login_infurl = "";
 
 
 export function inference_login_force_retry()
@@ -182,9 +183,21 @@ export async function inference_login(): Promise<boolean>
     }
     // Without login it will still work, with inference URL in settings.
     let apiKey = secret_api_key();
-    if (_last_inference_login_ts + 300*1000 > Date.now() && _last_inference_login_key === apiKey && apiKey !== "") {
+    let _conf_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    let conf_url = "";
+    if (typeof _conf_url === 'string') {
+        conf_url = _conf_url;
+    } else {
+        conf_url = "";
+    }
+    if (
+        _last_inference_login_ts + 300*1000 > Date.now() &&
+        _last_inference_login_key === apiKey && apiKey !== "" &&
+        _last_inference_login_infurl === conf_url
+    ) {
         return _last_inference_login_cached_result;
     }
+    console.log("perform inference login");
     let url = fetchAPI.inference_url("/v1/secret-key-activate");
     if (!url) {
         return false;
@@ -193,6 +206,7 @@ export async function inference_login(): Promise<boolean>
         _last_inference_login_key = "";
         _last_inference_login_ts = 0;
         _last_inference_login_cached_result = false;
+        _last_inference_login_infurl = conf_url;
         return _last_inference_login_cached_result;
     }
     let report_this_url = "private_url";
@@ -225,21 +239,25 @@ export async function inference_login(): Promise<boolean>
             _last_inference_login_cached_result = true;
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = Date.now();
+            _last_inference_login_infurl = conf_url;
         } else if (json.detail) {
             _last_inference_login_cached_result = false;
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = Date.now();
+            _last_inference_login_infurl = conf_url;
             await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json.detail, "");
         } else {
             _last_inference_login_cached_result = false;
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = Date.now();
+            _last_inference_login_infurl = conf_url;
             await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
         }
     } catch (error) {
         _last_inference_login_cached_result = false;
         _last_inference_login_key = apiKey;
         _last_inference_login_ts = Date.now();
+        _last_inference_login_infurl = conf_url;
         await usageStats.report_success_or_failure(false, "inference_login", report_this_url, error, "");
     }
     return _last_inference_login_cached_result;
