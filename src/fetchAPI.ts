@@ -251,19 +251,26 @@ export function fetch_api_promise(
     maxEdits: number,
     stop_tokens: string[],
     stream: boolean,
-    model_force: string = "",
+    use_longthink: boolean = false,
 ): [Promise<fetchH2.Response>, ApiFields]
 {
     let url = inference_url("/v1/contrast");
     let model_ = vscode.workspace.getConfiguration().get('codify.model');
+    let model_longthink = vscode.workspace.getConfiguration().get('codify.longthink_model');
     let model: string;
 
-    if (typeof model_ !== 'string' || model_ === '') {
-        model_ = 'CONTRASTcode';
+    if (use_longthink) {
+        if (typeof model_longthink !== 'string' || model_longthink === '' || !model_longthink) {
+            model_ = 'longthink/experimental';
+        } else {
+            model_ = model_longthink;
+        }
+    } else {
+        if (typeof model_ !== 'string' || model_ === '') {
+            model_ = 'CONTRASTcode';
+        }
     }
-    if (model_force) {
-        model_ = model_force;
-    }
+
     model = `${model_}`;
 
     const apiKey = userLogin.secret_api_key();
