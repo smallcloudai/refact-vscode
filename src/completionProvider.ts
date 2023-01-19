@@ -172,6 +172,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let modif_doc = whole_doc;
         if (!fail) {
             let t0 = Date.now();
+            let stream = false;
             request.supply_stream(...fetch.fetch_api_promise(
                 cancelToken,
                 "completion", // scope
@@ -184,6 +185,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 max_tokens,
                 max_edits,
                 stop_tokens,
+                stream,
             ));
             let json: any;
             json = await request.apiPromise;

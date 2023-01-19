@@ -33,6 +33,7 @@ export async function query_highlight(editor: vscode.TextEditor, intent: string 
     let stop_tokens: string[] = [];
     global.status_bar.statusbarLoading(true);
     let max_tokens = 0;
+    let stream = false;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         "highlight",     // scope
@@ -45,6 +46,7 @@ export async function query_highlight(editor: vscode.TextEditor, intent: string 
         max_tokens,
         1,
         stop_tokens,
+        stream,
     ));
     hl_animation_start(editor, editor.selection);
     let json: any;

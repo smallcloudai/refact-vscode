@@ -78,6 +78,7 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
     let max_tokens = 550;
     let stop_tokens: string[] = [];
     let max_edits = model_function==="diff-atcursor" ? 1 : 10; // the other is "diff-selection"
+    let stream = false;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         "query_diff",  // scope
@@ -90,6 +91,7 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
         max_tokens,
         max_edits,
         stop_tokens,
+        stream,
     ));
     let feedback = state.data_feedback_candidate;
     if (feedback) {

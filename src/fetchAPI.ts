@@ -29,12 +29,51 @@ export class PendingRequest {
     api_fields: ApiFields | undefined;
     cancelToken: vscode.CancellationToken;
     cancellationTokenSource: vscode.CancellationTokenSource | undefined;
+    streaming_callback: ((json: any) => void) | undefined;
+    streaming_end_callback: (() => void) | undefined;
+    streaming_buf: string = "";
 
     constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken)
     {
         this.seq = globalSeq++;
         this.apiPromise = apiPromise;
         this.cancelToken = cancelToken;
+    }
+
+    set_streaming_callback(callback: (json: any) => void, end_callback: () => void)
+    {
+        this.streaming_callback = callback;
+        this.streaming_end_callback = end_callback;
+    }
+
+    private look_for_completed_data_in_streaming_buf()
+    {
+        let split_slash_n_slash_n = this.streaming_buf.split("\n\n");
+        if (split_slash_n_slash_n.length <= 1) {
+            return;
+        }
+        // for (let i = 0; i < split_slash_n_slash_n.length; i++) {
+        //     console.log(["split_slash_n_slash_n[" + i + "] = " + split_slash_n_slash_n[i]]);
+        // }
+        let last = split_slash_n_slash_n[split_slash_n_slash_n.length - 1];
+        if (last.length > 0) {
+            return; // incomplete, the last one must be empty, means trailing \n\n
+        }
+        let before_last = split_slash_n_slash_n[split_slash_n_slash_n.length - 2];
+        if (before_last.substring(0, 6) !== "data: ") {
+            console.log("Unexpected data in streaming buf: " + before_last);
+            return;
+        }
+        let removed_prefix = before_last.substring(6);
+        if (removed_prefix === "[DONE]") { // means nothing (stream will end anyway)
+            return;
+        }
+        console.log(["feed = " + removed_prefix]);
+        let json = JSON.parse(removed_prefix);
+        if (this.streaming_callback) {
+            this.streaming_callback(json);
+        }
+        this.streaming_buf = "";
     }
 
     supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: ApiFields)
@@ -49,26 +88,47 @@ export class PendingRequest {
             return;
         });
         this.apiPromise = new Promise((resolve, reject) => {
-            h2stream.then((result_stream) => {
-                let json = result_stream.json();
-                json.then((json_arrived) => {
-                    if (json_arrived.inference_message) {
-                        // It's async, potentially two messages might appear if requests are fast, but we don't launch new requests
-                        // until the previous one is finished, should be fine...
-                        usabilityHints.show_message_from_server("InferenceServer", json_arrived.inference_message);
-                    }
-                    if (look_for_common_errors(json_arrived, api_fields)) {
-                        reject();
-                        return;
-                    }
-                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
-                    resolve(json_arrived);
-                }).catch((error) => {
-                    if (error && !error.message.includes("aborted")) {
-                        usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
-                    }
+            h2stream.then(async (result_stream) => {
+                if (this.streaming_callback) {
+                    let readable = await result_stream.readable();
+                    readable.on("readable", () => {
+                        // Use readable here because we need to read as much as possible, feed the last
+                        // chunk only if model+network is faster than the GUI
+                        while (1) {
+                            let chunk = readable.read();
+                            if (chunk === null) {
+                                break;
+                            }
+                            if (typeof chunk === "string") {
+                                this.streaming_buf += chunk;
+                                // console.log(["readable data", chunk]);
+                            } else {
+                                this.streaming_buf += chunk.toString();
+                                // console.log(["readable data", chunk.toString()]);
+                            }
+                            this.look_for_completed_data_in_streaming_buf();
+                        }
+                    });
+                    readable.on("end", () => {
+                        // console.log(["readable end"]);
+                        if (this.streaming_end_callback) {
+                            this.streaming_end_callback();
+                        }
+                    });
+                    resolve("");
+                }
+                let json_arrived = await result_stream.json();
+                if (json_arrived.inference_message) {
+                    // It's async, potentially two messages might appear if requests are fast, but we don't launch new requests
+                    // until the previous one is finished, should be fine...
+                    usabilityHints.show_message_from_server("InferenceServer", json_arrived.inference_message);
+                }
+                if (look_for_common_errors(json_arrived, api_fields)) {
                     reject();
-                });
+                    return;
+                }
+                usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
+                resolve(json_arrived);
             }).catch((error) => {
                 if (error && !error.message.includes("aborted")) {
                     usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
@@ -182,6 +242,7 @@ export function fetch_api_promise(
     maxTokens: number,
     maxEdits: number,
     stop_tokens: string[],
+    stream: boolean,
 ): [Promise<fetchH2.Response>, ApiFields]
 {
     let url = inference_url("/v1/contrast");
@@ -220,6 +281,7 @@ export function fetch_api_promise(
         "max_tokens": maxTokens,
         "max_edits": maxEdits,
         "stop": stop_tokens,
+        "stream": stream,
         "client": `vscode-${client_version}`,
     });
     const headers = {
