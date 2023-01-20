@@ -72,8 +72,6 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
     state.diff_lens_pos = sensitive_area.start.line;
     codeLens.quick_refresh();
 
-    let streaming_json = undefined;
-    let final_json = undefined;
     async function _streaming_callback(json: any)
     {
         if (!state) {
@@ -95,7 +93,6 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
             }
             return;
         } else {
-            streaming_json = json;
             if (json && json["choices"]) {
                 // let modif_doc = json["choices"][0]["files"][file_name];
                 let files = files_from_head_mid_tail(sources, json["choices"][0]["files_head_mid_tail"]);
