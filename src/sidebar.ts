@@ -32,8 +32,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             webviewView.webview.postMessage({ command: "focus" });
         });
     
-		webviewView.webview.onDidReceiveMessage(async (data) => {            
-			switch (data.type) {                
+		webviewView.webview.onDidReceiveMessage(async (data) => {      
+			switch (data.type) {
 				case "presetSelected": {
 					let editor = vscode.window.activeTextEditor;
 					if (!editor) {
