@@ -43,39 +43,28 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                     let function_name: string = "";
                     let use_longthink: boolean = false;
-
-                    switch (data.class) {
-                        case "selection-required": {
-                            let selection = editor.selection;
-                            let selection_empty = selection.isEmpty;
-                            if (selection_empty) {
-                                return; 
-                            }
-                            
-                            switch (data.id) {
-                                case "explain-code": {
-                                    function_name = "explain-code";
-                                    use_longthink = true;
-                                    break;
-                                }
-                                case "fix-bug": {
-                                    function_name = "fix-bug";
-                                    use_longthink = true;
-                                    break;
-                                }
-                                case 'complete-selected-code': {
-                                    function_name = "complete-selected-code";
-                                    use_longthink = true;
-                                    break;
-                                }
-                            }
-                            break;
+                    
+                    if (data.class && data.class.includes("selection-required")) {
+                        let selection = editor.selection;
+                        let selection_empty = selection.isEmpty;
+                        if (selection_empty) {
+                            return; 
                         }
                     }
 
+                    if (data.class && data.class.includes("longthink")) {
+                        use_longthink = true;
+                        if (data.id && typeof data.id === "string") {
+                            function_name = data.id;
+                        }
+                    }
+                            
                     if (state) {
                         await estate.switch_mode(state, estate.Mode.Normal);
                     }
+
+                    console.log('use_longthink', use_longthink);
+                    console.log('function_name', function_name);
 
                     await extension.follow_intent(data.value, function_name, use_longthink);
 					break;
@@ -207,9 +196,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </ul>
                         <h3 class="presets-title">3rd Party</h3>
                         <ul class="presets links-menu">
-                            <li tabindex="2" class="selection-required" id="explain-code">Explain Code</li>
-                            <li tabindex="3" class="selection-required" id="fix-bug">Fix Bug</li>
-                            <li tabindex="4" class="selection-required" id="complete-selected-code">Complete Selected Code</li>
+                            <li tabindex="2" class="longthink" id="explain-code">Explain Code</li>
+                            <li tabindex="3" class="selection-required longthink" id="fix-bug">Fix Bug</li>
+                            <li tabindex="4" class="selection-required longthink" id="complete-selected-code">Complete Selected ode</li>
+                            <li tabindex="5" class="selection-required longthink" id="explain-error">Explain Error</li>
+                            <li tabindex="6" class="selection-required longthink" id="add-console-logs">Add console logs</li>
+                            <li tabindex="7" class="selection-required longthink" id="make-code-shorter">Make Code Shorter</li>
                         </ul>
                     </div>
                     <div class="sidebar-controls">
