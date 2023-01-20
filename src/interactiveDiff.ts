@@ -67,18 +67,84 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
         return;
     }
     let file_name = storeVersions.filename_from_document(doc);
-    let json: any;
     await estate.switch_mode(state, estate.Mode.DiffWait);
     animation_start(editor, sensitive_area);
     state.diff_lens_pos = sensitive_area.start.line;
     codeLens.quick_refresh();
+
+    let streaming_json = undefined;
+    let final_json = undefined;
+    async function _streaming_callback(json: any)
+    {
+        if (!state) {
+            return;
+        }
+        if (json === undefined) {
+            if (state.get_mode() === estate.Mode.DiffWait) {
+                await estate.switch_mode(state, estate.Mode.Normal);
+            }
+            return;
+        }
+        if (state.get_mode() !== estate.Mode.DiffWait) {
+            return;
+        }
+        if (cancelToken.isCancellationRequested) {
+            console.log("diff request is cancelled, new data is coming");
+            if (state.get_mode() === estate.Mode.DiffWait) {
+                await estate.switch_mode(state, estate.Mode.Normal);
+            }
+            return;
+        } else {
+            streaming_json = json;
+            if (json && json["choices"]) {
+                // let modif_doc = json["choices"][0]["files"][file_name];
+                let files = files_from_head_mid_tail(sources, json["choices"][0]["files_head_mid_tail"]);
+                let modif_doc = files[file_name];
+                if (feedback) {
+                    feedback.results = files;
+                    feedback.ts = Date.now();
+                }
+                state.showing_diff_for_range = sensitive_area;
+                state.showing_diff_for_function = model_function;
+                state.showing_diff_edit_chain = undefined;
+                state.showing_diff_modif_doc = modif_doc;
+                await estate.switch_mode(state, estate.Mode.DiffWait);
+            }
+        }
+    }
+
+    async function _streaming_end_callback()
+    {
+        if (!state) {
+            return;
+        }
+        console.log("streaming end callback");
+        if (state.get_mode() === estate.Mode.DiffWait) {
+            await estate.switch_mode(state, estate.Mode.Normal);
+            await estate.switch_mode(state, estate.Mode.Diff);
+        }
+    }
+
     let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
     sources[file_name] = whole_doc;
     let max_tokens = 550;
     let stop_tokens: string[] = [];
     let max_edits = model_function==="diff-atcursor" ? 1 : 10; // the other is "diff-selection"
-    let stream = false;
+    let stream = true;
+
+    request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
+    let feedback = state.data_feedback_candidate;
+    if (feedback) {
+        feedback.sources = sources;
+        feedback.intent = estate.global_intent;
+        feedback.function = model_function;
+        feedback.cursor_file = file_name;
+        feedback.cursor_pos0 = doc.offsetAt(sensitive_area.start);
+        feedback.cursor_pos1 = doc.offsetAt(sensitive_area.end);
+        feedback.ts = Date.now();
+    }
+
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         "query_diff",  // scope
@@ -93,49 +159,20 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
         stop_tokens,
         stream,
     ));
-    let feedback = state.data_feedback_candidate;
-    if (feedback) {
-        feedback.sources = sources;
-        feedback.intent = estate.global_intent;
-        feedback.function = model_function;
-        feedback.cursor_file = file_name;
-        feedback.cursor_pos0 = doc.offsetAt(sensitive_area.start);
-        feedback.cursor_pos1 = doc.offsetAt(sensitive_area.end);
-        feedback.ts = Date.now();
+}
+
+function files_from_head_mid_tail(
+    sources: { [key: string]: string },
+    files_head_mid_tail: { [key: string]: { head: number, mid: string, tail: number } }
+): { [key: string]: string }
+{
+    let files: { [key: string]: string } = {};
+    for (let key in files_head_mid_tail) {
+        let hmt = files_head_mid_tail[key];
+        let original_doc = sources[key];
+        files[key] = original_doc.substring(0, hmt["head"]) + hmt["mid"] + original_doc.substring(original_doc.length-hmt["tail"]);
     }
-    json = await request.apiPromise;
-    if (json === undefined) {
-        if (state.get_mode() === estate.Mode.DiffWait) {
-            await estate.switch_mode(state, estate.Mode.Normal);
-        }
-        return;
-    }
-    if (state.get_mode() !== estate.Mode.DiffWait) {
-        return;
-    }
-    if (cancelToken.isCancellationRequested) {
-        if (state.get_mode() === estate.Mode.DiffWait) {
-            await estate.switch_mode(state, estate.Mode.Normal);
-        }
-        return;
-    }
-    if (!cancelToken.isCancellationRequested) {
-        if (json && json["choices"]) {
-            let modif_doc = json["choices"][0]["files"][file_name];
-            if (feedback) {
-                feedback.results = json["choices"][0]["files"];
-                feedback.ts = Date.now();
-            }
-            state.showing_diff_for_range = sensitive_area;
-            state.showing_diff_for_function = model_function;
-            state.showing_diff_edit_chain = undefined;
-            state.showing_diff_modif_doc = modif_doc;
-            await estate.switch_mode(state, estate.Mode.Diff);
-        }
-    }
-    if (state.get_mode() === estate.Mode.DiffWait) {
-        await estate.switch_mode(state, estate.Mode.Normal);
-    }
+    return files;
 }
 
 export async function animation_start(editor: vscode.TextEditor, sensitive_area: vscode.Range)
@@ -162,7 +199,7 @@ export async function animation_start(editor: vscode.TextEditor, sensitive_area:
         animation_ranges.push([]);
     }
     let t = 0;
-    while (state.get_mode() === estate.Mode.DiffWait) {
+    while (state.get_mode() === estate.Mode.DiffWait && 0) {
         await new Promise(resolve => setTimeout(resolve, 100));
         for (let a=0; a<animation_decos.length; a++) {
             animation_ranges[a].length = 0;

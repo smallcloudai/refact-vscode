@@ -29,8 +29,8 @@ export class PendingRequest {
     api_fields: ApiFields | undefined;
     cancelToken: vscode.CancellationToken;
     cancellationTokenSource: vscode.CancellationTokenSource | undefined;
-    streaming_callback: ((json: any) => void) | undefined;
-    streaming_end_callback: (() => void) | undefined;
+    streaming_callback: Function | undefined;
+    streaming_end_callback: Function | undefined;
     streaming_buf: string = "";
 
     constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken)
@@ -40,13 +40,13 @@ export class PendingRequest {
         this.cancelToken = cancelToken;
     }
 
-    set_streaming_callback(callback: (json: any) => void, end_callback: () => void)
+    set_streaming_callback(callback: Function | undefined, end_callback: Function | undefined)
     {
         this.streaming_callback = callback;
         this.streaming_end_callback = end_callback;
     }
 
-    private look_for_completed_data_in_streaming_buf()
+    private async look_for_completed_data_in_streaming_buf()
     {
         let split_slash_n_slash_n = this.streaming_buf.split("\n\n");
         if (split_slash_n_slash_n.length <= 1) {
@@ -59,19 +59,25 @@ export class PendingRequest {
         if (last.length > 0) {
             return; // incomplete, the last one must be empty, means trailing \n\n
         }
-        let before_last = split_slash_n_slash_n[split_slash_n_slash_n.length - 2];
-        if (before_last.substring(0, 6) !== "data: ") {
-            console.log("Unexpected data in streaming buf: " + before_last);
-            return;
-        }
-        let removed_prefix = before_last.substring(6);
-        if (removed_prefix === "[DONE]") { // means nothing (stream will end anyway)
-            return;
+        let removed_prefix: string = "";
+        let cursor = split_slash_n_slash_n.length - 2;
+        while (1) {
+            let before_last = split_slash_n_slash_n[cursor];
+            if (before_last.substring(0, 6) !== "data: ") {
+                console.log("Unexpected data in streaming buf: " + before_last);
+                return;
+            }
+            removed_prefix = before_last.substring(6);
+            if (removed_prefix === "[DONE]") { // means nothing (stream will end anyway)
+                cursor--;
+                continue;
+            }
+            break;
         }
         console.log(["feed = " + removed_prefix]);
         let json = JSON.parse(removed_prefix);
         if (this.streaming_callback) {
-            this.streaming_callback(json);
+            await this.streaming_callback(json);
         }
         this.streaming_buf = "";
     }
@@ -91,7 +97,7 @@ export class PendingRequest {
             h2stream.then(async (result_stream) => {
                 if (this.streaming_callback) {
                     let readable = await result_stream.readable();
-                    readable.on("readable", () => {
+                    readable.on("readable", async () => {
                         // Use readable here because we need to read as much as possible, feed the last
                         // chunk only if model+network is faster than the GUI
                         while (1) {
@@ -106,29 +112,31 @@ export class PendingRequest {
                                 this.streaming_buf += chunk.toString();
                                 // console.log(["readable data", chunk.toString()]);
                             }
-                            this.look_for_completed_data_in_streaming_buf();
+                            await this.look_for_completed_data_in_streaming_buf();
                         }
                     });
-                    readable.on("end", () => {
-                        // console.log(["readable end"]);
+                    readable.on("end", async () => {
+                        console.log(["readable end"]);
                         if (this.streaming_end_callback) {
-                            this.streaming_end_callback();
+                            await this.streaming_end_callback();
                         }
                     });
                     resolve("");
+                } else {
+                    // not streaming
+                    let json_arrived = await result_stream.json();
+                    if (json_arrived.inference_message) {
+                        // It's async, potentially two messages might appear if requests are fast, but we don't launch new requests
+                        // until the previous one is finished, should be fine...
+                        usabilityHints.show_message_from_server("InferenceServer", json_arrived.inference_message);
+                    }
+                    if (look_for_common_errors(json_arrived, api_fields)) {
+                        reject();
+                        return;
+                    }
+                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
+                    resolve(json_arrived);
                 }
-                let json_arrived = await result_stream.json();
-                if (json_arrived.inference_message) {
-                    // It's async, potentially two messages might appear if requests are fast, but we don't launch new requests
-                    // until the previous one is finished, should be fine...
-                    usabilityHints.show_message_from_server("InferenceServer", json_arrived.inference_message);
-                }
-                if (look_for_common_errors(json_arrived, api_fields)) {
-                    reject();
-                    return;
-                }
-                usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
-                resolve(json_arrived);
             }).catch((error) => {
                 if (error && !error.message.includes("aborted")) {
                     usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
