@@ -39,7 +39,7 @@ export function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Position,
     let is_empty = selection.anchor.line === selection.active.line && selection.anchor.character === selection.active.character;
     if (!is_empty && !state.diff_changing_doc) {
         // TODO: this branch doesn't work, check again
-        hands_off_dont_remove_presentation(editor);
+        hands_off_dont_remove_anything(editor);
     }
 }
 
@@ -68,8 +68,11 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
     }
     let file_name = storeVersions.filename_from_document(doc);
     await estate.switch_mode(state, estate.Mode.DiffWait);
-    animation_start(editor, sensitive_area);
     state.diff_lens_pos = sensitive_area.start.line;
+    state.showing_diff_for_range = sensitive_area;
+    state.diff_load_animation_head = 0;
+    state.diff_load_animation_mid = "";
+    animation_start(editor, state);
     codeLens.quick_refresh();
 
     async function _streaming_callback(json: any)
@@ -95,13 +98,23 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
         } else {
             if (json && json["choices"]) {
                 // let modif_doc = json["choices"][0]["files"][file_name];
-                let files = files_from_head_mid_tail(sources, json["choices"][0]["files_head_mid_tail"]);
+                // let files = files_from_head_mid_tail(sources, json["choices"][0]["files_head_mid_tail"]);
+                let files_head_mid_tail = json["choices"][0]["files_head_mid_tail"];
+                let files: { [key: string]: string } = {};
+                for (let key in files_head_mid_tail) {
+                    let hmt = files_head_mid_tail[key];
+                    let original_doc = sources[key];
+                    files[key] = original_doc.substring(0, hmt["head"]) + hmt["mid"] + original_doc.substring(original_doc.length-hmt["tail"]);
+                    if (key === file_name) {
+                        state.diff_load_animation_head = hmt["head"];
+                        state.diff_load_animation_mid = hmt["mid"];
+                    }
+                }
                 let modif_doc = files[file_name];
                 if (feedback) {
                     feedback.results = files;
                     feedback.ts = Date.now();
                 }
-                state.showing_diff_for_range = sensitive_area;
                 state.showing_diff_for_function = model_function;
                 state.showing_diff_edit_chain = undefined;
                 state.showing_diff_modif_doc = modif_doc;
@@ -158,27 +171,12 @@ export async function query_diff(editor: vscode.TextEditor, sensitive_area: vsco
     ));
 }
 
-function files_from_head_mid_tail(
-    sources: { [key: string]: string },
-    files_head_mid_tail: { [key: string]: { head: number, mid: string, tail: number } }
-): { [key: string]: string }
-{
-    let files: { [key: string]: string } = {};
-    for (let key in files_head_mid_tail) {
-        let hmt = files_head_mid_tail[key];
-        let original_doc = sources[key];
-        files[key] = original_doc.substring(0, hmt["head"]) + hmt["mid"] + original_doc.substring(original_doc.length-hmt["tail"]);
-    }
-    return files;
-}
 
-export async function animation_start(editor: vscode.TextEditor, sensitive_area: vscode.Range)
+export async function animation_start(editor: vscode.TextEditor, state: estate.StateOfEditor)
 {
     highlight.hl_clear(editor);
-    let state = estate.state_of_editor(editor);
-    if (!state) {
-        return;
-    }
+    let grey_deco: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({opacity: "0.5"});
+    let gray_ranges: vscode.Range[] = [];
     let animation_decos: vscode.TextEditorDecorationType[] = [];
     let animation_ranges: vscode.Range[][] = [];
     for (let c=0; c<20; c++) {
@@ -196,12 +194,25 @@ export async function animation_start(editor: vscode.TextEditor, sensitive_area:
         animation_ranges.push([]);
     }
     let t = 0;
-    while (state.get_mode() === estate.Mode.DiffWait && 0) {
+    let rainbow_area = state.showing_diff_for_range;
+    if (!rainbow_area) {
+        return;
+    }
+    while (state.get_mode() === estate.Mode.DiffWait) {
         await new Promise(resolve => setTimeout(resolve, 100));
+        let have_data_line0 = state.editor.document.positionAt(state.diff_load_animation_head).line;
+        let number_of_slash_n_in_mid = (state.diff_load_animation_mid.match(/\n/g) || []).length;
+        let have_data_line1 = have_data_line0 + number_of_slash_n_in_mid;
         for (let a=0; a<animation_decos.length; a++) {
             animation_ranges[a].length = 0;
         }
-        for (let line_n=sensitive_area.start.line; line_n<=sensitive_area.end.line; line_n++) {
+        gray_ranges.length = 0;
+        for (let line_n=rainbow_area.start.line; line_n<=rainbow_area.end.line; line_n++) {
+            if (line_n > have_data_line0 && line_n < have_data_line1) {
+                let range = new vscode.Range(line_n, 0, line_n, 1000);
+                gray_ranges.push(range);
+                continue;
+            }
             let line = editor.document.lineAt(line_n);
             for (let c=0; c<line.text.length; c+=2) {
                 let a = (line_n + c + t) % animation_decos.length;
@@ -215,11 +226,13 @@ export async function animation_start(editor: vscode.TextEditor, sensitive_area:
         for (let a=0; a<animation_decos.length; a++) {
             editor.setDecorations(animation_decos[a], animation_ranges[a]);
         }
+        editor.setDecorations(grey_deco, gray_ranges);
         t += 1;
     }
     for (let a=0; a<animation_decos.length; a++) {
         animation_decos[a].dispose();
     }
+    grey_deco.dispose();
 }
 
 export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc: string, move_cursor: boolean)
@@ -535,7 +548,7 @@ export async function query_the_same_thing_again(editor: vscode.TextEditor)
 }
 
 
-export function hands_off_dont_remove_presentation(editor: vscode.TextEditor)
+export function hands_off_dont_remove_anything(editor: vscode.TextEditor)
 {
     // Don't delete anything, user has already started same edit, leave it alone
     let state = estate.state_of_editor(editor);

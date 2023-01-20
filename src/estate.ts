@@ -61,6 +61,8 @@ export class StateOfEditor {
     public showing_diff_for_range: vscode.Range | undefined = undefined;
     public showing_diff_for_function: string | undefined = undefined;
     public showing_diff_edit_chain: vscode.Range | undefined = undefined;
+    public diff_load_animation_head: number = 0;
+    public diff_load_animation_mid: string = "";
 
     public edit_chain_modif_doc: string | undefined = undefined;
 
@@ -285,7 +287,7 @@ export function on_text_edited(editor: vscode.TextEditor)
     }
     if (state._mode === Mode.Diff || state._mode === Mode.DiffWait) {
         console.log(["text edited mode", state._mode, "hands off"]);
-        interactiveDiff.hands_off_dont_remove_presentation(editor);
+        interactiveDiff.hands_off_dont_remove_anything(editor);
         state.highlight_json_backup = undefined;
         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         // state.area2cache.clear();

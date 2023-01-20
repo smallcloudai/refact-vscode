@@ -96,7 +96,7 @@ export async function query_edit_chaining(animation: boolean): Promise<String>
     let line_n = position.line;
     let sensitive_area = new vscode.Range(new vscode.Position(line_n, 0), new vscode.Position(line_n, 0));
     if (animation) {
-        interactiveDiff.animation_start(editor, sensitive_area);
+        interactiveDiff.animation_start(editor, state);
     }
     let stream = false;
     request.supply_stream(...fetch.fetch_api_promise(
