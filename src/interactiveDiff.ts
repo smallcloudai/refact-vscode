@@ -16,7 +16,6 @@ let global_nav_counter: number = 0;
 
 export function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Position, is_mouse: boolean)
 {
-    console.log('on_cursor_moved');
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
@@ -52,8 +51,6 @@ export async function query_diff(
     use_longthink: boolean = false,
 ) {
     // NOT called from estate switch mode
-    console.log('query diff');
-    console.log('query diff args -->', model_function, use_longthink);
     let state = estate.state_of_editor(editor);
     if (!state) {
         return;
@@ -534,7 +531,6 @@ export async function like_and_accept(editor: vscode.TextEditor)
 
 export async function query_the_same_thing_again(editor: vscode.TextEditor)
 {
-    console.log("query_the_same_thing_again");
     editChaining.cleanup_edit_chaining_in_state(editor);
     let state = estate.state_of_editor(editor);
     if (!state) {

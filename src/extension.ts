@@ -330,11 +330,8 @@ export async function ask_and_save_intent(): Promise<boolean>
 }
 
 
-export async function follow_intent(intent: string, function_name_force: string = "", use_longthink: boolean = false)
+export async function follow_intent(intent: string, function_name: string = "", use_longthink: boolean = false)
 {
-    console.log('follow_intent');
-    let function_name: string = function_name_force ? function_name_force : "diff-selection";  
-
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
         return;
@@ -345,14 +342,14 @@ export async function follow_intent(intent: string, function_name_force: string 
     let selection = editor.selection;
     let selection_empty = selection.isEmpty;
     if (selection_empty) {
-            await highlight.query_highlight(editor, intent);
+        await highlight.query_highlight(editor, intent);
     } else {
         editor.selection = new vscode.Selection(selection.start, selection.start);  // this clears the selection, moves cursor up
         if (selection.end.line > selection.start.line && selection.end.character === 0) {
             selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
         }
         estate.save_intent(intent);
-        await interactiveDiff.query_diff(editor, selection, function_name, use_longthink);
+        await interactiveDiff.query_diff(editor, selection, function_name || "diff-selection", use_longthink);
     }
 }
 

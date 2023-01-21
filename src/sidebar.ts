@@ -7,48 +7,48 @@ import * as dataCollection from "./dataCollection";
 import * as extension from "./extension";
 
 export class PanelWebview implements vscode.WebviewViewProvider {
-	_view?: vscode.WebviewView;
-	_history: string[] = [];
+    _view?: vscode.WebviewView;
+    _history: string[] = [];
 
-	constructor(private readonly _context: any) {}
+    constructor(private readonly _context: any) {}
 
-	public resolveWebviewView(
-		webviewView: vscode.WebviewView,
-		context: vscode.WebviewViewResolveContext,
-		_token: vscode.CancellationToken
-	) {
-		this._view = webviewView;
+    public resolveWebviewView(
+        webviewView: vscode.WebviewView,
+        context: vscode.WebviewViewResolveContext,
+        _token: vscode.CancellationToken
+        ) {
+            this._view = webviewView;
 
-		webviewView.webview.options = {
+            webviewView.webview.options = {
             enableScripts: true,
-			localResourceRoots: [this._context.extensionUri],
-		};
+            localResourceRoots: [this._context.extensionUri],
+        };
 
-		webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
         this.update_webview();
 
         vscode.commands.registerCommand('workbench.action.focusSideBar', () => {
             webviewView.webview.postMessage({ command: "focus" });
         });
-    
-		webviewView.webview.onDidReceiveMessage(async (data) => {      
-			switch (data.type) {
-				case "presetSelected": {
-					let editor = vscode.window.activeTextEditor;
-					if (!editor) {
-						return;
-					}
+
+        webviewView.webview.onDidReceiveMessage(async (data) => {
+            switch (data.type) {
+                case "presetSelected": {
+                    let editor = vscode.window.activeTextEditor;
+                    if (!editor) {
+                        return;
+                    }
                     let state = estate.state_of_editor(editor);
 
                     let function_name: string = "";
                     let use_longthink: boolean = false;
-                    
+
                     if (data.class && data.class.includes("selection-required")) {
                         let selection = editor.selection;
                         let selection_empty = selection.isEmpty;
                         if (selection_empty) {
-                            return; 
+                            return;
                         }
                     }
 
@@ -58,17 +58,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             function_name = data.id;
                         }
                     }
-                            
+
                     if (state) {
                         await estate.switch_mode(state, estate.Mode.Normal);
                     }
 
-                    console.log('use_longthink', use_longthink);
-                    console.log('function_name', function_name);
-
                     await extension.follow_intent(data.value, function_name, use_longthink);
-					break;
-				}
+                    break;
+                }
 
                 case "login": {
                     vscode.commands.executeCommand('plugin-vscode.login');
@@ -96,12 +93,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     await userLogin.login();
                     break;
                 }
-				case "openSettings": {
-					vscode.commands.executeCommand("plugin-vscode.openSettings");
-				}
-			}
-		});
-	}
+                case "openSettings": {
+                    vscode.commands.executeCommand("plugin-vscode.openSettings");
+                }
+            }
+        });
+    }
 
     public update_webview()
     {
@@ -143,48 +140,48 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //     }
     // }
 
-	// public updateQuery(intent: string) {
+    // public updateQuery(intent: string) {
     //     if (!this._view) {
     //         return;
     //     }
-	// 	this._view!.webview.postMessage({ command: "updateQuery", value: intent });
-	// }
+    //     this._view!.webview.postMessage({ command: "updateQuery", value: intent });
+    // }
 
-	// public addHistory(intent: string) {
+    // public addHistory(intent: string) {
     //     if (!this._view) {
     //         return;
     //     }
-	// 	this._history.push(intent);
-	// 	this._view!.webview.postMessage({
-	// 		command: "updateHistory",
-	// 		value: this._history,
-	// 	});
-	// }
+    //     this._history.push(intent);
+    //     this._view!.webview.postMessage({
+    //         command: "updateHistory",
+    //         value: this._history,
+    //     });
+    // }
 
-	private _getHtmlForWebview(webview: vscode.Webview) {
-		const scriptUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
-		);
-		const styleMainUri = webview.asWebviewUri(
-			vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
-		);
-		const nonce = this.getNonce();
+    private _getHtmlForWebview(webview: vscode.Webview) {
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
+            );
+            const styleMainUri = webview.asWebviewUri(
+                vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
+                );
+                const nonce = this.getNonce();
 
-		return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<!--
-					Use a content security policy to only allow loading images from https or from our extension directory,
-					and only allow scripts that have a specific nonce.
-				-->
-				<!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+                return `<!DOCTYPE html>
+                <html lang="en">
+                <head>
+                <meta charset="UTF-8">
+                <!--
+                    Use a content security policy to only allow loading images from https or from our extension directory,
+                    and only allow scripts that have a specific nonce.
+                -->
+                <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-				<title>Presets</title>
+                <title>Presets</title>
                 <link href="${styleMainUri}" rel="stylesheet">
-			</head>
-			<body>
+            </head>
+            <body>
                 <div class="sidebar">
                     <div id="sidebar">
                         <h3 class="presets-title">Select & refactor: Press F1</h3>
@@ -217,16 +214,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <script nonce="${nonce}" src="${scriptUri}"></script>
                 </body>
                 </html>`;
-	}
-	getNonce() {
-		let text = "";
-		const possible =
-			"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-		for (let i = 0; i < 32; i++) {
-			text += possible.charAt(Math.floor(Math.random() * possible.length));
-		}
-		return text;
-	}
+    }
+    getNonce() {
+        let text = "";
+        const possible =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (let i = 0; i < 32; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
 }
 
 export default PanelWebview;
