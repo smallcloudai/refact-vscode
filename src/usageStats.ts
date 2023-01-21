@@ -4,14 +4,6 @@ import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
 
 
-let _global_last_useful_result_ts = 0;
-
-
-export function get_global_last_useful_result_ts() {
-    return _global_last_useful_result_ts;
-}
-
-
 export async function report_success_or_failure(
     positive: boolean,
     scope: string,
@@ -66,9 +58,6 @@ export async function report_success_or_failure(
         global.status_bar.url_and_model_worked(related_url, model_name);
     }
     global.status_bar.set_socket_error(!positive, error_message);
-    if (positive) {
-        _global_last_useful_result_ts = Date.now();
-    }
     if (userLogin.check_if_login_worked()) {
         if (global.side_panel) {
             global.side_panel.update_webview();

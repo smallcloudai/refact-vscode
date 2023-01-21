@@ -179,11 +179,6 @@ export async function wait_until_all_requests_finished()
             console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
         }
     }
-    if (usageStats.get_global_last_useful_result_ts() < Date.now() - 5 * 60 * 1000) {
-        console.log(["disconnect http session, last useful result too old"]);
-        // this helps with broken sessions
-        await fetchH2.disconnectAll();
-    }
 }
 
 export function anything_still_working()
