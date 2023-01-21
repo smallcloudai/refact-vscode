@@ -141,6 +141,10 @@ export async function query_diff(
 
     let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
+    let no_newline = whole_doc[whole_doc.length-1] !== "\n";
+    if (no_newline) {
+        whole_doc += "\n";
+    }
     sources[file_name] = whole_doc;
     let max_tokens = 550;
     let stop_tokens: string[] = [];

@@ -115,8 +115,6 @@ export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEdi
         for (let [_, state] of editor2state) {
             if (state.last_used_ts < oldest_ts) {
                 oldest_ts = state.last_used_ts;
-                let ymd_hms = new Date(oldest_ts).toISOString().replace(/T/, ' ');
-                console.log(["  last used", ymd_hms, state.editor.document.fileName, state.fn]);
                 oldest_state = state;
             }
         }

@@ -116,7 +116,7 @@ export class PendingRequest {
                         }
                     });
                     readable.on("end", async () => {
-                        console.log(["readable end"]);
+                        // console.log(["readable end", this.streaming_buf]);
                         if (this.streaming_end_callback) {
                             await this.streaming_end_callback();
                         }
