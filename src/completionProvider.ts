@@ -170,6 +170,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let fail = false;
         let stop_at = cursor;
         let modif_doc = whole_doc;
+        let backward_cache = "";
         if (!fail) {
             let t0 = Date.now();
             let stream = false;
@@ -198,6 +199,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             modif_doc = json["choices"][0]["files"][file_name];
             let before_cursor1 = whole_doc.substring(0, cursor);
             let before_cursor2 = modif_doc.substring(0, cursor);
+            backward_cache = json["backward_cache"] || "";
             if (before_cursor1 !== before_cursor2) {
                 console.log("completion before_cursor1 != before_cursor2");
                 return "";
@@ -221,7 +223,13 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let completion = "";
         if (!fail) {
             fail = cursor >= modif_doc.length + stop_at;
-            console.log([`completion modified before cursor ${cursor} < ${modif_doc.length} + ${stop_at}`]);
+            if (fail) {
+                console.log([`completion modified before cursor ${cursor} < ${modif_doc.length} + ${stop_at}`]);
+                let whole_doc2 = whole_doc.substring(0, cursor);
+                let modif_doc2 = modif_doc.substring(0, cursor);
+                console.log(["whole_doc2", whole_doc2]);
+                console.log(["modif_doc2", modif_doc2]);
+            }
         }
         if (!fail) {
             completion = modif_doc.substring(cursor, modif_doc.length + stop_at);
@@ -240,6 +248,18 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let more_left = left + completion.substring(0, i);
             this.cache.set(more_left, {
                 completion: completion.substring(i),
+                created_ts: Date.now(),
+            });
+        }
+        for (let i = 1; i < Math.min(backward_cache.length, CACHE_AHEAD); i++) {
+            let less_left = left.substring(0, left.length - i);
+            let cut = left.substring(left.length - i);
+            if (cut !== backward_cache.substring(backward_cache.length - i)) {
+                console.log(["backward cache problem, cut", cut, "backward_cache", backward_cache.substring(backward_cache.length - i)]);
+                continue;
+            }
+            this.cache.set(less_left, {
+                completion: cut + completion,
                 created_ts: Date.now(),
             });
         }
