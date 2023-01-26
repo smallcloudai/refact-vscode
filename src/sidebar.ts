@@ -41,8 +41,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
                     let state = estate.state_of_editor(editor);
 
+                    data.data_function = data.data_function ? JSON.parse(data.data_function): {};
+
                     let function_name: string = "";
-                    let use_longthink: boolean = false;
+                    // let use_longthink: boolean = false;
+                    let model_force: string = data.data_function.model;
 
                     if (data.class && data.class.includes("selection-required")) {
                         let selection = editor.selection;
@@ -50,10 +53,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         if (selection_empty) {
                             return;
                         }
+                        let selected_lines_count = selection.end.line - selection.start.line + 1;
                     }
 
                     if (data.class && data.class.includes("longthink")) {
-                        use_longthink = true;
+                        // use_longthink = true;
                         if (data.id && typeof data.id === "string") {
                             function_name = data.id;
                         }
@@ -63,7 +67,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         await estate.switch_mode(state, estate.Mode.Normal);
                     }
 
-                    await extension.follow_intent(data.value, function_name, use_longthink);
+                    await extension.follow_intent(data.value, function_name, model_force);
                     break;
                 }
 
@@ -115,6 +119,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             command: "ts2web",
             ts2web_user: global.user_logged_in,
             ts2web_plan: plan_msg,
+            longthink_functions: global.longthink_functions_today,
         });
     }
 
@@ -191,14 +196,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <li tabindex="4" class="regular">Convert to list comprehension</li>
                             <li tabindex="5" class="regular">Add docstrings</li>
                         </ul>
-                        <h3 class="presets-title">3rd Party</h3>
-                        <ul class="presets links-menu">
-                            <li tabindex="2" class="longthink" id="explain-code">Explain Code</li>
-                            <li tabindex="3" class="selection-required longthink" id="fix-bug">Fix Bug</li>
-                            <li tabindex="4" class="selection-required longthink" id="complete-selected-code">Complete Selected ode</li>
-                            <li tabindex="5" class="selection-required longthink" id="explain-error">Explain Error</li>
-                            <li tabindex="6" class="selection-required longthink" id="add-console-logs">Add console logs</li>
-                            <li tabindex="7" class="selection-required longthink" id="make-code-shorter">Make Code Shorter</li>
+                        <h3 id="third-party-header" class="presets-title">3rd Party</h3>
+                        <ul id="third-party-list" class="presets links-menu">
                         </ul>
                     </div>
                     <div class="sidebar-controls">
