@@ -4,18 +4,17 @@
 
     const sidebar = document.querySelector("#sidebar");
 
-    sidebar.querySelectorAll("li").forEach((userItem) => {
-        userItem.addEventListener("click", (event) => {
-            if (event.target) {
-                let text = event.target.innerText;
-                vscode.postMessage({ 
-                    type: "presetSelected", 
-                    value: text, 
-                    id: userItem.id, 
-                    class: userItem.className
-                });
-            }
-        });
+    sidebar.addEventListener("click", (event) => {
+        if (event.target && event.target.matches("li")) {
+            console.log(event.target.id);
+            vscode.postMessage({ 
+                type: "presetSelected", 
+                value: event.target.innerHTML, 
+                id: event.target.id, 
+                class: event.target.className,
+                data_function: event.target.dataset.function,
+            });
+        }
     });
 
     // const quickInput = document.querySelector("#quickinput");
@@ -97,7 +96,26 @@
 		vscode.postMessage({ type: "js2ts_refresh_login" });
 	});
 
+    function* longthinkToHtml(functions)
+    {
+        for (const [k, v] of Object.entries(functions)) {
+            classes = "";
+            classes += "longthink";
+            if ("selection-required" in v && v["selection-required"] === true) {
+                classes += " selection-required";
+            }
+
+            let child = document.createElement("li");
+            child.innerHTML = v.label;
+            child.id = k;
+            child.className = classes;
+            child.dataset.function = JSON.stringify(v);
+            yield child;
+        }
+    }
+
 	window.addEventListener("message", (event) => {
+        console.log("message -->", event.message);
 		const message = event.data;
 		switch (message.command) {
         // case "focus":
@@ -110,6 +128,9 @@
             let profile = document.querySelector('#profile');
             let data = document.querySelector('#datacollection');
             let logout = document.querySelector('#logout');
+            let tpHeader = document.querySelector('#third-party-header');
+            let tpList = document.querySelector('#third-party-list');
+    
             info.style.display = message.ts2web_user ? 'flex' : '';
             plan.style.display = message.ts2web_plan ? 'flex' : '';
             document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
@@ -118,15 +139,17 @@
             profile.style.display = message.ts2web_user ? 'block' : 'none';
             logout.style.display = message.ts2web_user ? 'block' : 'none';
             data.style.display = message.ts2web_user ? 'block' : 'none';
+            
+            tpHeader.style.display = message.ts2web_user ? 'block' : 'none';
+            tpList.style.display = message.ts2web_user ? 'block' : 'none';
+            
+            if (message.longthink_functions) {
+                tpList.innerHTML = '';
+                for (const h of longthinkToHtml(message.longthink_functions)) {
+                    tpList.appendChild(h);
+                }
+            }            
             break;
-
-        // case "display-inactive":
-        //     document.querySelector('.selection-required').style.opacity = 0.4;
-        //     break;
-		
-        // case "display-active":
-        //     document.querySelector('.selection-required').style.opacity = 1;
-        //     break;
 		}
 	});
 })();

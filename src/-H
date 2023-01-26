@@ -1,0 +1,4 @@
+{
+    "retcode": "FAILED",
+    "human_readable_message": "Please log in. Try \"s login\" in command line."
+}

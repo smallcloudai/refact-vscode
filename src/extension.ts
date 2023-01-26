@@ -17,6 +17,7 @@ import { Mode } from "./estate";
 
 
 declare global {
+    var api_key: string|undefined;
     var status_bar: statusBar.StatusBarMenu;
     var side_panel: sidebar.PanelWebview|undefined;
     var streamlined_login_ticket: string;
@@ -25,6 +26,7 @@ declare global {
     var global_context: vscode.ExtensionContext|undefined;
     var streamlined_login_countdown: number;
     var current_editor_text_edited_event: vscode.Disposable|undefined;
+    var longthink_functions_today: {[key: string]: {[key: string]: string}} | undefined;
 }
 
 
@@ -214,7 +216,9 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(settingsCommand);
 
-    let login = vscode.commands.registerCommand('plugin-vscode.login', login_clicked);
+    let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
+        login_clicked();
+    });
 
     let stats_timer = setInterval(() => {
         usageStats.report_usage_stats();
@@ -330,7 +334,7 @@ export async function ask_and_save_intent(): Promise<boolean>
 }
 
 
-export async function follow_intent(intent: string, function_name: string = "", use_longthink: boolean = false)
+export async function follow_intent(intent: string, function_name: string = "", model_force: string = "")
 {
     let editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -349,7 +353,7 @@ export async function follow_intent(intent: string, function_name: string = "", 
             selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
         }
         estate.save_intent(intent);
-        await interactiveDiff.query_diff(editor, selection, function_name || "diff-selection", use_longthink);
+        await interactiveDiff.query_diff(editor, selection, function_name || "diff-selection", model_force);
     }
 }
 

@@ -246,19 +246,19 @@ export function fetch_api_promise(
     maxEdits: number,
     stop_tokens: string[],
     stream: boolean,
-    use_longthink: boolean = false,
+    model_force: string = "",
 ): [Promise<fetchH2.Response>, ApiFields]
 {
     let url = inference_url("/v1/contrast");
     let model_ = vscode.workspace.getConfiguration().get('codify.model');
-    let model_longthink = vscode.workspace.getConfiguration().get('codify.longthink_model');
+    // let model_longthink = vscode.workspace.getConfiguration().get('codify.longthink_model');
     let model: string;
 
-    if (use_longthink) {
-        if (typeof model_longthink !== 'string' || model_longthink === '' || !model_longthink) {
+    if (model_force) {
+        if (typeof model_force !== 'string' || model_force === '' || !model_force) {
             model_ = 'longthink/experimental';
         } else {
-            model_ = model_longthink;
+            model_ = model_force;
         }
     } else {
         if (typeof model_ !== 'string' || model_ === '') {
