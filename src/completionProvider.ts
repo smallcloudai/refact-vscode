@@ -74,7 +74,15 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 
         let completion = "";
         if (state && state.completion_longthink) {
-            completion = "Hello world!\nHello line 2\nHello line 3";
+            completion = await this.cached_request(
+                cancelToken,
+                delay_if_not_cached,
+                file_name,
+                whole_doc,
+                cursor,
+                multiline,
+                true
+            );
         } else {
             completion = await this.cached_request(
                 cancelToken,
@@ -122,7 +130,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             if (this.cache.size < CACHE_STORE) {
                 return;
             }
-            let oldest_key = null;
+            let oldest_key: any = null;
             let oldest_ts = null;
             for (let [key, value] of this.cache) {
                 if (oldest_ts === null || value.created_ts < oldest_ts) {
@@ -144,11 +152,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         whole_doc: string,
         cursor: number,
         multiline: boolean,
+        third_party: boolean = false,
     ): Promise<string>
     {
         let left = whole_doc.substring(0, cursor);
         let cached = this.cache.get(left);
-        if (cached !== undefined) {
+        if (cached !== undefined && !third_party) {
             return cached.completion;
         }
         if (delay_if_not_cached) {
@@ -176,23 +185,44 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let stop_at = cursor;
         let modif_doc = whole_doc;
         let backward_cache = "";
+
         if (!fail) {
             let t0 = Date.now();
             let stream = false;
-            request.supply_stream(...fetch.fetch_api_promise(
-                cancelToken,
-                "completion", // scope
-                sources,
-                "Infill", // intent
-                "infill", // scratchpad function
-                file_name,
-                cursor,
-                cursor,
-                max_tokens,
-                max_edits,
-                stop_tokens,
-                stream,
-            ));
+
+            if (third_party) {
+                request.supply_stream(...fetch.fetch_api_promise(
+                    cancelToken,
+                    "completion", // scope
+                    sources,
+                    "Infill", // intent
+                    "complete-selected-code", 
+                    file_name,
+                    cursor,
+                    cursor,
+                    max_tokens,
+                    max_edits,
+                    stop_tokens,
+                    stream,
+                    "longthink/experimental"
+                ));
+            } else {
+                request.supply_stream(...fetch.fetch_api_promise(
+                    cancelToken,
+                    "completion", // scope
+                    sources,
+                    "Infill", // intent
+                    "infill", // scratchpad function
+                    file_name,
+                    cursor,
+                    cursor,
+                    max_tokens,
+                    max_edits,
+                    stop_tokens,
+                    stream,
+                ));
+            }
+            
             let json: any;
             json = await request.apiPromise;
             if (json === undefined) {

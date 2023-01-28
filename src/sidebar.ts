@@ -44,7 +44,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     data.data_function = data.data_function ? JSON.parse(data.data_function): {};
 
                     let function_name: string = "";
-                    // let use_longthink: boolean = false;
                     let model_force: string = data.data_function.model;
 
                     if (data.class && data.class.includes("selection-required")) {
@@ -57,7 +56,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
 
                     if (data.class && data.class.includes("longthink")) {
-                        // use_longthink = true;
                         if (data.id && typeof data.id === "string") {
                             function_name = data.id;
                         }
