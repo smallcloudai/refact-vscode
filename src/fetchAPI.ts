@@ -246,24 +246,16 @@ export function fetch_api_promise(
     maxEdits: number,
     stop_tokens: string[],
     stream: boolean,
-    model_force: string = "",
+    suggest_longthink_model: string = "",
 ): [Promise<fetchH2.Response>, ApiFields]
 {
     let url = inference_url("/v1/contrast");
-    let model_ = vscode.workspace.getConfiguration().get('codify.model') || "longthink/experimental";
-    let model_longthink_user: string = vscode.workspace.getConfiguration().get('codify.longthink_model') || "";
-    let model: string;
-
-    if (model_longthink_user && typeof model_longthink_user === 'string') {
-        model_ = model_longthink_user;
+    let model_ = vscode.workspace.getConfiguration().get('codify.model') || "CONTRASTcode";
+    let model_longthink: string = vscode.workspace.getConfiguration().get('codify.longthink_model') || suggest_longthink_model;
+    if (suggest_longthink_model) {
+        model_ = model_longthink;
     }
-    else if (model_force) {
-        model_ = model_force;
-    }
-
-    model = `${model_}`;
-    console.log([model, model_]);
-
+    let model: string = `${model_}`;
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return [Promise.reject("No API key"), new ApiFields()];
