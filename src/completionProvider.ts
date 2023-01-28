@@ -47,15 +47,22 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             return [];
         }
         let multiline = left_of_cursor.replace(/\s/g, "").length === 0;
-        let cursor = document.offsetAt(position);
         let whole_doc = document.getText();
         if (whole_doc.length > 180*1024) { // Too big (180k is ~0.2% of all files on our dataset) everything becomes heavy: network traffic, cache, cpu
             return [];
         }
+        let cursor = document.offsetAt(position);
+        let text_left = whole_doc.substring(0, cursor);
+        if (1) {
+            let whole_doc_cleaned = whole_doc.replace(/\r\n/g, "\n");
+            let text_left_cleaned = text_left.replace(/\r\n/g, "\n");
+            cursor -= (text_left.length - text_left_cleaned.length);
+            whole_doc = whole_doc_cleaned;
+            text_left = text_left_cleaned;
+        }
         if (whole_doc.length > 0 && whole_doc[whole_doc.length - 1] !== "\n") {
             whole_doc += "\n";
         }
-        let text_left = whole_doc.substring(0, cursor);
         let deleted_spaces_left = 0;
         while (multiline && text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
             text_left = text_left.substring(0, text_left.length - 1);
@@ -224,11 +231,19 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!fail) {
             fail = cursor >= modif_doc.length + stop_at;
             if (fail) {
-                console.log([`completion modified before cursor ${cursor} < ${modif_doc.length} + ${stop_at}`]);
+                console.log([`completion modified before cursor ${cursor} < ${modif_doc.length + stop_at}`]);
                 let whole_doc2 = whole_doc.substring(0, cursor);
                 let modif_doc2 = modif_doc.substring(0, cursor);
-                console.log(["whole_doc2", whole_doc2]);
-                console.log(["modif_doc2", modif_doc2]);
+                if (whole_doc2 !== modif_doc2) {
+                    console.log(["whole_doc2", whole_doc2]);
+                    console.log(["modif_doc2", modif_doc2]);
+                }
+                let after_cursor_real = whole_doc.substring(cursor);
+                let after_cursor_alternative = modif_doc.substring(modif_doc.length + stop_at);
+                if (after_cursor_real !== after_cursor_alternative) {
+                    console.log(["after_cursor_real", after_cursor_real]);
+                    console.log(["after_cursor_alternative", after_cursor_alternative]);
+                }
             }
         }
         if (!fail) {
