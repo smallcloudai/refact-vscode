@@ -199,10 +199,8 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
             console.log(["cannot enter highlight state, no hl json"]);
         }
     }
-    if (new_mode === Mode.Normal) {
-        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
-        codeLens.quick_refresh();
-    }
+    // if (new_mode === Mode.Normal) {
+    // }
     if (new_mode !== Mode.Dispose) {
         keyboard_events_on(state.editor);
     }
@@ -232,17 +230,14 @@ export function keyboard_events_on(editor: vscode.TextEditor)
     if (state.text_edited_event) {
         state.text_edited_event.dispose();
     }
-    state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection((ev: vscode.TextEditorSelectionChangeEvent) => {
+    state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection(async (ev: vscode.TextEditorSelectionChangeEvent) => {
         let ev_editor = ev.textEditor;
         if (!editor || editor !== ev_editor) {
             return;
         }
         let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
         let pos1 = editor.selection.active;
-        let pos2 = editor.selection.anchor;
-        if (pos1.line === pos2.line && pos1.character === pos2.character) {
-            interactiveDiff.on_cursor_moved(editor, pos1, is_mouse);
-        }
+        await interactiveDiff.on_cursor_moved(editor, pos1, is_mouse);
         if (state && state.completion_reset_on_cursor_movement) {
             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
             state.completion_longthink = 0;
@@ -288,6 +283,7 @@ export function on_text_edited(editor: vscode.TextEditor)
         interactiveDiff.hands_off_dont_remove_anything(editor);
         state.highlight_json_backup = undefined;
         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+        state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Highlight) {

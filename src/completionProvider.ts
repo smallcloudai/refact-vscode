@@ -5,6 +5,7 @@ import * as userLogin from "./userLogin";
 import * as estate from "./estate";
 import * as storeVersions from "./storeVersions";
 import * as codeLens from "./codeLens";
+import * as crlf from "./crlf";
 
 
 class CacheEntry {
@@ -52,14 +53,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             return [];
         }
         let cursor = document.offsetAt(position);
+        let cursors: number[];
+        [whole_doc, cursors] = crlf.cleanup_cr_lf(whole_doc, [cursor]);
+        cursor = cursors[0];
         let text_left = whole_doc.substring(0, cursor);
-        if (1) {
-            let whole_doc_cleaned = whole_doc.replace(/\r\n/g, "\n");
-            let text_left_cleaned = text_left.replace(/\r\n/g, "\n");
-            cursor -= (text_left.length - text_left_cleaned.length);
-            whole_doc = whole_doc_cleaned;
-            text_left = text_left_cleaned;
-        }
+
         if (whole_doc.length > 0 && whole_doc[whole_doc.length - 1] !== "\n") {
             whole_doc += "\n";
         }

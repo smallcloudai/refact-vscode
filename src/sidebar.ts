@@ -64,6 +64,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
 
                     if (state) {
+                        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+                        state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
                         await estate.switch_mode(state, estate.Mode.Normal);
                     }
 

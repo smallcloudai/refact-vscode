@@ -9,12 +9,13 @@ import * as estate from './estate';
 import * as highlight from "./highlight";
 import * as codeLens from "./codeLens";
 import * as dataCollection from "./dataCollection";
+import * as crlf from "./crlf";
 
 
 let global_nav_counter: number = 0;
 
 
-export function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Position, is_mouse: boolean)
+export async function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Position, is_mouse: boolean)
 {
     let state = estate.state_of_editor(editor);
     if (!state) {
@@ -38,8 +39,7 @@ export function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Position,
     let selection = editor.selection;
     let is_empty = selection.anchor.line === selection.active.line && selection.anchor.character === selection.active.character;
     if (!is_empty && !state.diff_changing_doc) {
-        // TODO: this branch doesn't work, check again
-        hands_off_dont_remove_anything(editor);
+        estate.switch_mode(state, estate.Mode.Normal);  // dislike_and_rollback(editor) inside
     }
 }
 
@@ -96,6 +96,8 @@ export async function query_diff(
         if (cancelToken.isCancellationRequested) {
             console.log("diff request is cancelled, new data is coming");
             if (state.get_mode() === estate.Mode.DiffWait) {
+                state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+                codeLens.quick_refresh();
                 await estate.switch_mode(state, estate.Mode.Normal);
             }
             return;
@@ -139,8 +141,14 @@ export async function query_diff(
         }
     }
 
-    let sources: { [key: string]: string } = {};
     let whole_doc = doc.getText();
+    let cursor0 = doc.offsetAt(sensitive_area.start);
+    let cursor1 = doc.offsetAt(sensitive_area.end);
+    let cursors: number[];
+    [whole_doc, cursors] = crlf.cleanup_cr_lf(whole_doc, [cursor0, cursor1]);
+    cursor0 = cursors[0];
+    cursor1 = cursors[1];
+    let sources: { [key: string]: string } = {};
     let no_newline = whole_doc[whole_doc.length-1] !== "\n";
     if (no_newline) {
         whole_doc += "\n";
@@ -158,8 +166,8 @@ export async function query_diff(
         feedback.intent = estate.global_intent;
         feedback.function = model_function;
         feedback.cursor_file = file_name;
-        feedback.cursor_pos0 = doc.offsetAt(sensitive_area.start);
-        feedback.cursor_pos1 = doc.offsetAt(sensitive_area.end);
+        feedback.cursor_pos0 = cursor0;
+        feedback.cursor_pos1 = cursor1;
         feedback.ts = Date.now();
     }
 
@@ -170,8 +178,8 @@ export async function query_diff(
         estate.global_intent,
         model_function,
         file_name,
-        doc.offsetAt(sensitive_area.start),
-        doc.offsetAt(sensitive_area.end),
+        cursor0,
+        cursor1,
         max_tokens,
         max_edits,
         stop_tokens,
@@ -258,7 +266,10 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
     if (no_newline) {   // server side always adds the missing newline, client side diff gets confused
         whole_doc += "\n";
     }
+    let cursors: number[];
+    [whole_doc, cursors] = crlf.cleanup_cr_lf(whole_doc, []);
     if (whole_doc === modif_doc) {
+        console.log(["apply diff -- no change"]);
         // no change, but go on because we want UI to be the same
     }
     const diff = Diff.diffLines(whole_doc, modif_doc);
@@ -455,6 +466,9 @@ export async function dislike_and_rollback(editor: vscode.TextEditor)
         return;
     }
     state.diff_changing_doc = true;
+    state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+    state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+    codeLens.quick_refresh();
     await editor.edit((e) => {
         if (!state) {
             return;
@@ -489,6 +503,8 @@ export async function like_and_accept(editor: vscode.TextEditor)
     }
     state.diff_changing_doc = true;
     state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+    state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+    codeLens.quick_refresh();
     let thenable = editor.edit((e) => {
         if (!state) {
             return;
@@ -565,5 +581,8 @@ export function hands_off_dont_remove_anything(editor: vscode.TextEditor)
         return;
     }
     state.edit_chain_modif_doc = undefined;
+    state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+    state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+    codeLens.quick_refresh();
     _remove_decoration(editor);
 }

@@ -4,6 +4,7 @@ import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
 import * as estate from "./estate";
+import * as crlf from "./crlf";
 
 
 
@@ -19,10 +20,13 @@ export async function query_highlight(editor: vscode.TextEditor, intent: string 
         estate.save_intent(intent);  // need it to return to previous selection
     }
     let doc = editor.document;
+    let whole_doc = doc.getText();
     let cursor = doc.offsetAt(editor.selection.active);
+    let cursors: number[];
+    [whole_doc, cursors] = crlf.cleanup_cr_lf(whole_doc, [cursor]);
+    cursor = cursors[0];
     let fn = doc.fileName;
     let sources: { [key: string]: string } = {};
-    let whole_doc = doc.getText();
     sources[fn] = whole_doc;
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
@@ -68,10 +72,24 @@ export function hl_show(editor: vscode.TextEditor, json: any)
         return;
     }
     let doc = editor.document;
+    let highlight_tokens: number[] = [];
     for (let index = 0; index < json.highlight_tokens.length; index++) {
         const element = json.highlight_tokens[index];
-        const start = doc.positionAt(element[0]);
-        const end = doc.positionAt(element[1]);
+        highlight_tokens.push(element[0]);
+        highlight_tokens.push(element[1]);
+    }
+    let highlight_lines: number[] = [];
+    for (let index = 0; index < json.highlight_lines.length; index++) {
+        const element = json.highlight_lines[index];
+        highlight_lines.push(element[0]);
+        highlight_lines.push(element[1]);
+    }
+    let whole_doc = doc.getText();
+    highlight_tokens = crlf.add_back_cr_lf(whole_doc, highlight_tokens);
+    highlight_lines = crlf.add_back_cr_lf(whole_doc, highlight_lines);
+    for (let i=0; i<highlight_tokens.length; i+=2) {
+        let start = doc.positionAt(highlight_tokens[i]);
+        let end = doc.positionAt(highlight_tokens[i+1]);
         let range = new vscode.Range(start, end);
         let decorange = { range };
         let range_list: vscode.DecorationOptions[] = [];
@@ -79,18 +97,17 @@ export function hl_show(editor: vscode.TextEditor, json: any)
         // state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
             overviewRulerLane: vscode.OverviewRulerLane.Full,
-            overviewRulerColor: 'rgba(255, 255, 0, ' + element[2] + ')',
-            backgroundColor: 'rgba(255, 255, 0, ' + element[2] + ')',
+            overviewRulerColor: 'rgba(255, 255, 0, ' + json.highlight_tokens[i/2][2] + ')',
+            backgroundColor: 'rgba(255, 255, 0, ' + json.highlight_tokens[i/2][2] + ')',
             color: 'black'
         });
         // console.log(["opacity", element[2], "text", doc.getText(range)]);
         state.highlights.push(deco_type);
         editor.setDecorations(deco_type, range_list);
     }
-    for (let index = 0; index < json.highlight_lines.length; index++) {
-        const element = json.highlight_lines[index];
-        const start = doc.positionAt(element[0]);
-        const end = doc.positionAt(element[1]);
+    for (let i=0; i<highlight_lines.length; i+=2) {
+        let start = doc.positionAt(highlight_lines[i]);
+        let end = doc.positionAt(highlight_lines[i+1]);
         let range = new vscode.Range(start, end);
         let decorange = { range };
         let range_list: vscode.DecorationOptions[] = [];
@@ -98,8 +115,8 @@ export function hl_show(editor: vscode.TextEditor, json: any)
         state.sensitive_ranges.push(decorange);
         let deco_type = vscode.window.createTextEditorDecorationType({
             overviewRulerLane: vscode.OverviewRulerLane.Full,
-            overviewRulerColor: 'rgba(255, 255, 0, ' + element[2] + ')',
-            backgroundColor: 'rgba(255, 255, 0, ' + element[2] + ')',
+            overviewRulerColor: 'rgba(255, 255, 0, ' + json.highlight_lines[i/2][2] + ')',
+            backgroundColor: 'rgba(255, 255, 0, ' + json.highlight_lines[i/2][2] + ')',
             isWholeLine: true,
         });
         // console.log(["opacity", element[2], "16text", doc.getText(range)]);
