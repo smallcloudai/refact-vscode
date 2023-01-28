@@ -250,23 +250,19 @@ export function fetch_api_promise(
 ): [Promise<fetchH2.Response>, ApiFields]
 {
     let url = inference_url("/v1/contrast");
-    let model_ = vscode.workspace.getConfiguration().get('codify.model');
-    // let model_longthink = vscode.workspace.getConfiguration().get('codify.longthink_model');
+    let model_ = vscode.workspace.getConfiguration().get('codify.model') || "longthink/experimental";
+    let model_longthink_user: string = vscode.workspace.getConfiguration().get('codify.longthink_model') || "";
     let model: string;
 
-    if (model_force) {
-        if (typeof model_force !== 'string' || model_force === '' || !model_force) {
-            model_ = 'longthink/experimental';
-        } else {
-            model_ = model_force;
-        }
-    } else {
-        if (typeof model_ !== 'string' || model_ === '') {
-            model_ = 'CONTRASTcode';
-        }
+    if (model_longthink_user && typeof model_longthink_user === 'string') {
+        model_ = model_longthink_user;
+    }
+    else if (model_force) {
+        model_ = model_force;
     }
 
     model = `${model_}`;
+    console.log([model, model_]);
 
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {

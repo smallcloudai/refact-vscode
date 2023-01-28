@@ -17,7 +17,6 @@ import { Mode } from "./estate";
 
 
 declare global {
-    var api_key: string|undefined;
     var status_bar: statusBar.StatusBarMenu;
     var side_panel: sidebar.PanelWebview|undefined;
     var streamlined_login_ticket: string;

@@ -107,7 +107,6 @@ export async function login()
         // wait until user clicks the login button
         return;
     }
-    global.api_key = apiKey;
     const login_url = "https://max.smallcloud.ai/v1/login";
     headers.Authorization = `Bearer ${apiKey}`;
     try {
