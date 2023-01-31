@@ -255,7 +255,7 @@ export function fetch_api_promise(
     if (suggest_longthink_model) {
         model_ = model_longthink;
     }
-    vscode.workspace.getConfiguration().update("files.autoSave", "off", true);
+    vscode.workspace.getConfiguration().update("files.autoSave", "off", true); // otherwise diffs do not work properly
     let model: string = `${model_}`;
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {

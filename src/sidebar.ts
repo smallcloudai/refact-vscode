@@ -41,12 +41,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
                     let state = estate.state_of_editor(editor);
 
-                    data.data_function = data.data_function ? JSON.parse(data.data_function): {};
+                    let data_function: any = data.data_function ? JSON.parse(data.data_function): {};
 
                     let function_name: string = "";
-                    let model_force: string = data.data_function.model;
+                    let model_force: string = data_function.model;
 
-                    if (data.class && data.class.includes("selection-required")) {
+                    if (data_function && data_function.highlight_supported === false) {
+                        console.log(data_function);
                         let selection = editor.selection;
                         let selection_empty = selection.isEmpty;
                         if (selection_empty) {
@@ -55,12 +56,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         let selected_lines_count = selection.end.line - selection.start.line + 1;
                     }
 
-                    if (data.class && data.class.includes("longthink")) {
-                        if (data.id && typeof data.id === "string") {
-                            function_name = data.id;
-                        }
+                    if (data.id && typeof data.id === "string") {
+                        function_name = data.id;
                     }
-
+                    
                     if (state) {
                         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
                         state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
@@ -189,16 +188,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div class="sidebar">
                     <div id="sidebar">
-                        <h3 class="presets-title">Select & refactor: Press F1</h3>
-                        <ul class="presets links-menu">
-                            <li tabindex="2" class="regular">Add type hints</li>
-                            <li tabindex="3" class="regular">Remove type hints</li>
-                            <li tabindex="4" class="regular">Convert to list comprehension</li>
-                            <li tabindex="5" class="regular">Add docstrings</li>
-                        </ul>
+                        <h3 id="regular-header" class="presets-title">Select & refactor: Press F1</h3>
+                        <ul id="regular-list" class="presets links-menu"></ul>
                         <h3 id="third-party-header" class="presets-title">3rd Party</h3>
-                        <ul id="third-party-list" class="presets links-menu">
-                        </ul>
+                        <ul id="third-party-list" class="presets links-menu"></ul>
                     </div>
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
