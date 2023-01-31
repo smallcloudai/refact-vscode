@@ -11,7 +11,6 @@
                 type: "presetSelected", 
                 value: event.target.innerHTML, 
                 id: event.target.id, 
-                class: event.target.className,
                 data_function: event.target.dataset.function,
             });
         }
@@ -98,29 +97,25 @@
 
     function* longthinkToHtml(functions)
     {
-        for (const [k, v] of Object.entries(functions)) {
-            classes = "";
-            classes += "longthink";
-            if ("selection-required" in v && v["selection-required"] === true) {
-                classes += " selection-required";
-            }
+        for (const f of functions) {
+            k = f[0];
+            v = f[1];
 
             let child = document.createElement("li");
             child.innerHTML = v.label;
-            child.id = k;
-            child.className = classes;
             child.dataset.function = JSON.stringify(v);
+            child.id = k;
             yield child;
         }
     }
 
 	window.addEventListener("message", (event) => {
-        console.log("message -->", event.message);
 		const message = event.data;
 		switch (message.command) {
         // case "focus":
         //     quickInput.focus();
         //     break;
+
         case "ts2web":
             let info = document.querySelector('.sidebar-logged');
             let plan = document.querySelector('.sidebar-plan');
@@ -128,6 +123,9 @@
             let profile = document.querySelector('#profile');
             let data = document.querySelector('#datacollection');
             let logout = document.querySelector('#logout');
+
+            let regHeader = document.querySelector('#regular-header');
+            let regList = document.querySelector('#regular-list');
             let tpHeader = document.querySelector('#third-party-header');
             let tpList = document.querySelector('#third-party-list');
     
@@ -140,13 +138,30 @@
             logout.style.display = message.ts2web_user ? 'block' : 'none';
             data.style.display = message.ts2web_user ? 'block' : 'none';
             
-            tpHeader.style.display = message.ts2web_user ? 'block' : 'none';
-            tpList.style.display = message.ts2web_user ? 'block' : 'none';
+            regHeader.style.display = 'none';
+            regList.style.display = 'none';
+            tpHeader.style.display = 'none';
+            tpList.style.display = 'none';
             
             if (message.longthink_functions) {
-                tpList.innerHTML = '';
-                for (const h of longthinkToHtml(message.longthink_functions)) {
-                    tpList.appendChild(h);
+                reg_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] === 0);
+                tp_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] > 0);
+
+                if (reg_functions) {
+                    regHeader.style.display = 'block';
+                    regList.style.display = 'block';
+                    regList.innerHTML = '';
+                    for (const h of longthinkToHtml(reg_functions)) {
+                        regList.appendChild(h);
+                    }
+                }
+                if (tp_functions) {
+                    tpHeader.style.display = 'block';
+                    tpList.style.display = 'block';        
+                    tpList.innerHTML = '';
+                    for (const h of longthinkToHtml(tp_functions)) {
+                        tpList.appendChild(h);
+                    }
                 }
             }            
             break;
