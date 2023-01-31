@@ -46,7 +46,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     let function_name: string = "";
                     let model_force: string = data_function.model;
 
-                    if (data_function && data_function.highlight_supported === false) {
+                    if (data_function && data_function.supports_highlight === false) {
                         console.log(data_function);
                         let selection = editor.selection;
                         let selection_empty = selection.isEmpty;
