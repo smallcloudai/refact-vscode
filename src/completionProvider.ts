@@ -52,7 +52,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (whole_doc.length > 180*1024) { // Too big (180k is ~0.2% of all files on our dataset) everything becomes heavy: network traffic, cache, cpu
             return [];
         }
-        let cursor_dirty = document.offsetAt(position);  // dirty because it has \r and emoji are 2 chars
+        let cursor_dirty = document.offsetAt(position);  // dirty because the \r are counted and emojis are 2 chars
         let cursors_cleaned_cr: number[], cursors_transmit: number[];
         [whole_doc, cursors_cleaned_cr, cursors_transmit] = crlf.cleanup_cr_lf(whole_doc, [cursor_dirty]);
         let cursor_cr = cursors_cleaned_cr[0];
