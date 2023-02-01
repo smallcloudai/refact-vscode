@@ -5,8 +5,8 @@
     const sidebar = document.querySelector("#sidebar");
 
     sidebar.addEventListener("click", (event) => {
-        if (event.target && event.target.parentElement.matches("li")) {
-            if(event.target.classList.contains('muted')) { return; };
+        if (event.target && event.target.matches("li")) {
+            if(event.target.parentElement.classList.contains('muted')) { return; };
             console.log(event.target.id);
             vscode.postMessage({ 
                 type: "presetSelected", 
