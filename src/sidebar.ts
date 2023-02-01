@@ -191,7 +191,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <h3 id="regular-header" class="presets-title">Select & refactor: Press F1</h3>
                         <ul id="regular-list" class="presets links-menu"></ul>
                         <h3 id="third-party-header" class="presets-title">Think Longer</h3>
-                        <ul id="third-party-list" class="presets links-menu"></ul>
+                        <ul id="third-party-list" class="presets links-menu muted"></ul>
                     </div>
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
