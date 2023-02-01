@@ -1,7 +1,7 @@
 {
   "name": "codify",
   "displayName": "Codify",
-  "description": "AI autocomplete, refactoring and advanced code generation",
+  "description": "AI autocomplete, refactoring and code generation",
   "publisher": "smallcloud",
   "icon": "logo-small.png",
   "galleryBanner": {
