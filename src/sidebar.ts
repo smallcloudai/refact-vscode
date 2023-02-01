@@ -59,7 +59,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     if (data.id && typeof data.id === "string") {
                         function_name = data.id;
                     }
-                    
+
                     if (state) {
                         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
                         state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
@@ -190,7 +190,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div id="sidebar">
                         <h3 id="regular-header" class="presets-title">Select & refactor: Press F1</h3>
                         <ul id="regular-list" class="presets links-menu"></ul>
-                        <h3 id="third-party-header" class="presets-title">3rd Party</h3>
+                        <h3 id="third-party-header" class="presets-title">Think Longer</h3>
                         <ul id="third-party-list" class="presets links-menu"></ul>
                     </div>
                     <div class="sidebar-controls">

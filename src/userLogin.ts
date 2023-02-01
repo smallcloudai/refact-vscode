@@ -107,7 +107,7 @@ export async function login()
         // wait until user clicks the login button
         return;
     }
-    const login_url = "https://max.smallcloud.ai/v1/login";
+    const login_url = "https://www.smallcloud.ai/v1/login";
     headers.Authorization = `Bearer ${apiKey}`;
     try {
         statusBar.set_website_message("");
@@ -119,7 +119,6 @@ export async function login()
             global.streamlined_login_ticket = "";
             if (json['longthink-functions-today']){
                 global.longthink_functions_today = json['longthink-functions-today'];
-                
             }
             if (json.inference_url) {
                 fetchAPI.save_url_from_login(json.inference_url);
