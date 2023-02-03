@@ -39,6 +39,9 @@ export async function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Pos
     let selection = editor.selection;
     let is_empty = selection.anchor.line === selection.active.line && selection.anchor.character === selection.active.character;
     if (!is_empty && !state.diff_changing_doc) {
+        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+        state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+        codeLens.quick_refresh();
         estate.switch_mode(state, estate.Mode.Normal);  // dislike_and_rollback(editor) inside
     }
 }
