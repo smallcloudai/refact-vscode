@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 import * as codeLens from "./codeLens";
+import * as completionProvider from "./completionProvider";
 
 
 export let global_intent: string = "Fix";
@@ -17,16 +18,22 @@ export enum Mode {
 };
 
 
-export class DataCollectStruct {
+export class ApiFields {
+    public scope: string = "";
     public positive: boolean = false;
+    public url: string = "";
+    public model: string = "";
+    public function: string = "";
+    public intent: string = "";
     public sources: { [key: string]: string } = {};
     public results: { [key: string]: string } = {};
-    public intent: string = "";
-    public function: string = "";
     public cursor_file: string = "";
     public cursor_pos0: number = 0;
     public cursor_pos1: number = 0;
-    public ts: number = 0;
+    public ts_req: number = 0;
+    public ts_presented: number = 0;
+    public ts_reacted: number = 0;
+    public serial_number: number = 0;
 };
 
 
@@ -69,7 +76,7 @@ export class StateOfEditor {
     public cursor_move_event: vscode.Disposable|undefined = undefined;
     public text_edited_event: vscode.Disposable|undefined = undefined;
 
-    public data_feedback_candidate: DataCollectStruct|undefined = undefined;
+    public data_feedback_candidate: ApiFields|undefined = undefined;
 
     constructor(editor: vscode.TextEditor)
     {
@@ -231,6 +238,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         state.text_edited_event.dispose();
     }
     state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection(async (ev: vscode.TextEditorSelectionChangeEvent) => {
+        completionProvider.on_cursor_moved();
         let ev_editor = ev.textEditor;
         if (!editor || editor !== ev_editor) {
             return;
@@ -245,6 +253,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         }
     });
     state.text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
+        completionProvider.on_text_edited();
         let doc = ev.document;
         let ev_doc = editor.document;
         if (doc !== ev_doc) {

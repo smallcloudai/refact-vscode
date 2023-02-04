@@ -41,15 +41,18 @@ export async function report_success_or_failure(
             conn_refused = true;
         }
     }
-    if (invalid_session || conn_refused) {
+    if (!positive) {
         await fetchH2.disconnectAll();
+    }
+    if (invalid_session || conn_refused) {
+        // await fetchH2.disconnectAll();
         userLogin.inference_login_force_retry();
         console.log(["INVALID_SESSION, ECONNREFUSED => inference_login_force_retry"]);
     }
     if (timedout) {
-        await fetchH2.disconnectAll();
+        // await fetchH2.disconnectAll();
         userLogin.inference_login_force_retry();
-        console.log(["ETIMEDOUT => disconnectAll"]);
+        // console.log(["ETIMEDOUT => disconnectAll"]);
     }
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";
@@ -90,6 +93,32 @@ export async function report_success_or_failure(
             count_msg
         );
     }
+}
+
+
+export async function report_increase_a_counter(
+    scope: string,
+    counter_name: string,
+) {
+    let global_context: vscode.ExtensionContext|undefined = global.global_context;
+    if (!global_context) {
+        return;
+    }
+    console.log(["increase_a_counter", scope, counter_name]);
+    // {"scope1": {"counter1": 5, "counter2": 6}, "scope2": {"counter1": 5, "counter2": 6}}
+    let usage_counters: { [key: string]: { [key: string]: number } } | undefined = await global_context.globalState.get("usage_counters");
+    if (typeof usage_counters !== "object") {
+        usage_counters = {};
+    }
+    if (usage_counters[scope] === undefined) {
+        usage_counters[scope] = {};
+    }
+    if (usage_counters[scope][counter_name] === undefined) {
+        usage_counters[scope][counter_name] = 1;
+    } else {
+        usage_counters[scope][counter_name] += 1;
+    }
+    await global_context.globalState.update("usage_counters", usage_counters);
 }
 
 

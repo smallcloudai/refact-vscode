@@ -5,18 +5,20 @@ import * as estate from './estate';
 import * as fetchH2 from 'fetch-h2';
 
 
-export async function data_collection_reset(state: estate.StateOfEditor)
+export function data_feedback_candidate_reset(state: estate.StateOfEditor)
 {
     console.log(["DATA FEEDBACK RESET"]);
-    state.data_feedback_candidate = new estate.DataCollectStruct();
+    state.data_feedback_candidate = new estate.ApiFields();
+    return state.data_feedback_candidate;
 }
 
 
-export async function data_collection_save_record(d: estate.DataCollectStruct)
+export async function data_collection_save_record(d: estate.ApiFields)
 {
     if (d.sources[d.cursor_file] === undefined || d.results[d.cursor_file] === undefined || d.sources[d.cursor_file] === d.results[d.cursor_file]) {
         return;
     }
+    d.ts_reacted = Date.now();
     // console.log([d.positive ? "👍" : "👎", "collection", result.status]);
     const payload = JSON.stringify({
         "positive": d.positive,
@@ -27,7 +29,7 @@ export async function data_collection_save_record(d: estate.DataCollectStruct)
         "cursor_file": d.cursor_file,
         "cursor0": d.cursor_pos0,
         "cursor1": d.cursor_pos1,
-        "ponder_time_ms": Math.round(Date.now() - d.ts),
+        "ponder_time_ms": Math.round(d.ts_reacted - d.ts_presented),
     });
     const same_situation_key = `${d.intent} ${d.cursor_file}:${d.cursor_pos0}:${d.cursor_pos1} --` + d.sources[d.cursor_file];
     if (!global.global_context) {

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import {MyInlineCompletionProvider} from "./completionProvider";
+import * as completionProvider from "./completionProvider";
 import * as highlight from "./highlight";
 import * as storeVersions from "./storeVersions";
 import * as statusBar from "./statusBar";
@@ -32,6 +32,8 @@ declare global {
 
 async function pressed_escape()
 {
+    console.log(["pressed_escape"]);
+    completionProvider.on_esc_pressed();
     let editor = vscode.window.activeTextEditor;
     if (editor) {
         let state = estate.state_of_editor(editor);
@@ -163,9 +165,10 @@ async function f1_pressed()
 }
 
 
-export async function inline_accepted()
+export async function inline_accepted(this_completion_serial_number: number)
 {
-    await usabilityHints.hint_after_successful_completion();
+    completionProvider.inline_accepted(this_completion_serial_number);
+    let fired = await usabilityHints.hint_after_successful_completion();
 }
 
 
@@ -186,7 +189,7 @@ export function activate(context: vscode.ExtensionContext)
         context.subscriptions.push(vscode.languages.registerCodeLensProvider({ scheme: "file" }, codeLens.global_provider));
     }
 
-    const comp = new MyInlineCompletionProvider();
+    const comp = new completionProvider.MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', pressed_escape);

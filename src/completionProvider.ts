@@ -6,19 +6,28 @@ import * as estate from "./estate";
 import * as storeVersions from "./storeVersions";
 import * as codeLens from "./codeLens";
 import * as crlf from "./crlf";
+import * as dataCollection from "./dataCollection";
+import * as usageStats from "./usageStats";
 
 
 class CacheEntry {
     public completion;
     public created_ts;
-    public constructor(completion: string, created_ts: number) {
+    public serial_number;
+    public constructor(completion: string, created_ts: number, serial_number: number) {
         this.completion = completion;
         this.created_ts = created_ts;
+        this.serial_number = serial_number;
     }
 };
 
 const CACHE_STORE = 160;
 const CACHE_AHEAD = 50;
+
+
+let _global_serial_number = 5000;
+
+let _completion_data_feedback_candidate = new estate.ApiFields();
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -75,8 +84,10 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let delay_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
 
         let completion = "";
+        let this_completion_serial_number = -1;
         if (state) {
-            completion = await this.cached_request(
+            [completion, this_completion_serial_number] = await this.cached_request(
+                state,
                 cancelToken,
                 delay_if_not_cached,
                 file_name,
@@ -89,19 +100,23 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
 
         if (state) {
-            if  (state && completion && multiline) {
+            if (state && completion && multiline) {
                 state.completion_lens_pos = position.line;
-                vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
             } else {
                 state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
             }
+            vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
             codeLens.quick_refresh();
+        }
+
+        if (_completion_data_feedback_candidate.serial_number === this_completion_serial_number && _completion_data_feedback_candidate.ts_presented === 0) {
+            _completion_data_feedback_candidate.ts_presented = Date.now();
         }
 
         let command = {
             command: "plugin-vscode.inlineAccepted",
             title: "inlineAccepted",
-            arguments: []
+            arguments: [this_completion_serial_number],
         };
 
         // Undocumented brittle functionality, it's hard to describe what InlineCompletionItem exactly does, trial and error...
@@ -140,6 +155,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
     }
 
     async cached_request(
+        state: estate.StateOfEditor,
         cancelToken: vscode.CancellationToken,
         delay_if_not_cached: boolean,
         file_name: string,
@@ -148,23 +164,21 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cursor_transmit: number,
         multiline: boolean,
         third_party: boolean = false,
-    ): Promise<string>
+    ): Promise<[string, number]>
     {
         let left = whole_doc.substring(0, cursor_cr);
         let cached = this.cache.get(left);
         if (cached !== undefined && !third_party) {
-            return cached.completion;
+            return [cached.completion, cached.serial_number];
         }
         if (delay_if_not_cached) {
             let sleep = 30;  // In a hope this request will be cancelled
             await new Promise(resolve => setTimeout(resolve, sleep));
         }
         let login: any = await userLogin.inference_login();
-        if (!login) { return ""; }
+        if (!login) { return ["", -1]; }
         await fetch.wait_until_all_requests_finished();
-        if (cancelToken.isCancellationRequested) {
-            return "";
-        }
+        if (cancelToken.isCancellationRequested) { return ["", -1]; }
         let request = new fetch.PendingRequest(undefined, cancelToken);
         let max_tokens = 50;
         let max_edits = 1;
@@ -183,9 +197,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 
         if (!fail) {
             let t0 = Date.now();
+            let promise: any;
             let stream = false;
+            let api_fields: estate.ApiFields;
             if (third_party) {
-                request.supply_stream(...fetch.fetch_api_promise(
+                [promise, api_fields] = fetch.fetch_api_promise(
                     cancelToken,
                     "completion", // scope
                     sources,
@@ -199,9 +215,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                     stop_tokens,
                     stream,
                     "longthink/experimental"
-                ));
+                );
             } else {
-                request.supply_stream(...fetch.fetch_api_promise(
+                [promise, api_fields] = fetch.fetch_api_promise(
                     cancelToken,
                     "completion", // scope
                     sources,
@@ -214,12 +230,16 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                     max_edits,
                     stop_tokens,
                     stream,
-                ));
+                );
             }
+            _completion_data_feedback_candidate = api_fields;
+            _completion_data_feedback_candidate.serial_number = _global_serial_number;
+            _global_serial_number += 1;
+            request.supply_stream(promise, api_fields);
             let json: any;
             json = await request.apiPromise;
             if (json === undefined) {
-                return "";
+                return ["", -1];
             }
             let t1 = Date.now();
             let ms_int = Math.round(t1 - t0);
@@ -230,7 +250,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             backward_cache = json["backward_cache"] || "";
             if (before_cursor1 !== before_cursor2) {
                 console.log("completion before_cursor1 != before_cursor2");
-                return "";
+                return ["", -1];
             }
             stop_at = 0;
             let any_different = false;
@@ -269,7 +289,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         if (!fail) {
             completion = modif_doc.substring(cursor_cr, modif_doc.length + stop_at);
-            console.log(["completion success", request.seq, completion]);
+            // console.log(["completion success", request.seq, completion]);
         }
         if (!fail && !multiline) {
             completion = completion.replace(/\s+$/, "");
@@ -285,6 +305,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             this.cache.set(more_left, {
                 completion: completion.substring(i),
                 created_ts: Date.now(),
+                serial_number: _completion_data_feedback_candidate.serial_number,
             });
         }
         for (let i = 1; i < Math.min(backward_cache.length, CACHE_AHEAD); i++) {
@@ -297,9 +318,75 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             this.cache.set(less_left, {
                 completion: cut + completion,
                 created_ts: Date.now(),
+                serial_number: _completion_data_feedback_candidate.serial_number,
             });
         }
         this.cleanup_cache();
-        return completion;
+        return [completion, _completion_data_feedback_candidate.serial_number];
     }
+}
+
+
+export function inline_accepted(serial_number: number)
+{
+    let feed: estate.ApiFields = _completion_data_feedback_candidate;
+    if (!feed || feed.serial_number !== serial_number) {
+        return;
+    }
+    if (feed.ts_reacted) {
+        return;
+    }
+    feed.ts_reacted = Date.now();
+    let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
+    let req_to_react_ms = feed.ts_reacted - feed.ts_req;
+    console.log(["inline_accepted", serial_number, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
+    usageStats.report_increase_a_counter("completion", "metric0ms_tab");
+    if (ponder_time_ms > 600) {
+        usageStats.report_increase_a_counter("completion", "metric600ms_tab");
+    }
+    if (ponder_time_ms > 1200) {
+        usageStats.report_increase_a_counter("completion", "metric1200ms_tab");
+    }
+}
+
+
+export function inline_rejected(reason: string)
+{
+    let feed: estate.ApiFields = _completion_data_feedback_candidate;
+    if (feed.ts_reacted) {
+        return;
+    }
+    feed.ts_reacted = Date.now();
+    let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
+    let req_to_react_ms = feed.ts_reacted - feed.ts_req;
+    console.log(["inline_rejected", reason, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
+    usageStats.report_increase_a_counter("completion", "metric0ms_" + reason);
+    if (ponder_time_ms > 600) {
+        usageStats.report_increase_a_counter("completion", "metric600ms_" + reason);
+    }
+    if (ponder_time_ms > 1200) {
+        usageStats.report_increase_a_counter("completion", "metric1200ms_" + reason);
+    }
+}
+
+
+export function on_cursor_moved()
+{
+    setTimeout(() => {
+        inline_rejected("moveaway");
+    }, 50);
+}
+
+
+export function on_text_edited()
+{
+    setTimeout(() => {
+        inline_rejected("moveaway");
+    }, 50);
+}
+
+
+export function on_esc_pressed()
+{
+    inline_rejected("esc");
 }

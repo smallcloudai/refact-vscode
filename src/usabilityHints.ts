@@ -40,6 +40,7 @@ export async function hint_after_successful_completion()
     if (fire) {
         await show_hint1();
     }
+    return fire;
 }
 
 

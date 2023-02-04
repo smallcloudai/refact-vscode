@@ -200,9 +200,9 @@ export async function inference_login(): Promise<boolean>
     ) {
         return _last_inference_login_cached_result;
     }
-    await fetchH2.disconnectAll();
     let url = fetchAPI.inference_url("/v1/secret-key-activate");
     console.log(["perform inference login", url]);
+    await fetchH2.disconnectAll();
     if (!url) {
         return false;
     }

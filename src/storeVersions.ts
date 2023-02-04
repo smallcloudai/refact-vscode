@@ -100,9 +100,9 @@ function _save_change(document: vscode.TextDocument, line0: number, force: boole
         textlist.shift();
         versionlist.shift();
     }
-    for (let i = 0; i < textlist.length; i++) {
-        console.log(["textlist", i, textlist[i].length, "version", versionlist[i]]);
-    }
+    // for (let i = 0; i < textlist.length; i++) {
+    //     console.log(["textlist", i, textlist[i].length, "version", versionlist[i]]);
+    // }
 }
 
 

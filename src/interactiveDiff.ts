@@ -122,7 +122,7 @@ export async function query_diff(
                 let modif_doc = files[file_name];
                 if (feedback) {
                     feedback.results = files;
-                    feedback.ts = Date.now();
+                    feedback.ts_presented = Date.now();
                 }
                 state.showing_diff_for_function = model_function;
                 state.showing_diff_edit_chain = undefined;
@@ -171,7 +171,7 @@ export async function query_diff(
         feedback.cursor_file = file_name;
         feedback.cursor_pos0 = cursor0;
         feedback.cursor_pos1 = cursor1;
-        feedback.ts = Date.now();
+        feedback.ts_req = Date.now();
     }
 
     request.supply_stream(...fetchAPI.fetch_api_promise(
@@ -493,7 +493,7 @@ export async function dislike_and_rollback(editor: vscode.TextEditor)
             feedback.positive = false;
             await dataCollection.data_collection_save_record(feedback);
         }
-        dataCollection.data_collection_reset(state);
+        dataCollection.data_feedback_candidate_reset(state);
     });
 }
 
@@ -546,7 +546,7 @@ export async function like_and_accept(editor: vscode.TextEditor)
             feedback.positive = true;
             await dataCollection.data_collection_save_record(feedback);
         }
-        dataCollection.data_collection_reset(state);
+        dataCollection.data_feedback_candidate_reset(state);
     });
     await thenable;
 }

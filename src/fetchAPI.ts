@@ -4,29 +4,16 @@ import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
 import * as usageStats from "./usageStats";
 import * as usabilityHints from "./usabilityHints";
+import * as estate from "./estate";
 
 
 let globalSeq = 100;
 
 
-export class ApiFields {
-    scope: string = "";
-    url: string = "";
-    model: string = "";
-    sources: { [key: string]: string } = {};
-    results: { [key: string]: string } = {};
-    intent: string = "";
-    function: string = "";
-    cursor_file: string = "";
-    cursor0: number = 0;
-    cursor1: number = 0;
-}
-
-
 export class PendingRequest {
     seq: number;
     apiPromise: Promise<any> | undefined;
-    api_fields: ApiFields | undefined;
+    api_fields: estate.ApiFields | undefined;
     cancelToken: vscode.CancellationToken;
     cancellationTokenSource: vscode.CancellationTokenSource | undefined;
     streaming_callback: Function | undefined;
@@ -82,7 +69,7 @@ export class PendingRequest {
         this.streaming_buf = "";
     }
 
-    supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: ApiFields)
+    supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: estate.ApiFields)
     {
         this.api_fields = api_fields;
         h2stream.catch((error) => {
@@ -247,7 +234,7 @@ export function fetch_api_promise(
     stop_tokens: string[],
     stream: boolean,
     suggest_longthink_model: string = "",
-): [Promise<fetchH2.Response>, ApiFields]
+): [Promise<fetchH2.Response>, estate.ApiFields]
 {
     let url = inference_url("/v1/contrast");
     let model_ = vscode.workspace.getConfiguration().get('codify.model') || "CONTRASTcode";
@@ -259,11 +246,11 @@ export function fetch_api_promise(
     let model: string = `${model_}`;
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
-        return [Promise.reject("No API key"), new ApiFields()];
+        return [Promise.reject("No API key"), new estate.ApiFields()];
     }
     let temp = 0.2;  // vscode.workspace.getConfiguration().get('codify.temperature');
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
-    let api_fields = new ApiFields();
+    let api_fields = new estate.ApiFields();
     api_fields.scope = scope;
     api_fields.url = url;
     api_fields.model = model;
@@ -271,8 +258,9 @@ export function fetch_api_promise(
     api_fields.intent = intent;
     api_fields.function = functionName;
     api_fields.cursor_file = cursorFile;
-    api_fields.cursor0 = cursor0;
-    api_fields.cursor1 = cursor1;
+    api_fields.cursor_pos0 = cursor0;
+    api_fields.cursor_pos1 = cursor1;
+    api_fields.ts_req = Date.now();
     const body = JSON.stringify({
         "model": model,
         "sources": sources,
@@ -316,7 +304,7 @@ export function fetch_api_promise(
 }
 
 
-export function look_for_common_errors(json: any, api_fields: ApiFields | undefined): boolean
+export function look_for_common_errors(json: any, api_fields: estate.ApiFields | undefined): boolean
 {
     if (json === undefined) {
         // undefined means error is already handled, do nothing
