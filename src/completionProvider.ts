@@ -6,7 +6,6 @@ import * as estate from "./estate";
 import * as storeVersions from "./storeVersions";
 import * as codeLens from "./codeLens";
 import * as crlf from "./crlf";
-import * as dataCollection from "./dataCollection";
 import * as usageStats from "./usageStats";
 
 
@@ -109,7 +108,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             codeLens.quick_refresh();
         }
 
-        if (_completion_data_feedback_candidate.serial_number === this_completion_serial_number && _completion_data_feedback_candidate.ts_presented === 0) {
+        if (completion && _completion_data_feedback_candidate.serial_number === this_completion_serial_number && _completion_data_feedback_candidate.ts_presented === 0) {
             _completion_data_feedback_candidate.ts_presented = Date.now();
         }
 
@@ -333,6 +332,9 @@ export function inline_accepted(serial_number: number)
     if (!feed || feed.serial_number !== serial_number) {
         return;
     }
+    if (feed.ts_presented === 0) {
+        return;
+    }
     if (feed.ts_reacted) {
         return;
     }
@@ -353,6 +355,9 @@ export function inline_accepted(serial_number: number)
 export function inline_rejected(reason: string)
 {
     let feed: estate.ApiFields = _completion_data_feedback_candidate;
+    if (feed.ts_presented === 0) {
+        return;
+    }
     if (feed.ts_reacted) {
         return;
     }

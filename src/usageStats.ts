@@ -159,4 +159,23 @@ export async function report_usage_stats()
         return;
     }
     await global_context.globalState.update("usage_stats", {});
+
+    let usage_counters: { [key: string]: { [key: string]: number } } | undefined = await global_context.globalState.get("usage_counters");
+    if (usage_counters) {
+        url = "https://www.smallcloud.ai/v1/accept-reject-stats";
+        let usage_counters_str = JSON.stringify(usage_counters);
+        response = await fetchH2.fetch(url, {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify({
+                "client_version": `vscode-${client_version}`,
+                "usage": usage_counters_str,
+            }),
+        });
+        if (response.status !== 200) {
+            console.log([response.status, url]);
+            return;
+        }
+        await global_context.globalState.update("usage_counters", {});
+    }
 }
