@@ -1,37 +1,28 @@
-# Codify strives to be the only AI coding assistant you'll ever need
-Start with a free trial!
+# Codify: The AI Assistant for Code Writing and Refactoring
+Boost your productivity by employing AI to pair program with you or make more fun out of your work by delegating boring tasks to the AI.
 
-Codify is a coding assistant from Small Magellanic Cloud AI Ltd. It uses the latest advances in Deep Learning and Large Language Models.
+![feature X](vscode.png)
 
 ## Features
-- Open source plugin.
-- State of the art code generation models (see website for details).
-- 20+ programming languages.
-- Cloud subscription and an open source self-hosted version.
-- Experimental features: select & refactor, highlight & fix.
+- **Code Completion:** satisfying, smart and relevant code completion that can suggest whole functions or classes. It suggests commonly used programming patterns, libraries and APIs usage, and helps with typing. This helps you write code faster and with fewer errors.
+- **Code Transformation:** use natural language commands to ask the AI to search, transform, or optimize your code. Whether you're looking to optimize, search, or refactor your code, Codify has you covered.
+- **Privacy of your code guaranteed:** Codify allows you to restrict access to particular files or projects, ensuring that your private code or confidential files are protected. And we never store your code on the server side.
+- **User-Friendly Interface:** Codify has a simple, user-friendly interface that makes it easy to use, even for those new to AI tools. Codify will assist by completing your code or by accessing the AI toolbox function (use F1 to open).
+- **It’s fast!** And supports Python, Java, PHP, C++, Javascript, TypeScript and 20 more programming languages.
 
-## Code Completion
-As you type in code, this feature offers suggestions to increase your productivity. It can suggest commonly used programming patterns, libraries and APIs usage, and it helps with typing.
+Codify is a cutting-edge AI tool designed to assist developers in writing and refining code.
+Whether you're working on a brand new project or modifying existing code, Codify can help you save time and streamline your coding process.
 
-By looking up and down the cursor, it can make more informed suggestions based on surrounding code, natural language comments, and other contextual information.
+If you have your own NVIDIA GPU, you can try the [self-hosted version](https://codify.smallcloud.ai/docker).
+Our proprietary [AI model behind](https://www.smallcloud.ai/) Codify is state-of-the-art (for the size and latency). The weights are free to [download on Huggingface](https://huggingface.co/smallcloudai).
 
-It also works fast!
-
-## You Are In Control of Your Data
-We are not collecting data on server side (the inference server), see website for details.
-
-## Open Source
-The plugin is open source: you can verify for yourself it cares about your data as advertised.
+## Crowdsourcing Human Feedback
+No one likes big corporations taking over our development toolchain, right? You can improve independent code tools like this one simply by turning your privacy settings to a relaxed position for some of your projects. We’ll tune the model to better follow YOUR commands and the tool will get better for everybody!
 
 ## Getting Started
-The sidebar on the left lets you explore new features. There is also a status icon on at the bottom of the screen, it reflects communication with AI inference server.
+1. Once installed you can find Codify logo at the right part of the status bar.
+2. Click "Login" and you will be redirected to Codify site.
+3. After logging in and accepting our terms click the "Authenticate" button to connect the plugin to your account.
+4. Once the Plugin is Authenticated and Codify started to work, you’ll get 14 days of the free trial.
+5. If you have your own GPU, you can try a self-hosted version - please follow the Codify site and change your plan at the "My Account" page.
 
-## Cloud Subscription
-You can start with a free trial, switch to a paid subscription later. Alternatively, if you have a GPU you can run your own open source self-hosted version.
-
-## Experimental Features
-Select & Refactor: select lines to change, press F1. It will ask you for your intent: what are you trying to do? Try "add docstrings", "add type hints", "convert to list comprehension", "use lambda". The model will try to modify the selected lines only.
-
-Highlight & Fix: press F1 without selection. The model will highlight all the places it thinks your instruction is applicable to. Click on highlighted lines to generate changes.
-
-Stay tuned for more!

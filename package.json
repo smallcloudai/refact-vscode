@@ -1,12 +1,15 @@
 {
   "name": "codify",
   "displayName": "Codify",
-  "description": "AI autocomplete, refactoring and code generation",
+  "description": "The AI Assistant for Code Writing and Refactoring",
   "publisher": "smallcloud",
   "icon": "logo-small.png",
   "galleryBanner": {
     "color": "#000000",
     "theme": "dark"
+  },
+  "vsce": {
+    "baseImagesUrl": "https://www.smallcloud.ai/img/"
   },
   "homepage": "https://codify.smallcloud.ai",
   "author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
@@ -36,6 +39,9 @@
     "bash",
     "kotlin",
     "html",
+    "scss",
+    "vue",
+    "react",
     "css",
     "ocaml",
     "perl",
