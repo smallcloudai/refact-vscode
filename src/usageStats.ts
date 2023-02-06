@@ -161,7 +161,8 @@ export async function report_usage_stats()
     await global_context.globalState.update("usage_stats", {});
 
     let usage_counters: { [key: string]: { [key: string]: number } } | undefined = await global_context.globalState.get("usage_counters");
-    if (usage_counters) {
+    let usage_counters_size = usage_counters ? Object.keys(usage_counters).length : 0;
+    if (usage_counters_size > 0) {
         url = "https://www.smallcloud.ai/v1/accept-reject-stats";
         let usage_counters_str = JSON.stringify(usage_counters);
         response = await fetchH2.fetch(url, {
@@ -176,6 +177,6 @@ export async function report_usage_stats()
             console.log([response.status, url]);
             return;
         }
-        await global_context.globalState.update("usage_counters", {});
+        await global_context.globalState.update("usage_counters", undefined);
     }
 }
