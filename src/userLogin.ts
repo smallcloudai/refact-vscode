@@ -181,7 +181,8 @@ export function inference_login_force_retry()
 
 export async function inference_login(): Promise<boolean>
 {
-    if (global.streamlined_login_countdown >= 0) {
+    let url = fetchAPI.inference_url("/v1/secret-key-activate");
+    if (global.streamlined_login_countdown >= 0 || url === "") {
         await login();
     }
     // Without login it will still work, with inference URL in settings.
@@ -200,9 +201,8 @@ export async function inference_login(): Promise<boolean>
     ) {
         return _last_inference_login_cached_result;
     }
-    let url = fetchAPI.inference_url("/v1/secret-key-activate");
     console.log(["perform inference login", url]);
-    await fetchH2.disconnectAll();
+    // await fetchH2.disconnectAll();
     if (!url) {
         return false;
     }
