@@ -4,7 +4,7 @@ import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 import * as codeLens from "./codeLens";
 import * as completionProvider from "./completionProvider";
-
+import * as privacy from "./privacy";
 
 export let global_intent: string = "Fix";
 
@@ -113,7 +113,10 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
     if (!editor) {
         return undefined;
     }
-    if (!is_lang_enabled(editor.document)) {
+    // if (!is_lang_enabled(editor.document)) {
+    //     return undefined;
+    // }
+    if(privacy.get_file_access(editor.document.fileName) === 0) {
         return undefined;
     }
     if (editor2state.size > 3) {

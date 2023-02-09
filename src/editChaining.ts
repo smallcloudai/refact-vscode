@@ -5,6 +5,7 @@ import * as userLogin from "./userLogin";
 import * as storeVersions from './storeVersions';
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from './estate';
+import * as privacy from './privacy';
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 
 
@@ -31,6 +32,9 @@ export async function query_edit_chaining(animation: boolean): Promise<String>
         return "";
     }
     let doc = editor.document;
+    if(privacy.get_file_access(doc.fileName) === 0) {
+        return "";
+    }
     let position: vscode.Position = editor.selection.active;
     let cursor = doc.offsetAt(position);
     let file_name = storeVersions.filename_from_document(doc);

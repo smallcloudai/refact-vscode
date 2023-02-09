@@ -2,6 +2,8 @@
 import * as vscode from 'vscode';
 import * as userLogin from "./userLogin";
 import * as estate from './estate';
+import * as privacy from "./privacy";
+import { PrivacySettings } from './privacySettings';
 
 
 let _website_message = "";
@@ -25,12 +27,13 @@ export class StatusBarMenu {
     command: string = 'plugin-vscode.statusBarClick';
     socketerror: boolean = false;
     socketerror_msg: string = '';
-    disable_lang: boolean = true;
     spinner: boolean = false;
-    language_name: string = "";
     last_url: string = "";
     last_model_name: string = "";
     inference_attempted: boolean = false;
+    access_level: number = 0;
+    // disable_lang: boolean = true;
+    // language_name: string = "";
 
     createStatusBarBlock(context: vscode.ExtensionContext)
     {
@@ -49,10 +52,18 @@ export class StatusBarMenu {
 
     choose_color()
     {
-        if (this.disable_lang && this.language_name) {
+        if (this.access_level === 0) {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-            this.menu.tooltip = `Codify is not enabled for "${this.language_name}"`;
+            this.menu.tooltip = `Access Level 0`;
+        } else if (this.access_level === 1) {
+            this.menu.text = `$(codify-logo) codify`;
+            this.menu.backgroundColor = undefined;
+            this.menu.tooltip = `Access Level 1`;
+        } else if (this.access_level === 2) {
+            this.menu.text = `$(codify-logo) codify`;
+            this.menu.backgroundColor = undefined;
+            this.menu.tooltip = `Access Level 2`;
         } else if (this.socketerror) {
             this.menu.text = `$(debug-disconnect) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
@@ -77,12 +88,12 @@ export class StatusBarMenu {
                 }
                 msg += `🗒️ ${this.last_model_name}`;
             }
-            if (this.language_name) {
-                if (msg) {
-                    msg += "\n";
-                }
-                msg += `Click to disable Codify for "${this.language_name}"`;
-            }
+            // if (this.language_name) {
+            //     if (msg) {
+            //         msg += "\n";
+            //     }
+            //     msg += `Click to disable Codify for "${this.language_name}"`;
+            // }
             if (_website_message || _inference_message) {
                 msg += "\n";
                 msg += _website_message || _inference_message;
@@ -126,10 +137,16 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    set_language_enabled(state: boolean, language_name: string)
+    // set_language_enabled(state: boolean, language_name: string)
+    // {
+    //     this.disable_lang = state;
+    //     this.language_name = language_name;
+    //     this.choose_color();
+    // }
+
+    set_access_level(state: number)
     {
-        this.disable_lang = state;
-        this.language_name = language_name;
+        this.access_level = state;
         this.choose_color();
     }
 
@@ -146,16 +163,24 @@ export class StatusBarMenu {
 function on_change_active_editor(editor: vscode.TextEditor | undefined)
 {
     if (!editor) {
-        global.status_bar.set_language_enabled(true, "");
+        global.status_bar.set_access_level(0);
+        PrivacySettings.update_webview(PrivacySettings._panel);
         return;
     }
-    let document = editor.document;
-    let language = document.languageId;
-    if (!estate.is_lang_enabled(document)) {
-        global.status_bar.set_language_enabled(true, language);
+    let document_filename = editor.document.fileName;
+    if (privacy.get_file_access(document_filename) === 1) {
+        global.status_bar.set_access_level(1);
+    } else if (privacy.get_file_access(document_filename) === 2) {
+        global.status_bar.set_access_level(2);
     } else {
-        global.status_bar.set_language_enabled(false, language);
+        global.status_bar.set_access_level(0);
     }
+    // let language = document.languageId;
+    // if (!estate.is_lang_enabled(document)) {
+    //     global.status_bar.set_language_enabled(true, language);
+    // } else {
+    //     global.status_bar.set_language_enabled(false, language);
+    // }
 }
 
 

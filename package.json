@@ -1,219 +1,261 @@
 {
-  "name": "codify",
-  "displayName": "Codify",
-  "description": "The AI Assistant for Code Writing and Refactoring",
-  "publisher": "smallcloud",
-  "icon": "logo-small.png",
-  "galleryBanner": {
-    "color": "#000000",
-    "theme": "dark"
-  },
-  "vsce": {
-    "baseImagesUrl": "https://www.smallcloud.ai/img/"
-  },
-  "homepage": "https://codify.smallcloud.ai",
-  "author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "1.0.21",
-  "engines": {
-    "vscode": "^1.69.0"
-  },
-  "categories": [
-    "Programming Languages",
-    "Snippets",
-    "Other",
-    "Machine Learning"
-  ],
-  "keywords": [
-    "copilot",
-    "refactoring",
-    "tabnine",
-    "javascript",
-    "python",
-    "typescript",
-    "php",
-    "autocomplete",
-    "ruby",
-    "java",
-    "go",
-    "golang",
-    "bash",
-    "kotlin",
-    "html",
-    "scss",
-    "vue",
-    "react",
-    "css",
-    "ocaml",
-    "perl",
-    "rust",
-    "julia",
-    "lua",
-    "haskell",
-    "c",
-    "cpp",
-    "c++",
-    "csharp",
-    "c#",
-    "react",
-    "swift",
-    "objective-c",
-    "objectivec",
-    "ai",
-    "method completion",
-    "intellicode",
-    "intellisense",
-    "snippets",
-    "kite",
-    "nodejs",
-    "node",
-    "node.js",
-    "jupyter",
-    "IntelliSense",
-    "intelliCode",
-    "autocomplete",
-    "AI-assisted code completion",
-    "AI-powered code completion",
-    "AI copilot",
-    "AI code snippets",
-    "code suggestion",  
-    "code prediction"
-  ],
-  "activationEvents": [
-    "onStartupFinished",
-    "onView:codify-presets"
-  ],
-  "main": "./out/extension.js",
-  "contributes": {
-    "configuration": {
-      "type": "object",
-      "title": "Codify",
-      "properties": {
-        "codify.apiKey": {
-          "type": "string",
-          "default": null,
-          "description": "Secret API Key. It's used to authenticate your requests."
-        },
-        "codify.infurl": {
-          "type": "string",
-          "description": "For self-hosted inference, set the URL to your inference server, for example http://127.0.0.1:8008/\nLeave blank otherwise.",
-          "default": ""
-        },
-        "codify.lang": {
-          "*": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable plugin for this language"
-          }
-        }
-      }
-    },
-    "properties": [],
-    "commands": [
-      {
-        "command": "plugin-vscode.highlight",
-        "title": "Ask Intent and Highlight",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.login",
-        "title": "Login",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.logout",
-        "title": "Logout",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.editChaining",
-        "title": "Edit Chaining",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.openSettings",
-        "title": "Settings Page",
-        "category": "Codify"
-      },
-      {
-        "command": "plugin-vscode.openLogin",
-        "title": "Login / Register",
-        "category": "Codify"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "plugin-vscode.highlight",
-        "key": "F1"
-      },
-      {
-        "command": "plugin-vscode.editChaining",
-        "key": "Ctrl+Q"
-      },
-      {
-        "command": "plugin-vscode.esc",
-        "key": "escape",
-        "when": "codify.runEsc"
-      },
-      {
-        "command": "plugin-vscode.tab",
-        "key": "tab",
-        "when": "codify.runTab"
-      }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "codify-pane",
-          "title": "Codify",
-          "icon": "$(codify-logo)"
-        }
-      ]
-    },
-    "views": {
-      "codify-pane": [
-        {
-          "type": "webview",
-          "id": "codify-presets",
-          "name": "Presets"
-        }
-      ]
-    },
-    "icons": {
-      "codify-logo": {
-        "description": "codify logo",
-        "default": {
-          "fontPath": "./assets/codify.woff",
-          "fontCharacter": "\\41"
-        }
-      }
-    }
-  },
-  "scripts": {
-    "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile && npm run lint",
-    "lint": "eslint src --ext ts",
-    "test": "node ./out/test/runTest.js",
-    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
-    "esbuild": "npm run esbuild-base -- --sourcemap",
-    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
-  },
-  "dependencies": {
-    "diff": "^5.1.0",
-    "fetch-h2": "^3.0.2"
-  },
-  "devDependencies": {
-    "@types/glob": "^7.2.0",
-    "@types/mocha": "^9.1.1",
-    "@types/vscode": "^1.69.0",
-    "@typescript-eslint/eslint-plugin": "^5.30.0",
-    "@typescript-eslint/parser": "^5.30.0",
-    "@vscode/test-electron": "^2.1.5",
-    "esbuild": "^0.16.3",
-    "eslint": "^8.18.0",
-    "glob": "^8.0.3",
-    "mocha": "^10.0.0",
-    "typescript": "^4.7.4"
-  }
+	"name": "codify",
+	"displayName": "Codify",
+	"description": "The AI Assistant for Code Writing and Refactoring",
+	"publisher": "smallcloud",
+	"icon": "logo-small.png",
+	"galleryBanner": {
+		"color": "#000000",
+		"theme": "dark"
+	},
+	"vsce": {
+		"baseImagesUrl": "https://www.smallcloud.ai/img/"
+	},
+	"homepage": "https://codify.smallcloud.ai",
+	"author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
+	"version": "1.0.16",
+	"engines": {
+		"vscode": "^1.69.0"
+	},
+	"categories": [
+		"Programming Languages",
+		"Snippets",
+		"Other",
+		"Machine Learning"
+	],
+	"keywords": [
+		"copilot",
+		"refactoring",
+		"tabnine",
+		"javascript",
+		"python",
+		"typescript",
+		"php",
+		"autocomplete",
+		"ruby",
+		"java",
+		"go",
+		"golang",
+		"bash",
+		"kotlin",
+		"html",
+		"scss",
+		"vue",
+		"react",
+		"css",
+		"ocaml",
+		"perl",
+		"rust",
+		"julia",
+		"lua",
+		"haskell",
+		"c",
+		"cpp",
+		"c++",
+		"csharp",
+		"c#",
+		"react",
+		"swift",
+		"objective-c",
+		"objectivec",
+		"ai",
+		"method completion",
+		"intellicode",
+		"intellisense",
+		"snippets",
+		"kite",
+		"nodejs",
+		"node",
+		"node.js",
+		"jupyter"
+	],
+	"activationEvents": [
+		"onStartupFinished",
+		"onView:codify-presets"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"configuration": {
+			"type": "object",
+			"title": "Codify",
+			"properties": {
+				"codify.apiKey": {
+					"type": "string",
+					"default": null,
+					"description": "Secret API Key. It's used to authenticate your requests."
+				},
+				"codify.infurl": {
+					"type": "string",
+					"description": "For self-hosted inference, set the URL to your inference server, for example http://127.0.0.1:8008/\nLeave blank otherwise.",
+					"default": ""
+				}
+			}
+		},
+		"properties": [],
+		"commands": [
+			{
+				"command": "plugin-vscode.highlight",
+				"title": "Ask Intent and Highlight",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.login",
+				"title": "Login",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.logout",
+				"title": "Logout",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.editChaining",
+				"title": "Edit Chaining",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.openSettings",
+				"title": "Settings Page",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.openLogin",
+				"title": "Login / Register",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.codifyPrivacySettings",
+				"title": "Privacy Rules",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.codifyThirdParty",
+				"title": "Level 2",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.codifyDisabled",
+				"title": "Level 0: Turn off",
+				"category": "Codify"
+			},
+			{
+				"command": "plugin-vscode.codifyOnly",
+				"title": "Level 1",
+				"category": "Codify"
+			}
+		],
+		"menus": {
+			"editor/context": [
+				{
+					"submenu": "codifyaccess",
+					"group": "z_commands"
+				}
+			],
+			"codifyaccess": [
+				{
+					"command": "plugin-vscode.codifyDisabled",
+					"group": "codifyprivacy.codify@1"
+				},
+				{
+					"command": "plugin-vscode.codifyOnly",
+					"group": "codifyprivacy.codify@2"
+				},
+				{
+					"command": "plugin-vscode.codifyThirdParty",
+					"group": "codifyprivacy.codify@3"
+				},
+				{
+					"command": "plugin-vscode.codifyPrivacySettings",
+					"group": "codifyprivacy.codify2"
+				}
+			],
+			"explorer/context": [
+				{
+					"submenu": "codifyaccess",
+					"group": "z_commands"
+				}
+			]
+		},
+		"submenus": [
+			{
+				"label": "Codify Access",
+				"id": "codifyaccess"
+			}
+		],
+		"keybindings": [
+			{
+				"command": "plugin-vscode.highlight",
+				"key": "F1"
+			},
+			{
+				"command": "plugin-vscode.editChaining",
+				"key": "Ctrl+Q"
+			},
+			{
+				"command": "plugin-vscode.esc",
+				"key": "escape",
+				"when": "codify.runEsc"
+			},
+			{
+				"command": "plugin-vscode.tab",
+				"key": "tab",
+				"when": "codify.runTab"
+			}
+		],
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "codify-pane",
+					"title": "Codify",
+					"icon": "$(codify-logo)"
+				}
+			]
+		},
+		"views": {
+			"codify-pane": [
+				{
+					"type": "webview",
+					"id": "codify-presets",
+					"name": "Presets"
+				}
+			]
+		},
+		"icons": {
+			"codify-logo": {
+				"description": "codify logo",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\41"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"pretest": "npm run compile && npm run lint",
+		"lint": "eslint src --ext ts",
+		"test": "node ./out/test/runTest.js",
+		"esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
+		"esbuild": "npm run esbuild-base -- --sourcemap",
+		"esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
+	},
+	"dependencies": {
+		"diff": "^5.1.0",
+		"fetch-h2": "^3.0.2"
+	},
+	"devDependencies": {
+		"@types/glob": "^7.2.0",
+		"@types/mocha": "^9.1.1",
+		"@types/vscode": "^1.69.0",
+		"@typescript-eslint/eslint-plugin": "^5.30.0",
+		"@typescript-eslint/parser": "^5.30.0",
+		"@vscode/test-electron": "^2.1.5",
+		"esbuild": "^0.16.3",
+		"eslint": "^8.18.0",
+		"glob": "^8.0.3",
+		"mocha": "^10.0.0",
+		"typescript": "^4.7.4"
+	}
 }

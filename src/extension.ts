@@ -1,3 +1,4 @@
+
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as completionProvider from "./completionProvider";
@@ -13,6 +14,8 @@ import * as usageStats from "./usageStats";
 import * as userLogin from "./userLogin";
 import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
+import * as privacy from "./privacy";
+import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
 
 
@@ -28,6 +31,8 @@ declare global {
     var longthink_functions_today: {[key: string]: {[key: string]: string}} | undefined;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
+    var global_access: number|undefined;
+    var file_access: number|undefined;
 }
 
 
@@ -176,6 +181,7 @@ export async function inline_accepted(this_completion_serial_number: number)
 export function activate(context: vscode.ExtensionContext)
 {
     global.global_context = context;
+    privacy.init();
     global.enable_longthink_completion = false;
     global.streamlined_login_countdown = -1;
     global.last_positive_result = 0;
@@ -198,6 +204,15 @@ export function activate(context: vscode.ExtensionContext)
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', pressed_tab);
     let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', f1_pressed);
     let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining',  manual_edit_chaining);
+    let disposable9 = vscode.commands.registerCommand('plugin-vscode.codifyDisabled', (uri:vscode.Uri) => {
+        privacy.set_access_override(uri.fsPath, 0);
+    });
+    let disposable10 = vscode.commands.registerCommand('plugin-vscode.codifyOnly', (uri:vscode.Uri) => {
+        privacy.set_access_override(uri.fsPath, 1);
+    });
+    let disposable11 = vscode.commands.registerCommand('plugin-vscode.codifyThirdParty', (uri:vscode.Uri) => {
+        privacy.set_access_override(uri.fsPath, 2);
+    });
 
     let disposables = storeVersions.store_versions_init();
 
@@ -207,6 +222,9 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable1);
     context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable8);
+    context.subscriptions.push(disposable9);
+    context.subscriptions.push(disposable10);
+    context.subscriptions.push(disposable11);
     context.subscriptions.push(...disposables);
 
     global.side_panel = new sidebar.PanelWebview(context);
@@ -249,6 +267,11 @@ export function activate(context: vscode.ExtensionContext)
         }
         vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     });
+
+    let privacySettingsPage = vscode.commands.registerCommand('plugin-vscode.codifyPrivacySettings', () => {
+        PrivacySettings.render(context);
+    });
+    context.subscriptions.push(privacySettingsPage);
 
     context.subscriptions.push(logout);
     context.subscriptions.push(...statusBar.status_bar_init());
@@ -386,26 +409,44 @@ export async function status_bar_clicked()
         // - file bug report
         return;
     }
-    let lang = editor.document.languageId;
-    let enabled = estate.is_lang_enabled(editor.document);
-    if (enabled) {
-        await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
-        console.log(["disable", lang]);
-        global.status_bar.set_language_enabled(true, lang);
+    // let lang = editor.document.languageId;
+    // let enabled = estate.is_lang_enabled(editor.document);
+    let document_filename = editor.document.fileName;
+    let access_level = privacy.get_file_access(document_filename);
+    let chunks = document_filename.split("/");
+    if (access_level === 0) {
+        // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
+        // console.log(["disable", lang]);
+        global.status_bar.set_access_level(0);
         global.status_bar.choose_color();
-    } else {
         let selection = await vscode.window.showInformationMessage(
-            "Enable Codify for the programming language \"" + lang + "\"?",
+            chunks[chunks.length - 1] + ": Access level " + access_level,
             "Enable",
-            // "Bug Report..."
+            "Privacy Rules",
         );
         if (selection === "Enable") {
-            await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
-            console.log(["enable", lang]);
-            global.status_bar.set_language_enabled(false, lang);
-            global.status_bar.choose_color();
-        // } else if (selection === "Bug Report...") {
-        //     vscode.commands.executeCommand("plugin-vscode.openBug");
+            // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
+            // console.log(["enable", lang]);
+            // global.status_bar.set_language_enabled(false, lang);
+            privacy.set_access_override(document_filename, 1);
+            global.status_bar.set_access_level(1);
+        } else if (selection === "Privacy Rules") {
+            vscode.commands.executeCommand("plugin-vscode.codifyPrivacySettings");
+        }
+    } else {
+        let selection = await vscode.window.showInformationMessage(
+            chunks[chunks.length - 1] + ": Access level " + access_level,
+            "Disable",
+            "Privacy Rules",
+        );
+        if (selection === "Disable") {
+            privacy.set_access_override(document_filename, 0);
+            global.status_bar.set_access_level(0);
+            // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
+            // console.log(["enable", lang]);
+            // global.status_bar.set_language_enabled(false, lang);
+        } else if (selection === "Privacy Rules") {
+            vscode.commands.executeCommand("plugin-vscode.codifyPrivacySettings");
         }
     }
 }

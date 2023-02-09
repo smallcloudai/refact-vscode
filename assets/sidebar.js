@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 (function () {
 	const vscode = acquireVsCodeApi();
 	// let presets = document.querySelectorAll(".presets li");

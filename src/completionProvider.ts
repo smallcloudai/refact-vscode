@@ -7,6 +7,7 @@ import * as storeVersions from "./storeVersions";
 import * as codeLens from "./codeLens";
 import * as crlf from "./crlf";
 import * as usageStats from "./usageStats";
+import * as privacy from "./privacy";
 
 
 class CacheEntry {
@@ -44,7 +45,10 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 return [];
             }
         }
-        if (!estate.is_lang_enabled(document)) {
+        // if (!estate.is_lang_enabled(document)) {
+        //     return [];
+        // }
+        if(privacy.get_file_access(document.fileName) === 0) {
             return [];
         }
         let file_name = storeVersions.filename_from_document(document);
