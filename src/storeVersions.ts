@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as estate from './estate';
+import * as privacy from './privacy';
 
 
 let fn2textlist = new Map<string, string[]>();
@@ -109,7 +110,11 @@ function _save_change(document: vscode.TextDocument, line0: number, force: boole
 function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
 {
     let document = event.document;
-    if (!estate.is_lang_enabled(document)) {
+    // if (!estate.is_lang_enabled(document)) {
+    //     reset_file_state_to_one_current_version(document, 0);
+    //     return;
+    // }
+    if(privacy.get_file_access(document.fileName) === 0) {
         reset_file_state_to_one_current_version(document, 0);
         return;
     }
@@ -151,10 +156,14 @@ function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
     }
     let document = editor.document;
     let line0 = editor.selection.start.line;
-    if (!estate.is_lang_enabled(document)) {
+    if(privacy.get_file_access(document.fileName) === 0) {
         reset_file_state_to_one_current_version(document, 0);
         return;
     }
+    // if (!estate.is_lang_enabled(document)) {
+    //     reset_file_state_to_one_current_version(document, 0);
+    //     return;
+    // }
     console.log(["onChangeActiveEditor"]);
     _save_change(document, line0);
 }

@@ -13,7 +13,7 @@
 	},
 	"homepage": "https://codify.smallcloud.ai",
 	"author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
-	"version": "1.0.16",
+	"version": "1.0.17",
 	"engines": {
 		"vscode": "^1.69.0"
 	},

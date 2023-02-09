@@ -6,6 +6,7 @@ export async function init() {
     let status:number|undefined = await get_global_access();
     if(status) {
         global.global_access = status;
+        global.status_bar.set_access_level(status);
         console.log('init global access', global.global_access);
     }
 }
@@ -99,33 +100,25 @@ export function get_file_access(uri: string) {
                     let segments = uri.split('/');
                     // console.log('segments', segments);
                     for(let i = 0; i < segments.length; i++) {
-                        console.log('here 1');
                         segments.pop();
                         let temp = segments.join('/');
-                        console.log('temp ' + i, temp);
                         if(temp !== undefined) {
-                            console.log('here 2');
                             if(storage[temp] !== undefined) {
-                                console.log('here 3');
                                 return storage[temp];
                             }
                             else {
-                                console.log('here 4');
                                 if(i === segments.length) {
-                                    console.log('here 5',global.global_access);
                                     return global.global_access;
                                 }
                             }
 
                         }
                         else {
-                            console.log('here 6');
                             return global.global_access;
                         }
                     }
                 }
                 else {
-                    console.log('here 0');
                     return storage[uri];
                 }
             }

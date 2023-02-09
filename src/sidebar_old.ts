@@ -39,36 +39,27 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     if (!editor) {
                         return;
                     }
-                    let state = estate.state_of_editor(editor, "presetSelected");
+                    let state = estate.state_of_editor(editor);
 
                     let data_function: any = data.data_function ? JSON.parse(data.data_function): {};
-                    if (!data_function) {
-                        console.log(["data_function is not defined", data_function]);
-                        return;
+
+                    let function_name: string = "";
+                    let model_force: string = data_function.model;
+
+                    if (data_function && data_function.supports_highlight === false) {
+                        console.log(data_function);
+                        let selection = editor.selection;
+                        let selection_empty = selection.isEmpty;
+                        if (selection_empty) {
+                            return;
+                        }
+                        let selected_lines_count = selection.end.line - selection.start.line + 1;
                     }
 
-                    let model_force: string = data_function.model;
-                    let selection = editor.selection;
-                    let selection_empty = selection.isEmpty;
-                    let function_name: string = "";
-                    let selected_lines_count = selection.end.line - selection.start.line + 1;
-                    if (selection_empty) {
-                        function_name = data_function.function_highlight;
-                        if (selection_empty && data_function.supports_highlight === false) {
-                            console.log(["no selection, but function", function_name, "doesn't support highlight"]);
-                            return;
-                        }
-                    } else {
-                        function_name = data_function.function_selection;
-                        if (data_function.supports_selection === false) {
-                            console.log(["selection present, but", function_name, "doesn't support selection"]);
-                            return;
-                        }
+                    if (data.id && typeof data.id === "string") {
+                        function_name = data.id;
                     }
-                    if (typeof function_name !== "string") {
-                        console.log(["function_name is not a string", function_name]);
-                        return;
-                    }
+
                     if (state) {
                         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
                         state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
@@ -195,13 +186,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <div class="toolbox">
-                    <input class="toolbox-search" id="toolbox-search" placeholder="Instructions">
-                    <div class="toolbox-container">
-                        <div class="toolbox-list"></div>
+                <div class="sidebar">
+                    <div id="sidebar">
+                        <h3 id="regular-header" class="presets-title">Select & refactor: Press F1</h3>
+                        <ul id="regular-list" class="presets links-menu"></ul>
+                        <h3 id="third-party-header" class="presets-title">Think Longer</h3>
+                        <ul id="third-party-list" class="presets links-menu muted"></ul>
                     </div>
-                </div>
-                <div id="sidebar" class="sidebar">
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
                         <div class="sidebar-logged">Account: <b><span></span></b></div>
@@ -217,7 +208,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 </html>`;
     }
     getNonce() {
-        let text = ""; 
+        let text = "";
         const possible =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for (let i = 0; i < 32; i++) {

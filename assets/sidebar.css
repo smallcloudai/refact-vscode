@@ -230,3 +230,53 @@ body.vscode-light #logout {
 .muted li:hover {
     color: var(--color) !important;
 }
+
+.toolbox-search {
+    width: 100%;
+    box-sizing: border-box;
+    display: block;
+    padding: 5px 10px;
+    background-color: transparent;
+    border: 1px solid var(--secondary);
+    color: var(--secondary);
+
+}
+
+.toolbox-container {
+    margin-top: 20px;
+}
+.toolbox-item {
+    margin: 3px 0;
+}
+
+.toolbox-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0px;
+    cursor: pointer;
+}
+.toolbox-header:hover {
+    color: var(--secondary);
+}
+.toolbox-likes {
+    font-weight: bold;
+    font-size: 12px;
+}
+.toolbox-likes::before {
+    content: "♡ ";
+}
+.toolbox-body {
+    display: none;
+    height: 380px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+.item-active {
+    border-bottom: 1px solid var(--secondary);
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+}
+.item-active .toolbox-body {
+    display: block;
+}
