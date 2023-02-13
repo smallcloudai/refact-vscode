@@ -32,7 +32,7 @@ export async function query_edit_chaining(animation: boolean): Promise<String>
         return "";
     }
     let doc = editor.document;
-    if(privacy.get_file_access(doc.fileName) === 0) {
+    if (await privacy.get_file_access(doc.fileName) === 0) {
         return "";
     }
     let position: vscode.Position = editor.selection.active;

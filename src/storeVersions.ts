@@ -114,10 +114,10 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
     //     reset_file_state_to_one_current_version(document, 0);
     //     return;
     // }
-    if(privacy.get_file_access(document.fileName) === 0) {
-        reset_file_state_to_one_current_version(document, 0);
-        return;
-    }
+    // if (privacy.get_file_access(document.fileName) === 0) {
+    //     reset_file_state_to_one_current_version(document, 0);
+    //     return;
+    // }
     let contentChanges = event.contentChanges;
     let reason = event.reason;
     if(contentChanges.length === 0) { return; };
@@ -156,10 +156,10 @@ function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
     }
     let document = editor.document;
     let line0 = editor.selection.start.line;
-    if(privacy.get_file_access(document.fileName) === 0) {
-        reset_file_state_to_one_current_version(document, 0);
-        return;
-    }
+    // if(privacy.get_file_access(document.fileName) === 0) {
+    //     reset_file_state_to_one_current_version(document, 0);
+    //     return;
+    // }
     // if (!estate.is_lang_enabled(document)) {
     //     reset_file_state_to_one_current_version(document, 0);
     //     return;

@@ -113,12 +113,6 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
     if (!editor) {
         return undefined;
     }
-    // if (!is_lang_enabled(editor.document)) {
-    //     return undefined;
-    // }
-    if(privacy.get_file_access(editor.document.fileName) === 0) {
-        return undefined;
-    }
     if (editor2state.size > 3) {
         let oldest_ts = Number.MAX_SAFE_INTEGER;
         let oldest_state: StateOfEditor | undefined = undefined;

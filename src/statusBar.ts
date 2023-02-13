@@ -160,27 +160,17 @@ export class StatusBarMenu {
 }
 
 
-function on_change_active_editor(editor: vscode.TextEditor | undefined)
+async function on_change_active_editor(editor: vscode.TextEditor | undefined)
 {
     if (!editor) {
-        global.status_bar.set_access_level(0);
+        global.status_bar.set_access_level(-1);
         PrivacySettings.update_webview(PrivacySettings._panel);
         return;
     }
     let document_filename = editor.document.fileName;
-    if (privacy.get_file_access(document_filename) === 1) {
-        global.status_bar.set_access_level(1);
-    } else if (privacy.get_file_access(document_filename) === 2) {
-        global.status_bar.set_access_level(2);
-    } else {
-        global.status_bar.set_access_level(0);
-    }
-    // let language = document.languageId;
-    // if (!estate.is_lang_enabled(document)) {
-    //     global.status_bar.set_language_enabled(true, language);
-    // } else {
-    //     global.status_bar.set_language_enabled(false, language);
-    // }
+    let access_level = await privacy.get_file_access(document_filename);
+    global.status_bar.set_access_level(access_level);
+    global.status_bar.choose_color();
 }
 
 

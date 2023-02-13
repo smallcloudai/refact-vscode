@@ -2,126 +2,101 @@
 import * as vscode from "vscode";
 import { PrivacySettings } from './privacySettings';
 
-export async function init() {
-    let status:number|undefined = await get_global_access();
-    if(status) {
-        global.global_access = status;
-        global.status_bar.set_access_level(status);
-        console.log('init global access', global.global_access);
-    }
-}
-export async function get_global_access() {
+
+export async function get_global_access()
+{
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
-    if (global_context !== undefined) {
-        let access: number|undefined = await global_context.globalState.get('global_access');
-        if (access === undefined) {
-            await global_context.globalState.update('global_access', 2);
-            return 2;
-        }
-        return access;
+    if (global_context === undefined) {
+        return 0;
     }
+    let access: number|undefined = await global_context.globalState.get('global_access');
+    if (access === undefined) {
+        // FIXME: get from login
+        await global_context.globalState.update('global_access', 2);
+        return 2;
+    }
+    return access;
 }
 
-export async function set_global_access(globalDefault: number) {
+export async function set_global_access(globalDefault: number)
+{
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context !== undefined) {
         await global_context.globalState.update('global_access', globalDefault);
-        console.log('Global Access set to:', globalDefault);
+        console.log(['Global Access set to:', globalDefault]);
         PrivacySettings.update_webview(PrivacySettings._panel);
     }
 }
 
-export async function set_access_override(uri: string, mode: number) {
-    // console.log('Codify only',);
+export async function set_access_override(uri: string, mode: number)
+{
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
-    if (global_context !== undefined) {
-        let data:any = {};
-        let storage: any|{} = await global_context.globalState.get('codifyAccessOverrides');
-        if(storage === undefined) {
-            data[uri] = mode;
-            await global_context.globalState.update('codifyAccessOverrides', data);
-            console.log('Setting access override:', uri, mode);
-            PrivacySettings.update_webview(PrivacySettings._panel);
-        }
-        else {
-            if(storage && typeof storage === 'object') {
-                data = {
-                    ...storage,
-                    [uri]: mode
-                };
-                await global_context.globalState.update('codifyAccessOverrides', data);
-                console.log('Setting access override:', uri, mode);
-                // status_bar.set_access_level();
-                PrivacySettings.update_webview(PrivacySettings._panel);
-            }
-            // else {
-            //     data[uri] = mode;
-            //     await global_context.globalState.update('codifyAccessOverrides', data);
-            // }
-        }
+    if (global_context === undefined) {
+        return;
     }
+    let data: {[key: string]: number} = {};
+    let storage: {[key: string]: number}|undefined = await global_context.globalState.get('codifyAccessOverrides');
+    if (storage !== undefined) {
+        data = storage;
+    }
+    data[uri] = mode;
+    console.log(['Setting access override:', uri, mode]);
+    console.log(["type", typeof mode]);
+    await global_context.globalState.update('codifyAccessOverrides', data);
+    PrivacySettings.update_webview(PrivacySettings._panel);
 }
 
-export async function delete_access_override(uri: string) {
+export async function delete_access_override(uri: string)
+{
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
-    if (global_context !== undefined) {
-        let data:any = {};
-        let storage: any|{} = await global_context.globalState.get('codifyAccessOverrides');
-        if(storage !== undefined && typeof storage === 'object') {
-            delete storage[uri]; 
-            console.log('Override setting deleted:', uri);
-            PrivacySettings.update_webview(PrivacySettings._panel);
-        }
+    if (global_context === undefined) {
+        return;
     }
+    let storage: {[key: string]: number}|undefined = await global_context.globalState.get('codifyAccessOverrides');
+    if(storage === undefined) {
+        storage = {};
+    } else {
+        delete storage[uri];
+        console.log(['Override deleted:', uri]);
+    }
+    await global_context.globalState.update('codifyAccessOverrides', storage);
+    PrivacySettings.update_webview(PrivacySettings._panel);
 }
 
-export async function get_access_overrides() {
+export async function get_access_overrides(): Promise<{[key: string]: number}>
+{
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
-    if (global_context !== undefined) {
-        let storage = await global_context.globalState.get('codifyAccessOverrides');
-        if(storage === undefined) {
-            return [];
-        }
-        return storage;
+    if (global_context === undefined) {
+        return {};
     }
+    let storage: {[key: string]: number}|undefined = await global_context.globalState.get('codifyAccessOverrides');
+    if(storage === undefined) {
+        return {};
+    }
+    return storage;
 }
 
-export function get_file_access(uri: string) {
-    // return 1;
+export async function get_file_access(uri: string)
+{
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
-    if (global_context !== undefined) {
-        let storage: any|{} = global_context.globalState.get('codifyAccessOverrides');
-        if(storage === undefined) {
-            return global.global_access;
-        }
-        else {
-            if(storage && typeof storage === 'object') {
-                if(storage[uri] === undefined) {
-                    let segments = uri.split('/');
-                    // console.log('segments', segments);
-                    for(let i = 0; i < segments.length; i++) {
-                        segments.pop();
-                        let temp = segments.join('/');
-                        if(temp !== undefined) {
-                            if(storage[temp] !== undefined) {
-                                return storage[temp];
-                            }
-                            else {
-                                if(i === segments.length) {
-                                    return global.global_access;
-                                }
-                            }
-
-                        }
-                        else {
-                            return global.global_access;
-                        }
-                    }
-                }
-                else {
-                    return storage[uri];
-                }
-            }
-        }
+    if (global_context === undefined) {
+        return 0;
     }
+    let storage: {[key: string]: number}|undefined = global_context.globalState.get('codifyAccessOverrides');
+    if(storage === undefined) {
+        return await get_global_access();
+    }
+    let segments = uri.split('/');
+    let segments_cnt = segments.length;
+    for(let i = 0; i < segments_cnt; i++) {
+        let temp = segments.join('/');
+        console.log(['checking', temp]);
+        if(storage[temp] !== undefined) {
+            console.log(['=> found override', storage[temp]]);
+            return storage[temp];
+        }
+        segments.pop();
+    }
+    console.log(['=> revert to global default']);
+    return await get_global_access();
 }

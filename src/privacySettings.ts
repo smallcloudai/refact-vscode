@@ -39,7 +39,7 @@ export class PrivacySettings {
 
         PrivacySettings.currentPanel = new PrivacySettings(panel, context.extensionUri, context);
 
-        
+
         panel.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
 				case "globalDefault": {
@@ -54,7 +54,7 @@ export class PrivacySettings {
                     break;
 				}
 				case "selectOverride": {
-                    privacy.set_access_override(data.value[0], data.value[1]);
+                    privacy.set_access_override(data.value[0], Number(data.value[1]));
                     // this.update_webview(panel);
                     break;
 				}
@@ -122,7 +122,7 @@ export class PrivacySettings {
                 -->
                 <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                
+
                 <title>Your Privacy Rules</title>
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
@@ -151,7 +151,7 @@ export class PrivacySettings {
                                 Level 2: Codify can use any model, including 3rd party
                                 </label>
                             <p class="codify-help-text">Data could be sent also to 3rd party model.</p>
-                        </div>    
+                        </div>
                     </div>
                     <h2 class="codify-privacy__subtitle">Global permanent rules to override the default:</h2>
                     <div class="codify-privacy__overrides overrides">
@@ -179,4 +179,5 @@ export class PrivacySettings {
         return text;
     }
 }
+
 export default PrivacySettings;

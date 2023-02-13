@@ -31,8 +31,6 @@ declare global {
     var longthink_functions_today: {[key: string]: {[key: string]: string}} | undefined;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
-    var global_access: number|undefined;
-    var file_access: number|undefined;
 }
 
 
@@ -181,7 +179,6 @@ export async function inline_accepted(this_completion_serial_number: number)
 export function activate(context: vscode.ExtensionContext)
 {
     global.global_context = context;
-    privacy.init();
     global.enable_longthink_completion = false;
     global.streamlined_login_countdown = -1;
     global.last_positive_result = 0;
@@ -412,12 +409,12 @@ export async function status_bar_clicked()
     // let lang = editor.document.languageId;
     // let enabled = estate.is_lang_enabled(editor.document);
     let document_filename = editor.document.fileName;
-    let access_level = privacy.get_file_access(document_filename);
+    let access_level = await privacy.get_file_access(document_filename);
     let chunks = document_filename.split("/");
     if (access_level === 0) {
         // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
         // console.log(["disable", lang]);
-        global.status_bar.set_access_level(0);
+        // global.status_bar.set_access_level(0);
         global.status_bar.choose_color();
         let selection = await vscode.window.showInformationMessage(
             chunks[chunks.length - 1] + ": Access level " + access_level,

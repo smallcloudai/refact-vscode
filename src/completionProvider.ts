@@ -45,11 +45,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 return [];
             }
         }
-        // if (!estate.is_lang_enabled(document)) {
-        //     return [];
-        // }
-        if(privacy.get_file_access(document.fileName) === 0) {
-            console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", privacy.get_file_access(document.fileName));
+        if(await privacy.get_file_access(document.fileName) === 0) {
             return [];
         }
         let file_name = storeVersions.filename_from_document(document);
