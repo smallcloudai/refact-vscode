@@ -1,9 +1,17 @@
+@font-face {
+    font-family: 'codify';
+    src: url('codify.woff');
+    font-weight: normal;
+    font-style: normal;
+  }
 body.vscode-light {
 	--color: #000;
     --secondary: rgba(0,0,0,0.5);
     --dark: rgba(0,0,0,0.7);
 }
-
+body {
+    overflow: hidden;
+}
 body.vscode-dark {
 	--color: #FFF;
     --secondary: rgba(255,255,255,0.5);
@@ -90,9 +98,10 @@ body.vscode-light .presets-title {
     align-items: center;
     width: 100%;
     box-sizing: border-box;
-    background-color: var(--vscode-sideBar-background) !important;
+    background-color: var(--vscode-sidebar-background) !important;
     padding: 0 20px 20px;
-
+    z-index: 10 !important;
+    overflow: hidden;
 }
 #profile {
     font-size: 13px;
@@ -231,6 +240,11 @@ body.vscode-light #logout {
     color: var(--color) !important;
 }
 
+.toolbox-inline {
+    display: flex;
+    align-items: center;
+}
+
 .toolbox-search {
     width: 100%;
     box-sizing: border-box;
@@ -239,7 +253,33 @@ body.vscode-light #logout {
     background-color: transparent;
     border: 1px solid var(--secondary);
     color: var(--secondary);
+    height: 40px;
+}
 
+.toolbox-run {
+    width: 40px;
+    height: 40px;
+    border: 0;
+    color: var(--secondary);
+    border: 1px solid transparent;
+    background: transparent;
+    text-align: center;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    outline: none !important;
+}
+.toolbox-run-disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+.toolbox-run:focus {
+    outline: none !important;
+    /* border-color: #da9a35; */
 }
 
 .toolbox-container {
@@ -248,10 +288,13 @@ body.vscode-light #logout {
 .toolbox-item {
     margin: 3px 0;
 }
+.toolbox-item:focus {
+    font-weight: bold !important;
+}
 
 .toolbox-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     padding: 3px 0px;
     cursor: pointer;
@@ -262,21 +305,117 @@ body.vscode-light #logout {
 .toolbox-likes {
     font-weight: bold;
     font-size: 12px;
+    margin-left: auto;
 }
-.toolbox-likes::before {
-    content: "♡ ";
+.toolbox-bookmark {
+    margin-left: 5px;
+}
+.toolbox-bookmark-checked::before {
+    content: "\e801";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: inline-block;
+    text-decoration: inherit;
+    width: 1em;
+    margin-right: .2em;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    margin-left: .2em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.toolbox-bookmark-unchecked::before {
+    content: "\e803";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: inline-block;
+    text-decoration: inherit;
+    width: 1em;
+    margin-right: .2em;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    margin-left: .2em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.toolbox-like-checked::before {
+    content: "\e802";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: inline-block;
+    text-decoration: inherit;
+    width: 1em;
+    margin-right: .2em;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    margin-left: .2em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.toolbox-like-unchecked::before {
+    content: "\e804";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: inline-block;
+    text-decoration: inherit;
+    width: 1em;
+    margin-right: .2em;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    margin-left: .2em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 .toolbox-body {
     display: none;
-    height: 380px;
     overflow-y: auto;
-    margin-top: 10px;
+    margin-top: 0px;
+    position: absolute;
+    top: 50px;
+    height: calc(100vh - 50px);
+    left: 0;
+    right: 0;
+    background-color: var(--vscode-editorWidget-background) !important;
+    padding: 0 20px 40px 20px;
+}
+.toolbox-body img {
+    width: 100%;
+}
+.toolbox-controls {
+    height: 30px;
+    align-items: center;
+    display: flex;
+    justify-content: flex-end;
+}
+.toolbox-back {
+    width: 80px;
+    display: block;
+    background: transparent !important;
+    border: 1px solid var(--secondary) !important;
+    color: var(--secondary);
+    padding: 6px 6px;
+    cursor: pointer;
+    margin-bottom: 10px;
 }
 .item-active {
-    border-bottom: 1px solid var(--secondary);
-    margin-bottom: 10px;
-    padding-bottom: 10px;
+
+}
+.item-selected {
+    font-weight: bold;
 }
 .item-active .toolbox-body {
     display: block;
+    z-index: 999 !important;
 }

@@ -2,105 +2,88 @@
 (function () {
 	const vscode = acquireVsCodeApi();
 	// let presets = document.querySelectorAll(".presets li");
-
-    const data = [
-        {
-            'explain-error': {
-                'model':'longthink/experimental',
-                'label':'Explain Error',
-                'selected_lines_min':1,
-                'selected_lines_max':10,
-                'metering':1,
-                'always_visible':false,
-                'third_party':true,
-                'supports_highlight':false,
-                'supports_selection':true,
-                'content': "<img src=\"https://inverezh.com/1.gif \"/>\n<div>\n    <p>Boost your productivity by employing AI to pair program with you or make more fun out of your work by delegating boring tasks to the AI.</p>\n    <p><strong>Code Completion:</strong> satisfying, smart and relevant code completion that can suggest whole functions or classes. It suggests commonly used programming patterns, libraries and APIs usage, and helps with typing. This helps you write code faster and with fewer errors.</p>\n    <p><strong>Code Transformation:</strong> use natural language commands to ask the AI to search, transform, or optimize your code. Whether you're looking to optimize, search, or refactor your code, Codify has you covered.</p>\n    <p><strong>Privacy of your code guaranteed:</strong> Codify allows you to restrict access to particular files or projects, ensuring that your private code or confidential files are protected. And we never store your code on the server side.</p>\n    <p><strong>User-Friendly Interface:</strong> Codify has a simple, user-friendly interface that makes it easy to use, even for those new to AI tools. Codify will assist by completing your code or by accessing the AI toolbox function (use F1 to open).</p>\n    <p><strong>It's fast!</strong> And supports Python, Java, PHP, C++, Javascript, TypeScript and 20 more programming languages.</p>\n    <p>Codify is a cutting-edge AI tool designed to assist developers in writing and refining code.\n    Whether you're working on a brand new project or modifying existing code, Codify can help you save time and streamline your coding process.</p>\n</div>",
-                'likes': 0
-            }
-        },
-        {
-            'make-code-shorter': {
-                'model':'longthink/experimental',
-                'label':'Make code shorter',
-                'selected_lines_min':1,
-                'selected_lines_max':10,
-                'metering':1,
-                'always_visible':false,
-                'third_party':true,
-                'supports_highlight':false,
-                'supports_selection':true,
-                'content': "<img src=\"https://inverezh.com/2.gif \"/>\n<div>\n    <p>Boost your productivity by employing AI to pair program with you or make more fun out of your work by delegating boring tasks to the AI.</p>\n    <p><strong>Code Completion:</strong> satisfying, smart and relevant code completion that can suggest whole functions or classes. It suggests commonly used programming patterns, libraries and APIs usage, and helps with typing. This helps you write code faster and with fewer errors.</p>\n    <p><strong>Code Transformation:</strong> use natural language commands to ask the AI to search, transform, or optimize your code. Whether you're looking to optimize, search, or refactor your code, Codify has you covered.</p>\n    <p><strong>Privacy of your code guaranteed:</strong> Codify allows you to restrict access to particular files or projects, ensuring that your private code or confidential files are protected. And we never store your code on the server side.</p>\n    <p><strong>User-Friendly Interface:</strong> Codify has a simple, user-friendly interface that makes it easy to use, even for those new to AI tools. Codify will assist by completing your code or by accessing the AI toolbox function (use F1 to open).</p>\n    <p><strong>It's fast!</strong> And supports Python, Java, PHP, C++, Javascript, TypeScript and 20 more programming languages.</p>\n    <p>Codify is a cutting-edge AI tool designed to assist developers in writing and refining code.\n    Whether you're working on a brand new project or modifying existing code, Codify can help you save time and streamline your coding process.</p>\n</div>",
-                'likes': 10
-            }
-        },
-        {
-            'highlight': {
-                'model':'longthink/experimental',
-                'label':'Highlight',
-                'selected_lines_min':1,
-                'selected_lines_max':10,
-                'metering':1,
-                'third_party':false,
-                'always_visible':true,
-                'supports_highlight':true,
-                'supports_selection':true,
-                'content': "<img src=\"https://inverezh.com/3.gif \"/>\n<div>\n    <p>Boost your productivity by employing AI to pair program with you or make more fun out of your work by delegating boring tasks to the AI.</p>\n    <p><strong>Code Completion:</strong> satisfying, smart and relevant code completion that can suggest whole functions or classes. It suggests commonly used programming patterns, libraries and APIs usage, and helps with typing. This helps you write code faster and with fewer errors.</p>\n    <p><strong>Code Transformation:</strong> use natural language commands to ask the AI to search, transform, or optimize your code. Whether you're looking to optimize, search, or refactor your code, Codify has you covered.</p>\n    <p><strong>Privacy of your code guaranteed:</strong> Codify allows you to restrict access to particular files or projects, ensuring that your private code or confidential files are protected. And we never store your code on the server side.</p>\n    <p><strong>User-Friendly Interface:</strong> Codify has a simple, user-friendly interface that makes it easy to use, even for those new to AI tools. Codify will assist by completing your code or by accessing the AI toolbox function (use F1 to open).</p>\n    <p><strong>It's fast!</strong> And supports Python, Java, PHP, C++, Javascript, TypeScript and 20 more programming languages.</p>\n    <p>Codify is a cutting-edge AI tool designed to assist developers in writing and refining code.\n    Whether you're working on a brand new project or modifying existing code, Codify can help you save time and streamline your coding process.</p>\n</div>",
-                'likes': 10
-                
-            }
-        },
-        {
-            'fix': {
-                'model':'longthink/experimental',
-                'label':'Fix',
-                'selected_lines_min':1,
-                'selected_lines_max':10,
-                'metering':1,
-                'third_party':false,
-                'always_visible':true,
-                'supports_highlight':false,
-                'supports_selection':true,
-                'content': "<img src=\"https://inverezh.com/1.gif \"/>\n<div>\n    <p>Boost your productivity by employing AI to pair program with you or make more fun out of your work by delegating boring tasks to the AI.</p>\n    <p><strong>Code Completion:</strong> satisfying, smart and relevant code completion that can suggest whole functions or classes. It suggests commonly used programming patterns, libraries and APIs usage, and helps with typing. This helps you write code faster and with fewer errors.</p>\n    <p><strong>Code Transformation:</strong> use natural language commands to ask the AI to search, transform, or optimize your code. Whether you're looking to optimize, search, or refactor your code, Codify has you covered.</p>\n    <p><strong>Privacy of your code guaranteed:</strong> Codify allows you to restrict access to particular files or projects, ensuring that your private code or confidential files are protected. And we never store your code on the server side.</p>\n    <p><strong>User-Friendly Interface:</strong> Codify has a simple, user-friendly interface that makes it easy to use, even for those new to AI tools. Codify will assist by completing your code or by accessing the AI toolbox function (use F1 to open).</p>\n    <p><strong>It's fast!</strong> And supports Python, Java, PHP, C++, Javascript, TypeScript and 20 more programming languages.</p>\n    <p>Codify is a cutting-edge AI tool designed to assist developers in writing and refining code.\n    Whether you're working on a brand new project or modifying existing code, Codify can help you save time and streamline your coding process.</p>\n</div>",
-                'likes': 0
-            }
-        }
-    ];
-
     const sidebar = document.querySelector("#sidebar");
+    const toolbox = document.querySelector(".toolbox");
     const toolboxSearch = document.querySelector("#toolbox-search");
     const toolboxList = document.querySelector(".toolbox-list");
+    const toolboxRun = document.querySelector(".toolbox-run");
+    let toolboxIndex = 0;
 
     toolboxSearch.addEventListener("keyup", ( event ) => {
         if (event.key === "Enter") {
-            console.log('Toolbox Enter',event);
-            // vscode.postMessage({ type: "quickInput", value: quickInput.value });
+            if(event.target.value !== '') {
+
+                // console.log('Toolbox Enter',event);
+                // vscode.postMessage({ type: "quickInput", value: quickInput.value });
+            }
         }
         if(event.key === "ArrowDown") {
+            document.activeElement.blur();
+            event.preventDefault();
+            toolboxItems[toolboxIndex].focus();
+            toolboxItems[toolboxIndex].blur();
+            toolboxItems[toolboxIndex].classList.add('item-selected');
             // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
-            // console.log('Toolbox ArrowDown',index);
             // if(index < toolboxItems.length - 1) {
             //     toolboxItems[index + 1].focus();
             // }
         }
         if(event.key === "ArrowUp") {
-            let index = Array.prototype.indexOf.call(toolboxItems, event.target);
-            if(index < toolboxItems.length - 1) {
-                toolboxItems[index - 1].focus();
-            }
+            // history
+            // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
+            // if(index < toolboxItems.length - 1) {
+            //     toolboxItems[index - 1].focus();
+            // }
         }
+    });
+
+    toolboxRun.addEventListener("click", ( event ) => {
+        // if(event.target.classList.contains('toolbox-run-disabled')) {
+            const current = document.querySelector(".item-active");
+            if(current) {
+                vscode.postMessage({ 
+                    type: "presetSelected", 
+                    value: current.dataset.function, 
+                    id: current.id, 
+                    data_function: current.dataset.function,
+                });
+            }
+        // }
     });
 
     toolboxList.addEventListener("click", (event) => {
         if (event.target && event.target.classList.contains("toolbox-item")) {
         //     if(event.target.parentElement.classList.contains('muted')) { return; };
         //     console.log(event.target.id);
-            vscode.postMessage({ 
-                type: "presetSelected", 
-                value: event.target.dataset.function, 
-                id: event.target.id, 
-                data_function: event.target.dataset.function,
-            });
+            // vscode.postMessage({ 
+            //     type: "presetSelected", 
+            //     value: event.target.dataset.function, 
+            //     id: event.target.id, 
+            //     data_function: event.target.dataset.function,
+            // });
+        }
+        if (event.target && event.target.classList.contains("toolbox-back")) {
+            let active = document.querySelector(".item-active");
+            if(active) {
+                toolboxSearch.value = '';
+                active.classList.remove("item-active");
+            }
+        }
+    });
+
+    toolbox.addEventListener("keyup",(event) => {
+        if(event.key === "ArrowUp") {
+            // console.log('KKKKKKKKKKKKKKKKKUP',event);
+            toolboxItems[toolboxIndex - 1].focus();
+            toolboxItems[toolboxIndex - 1].blur();
+        }
+        if(event.key === "ArrowDown") {
+            toolboxItems[toolboxIndex + 1].focus();
+            toolboxItems[toolboxIndex + 1].blur();
+        }
+        if (event.target && event.target.classList.contains("toolbox-item")) {
+            // console.log('KKKKKKKKKKKKKKKKKDOWN',event);
+            // event.target.classList.add("item-active");
         }
     });
 
@@ -183,73 +166,131 @@
 		vscode.postMessage({ type: "js2ts_refresh_login" });
 	});
 
-    function renderToolbox(data) {  
-        for(const item of data) {
-            Object.values(item).forEach(function(item) {
-                const toolboxItem = document.createElement("div");
-                const header = document.createElement("div");
-                const body = document.createElement("div");
-                const likes = document.createElement("div");
-    
-                toolboxItem.classList.add("toolbox-item");
-                if(!item.always_visible) {
-                    toolboxItem.classList.add("toolbox-filter");
-                }
-                else {
-                    toolboxItem.classList.add("toolbox-static");
-                }
-                header.classList.add("toolbox-header");
-                likes.classList.add("toolbox-likes");
-                body.classList.add("toolbox-body");
-                
-                header.innerHTML = item.label;
-                toolboxItem.id = Object.keys(item)[0];
-                toolboxItem.dataset.title = item.label;
-                toolboxItem.dataset.function = Object.keys(item)[0];
-                likes.innerHTML = item.likes;
-                body.innerHTML = item.content;
-    
-                header.appendChild(likes);
-                toolboxItem.appendChild(header);
-                toolboxItem.appendChild(body);
-                toolboxList.appendChild(toolboxItem);
-            });
-        }
+    function check_bookmarked_functions(data) {
+        const keys = Object.keys(data);
+        keys.forEach((key) => {
+            let bookmark = {};
+            if(key === 'explain-error') {
+                bookmark = {
+                    ...data[key],
+                    'is_bookmarked': true
+                }; 
+            }
+            else {
+                bookmark = {
+                    ...data[key],
+                    'is_bookmarked': false
+                };
+            }
+            data[key] = bookmark;
+        });
+        return data;
     }
-    renderToolbox(data);
-    const toolboxItems = document.querySelectorAll(".toolbox-item");
-    toolboxItems[0].classList.add("item-active");
-    toolboxItems.forEach((item) => {
-        item.addEventListener("mouseover", (toolbox) => {
-            document.querySelector(".item-active").classList.remove("item-active");
-            item.classList.add("item-active");
-            // item.querySelector('.toolbox-body').scrollTop = 0;
-        });
-    });
 
-    const filterItems = document.querySelectorAll(".toolbox-filter");
-    toolboxSearch.addEventListener('input', function() {
-        let currentActive = document.querySelectorAll(".item-active");
-        if(currentActive.length > 0) {
-            currentActive.forEach(function(item) {
-                item.classList.remove("item-active");
-            });
-        }
-        const searchTerm = this.value.toLowerCase();
-        const itemsArray = Array.from(filterItems);
-        const filteredDivs = itemsArray.filter(div => {
-            return div.dataset.title.toLowerCase().includes(searchTerm);
+    // renderToolbox(data);
+    function renderToolbox(data) {
+        const bookmarked = check_bookmarked_functions(data);
+        const sortedData = Object.entries(bookmarked)
+        .sort(([, a], [, b]) => {
+            if (a.is_bookmarked !== b.is_bookmarked) {
+            return a.is_bookmarked ? -1 : 1; // bookmarked
+            } else if (a.always_visible !== b.always_visible) {
+            return a.always_visible ? 1 : -1; // always_visible
+            } else {
+            return b.likes - a.likes; // likes
+            }
+        })
+        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+        const keys = Object.keys(sortedData);
+        toolboxList.innerHTML = '';
+        keys.forEach((key) => {
+            let item = data[key];
+            const toolboxItem = document.createElement("div");
+            const header = document.createElement("div");
+            const body = document.createElement("div");
+            const likes = document.createElement("div");
+            const backButton = document.createElement('button');
+            const content = document.createElement("div");
+            const bookmark = document.createElement("div");
+            const likes_span = document.createElement("span");
+            const likes_icon = document.createElement("i");
+            const bookmark_icon = document.createElement("i");
+            const body_controls = document.createElement("div");
+
+            toolboxItem.classList.add("toolbox-item");
+            if(!item.always_visible) {
+                toolboxItem.classList.add("toolbox-filter");
+            }
+            else {
+                toolboxItem.classList.add("toolbox-static");
+            }
+            header.classList.add("toolbox-header");
+            likes.classList.add("toolbox-likes");
+            if(item.is_liked) {
+                likes_icon.classList.add("toolbox-like-checked");
+            } else {
+                likes_icon.classList.add("toolbox-like-unchecked");
+            }
+            if(item.is_bookmarked) {
+                bookmark_icon.classList.add("toolbox-bookmark-checked");
+            } else {
+                bookmark_icon.classList.add("toolbox-bookmark-unchecked");
+            }
+            body.classList.add("toolbox-body");
+            bookmark.classList.add("toolbox-bookmark");
+            backButton.classList.add('toolbox-back');
+            body_controls.classList.add('toolbox-controls');
+            header.innerHTML = item.label;
+            toolboxItem.id = key;
+            toolboxItem.dataset.title = item.label;
+            toolboxItem.dataset.function = JSON.stringify(item.label);
+            likes_span.innerHTML = item.likes;
+            content.innerHTML = item.mini_html;
+            backButton.innerText = '← Back';
+            likes.appendChild(likes_icon);
+            likes.appendChild(likes_span);
+            bookmark.appendChild(bookmark_icon);
+            let likes2 = likes.cloneNode(true);
+            let bookmark2 = bookmark.cloneNode(true);
+            header.appendChild(likes);
+            header.appendChild(bookmark);
+            body_controls.appendChild(likes2);
+            body_controls.appendChild(bookmark2);
+            body.appendChild(backButton);
+            body.appendChild(body_controls);
+            body.appendChild(content);
+            toolboxItem.appendChild(header);
+            toolboxItem.appendChild(body);
+            toolboxList.appendChild(toolboxItem);
         });
-        filterItems.forEach(div => div.style.display = 'none');
-        filteredDivs.forEach(div => div.style.display = 'block');
-        if(filteredDivs.length === 0) {
-            // console.log('asdasd',document.querySelectorAll(".toolbox-static"));
-            document.querySelector(".toolbox-static").classList.add("item-active");
-        }
-        else {
-            filteredDivs[0].classList.add("item-active");  
-        }
-    });
+    }
+
+    function search_filter() {
+        const filterItems = document.querySelectorAll(".toolbox-filter");
+        toolboxSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const itemsArray = Array.from(filterItems);
+            const filteredDivs = itemsArray.filter(div => {
+                return div.dataset.title.toLowerCase().includes(searchTerm);
+            });
+            filterItems.forEach(div => div.style.display = 'none');
+            filteredDivs.forEach(div => div.style.display = 'block');
+        });
+    }
+
+    function command_handler(command) {
+        const toolboxItems = document.querySelectorAll(".toolbox-item");
+        toolboxItems.forEach((item) => {
+            item.addEventListener("click", (toolbox) => {
+                let active = document.querySelector(".item-active");
+                if(active) {
+                    active.classList.remove("item-active");
+                }
+                item.classList.add("item-active");
+                toolboxSearch.value = item.dataset.title;
+            });
+        });
+    }
 
 
     // function toolboxItemsToHtml(functions)
@@ -283,9 +324,9 @@
 	window.addEventListener("message", (event) => {
 		const message = event.data;
 		switch (message.command) {
-        // case "focus":
-        //     quickInput.focus();
-        //     break;
+        case "focus":
+            toolboxSearch.focus();
+            break;
 
         case "ts2web":
             let info = document.querySelector('.sidebar-logged');
@@ -314,27 +355,30 @@
             // tpHeader.style.display = 'none';
             // tpList.style.display = 'none';
             
-            // if (message.longthink_functions) {
-            //     reg_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] === 0);
-            //     tp_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] > 0);
+            if (message.longthink_functions) {
+                renderToolbox(message.longthink_functions);
+                search_filter();
+                command_handler();
+                // reg_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] === 0);
+                // tp_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] > 0);
 
-            //     if (reg_functions) {
-            //         regHeader.style.display = 'block';
-            //         regList.style.display = 'block';
-            //         regList.innerHTML = '';
-            //         for (const h of longthinkToHtml(reg_functions)) {
-            //             regList.appendChild(h);
-            //         }
-            //     }
-            //     if (tp_functions) {
-            //         tpHeader.style.display = 'block';
-            //         tpList.style.display = 'block';        
-            //         tpList.innerHTML = '';
-            //         for (const h of longthinkToHtml(tp_functions)) {
-            //             tpList.appendChild(h);
-            //         }
-            //     }
-            // }            
+                // if (reg_functions) {
+                //     regHeader.style.display = 'block';
+                //     regList.style.display = 'block';
+                //     regList.innerHTML = '';
+                //     for (const h of longthinkToHtml(reg_functions)) {
+                //         regList.appendChild(h);
+                //     }
+                // }
+                // if (tp_functions) {
+                //     tpHeader.style.display = 'block';
+                //     tpList.style.display = 'block';        
+                //     tpList.innerHTML = '';
+                //     for (const h of longthinkToHtml(tp_functions)) {
+                //         tpList.appendChild(h);
+                //     }
+                // }
+            }            
             break;
 		}
 	});

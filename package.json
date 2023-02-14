@@ -13,7 +13,7 @@
 	},
 	"homepage": "https://codify.smallcloud.ai",
 	"author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
-	"version": "1.0.17",
+	"version": "1.0.18",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -225,9 +225,38 @@
 				"description": "codify logo",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\41"
+					"fontCharacter": "\\e800"
+				}
+			},
+            "codify-bookmark-unchecked": {
+				"description": "codify bookmark unchecked",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\803"
+				}
+			},
+            "codify-bookmark-checked": {
+				"description": "codify bookmark checked",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\e801"
+				}
+			},
+            "codify-like": {
+				"description": "codify like",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\802"
+				}
+			},
+            "codify-life-checked": {
+				"description": "codify like checked",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\804"
 				}
 			}
+            
 		}
 	},
 	"scripts": {
