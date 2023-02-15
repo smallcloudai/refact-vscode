@@ -43,6 +43,8 @@ export async function report_success_or_failure(
     }
     if (!positive) {
         await fetchH2.disconnectAll();
+    } else {
+        global.last_positive_result = Date.now();
     }
     if (invalid_session || conn_refused) {
         // await fetchH2.disconnectAll();

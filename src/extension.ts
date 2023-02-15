@@ -27,6 +27,7 @@ declare global {
     var current_editor_text_edited_event: vscode.Disposable|undefined;
     var longthink_functions_today: {[key: string]: {[key: string]: string}} | undefined;
     var enable_longthink_completion: boolean;
+    var last_positive_result: number;
 }
 
 
@@ -177,6 +178,7 @@ export function activate(context: vscode.ExtensionContext)
     global.global_context = context;
     global.enable_longthink_completion = false;
     global.streamlined_login_countdown = -1;
+    global.last_positive_result = 0;
     let disposable1 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('plugin-vscode.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();

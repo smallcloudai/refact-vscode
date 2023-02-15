@@ -182,6 +182,10 @@ export function inference_login_force_retry()
 export async function inference_login(): Promise<boolean>
 {
     let url = fetchAPI.inference_url("/v1/secret-key-activate");
+    if (global.last_positive_result + 600*1000 < Date.now()) {
+        console.log("inference_login: last_positive_result too old, force disconnect");
+        await fetchH2.disconnectAll();
+    }
     if (global.streamlined_login_countdown >= 0 || url === "") {
         await login();
     }
@@ -202,7 +206,6 @@ export async function inference_login(): Promise<boolean>
         return _last_inference_login_cached_result;
     }
     console.log(["perform inference login", url]);
-    // await fetchH2.disconnectAll();
     if (!url) {
         return false;
     }
