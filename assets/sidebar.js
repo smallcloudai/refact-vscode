@@ -41,6 +41,7 @@
         // if(event.target.classList.contains('toolbox-run-disabled')) {
             const current = document.querySelector(".item-active");
             if(current) {
+                console.log('Toolbox Run',current);
                 vscode.postMessage({ 
                     type: "presetSelected", 
                     value: current.dataset.function, 
@@ -155,11 +156,13 @@
     logoutButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "logout" });
 	});
+    
 
     const loginButton = document.querySelector("#login");
     loginButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "login" });
 	});
+
 
     const refreshButton = document.querySelector(".sidebar-plan-button");
     refreshButton.addEventListener("click", () => {
@@ -170,7 +173,7 @@
         const keys = Object.keys(data);
         keys.forEach((key) => {
             let bookmark = {};
-            if(key === 'explain-error') {
+            if(key === 'explain-error' || key === 'make-code-shorter') {
                 bookmark = {
                     ...data[key],
                     'is_bookmarked': true
@@ -243,7 +246,7 @@
             header.innerHTML = item.label;
             toolboxItem.id = key;
             toolboxItem.dataset.title = item.label;
-            toolboxItem.dataset.function = JSON.stringify(item.label);
+            toolboxItem.dataset.function = JSON.stringify(item);
             likes_span.innerHTML = item.likes;
             content.innerHTML = item.mini_html;
             backButton.innerText = '← Back';
