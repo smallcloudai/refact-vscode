@@ -107,17 +107,12 @@ function _save_change(document: vscode.TextDocument, line0: number, force: boole
 }
 
 
-function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
+async function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
 {
     let document = event.document;
-    // if (!estate.is_lang_enabled(document)) {
-    //     reset_file_state_to_one_current_version(document, 0);
-    //     return;
-    // }
-    // if (privacy.get_file_access(document.fileName) === 0) {
-    //     reset_file_state_to_one_current_version(document, 0);
-    //     return;
-    // }
+    if (await privacy.get_file_access(document.fileName) <= 0) {
+        return;
+    }
     let contentChanges = event.contentChanges;
     let reason = event.reason;
     if(contentChanges.length === 0) { return; };
@@ -149,21 +144,17 @@ function onDidChangeTextDocument(event: vscode.TextDocumentChangeEvent)
 }
 
 
-function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
+async function onChangeActiveEditor(editor: vscode.TextEditor | undefined)
 {
     if (!editor) {
         return;
     }
     let document = editor.document;
+    if (await privacy.get_file_access(document.fileName) <= 0) {  // "<= 0" means "zero or we don't know"
+        // don't even start
+        return;
+    }
     let line0 = editor.selection.start.line;
-    // if(privacy.get_file_access(document.fileName) === 0) {
-    //     reset_file_state_to_one_current_version(document, 0);
-    //     return;
-    // }
-    // if (!estate.is_lang_enabled(document)) {
-    //     reset_file_state_to_one_current_version(document, 0);
-    //     return;
-    // }
     console.log(["onChangeActiveEditor"]);
     _save_change(document, line0);
 }
