@@ -67,7 +67,16 @@
     "nodejs",
     "node",
     "node.js",
-    "jupyter"
+    "jupyter",
+    "IntelliSense",
+    "intelliCode",
+    "autocomplete",
+    "AI-assisted code completion",
+    "AI-powered code completion",
+    "AI copilot",
+    "AI code snippets",
+    "code suggestion",  
+    "code prediction"
   ],
   "activationEvents": [
     "onStartupFinished",
