@@ -1,7 +1,7 @@
 # Codify: The AI Assistant for Code Writing and Refactoring
 Boost your productivity by employing AI to pair program with you or make more fun out of your work by delegating boring tasks to the AI.
 
-![feature X](vscode.png)
+![Code completion](autocomplete.gif)
 
 ## Features
 - **Code Completion:** satisfying, smart and relevant code completion that can suggest whole functions or classes. It suggests commonly used programming patterns, libraries and APIs usage, and helps with typing. This helps you write code faster and with fewer errors.
