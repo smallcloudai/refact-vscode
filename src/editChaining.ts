@@ -10,7 +10,7 @@ const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsd
 
 export async function cleanup_edit_chaining_in_state(editor: vscode.TextEditor)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "cleanup_edit_chaining_in_state");
     if (state) {
         state.edit_chain_modif_doc = undefined;
     }
@@ -23,7 +23,7 @@ export async function query_edit_chaining(animation: boolean): Promise<String>
     if (!editor) {
         return "";
     }
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "query_edit_chaining");
     if (!state) {
         return "";
     }

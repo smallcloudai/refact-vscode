@@ -10,7 +10,7 @@ import * as crlf from "./crlf";
 
 export async function query_highlight(editor: vscode.TextEditor, intent: string | undefined)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "query_highlight");
     if (!state) {
         return;
     }
@@ -67,7 +67,7 @@ export function hl_show(editor: vscode.TextEditor, json: any)
     if (json.highlight_tokens === undefined) {
         return;
     }
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "hl_show");
     if (!state) {
         return;
     }
@@ -128,7 +128,7 @@ export function hl_show(editor: vscode.TextEditor, json: any)
 
 export function hl_clear(editor: vscode.TextEditor)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "hl_clear");
     if (!state) {
         return;
     }

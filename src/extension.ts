@@ -37,7 +37,7 @@ async function pressed_escape()
     completionProvider.on_esc_pressed();
     let editor = vscode.window.activeTextEditor;
     if (editor) {
-        let state = estate.state_of_editor(editor);
+        let state = estate.state_of_editor(editor, "pressed_escape");
         if (state) {
             state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
@@ -68,7 +68,7 @@ async function pressed_tab()
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
-        let state = estate.state_of_editor(editor);
+        let state = estate.state_of_editor(editor, "pressed_tab");
         if (state && state.get_mode() === Mode.Diff) {
             interactiveDiff.like_and_accept(editor);
         } else {
@@ -82,7 +82,7 @@ async function code_lens_clicked(arg0: any)
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
-        let state = estate.state_of_editor(editor);
+        let state = estate.state_of_editor(editor, "code_lens_clicked");
         if (!state) {
             return;
         }
@@ -154,7 +154,7 @@ async function f1_pressed()
     if (!editor) {
         return;
     }
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "f1_pressed");
     if (state && state.get_mode() === Mode.Diff) {
         rollback_and_regen(editor);
     } else {
@@ -277,7 +277,7 @@ export async function manual_edit_chaining()
     if (!editor) {
         return;
     }
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "manual_edit_chaining");
     if (state) {
         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         if (state.get_mode() === Mode.Diff) {
@@ -307,7 +307,7 @@ export async function manual_edit_chaining()
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "rollback_and_regen");
     if (state) {
         await estate.switch_mode(state, Mode.Normal);  // dislike_and_rollback inside
         await interactiveDiff.query_the_same_thing_again(editor);

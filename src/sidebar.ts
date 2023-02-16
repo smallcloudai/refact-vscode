@@ -39,7 +39,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     if (!editor) {
                         return;
                     }
-                    let state = estate.state_of_editor(editor);
+                    let state = estate.state_of_editor(editor, "presetSelected");
 
                     let data_function: any = data.data_function ? JSON.parse(data.data_function): {};
 

@@ -17,7 +17,7 @@ let global_nav_counter: number = 0;
 
 export async function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Position, is_mouse: boolean)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "on_cursor_moved");
     if (!state) {
         return;
     }
@@ -54,7 +54,7 @@ export async function query_diff(
     model_force: string = "",
 ) {
     // NOT called from estate switch mode
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "query_diff");
     if (!state) {
         return;
     }
@@ -257,7 +257,7 @@ export async function animation_start(editor: vscode.TextEditor, state: estate.S
 
 export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc: string, move_cursor: boolean)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "present_diff_to_user");
     if (!state) {
         return;
     }
@@ -378,7 +378,7 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
             }
         });
     }, { undoStopBefore: false, undoStopAfter: false }).then(() => {
-        let state = estate.state_of_editor(editor);
+        let state = estate.state_of_editor(editor, "apply_diff");
         if (!state) {
             return;
         }
@@ -448,7 +448,7 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
 
 function _remove_decoration(editor: vscode.TextEditor)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "remove_decoration");
     if (!state) {
         return;
     }
@@ -464,7 +464,7 @@ function _remove_decoration(editor: vscode.TextEditor)
 export async function dislike_and_rollback(editor: vscode.TextEditor)
 {
     editChaining.cleanup_edit_chaining_in_state(editor);
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "dislike_and_rollback");
     if (!state) {
         return;
     }
@@ -500,7 +500,7 @@ export async function dislike_and_rollback(editor: vscode.TextEditor)
 
 export async function like_and_accept(editor: vscode.TextEditor)
 {
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "like_and_accept");
     if (!state) {
         return;
     }
@@ -555,7 +555,7 @@ export async function like_and_accept(editor: vscode.TextEditor)
 export async function query_the_same_thing_again(editor: vscode.TextEditor)
 {
     editChaining.cleanup_edit_chaining_in_state(editor);
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "query_the_same_thing_again");
     if (!state) {
         return;
     }
@@ -579,7 +579,7 @@ export async function query_the_same_thing_again(editor: vscode.TextEditor)
 export function hands_off_dont_remove_anything(editor: vscode.TextEditor)
 {
     // Don't delete anything, user has already started same edit, leave it alone
-    let state = estate.state_of_editor(editor);
+    let state = estate.state_of_editor(editor, "hands_off");
     if (!state) {
         return;
     }

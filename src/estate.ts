@@ -108,7 +108,7 @@ export function is_lang_enabled(document: vscode.TextDocument): boolean
 }
 
 
-export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEditor | undefined
+export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: string): StateOfEditor | undefined
 {
     if (!editor) {
         return undefined;
@@ -134,10 +134,32 @@ export function state_of_editor(editor: vscode.TextEditor|undefined): StateOfEdi
     }
     let state = editor2state.get(editor);
     if (!state) {
+        let current_editor = vscode.window.activeTextEditor;
+        for (const [other_editor, other_state] of editor2state) {
+            if (other_editor.document === editor.document) {
+                if (other_state.editor === current_editor) {
+                    console.log([reqfrom, "return other AKA current", other_state.fn]);
+                    return other_state;
+                }
+                if (editor === current_editor) {
+                    console.log([reqfrom, "delete/add AKA new is current", other_state.fn]);
+                    editor2state.delete(other_editor);
+                    editor2state.set(editor, other_state);
+                    state = other_state;
+                    state.editor = editor;
+                    break;
+                }
+            }
+        }
+    } else {
+        console.log([reqfrom, "found", state.fn]);
+    }
+    if (!state) {
         state = new StateOfEditor(editor);
         state.last_used_ts = Date.now();
         state.fn = editor.document.fileName;
         editor2state.set(editor, state);
+        console.log([reqfrom, "create new", state.fn]);
     }
     state.last_used_ts = Date.now();
     return state;
@@ -227,7 +249,7 @@ export async function back_to_normal(state: StateOfEditor)
 
 export function keyboard_events_on(editor: vscode.TextEditor)
 {
-    let state = state_of_editor(editor);
+    let state = state_of_editor(editor, "keyb_on");
     if (!state) {
         return;
     }
@@ -279,7 +301,7 @@ function keyboard_events_off(state: StateOfEditor)
 
 export function on_text_edited(editor: vscode.TextEditor)
 {
-    let state = state_of_editor(editor);
+    let state = state_of_editor(editor, "text_edited");
     if (!state) {
         return;
     }
@@ -319,7 +341,7 @@ function on_change_active_editor(editor: vscode.TextEditor | undefined)
         }
         let state_stored = editor2state.get(editor);
         if (!state_stored) {
-            let state = state_of_editor(editor);
+            let state = state_of_editor(editor, "change_active");
             if (state) {
                 // this does almost nothing, but the state will be there for inline completion to pick up
                 switch_mode(state, Mode.Normal);
