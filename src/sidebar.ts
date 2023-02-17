@@ -35,6 +35,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.type) {
                 case "presetSelected": {
+                    console.log('presetSelected',data.value);
                     let editor = vscode.window.activeTextEditor;
                     if (!editor) {
                         return;
@@ -198,7 +199,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div class="toolbox">
                     <div class="toolbox-inline">
                         <input class="toolbox-search" id="toolbox-search" placeholder="↓ commands; ↑ history">
-                        <button class="toolbox-run">Run</button>
+                        <button class="toolbox-run toolbox-run-disabled">Run</button>
                     </div>
                     <div class="toolbox-container">
                         <div class="toolbox-list"></div>

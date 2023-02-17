@@ -10,19 +10,30 @@
     let toolboxIndex = 0;
 
     toolboxSearch.addEventListener("keyup", ( event ) => {
-        if (event.key === "Enter") {
-            if(event.target.value !== '') {
-
-                // console.log('Toolbox Enter',event);
-                // vscode.postMessage({ type: "quickInput", value: quickInput.value });
-            }
+        if(event.target.value !== '') {
+            toolboxRun.classList.remove("toolbox-run-disabled");
+        }
+        else {
+            toolboxRun.classList.add("toolbox-run-disabled");
+        }
+        if (event.key === "Enter") {        
+            vscode.postMessage({ 
+                type: "presetSelected", 
+                value: 'intent', 
+                id: 'intent', 
+                data_function: 'intent',
+            });
         }
         if(event.key === "ArrowDown") {
-            document.activeElement.blur();
-            event.preventDefault();
-            toolboxItems[toolboxIndex].focus();
-            toolboxItems[toolboxIndex].blur();
-            toolboxItems[toolboxIndex].classList.add('item-selected');
+            const firstBlockChild = Array.from(toolboxList.childNodes).find(child => {
+                return child.style.display !== 'none';
+            });
+            if(firstBlockChild) {
+                toolboxSearch.blur();
+                firstBlockChild.focus();
+                firstBlockChild.classList.add('item-selected');
+                toolboxSearch.value = firstBlockChild.dataset.title;
+            }
             // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
             // if(index < toolboxItems.length - 1) {
             //     toolboxItems[index + 1].focus();
@@ -74,18 +85,19 @@
 
     toolbox.addEventListener("keyup",(event) => {
         if(event.key === "ArrowUp") {
-            // console.log('KKKKKKKKKKKKKKKKKUP',event);
-            toolboxItems[toolboxIndex - 1].focus();
-            toolboxItems[toolboxIndex - 1].blur();
+            if (event.target && event.target.classList.contains("toolbox-item")) {
+                event.target.blur();
+                toolboxItems[toolboxIndex - 1].focus();
+            }
         }
         if(event.key === "ArrowDown") {
-            toolboxItems[toolboxIndex + 1].focus();
-            toolboxItems[toolboxIndex + 1].blur();
+            if (event.target && event.target.classList.contains("toolbox-item")) {
+                event.target.blur();
+                toolboxItems[toolboxIndex + 1].focus();
+            }
         }
-        if (event.target && event.target.classList.contains("toolbox-item")) {
             // console.log('KKKKKKKKKKKKKKKKKDOWN',event);
             // event.target.classList.add("item-active");
-        }
     });
 
     // const quickInput = document.querySelector("#quickinput");
