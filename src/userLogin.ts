@@ -112,7 +112,14 @@ export async function login()
     try {
         statusBar.set_website_message("");
         let req = new fetchH2.Request(login_url, init);
-        let result = await fetchH2.fetch(req);
+        let result_promise: Promise<fetchH2.Response>;
+        try {
+            result_promise = fetchH2.fetch(req);
+        } catch (error) {
+            await usageStats.report_success_or_failure(false, "login(1)", login_url, error, "");
+            return;
+        }
+        let result = await result_promise;
         let json: any = await result.json();
         if (json.retcode === "OK") {
             global.user_logged_in = json.account;
@@ -171,6 +178,7 @@ let _last_inference_login_cached_result = false;
 let _last_inference_login_key = "";
 let _last_inference_login_ts = 0;
 let _last_inference_login_infurl = "";
+let _inference_login_in_progress = false;
 
 
 export function inference_login_force_retry()
@@ -186,8 +194,15 @@ export async function inference_login(): Promise<boolean>
         console.log("inference_login: last_positive_result too old, force disconnect");
         await fetchH2.disconnectAll();
     }
+    if (_inference_login_in_progress) {
+        while (_inference_login_in_progress) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return _last_inference_login_cached_result;
+    }
     if (global.streamlined_login_countdown >= 0 || url === "") {
         await login();
+        url = fetchAPI.inference_url("/v1/secret-key-activate");
     }
     // Without login it will still work, with inference URL in settings.
     let apiKey = secret_api_key();
@@ -219,7 +234,7 @@ export async function inference_login(): Promise<boolean>
     let report_this_url = "private_url";
     if (url.indexOf("smallcloud") > 0) {
         report_this_url = url;
-    } // else might be private
+    } // else might be a private url
     let headers = {
         "Content-Type": "application/json",
         "Authorization": "Bearer " + apiKey,
@@ -232,11 +247,28 @@ export async function inference_login(): Promise<boolean>
         referrer: "no-referrer",
     };
     try {
+        _inference_login_in_progress = true;
         let req = new fetchH2.Request(url, init);
-        let result = await fetchH2.fetch(req);
+        let result_promise: Promise<fetchH2.Response>;
+        try {
+            result_promise = fetchH2.fetch(req);
+        } catch (error) {
+            _last_inference_login_cached_result = false;
+            _last_inference_login_key = apiKey;
+            _last_inference_login_ts = Date.now();
+            _last_inference_login_infurl = conf_url;
+            await usageStats.report_success_or_failure(false, "inference_login(1)", report_this_url, error, "");
+            return false;
+        }
+        let result = await result_promise;
         let json: any = await result.json();
-        if (json.retcode === "OK") {
-            await usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
+        if (result.status === 401) {
+            _last_inference_login_cached_result = false;
+            _last_inference_login_key = apiKey;
+            _last_inference_login_ts = Date.now();
+            _last_inference_login_infurl = conf_url;
+            await usageStats.report_success_or_failure(false, "inference_login(2)", report_this_url, json.detail, "");
+        } else if (json.retcode === "OK") {
             if (json.inference_message) {
                 await usabilityHints.show_message_from_server("InferenceServer", json.inference_message);
             }
@@ -247,25 +279,28 @@ export async function inference_login(): Promise<boolean>
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = Date.now();
             _last_inference_login_infurl = conf_url;
+            await usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
         } else if (json.detail) {
             _last_inference_login_cached_result = false;
             _last_inference_login_key = apiKey;
-            _last_inference_login_ts = Date.now();
+            _last_inference_login_ts = 0;
             _last_inference_login_infurl = conf_url;
-            await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json.detail, "");
+            await usageStats.report_success_or_failure(false, "inference_login(2)", report_this_url, json.detail, "");
         } else {
             _last_inference_login_cached_result = false;
             _last_inference_login_key = apiKey;
-            _last_inference_login_ts = Date.now();
+            _last_inference_login_ts = 0;
             _last_inference_login_infurl = conf_url;
-            await usageStats.report_success_or_failure(false, "inference_login", report_this_url, json, "");
+            await usageStats.report_success_or_failure(false, "inference_login(3)", report_this_url, json, "");
         }
     } catch (error) {
         _last_inference_login_cached_result = false;
         _last_inference_login_key = apiKey;
-        _last_inference_login_ts = Date.now();
+        _last_inference_login_ts = 0;
         _last_inference_login_infurl = conf_url;
-        await usageStats.report_success_or_failure(false, "inference_login", report_this_url, error, "");
+        await usageStats.report_success_or_failure(false, "inference_login(4)", report_this_url, error, "");
+    } finally {
+        _inference_login_in_progress = false;
     }
     return _last_inference_login_cached_result;
 }
