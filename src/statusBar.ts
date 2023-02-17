@@ -52,6 +52,7 @@ export class StatusBarMenu {
 
     choose_color()
     {
+        console.log("choose_color",this.access_level);
         if (this.access_level === 0) {
             this.menu.text = `$(codify-logo) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
@@ -170,7 +171,7 @@ async function on_change_active_editor(editor: vscode.TextEditor | undefined)
     let document_filename = editor.document.fileName;
     let access_level = await privacy.get_file_access(document_filename);
     global.status_bar.set_access_level(access_level);
-    global.status_bar.choose_color();
+    // global.status_bar.choose_color();
 }
 
 

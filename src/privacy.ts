@@ -93,6 +93,7 @@ export async function get_file_access(uri: string)
         console.log(['checking', temp]);
         if(storage[temp] !== undefined) {
             console.log(['=> found override', storage[temp]]);
+            global.status_bar.choose_color();
             return storage[temp];
         }
         segments.pop();
