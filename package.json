@@ -9,11 +9,11 @@
     "theme": "dark"
   },
   "vsce": {
-    "baseImagesUrl": "https://max.smallcloud.ai/img/"
+    "baseImagesUrl": "https://www.smallcloud.ai/img/"
   },
   "homepage": "https://codify.smallcloud.ai",
   "author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "engines": {
     "vscode": "^1.69.0"
   },
