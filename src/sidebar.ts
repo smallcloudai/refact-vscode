@@ -57,7 +57,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
 
                     if (data.id && typeof data.id === "string") {
-                        function_name = data.id;
+                        function_name = data.function;
                     }
 
                     if (state) {
