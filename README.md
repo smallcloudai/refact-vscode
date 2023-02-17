@@ -14,7 +14,7 @@ Codify is a cutting-edge AI tool designed to assist developers in writing and re
 Whether you're working on a brand new project or modifying existing code, Codify can help you save time and streamline your coding process.
 
 If you have your own NVIDIA GPU, you can try the [self-hosted version](https://codify.smallcloud.ai/docker).
-Our proprietary [AI model behind](https://www.smallcloud.ai/) Codify is state-of-the-art (for the size and latency). The weights are free to [download on Huggingface](https://huggingface.co/smallcloudai).
+Our own [AI model behind](https://www.smallcloud.ai/) Codify is state-of-the-art (for the size and latency). The weights are free to [download on Huggingface](https://huggingface.co/smallcloudai).
 
 ## Crowdsourcing Human Feedback
 No one likes big corporations taking over our development toolchain, right? You can improve independent code tools like this one simply by turning your privacy settings to a relaxed position for some of your projects. We’ll tune the model to better follow YOUR commands and the tool will get better for everybody!
