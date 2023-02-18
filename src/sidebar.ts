@@ -42,24 +42,33 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     let state = estate.state_of_editor(editor, "presetSelected");
 
                     let data_function: any = data.data_function ? JSON.parse(data.data_function): {};
+                    if (!data_function) {
+                        console.log(["data_function is not defined", data_function]);
+                        return;
+                    }
 
-                    let function_name: string = "";
                     let model_force: string = data_function.model;
-
-                    if (data_function && data_function.supports_highlight === false) {
-                        console.log(data_function);
-                        let selection = editor.selection;
-                        let selection_empty = selection.isEmpty;
-                        if (selection_empty) {
+                    let selection = editor.selection;
+                    let selection_empty = selection.isEmpty;
+                    let function_name: string = "";
+                    let selected_lines_count = selection.end.line - selection.start.line + 1;
+                    if (selection_empty) {
+                        function_name = data_function.function_highlight;
+                        if (selection_empty && data_function.supports_highlight === false) {
+                            console.log(["no selection, but function", function_name, "doesn't support highlight"]);
                             return;
                         }
-                        let selected_lines_count = selection.end.line - selection.start.line + 1;
+                    } else {
+                        function_name = data_function.function_selection;
+                        if (data_function.supports_selection === false) {
+                            console.log(["selection present, but", function_name, "doesn't support selection"]);
+                            return;
+                        }
                     }
-
-                    if (data.id && typeof data.id === "string") {
-                        function_name = data.function;
+                    if (typeof function_name !== "string") {
+                        console.log(["function_name is not a string", function_name]);
+                        return;
                     }
-
                     if (state) {
                         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
                         state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
