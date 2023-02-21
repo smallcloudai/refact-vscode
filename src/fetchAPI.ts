@@ -238,7 +238,7 @@ export function fetch_api_promise(
 {
     let url = inference_url("/v1/contrast");
     let model_ = vscode.workspace.getConfiguration().get('codify.model') || "CONTRASTcode";
-    let model_longthink: string = vscode.workspace.getConfiguration().get('codify.longthink_model') || suggest_longthink_model;
+    let model_longthink: string = vscode.workspace.getConfiguration().get('codify.longthinkModel') || suggest_longthink_model;
     if (suggest_longthink_model) {
         model_ = model_longthink;
     }
