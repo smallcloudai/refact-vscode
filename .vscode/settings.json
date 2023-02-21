@@ -10,5 +10,4 @@
     "typescript.tsc.autoDetect": "off",
     "editor.tabCompletion": "on",
     "diffEditor.codeLens": true,
-    "codify.longthink_model": "longthink/experimental"
 }
