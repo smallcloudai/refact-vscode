@@ -48,9 +48,11 @@ body.vscode-dark {
     padding: 0;
     display: inline-block;
     width: 100%;
+    overflow: hidden;
 }
 
 .codify-radio {
+    pointer-events: none;
     position: relative;
     margin: 0;
     margin-top: -2px;
@@ -163,14 +165,14 @@ body.vscode-dark {
 
 /* Privacy Popup */
 .privacy-popup {
-    position: fixed;
-    top: 10%;
+    position: absolute;
+    top: 120px;
     left: 50%;
     transform: translate(-50%, -10%);
     width: 400px;
     border: 1px solid var(--secondary);
     box-shadow: 0 0 10px 0 rgba(0,0,0,0.5);
-    padding: 10px;
+    padding: 20px;
     background-color: var(--vscode-sideBar-background) !important;
     z-index: 99;
 }
@@ -178,21 +180,22 @@ body.vscode-dark {
     font-size: 14px;
 }
 .privacy-popup-actions {
-    margin-top: 10px;
+    margin-top: 20px;
     display: flex;
     justify-content: center;
 }
 .privacy-popup-cancel {
     margin: 5px;
-    border: 1px solid var(--secondary);
-    color: var(--secondary);
-    padding: 5px 10px;
-    background-color: inherit;
+    color: var(--color) !important;
+    border: 1px solid var(--color) !important;
+    padding: 7px 14px;
+    background-color: var(--vscode-sideBar-background) !important;
 }
 .privacy-popup-ok {
     margin: 5px;
-    border: 1px solid var(--secondary);
+    color: var(--color) !important;
+    border: 1px solid var(--color) !important;
     color: inherit;
-    padding: 5px 10px;
-    background-color: var(--vscode-activityBar-background) !important;
+    padding: 7px 14px;
+    background-color: var(--vscode-sideBar-background) !important;
 }

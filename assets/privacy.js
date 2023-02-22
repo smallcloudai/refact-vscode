@@ -1,14 +1,22 @@
 (function () {
 	const vscode = acquireVsCodeApi();
     const globalDefaultsSelector = document.querySelectorAll('.codify-radio');
+    const globalLabels = document.querySelectorAll('.codify-privacy__item label');
+    let globalDefault;
+    let popup;
 
-    globalDefaultsSelector.forEach((input) => {
-        input.addEventListener('change', (event) => {
-            console.log(event);
-            const selectedValue = event.target.value;
-            const selectedText = event.target.nextSibling.nodeValue;
-            showPopup(`Be careful!<br>You are about to change global privacy default to:<br> ${selectedText}`, "OK");
-            // vscode.postMessage({ type: "globalDefault", value: selectedValue });
+    globalLabels.forEach((label) => {
+        label.addEventListener("click", (event) => {
+            event.preventDefault();
+            const selectedText = event.target.innerText;
+            const selectedValue = event.target.children[0].value;
+            showPopup(`Be careful!<br>You are about to change global privacy default to:<br><br><b> ${selectedText}</b>`, "OK");
+            const listenOk = document.querySelector('.privacy-popup-ok').addEventListener("click", (event) => {
+                event.target.children.checked = true;
+                vscode.postMessage({ type: "globalDefault", value: selectedValue });
+                popup.remove();
+                this.removeEventListener("click",listenOk);
+            });
         });
     });
 
@@ -25,6 +33,7 @@
             case "defaults":
                 globalDefaultsSelector.forEach((input, index) => {
                     if(index === Number.parseInt(message.value)) {
+                        globalDefault = Number.parseInt(message.value);
                         input.checked = true;
                     }
                 });
@@ -45,9 +54,9 @@
         selector.classList.add("overrides__selector");
         let select = document.createElement("select");
         const options = [
-            [0, "Disabled"],
-            [1, "Codify only"],
-            [2, "Codify & 3rd party"]
+            [0, "Level 0: Turn off"],
+            [1, "Level 1"],
+            [2, "Level 2"]
         ];
         options.forEach((element,index) => {
             let option = document.createElement("option");
@@ -66,7 +75,15 @@
         button.classList.add("overrides__delete");
         button.innerHTML = `<svg height="512px" id="Layer_1" style="enable-background:new 0 0 512 512;" version="1.1" viewBox="0 0 512 512" width="512px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g><path d="M413.7,133.4c-2.4-9-4-14-4-14c-2.6-9.3-9.2-9.3-19-10.9l-53.1-6.7c-6.6-1.1-6.6-1.1-9.2-6.8c-8.7-19.6-11.4-31-20.9-31   h-103c-9.5,0-12.1,11.4-20.8,31.1c-2.6,5.6-2.6,5.6-9.2,6.8l-53.2,6.7c-9.7,1.6-16.7,2.5-19.3,11.8c0,0-1.2,4.1-3.7,13   c-3.2,11.9-4.5,10.6,6.5,10.6h302.4C418.2,144.1,417,145.3,413.7,133.4z"/><path d="M379.4,176H132.6c-16.6,0-17.4,2.2-16.4,14.7l18.7,242.6c1.6,12.3,2.8,14.8,17.5,14.8h207.2c14.7,0,15.9-2.5,17.5-14.8   l18.7-242.6C396.8,178.1,396,176,379.4,176z"/></g></svg>`;
         button.addEventListener("click", (event) => {
-            vscode.postMessage({ type: "deleteOverride", value: uri });
+            currentFile = uri.split("/");
+            currentLevel = Number.parseInt(state);
+            defaultLevel = 0;
+            showPopup(`Privacy policy for ${currentFile[currentFile.length - 1]} is now Level ${currentLevel}<br><br>If you delete this rule, the global privacy default and rules for the parent folders will apply.<br><br>New privacy policy for <b>${currentFile[currentFile.length - 1]} will be Level ${globalDefault}</b>.`, "Delete");
+            const listenDelete = document.querySelector('.privacy-popup-ok').addEventListener("click", (event) => {
+                vscode.postMessage({ type: "deleteOverride", value: uri });
+                popup.remove();
+                this.removeEventListener("click",listenDelete);
+            });
         });
         select.addEventListener("change", (event) => {
             vscode.postMessage({ type: "selectOverride", value: [uri, select.value] });
@@ -77,7 +94,7 @@
     }
     
     function showPopup(text, actionButtonText) {
-        const popup = document.createElement("div");
+        popup = document.createElement("div");
         const popupContent = document.createElement("div");
         const popupActions = document.createElement("div");
         const popupCancel = document.createElement("button");
@@ -95,30 +112,9 @@
         popupActions.appendChild(popupOK);
         popup.appendChild(popupActions);
         document.body.appendChild(popup);
-        console.log(popup);
-
-        // popup.querySelector("button").addEventListener("click", (event) => {
-        //     vscode.postMessage({ type: "
-        // popup.querySelector("button").addEventListener("click", (event) => {
-        //     vscode.postMessage({ type: "buttonSubmit
+        const listenCancel = popupCancel.addEventListener("click", (event) => {
+            document.body.removeChild(popup);
+            popupCancel.removeEventListener("click",listenCancel);
+        });
     }
-    // buttonSubmit.addEventListener("click",(event) => {
-    //     let _text = document.querySelector('#comment');
-    //     let _intent = _text.getAttribute('data-intent');
-    //     let _funct = _text.getAttribute('data-function');
-    //     let _comment = document.querySelector('#comment').value;
-    //     let _source = false;
-    //     const file = document.querySelector('#source');
-    //     if(file && file.checked) {
-    //         _source = true;
-    //     }
-    //     let data = {
-    //         intent: _intent,
-    //         function: _funct,
-    //         source: _source,
-    //         comment: _comment
-    //     };
-    //     vscode.postMessage({ type: "buttonSubmit", value: data });
-    // });
-
 })();
