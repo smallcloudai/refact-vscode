@@ -4,8 +4,11 @@
 
     globalDefaultsSelector.forEach((input) => {
         input.addEventListener('change', (event) => {
+            console.log(event);
             const selectedValue = event.target.value;
-            vscode.postMessage({ type: "globalDefault", value: selectedValue });
+            const selectedText = event.target.nextSibling.nodeValue;
+            showPopup(`Be careful!<br>You are about to change global privacy default to:<br> ${selectedText}`, "OK");
+            // vscode.postMessage({ type: "globalDefault", value: selectedValue });
         });
     });
 
@@ -72,7 +75,33 @@
         row.appendChild(action);
         table.appendChild(row);
     }
+    
+    function showPopup(text, actionButtonText) {
+        const popup = document.createElement("div");
+        const popupContent = document.createElement("div");
+        const popupActions = document.createElement("div");
+        const popupCancel = document.createElement("button");
+        const popupOK = document.createElement("button");
+        popup.classList.add("privacy-popup");
+        popupContent.classList.add("privacy-popup-content");
+        popupActions.classList.add("privacy-popup-actions");
+        popupCancel.classList.add("privacy-popup-cancel");
+        popupOK.classList.add("privacy-popup-ok");
+        popupContent.innerHTML = text;
+        popup.appendChild(popupContent);
+        popupCancel.innerHTML = 'Cancel';
+        popupOK.innerHTML = actionButtonText;
+        popupActions.appendChild(popupCancel);
+        popupActions.appendChild(popupOK);
+        popup.appendChild(popupActions);
+        document.body.appendChild(popup);
+        console.log(popup);
 
+        // popup.querySelector("button").addEventListener("click", (event) => {
+        //     vscode.postMessage({ type: "
+        // popup.querySelector("button").addEventListener("click", (event) => {
+        //     vscode.postMessage({ type: "buttonSubmit
+    }
     // buttonSubmit.addEventListener("click",(event) => {
     //     let _text = document.querySelector('#comment');
     //     let _intent = _text.getAttribute('data-intent');

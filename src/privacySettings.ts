@@ -43,7 +43,7 @@ export class PrivacySettings {
         panel.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
 				case "globalDefault": {
-                    privacy.set_global_access(data.value);
+                    privacy.set_global_access(Number(data.value));
                     this.update_webview(panel);
                     break;
 				}
