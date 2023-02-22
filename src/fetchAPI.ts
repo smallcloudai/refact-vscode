@@ -83,6 +83,9 @@ export class PendingRequest {
         this.apiPromise = new Promise((resolve, reject) => {
             h2stream.then(async (result_stream) => {
                 if (this.streaming_callback) {
+                    // Streaming is a bit homegrown, maybe read the docs:
+                    // https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+                    // https://nodejs.org/api/stream.html#stream_readable_readablehighwatermark
                     let readable = await result_stream.readable();
                     readable.on("readable", async () => {
                         // Use readable here because we need to read as much as possible, feed the last
