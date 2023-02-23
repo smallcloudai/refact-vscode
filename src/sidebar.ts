@@ -34,6 +34,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.type) {
+                // case "toolboxSelected": {
+                //     vscode.window.onDidChangeTextEditorSelection((e) => {
+                //         this.check_selection();
+                //     }); 
+                // }
                 case "presetSelected": {
                     console.log('presetSelected',data.value);
                     let editor = vscode.window.activeTextEditor;
@@ -75,7 +80,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
                         await estate.switch_mode(state, estate.Mode.Normal);
                     }
-
                     await extension.follow_intent(data.value, function_name, model_force);
                     break;
                 }
@@ -109,7 +113,57 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 case "openSettings": {
                     vscode.commands.executeCommand("plugin-vscode.openSettings");
                 }
+                case "checkSelection": {
+                    this.check_selection();
+                    break;
+                }
+                case "checkSelectionDefault": {
+                    this.check_selection_default(data.intent);
+                    break;
+                }
             }
+        });
+    }
+
+    public check_selection() {
+        
+        let current_selection = false;
+        let editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return false;
+        }
+        let selection = editor.selection;
+        if( selection) {
+            current_selection = true;
+        }
+        if (selection.isEmpty) {
+            current_selection = false;
+        }
+        console.log('xxxxxxxxxxxxxxxxxxxxxx checking selection',current_selection);
+        this._view!.webview.postMessage({
+            command: "selection",
+            value: current_selection
+        });
+    }
+
+    public check_selection_default(intent: string) {
+        
+        let current_selection = false;
+        let editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return false;
+        }
+        let selection = editor.selection;
+        if( selection) {
+            current_selection = true;
+        }
+        if (selection.isEmpty) {
+            current_selection = false;
+        }
+        this._view!.webview.postMessage({
+            command: "selectionDefault",
+            value: current_selection,
+            intent: intent
         });
     }
 
@@ -199,7 +253,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div class="toolbox">
                     <div class="toolbox-inline">
                         <input class="toolbox-search" id="toolbox-search" placeholder="↓ commands; ↑ history">
-                        <button class="toolbox-run toolbox-run-disabled">Run</button>
+                        <button class="toolbox-run toolbox-run-disabled">▶</button>
                     </div>
                     <div class="toolbox-container">
                         <div class="toolbox-list"></div>

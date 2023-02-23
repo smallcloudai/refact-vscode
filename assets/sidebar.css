@@ -266,7 +266,7 @@ body.vscode-light #logout {
     text-align: center;
     cursor: pointer;
     text-transform: uppercase;
-    font-size: 9px;
+    font-size: 19px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -418,4 +418,10 @@ body.vscode-light #logout {
 .item-active .toolbox-body {
     display: block;
     z-index: 999 !important;
+}
+.toolbox-notice {
+    color: red;
+}
+.toolbox-notice-hidden {
+    display: none;
 }

@@ -107,7 +107,7 @@ export async function login()
         // wait until user clicks the login button
         return;
     }
-    const login_url = "https://max.smallcloud.ai/v1/login";
+    const login_url = "https://max.smallcloud.ai/v1/login?want_staging_version=1";
     headers.Authorization = `Bearer ${apiKey}`;
     try {
         statusBar.set_website_message("");

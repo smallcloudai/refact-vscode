@@ -8,6 +8,8 @@
     const toolboxList = document.querySelector(".toolbox-list");
     const toolboxRun = document.querySelector(".toolbox-run");
     let toolboxIndex = 0;
+    let longthink_functions_today;
+    let editor_selection = false;
 
     toolboxSearch.addEventListener("keyup", ( event ) => {
         if(event.target.value !== '') {
@@ -16,13 +18,8 @@
         else {
             toolboxRun.classList.add("toolbox-run-disabled");
         }
-        if (event.key === "Enter") {        
-            vscode.postMessage({ 
-                type: "presetSelected", 
-                value: 'intent', 
-                id: 'intent', 
-                data_function: 'intent',
-            });
+        if (event.key === "Enter") {   
+            vscode.postMessage({ type: "checkSelectionDefault", intent: event.target.value});
         }
         if(event.key === "ArrowDown") {
             const firstBlockChild = Array.from(toolboxList.childNodes).find(child => {
@@ -49,18 +46,22 @@
     });
 
     toolboxRun.addEventListener("click", ( event ) => {
-        // if(event.target.classList.contains('toolbox-run-disabled')) {
             const current = document.querySelector(".item-active");
             if(current) {
                 console.log('Toolbox Run',current);
+                const item_functions = longthink_functions_today[current.id];
                 vscode.postMessage({ 
                     type: "presetSelected", 
-                    value: current.dataset.function, 
+                    value: JSON.stringify(item_functions.label), 
                     id: current.id, 
-                    data_function: current.dataset.function,
+                    data_function: JSON.stringify(item_functions),
                 });
             }
-        // }
+            else {
+                if(toolboxSearch.value !== '') {
+                    vscode.postMessage({ type: "checkSelectionDefault", intent: toolboxSearch.value});
+                }
+            }
     });
 
     toolboxList.addEventListener("click", (event) => {
@@ -76,9 +77,11 @@
         }
         if (event.target && event.target.classList.contains("toolbox-back")) {
             let active = document.querySelector(".item-active");
+            document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
             if(active) {
                 toolboxSearch.value = '';
                 active.classList.remove("item-active");
+                toolboxRun.classList.add("toolbox-run-disabled");
             }
         }
     });
@@ -96,8 +99,6 @@
                 toolboxItems[toolboxIndex + 1].focus();
             }
         }
-            // console.log('KKKKKKKKKKKKKKKKKDOWN',event);
-            // event.target.classList.add("item-active");
     });
 
     // const quickInput = document.querySelector("#quickinput");
@@ -185,7 +186,7 @@
         const keys = Object.keys(data);
         keys.forEach((key) => {
             let bookmark = {};
-            if(key === 'explain-error' || key === 'make-code-shorter') {
+            if(key === 'staging-explain-code' || key === 'staging-make-code-shorter') {
                 bookmark = {
                     ...data[key],
                     'is_bookmarked': true
@@ -205,7 +206,7 @@
     // renderToolbox(data);
     function renderToolbox(data) {
         const bookmarked = check_bookmarked_functions(data);
-        const sortedData = Object.entries(bookmarked)
+        const sortedData = Object.entries(data)
         .sort(([, a], [, b]) => {
             if (a.is_bookmarked !== b.is_bookmarked) {
             return a.is_bookmarked ? -1 : 1; // bookmarked
@@ -231,9 +232,11 @@
             const likes_icon = document.createElement("i");
             const bookmark_icon = document.createElement("i");
             const body_controls = document.createElement("div");
+            const label_wrapper = document.createElement("span");
+            const selection_notice = document.createElement("div");
 
             toolboxItem.classList.add("toolbox-item");
-            if(!item.always_visible) {
+            if(item.catch_all_hl === 0 && item.catch_all_selection === 0) {
                 toolboxItem.classList.add("toolbox-filter");
             }
             else {
@@ -241,7 +244,7 @@
             }
             header.classList.add("toolbox-header");
             likes.classList.add("toolbox-likes");
-            if(item.is_liked) {
+            if(item.is_liked > 0) {
                 likes_icon.classList.add("toolbox-like-checked");
             } else {
                 likes_icon.classList.add("toolbox-like-unchecked");
@@ -255,7 +258,10 @@
             bookmark.classList.add("toolbox-bookmark");
             backButton.classList.add('toolbox-back');
             body_controls.classList.add('toolbox-controls');
-            header.innerHTML = item.label;
+            selection_notice.classList.add('toolbox-notice');
+            selection_notice.innerHTML = `Please select code to run this function.`;
+            label_wrapper.innerHTML = item.label;
+            header.appendChild(label_wrapper);
             toolboxItem.id = key;
             toolboxItem.dataset.title = item.label;
             toolboxItem.dataset.function = JSON.stringify(item);
@@ -272,6 +278,7 @@
             body_controls.appendChild(likes2);
             body_controls.appendChild(bookmark2);
             body.appendChild(backButton);
+            body.appendChild(selection_notice);
             body.appendChild(body_controls);
             body.appendChild(content);
             toolboxItem.appendChild(header);
@@ -296,13 +303,24 @@
     function command_handler(command) {
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
-            item.addEventListener("click", (toolbox) => {
-                let active = document.querySelector(".item-active");
-                if(active) {
-                    active.classList.remove("item-active");
+            item.addEventListener("click", (event) => {
+                if(event.target.tagName === 'SPAN') {
+                    let active = document.querySelector(".item-active");
+                    if(active) {
+                        active.classList.remove("item-active");
+                    }
+                    item.classList.add("item-active");
+                    toolboxSearch.value = item.dataset.title;
+                    const item_name = item.id;
+                    const item_functions = longthink_functions_today[item_name];
+                    if(item_functions.supports_highlight === 1) {
+                        toolboxRun.classList.remove("toolbox-run-disabled");
+                        document.querySelector(".item-active .toolbox-notice").classList.add('toolbox-notice-hidden');
+                    } else if(item_functions.supports_selection === 1) {
+                        vscode.postMessage({ type: "checkSelection"});
+                    }
+                    // console.log(longthink_functions_today[item_name]);
                 }
-                item.classList.add("item-active");
-                toolboxSearch.value = item.dataset.title;
             });
         });
     }
@@ -339,6 +357,28 @@
 	window.addEventListener("message", (event) => {
 		const message = event.data;
 		switch (message.command) {
+        case "selectionDefault":
+            const keys = Object.keys(longthink_functions_today);
+            let result = keys.find(obj => longthink_functions_today[obj].catch_all_hl === 1);
+            if(message.value) {
+                result = keys.find(obj => longthink_functions_today[obj].catch_all_selection === 1);
+            }
+            vscode.postMessage({ 
+                type: "presetSelected", 
+                value: message.intent, 
+                id: 'intent', 
+                data_function: JSON.stringify(result),
+            });
+        case "selection":
+            editor_selection = message.value;
+            if(editor_selection) {
+                toolboxRun.classList.remove("toolbox-run-disabled");
+                let notice = document.querySelector(".item-active .toolbox-notice");
+                if(notice) {
+                    notice.classList.add('toolbox-notice-hidden');
+                }
+            }
+            break;
         case "focus":
             toolboxSearch.focus();
             break;
@@ -371,6 +411,8 @@
             // tpList.style.display = 'none';
             
             if (message.longthink_functions) {
+                console.log(message.longthink_functions);
+                longthink_functions_today = message.longthink_functions;
                 renderToolbox(message.longthink_functions);
                 search_filter();
                 command_handler();
