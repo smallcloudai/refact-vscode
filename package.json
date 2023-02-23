@@ -216,7 +216,7 @@
 				{
 					"type": "webview",
 					"id": "codify-presets",
-					"name": "Presets"
+					"name": "AI Toolbox"
 				}
 			]
 		},

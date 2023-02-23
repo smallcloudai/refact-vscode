@@ -253,7 +253,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div class="toolbox">
                     <div class="toolbox-inline">
                         <input class="toolbox-search" id="toolbox-search" placeholder="↓ commands; ↑ history">
-                        <button class="toolbox-run toolbox-run-disabled">▶</button>
+                        <button class="toolbox-run toolbox-run-disabled">▶<span>Run</span></button>
                     </div>
                     <div class="toolbox-container">
                         <div class="toolbox-list"></div>

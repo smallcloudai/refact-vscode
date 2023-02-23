@@ -4,6 +4,7 @@
     const globalLabels = document.querySelectorAll('.codify-privacy__item label');
     let globalDefault;
     let popup;
+    let rules;
 
     globalLabels.forEach((label) => {
         label.addEventListener("click", (event) => {
@@ -23,6 +24,8 @@
     window.addEventListener("message", (event) => {
 		const message = event.data;
 		switch (message.command) {
+            case "rules":
+                rules = message.value;
 			case "overrides":
                 const table = document.querySelector('.overrides__body');
                 table.innerHTML = "";
@@ -53,15 +56,13 @@
         let selector = document.createElement("div");
         selector.classList.add("overrides__selector");
         let select = document.createElement("select");
-        const options = [
-            [0, "Level 0: Turn off"],
-            [1, "Level 1"],
-            [2, "Level 2"]
-        ];
-        options.forEach((element,index) => {
+        rules.forEach((element,index) => {
             let option = document.createElement("option");
-            option.value = element[0];
-            option.text = element[1];
+            option.value = element.value;
+            option.text = element.name;
+            if(index === 0) {
+                option.text = element.name + ": " + element.short_description;
+            }
             if(Number.parseInt(state) === index) {
                 option.selected = true;
             }
@@ -77,8 +78,8 @@
         button.addEventListener("click", (event) => {
             currentFile = uri.split("/");
             currentLevel = Number.parseInt(state);
-            defaultLevel = 0;
-            showPopup(`Privacy policy for ${currentFile[currentFile.length - 1]} is now Level ${currentLevel}<br><br>If you delete this rule, the global privacy default and rules for the parent folders will apply.<br><br>New privacy policy for <b>${currentFile[currentFile.length - 1]} will be Level ${globalDefault}</b>.`, "Delete");
+            const defaultLevel = rules.find(obj => obj.value === Number.parseInt(globalDefault)); 
+            showPopup(`Privacy policy for ${currentFile[currentFile.length - 1]} is now Level ${currentLevel}<br><br>If you delete this rule, the global privacy default and rules for the parent folders will apply.<br><br>New privacy policy for <b>${currentFile[currentFile.length - 1]}</b> will be ${defaultLevel.name} - ${defaultLevel.short_description}.`, "Delete");
             const listenDelete = document.querySelector('.privacy-popup-ok').addEventListener("click", (event) => {
                 vscode.postMessage({ type: "deleteOverride", value: uri });
                 popup.remove();

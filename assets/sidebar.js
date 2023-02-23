@@ -48,7 +48,7 @@
     toolboxRun.addEventListener("click", ( event ) => {
             const current = document.querySelector(".item-active");
             if(current) {
-                console.log('Toolbox Run',current);
+                // console.log('Toolbox Run',current);
                 const item_functions = longthink_functions_today[current.id];
                 vscode.postMessage({ 
                     type: "presetSelected", 

@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as privacy from "./privacy";
-enum access_level {
-    disabled = 0,
-    codify_only = 1,
-    third_party = 2,
+
+type Rule = {
+    value: number;
+    name: string;
+    short_description: string;
+    long_description: string;
 };
 
 export class PrivacySettings {
@@ -12,6 +14,29 @@ export class PrivacySettings {
     private _editor = vscode.window.activeTextEditor;
     public static _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
+    public static rules: Rule[] = [
+        {
+          value: 0,
+          name: "Level 0",
+          short_description: "Turn off",
+          long_description:
+            "Paranoid mode, Codify has no access to your files.",
+        },
+        {
+          value: 1,
+          name: "Level 1",
+          short_description:
+            "Codify can read your files, but only uses AI models hosted at Codify",
+          long_description:
+            "Data will be sent to Codify servers only. We don't collect datasets on the server side.",
+        },
+        {
+          value: 2,
+          name: "Level 2",
+          short_description: "Codify can use any model, including 3rd party",
+          long_description: "Data could be sent also to a 3rd party model.",
+        },
+      ];
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any) {
         PrivacySettings._panel = panel;
@@ -60,13 +85,8 @@ export class PrivacySettings {
 				}
 			}
 		});
-
+        panel.webview.postMessage({ command: "rules", value: this.rules });
         this.update_webview(panel);
-
-        // let accessOverrides = get_access_overrides();
-        // accessOverrides.then((value) => {
-        //     panel.webview.postMessage({ command: "overrides", value: value });
-        // });
     }
 
     public dispose() {
@@ -104,14 +124,45 @@ export class PrivacySettings {
         const styleMainUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "privacy.css")
         );
-        // const imagesUri = webview.asWebviewUri(
-        //     vscode.Uri.joinPath(extensionUri, "images")
-        // );
 
 
         const nonce = PrivacySettings.getNonce();
         const trash_icon = `$(trash)`;
 
+        const rules = [
+            {
+                "value": 0,
+                "name": "Level 0",
+                "short_description": "Turn off",
+                "long_description": "Paranoid mode, Codify has no access to your files.",
+
+            },
+            {
+                "value": 1,
+                "name": "Level 1",
+                "short_description": "Codify can read your files, but only uses AI models hosted at Codify",
+                "long_description": "Data will be sent to Codify servers only. We don't collect datasets on the server side.",
+            },
+            {
+                "value": 2,
+                "name": "Level 2",
+                "short_description": "Codify can use any model, including 3rd party",
+                "long_description": "Data could be sent also to a 3rd party model.",
+            },
+        ];
+
+        let items = '';
+        for (let i = 0; i < rules.length; i++) {
+            items += `
+                <div class="codify-privacy__item">
+                    <label for="codify-access-${rules[i].value}">
+                        <input type="radio" id="codify-access-${rules[i].value}" name="codify-access" class="codify-radio" value="${rules[i].value}">
+                        ${rules[i].name}: ${rules[i].short_description}
+                    </label>
+                    <p class="codify-help-text">${rules[i].long_description}</p>
+                </div>
+            `;
+        }
         return `<!DOCTYPE html>
             <html lang="en">
             <head>
@@ -131,27 +182,7 @@ export class PrivacySettings {
                 <div class="codify-privacy__global">
                     <h2 class="codify-privacy__subtitle">Global defaults:</h2>
                     <div class="codify-privacy__defaults">
-                        <div class="codify-privacy__item">
-                            <label for="codify-disabled">
-                                <input type="radio" id="codify-disabled" name="codify-access" class="codify-radio" value="0">
-                                Level 0: Turn off
-                            </label>
-                            <p class="codify-help-text">Paranoid mode, Codify has no access to your files.</p>
-                        </div>
-                        <div class="codify-privacy__item">
-                            <label for="codify-only">
-                                <input type="radio" id="codify-only" name="codify-access" class="codify-radio" value="1">
-                               Level 1: Codify can read your files, but only uses AI models hosted at Codify
-                            </label>
-                            <p class="codify-help-text">Data will be sent to Codify servers only. We don't collect datasets on the server side.</p>
-                        </div>
-                        <div class="codify-privacy__item">
-                            <label for="codify-3rd-party">
-                                <input type="radio" id="codify-3rd-party" name="codify-access" class="codify-radio" value="2">
-                                Level 2: Codify can use any model, including 3rd party
-                                </label>
-                            <p class="codify-help-text">Data could be sent also to 3rd party model.</p>
-                        </div>
+                       ${items}
                     </div>
                     <h2 class="codify-privacy__subtitle">Global permanent rules to override the default:</h2>
                     <div class="codify-privacy__overrides overrides">

@@ -108,6 +108,7 @@ export async function login()
         return;
     }
     const login_url = "https://max.smallcloud.ai/v1/login?want_staging_version=1";
+    // const login_url = "https://www.smallcloud.ai/v1/login";
     headers.Authorization = `Bearer ${apiKey}`;
     try {
         statusBar.set_website_message("");
