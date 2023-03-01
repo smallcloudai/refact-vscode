@@ -88,6 +88,11 @@
 					"type": "string",
 					"description": "For self-hosted inference, set the URL to your inference server, for example http://127.0.0.1:8008/\nLeave blank otherwise.",
 					"default": ""
+				},
+                "codify.autoHideSidebar": {
+					"type": "boolean",
+					"description": "Auto hide sidebar after function execution.",
+					"default": false
 				}
 			}
 		},
@@ -225,35 +230,42 @@
 				"description": "codify logo",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\e800"
+					"fontCharacter": "\\e899"
 				}
 			},
             "codify-bookmark-unchecked": {
 				"description": "codify bookmark unchecked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\803"
+					"fontCharacter": "\\801"
 				}
 			},
             "codify-bookmark-checked": {
 				"description": "codify bookmark checked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\e801"
+					"fontCharacter": "\\e800"
 				}
 			},
             "codify-like": {
 				"description": "codify like",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\802"
+					"fontCharacter": "\\808"
 				}
 			},
             "codify-life-checked": {
 				"description": "codify like checked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\804"
+					"fontCharacter": "\\807"
+				}
+			},
+            "codify-coin": {
+				"description": "codify coin",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\802"
 				}
 			}
             

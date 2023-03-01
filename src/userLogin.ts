@@ -90,6 +90,7 @@ export async function login()
                 // expected: do nothing
                 global.user_logged_in = "";
                 global.user_active_plan = "";
+                global.user_metering_balance = 0;
                 if (global.side_panel) {
                     global.side_panel.update_webview();
                 }
@@ -124,6 +125,7 @@ export async function login()
         let json: any = await result.json();
         if (json.retcode === "OK") {
             global.user_logged_in = json.account;
+            global.user_metering_balance = json.metering_balance;
             global.streamlined_login_ticket = "";
             if (json['longthink-functions-today']){
                 global.longthink_functions_today = json['longthink-functions-today-v2'];
@@ -153,6 +155,7 @@ export async function login()
             // Login failed, but the request was a success.
             global.user_logged_in = "";
             global.user_active_plan = "";
+            global.user_metering_balance = 0;
             if (global.side_panel) {
                 global.side_panel.update_webview();
             }
@@ -161,6 +164,7 @@ export async function login()
         } else {
             global.user_logged_in = "";
             global.user_active_plan = "";
+            global.user_metering_balance = 0;
             if (global.side_panel) {
                 global.side_panel.update_webview();
             }

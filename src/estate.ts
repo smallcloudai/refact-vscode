@@ -4,7 +4,6 @@ import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 import * as codeLens from "./codeLens";
 import * as completionProvider from "./completionProvider";
-import * as privacy from "./privacy";
 
 export let global_intent: string = "Fix";
 
@@ -280,6 +279,9 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         }
         on_text_edited(editor);
     });
+    if(global.side_panel !== undefined) {
+        global.side_panel.update_editor_state(state);
+    }
 }
 
 

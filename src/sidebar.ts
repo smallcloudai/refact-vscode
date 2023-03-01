@@ -37,10 +37,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 // case "toolboxSelected": {
                 //     vscode.window.onDidChangeTextEditorSelection((e) => {
                 //         this.check_selection();
-                //     }); 
+                //     });
                 // }
                 case "presetSelected": {
-                    console.log('presetSelected',data.value);
+                    if(vscode.workspace.getConfiguration().get('codify.autoHideSidebar')) {
+                        vscode.commands.executeCommand('workbench.action.toggleSidebarVisibility');
+                    }
+                    console.log('*** presetSelected ***',data);
                     let editor = vscode.window.activeTextEditor;
                     if (!editor) {
                         return;
@@ -113,59 +116,67 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 case "openSettings": {
                     vscode.commands.executeCommand("plugin-vscode.openSettings");
                 }
-                case "checkSelection": {
-                    this.check_selection();
-                    break;
-                }
-                case "checkSelectionDefault": {
-                    this.check_selection_default(data.intent);
-                    break;
-                }
+                // case "checkSelection": {
+                //     this.check_selection();
+                //     break;
+                // }
+                // case "checkSelectionDefault": {
+                //     this.check_selection_default(data.intent);
+                //     break;
+                // }
             }
         });
     }
 
-    public check_selection() {
-        
-        let current_selection = false;
-        let editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return false;
-        }
-        let selection = editor.selection;
-        if( selection) {
-            current_selection = true;
-        }
-        if (selection.isEmpty) {
-            current_selection = false;
-        }
-        console.log('xxxxxxxxxxxxxxxxxxxxxx checking selection',current_selection);
+    public update_editor_state(state: any) {
+        console.log('---------------------___>>> editor state updated');
         this._view!.webview.postMessage({
-            command: "selection",
-            value: current_selection
+            command: "editor_state",
+            value: estate.state_of_editor(state)
         });
     }
 
-    public check_selection_default(intent: string) {
-        
-        let current_selection = false;
-        let editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return false;
-        }
-        let selection = editor.selection;
-        if( selection) {
-            current_selection = true;
-        }
-        if (selection.isEmpty) {
-            current_selection = false;
-        }
-        this._view!.webview.postMessage({
-            command: "selectionDefault",
-            value: current_selection,
-            intent: intent
-        });
-    }
+    // public check_selection() {
+
+    //     let current_selection = false;
+    //     let editor = vscode.window.activeTextEditor;
+    //     if (!editor) {
+    //         return false;
+    //     }
+    //     let selection = editor.selection;
+    //     if( selection) {
+    //         current_selection = true;
+    //     }
+    //     if (selection.isEmpty) {
+    //         current_selection = false;
+    //     }
+    //     console.log('xxxxxxxxxxxxxxxxxxxxxx checking selection',current_selection);
+    //     this._view!.webview.postMessage({
+    //         command: "selection",
+    //         value: current_selection
+    //     });
+    // }
+
+    // public check_selection_default(intent: string) {
+
+    //     let current_selection = false;
+    //     let editor = vscode.window.activeTextEditor;
+    //     if (!editor) {
+    //         return false;
+    //     }
+    //     let selection = editor.selection;
+    //     if( selection) {
+    //         current_selection = true;
+    //     }
+    //     if (selection.isEmpty) {
+    //         current_selection = false;
+    //     }
+    //     this._view!.webview.postMessage({
+    //         command: "selectionDefault",
+    //         value: current_selection,
+    //         intent: intent
+    //     });
+    // }
 
     public update_webview()
     {
@@ -182,6 +193,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             command: "ts2web",
             ts2web_user: global.user_logged_in,
             ts2web_plan: plan_msg,
+            ts2web_metering_balance: global.user_metering_balance,
             longthink_functions: global.longthink_functions_today,
         });
     }
@@ -264,6 +276,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <button tabindex="-1" id="datacollection">Review Data...</button>
                         <div class="sidebar-logged">Account: <b><span></span></b></div>
                         <div class="sidebar-plan"><span></span><button class="sidebar-plan-button">⟳</button></div>
+                        <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
                         <button tabindex="-1" id="profile"><span>🔗</span> Your Account...</button>
@@ -275,7 +288,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 </html>`;
     }
     getNonce() {
-        let text = ""; 
+        let text = "";
         const possible =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for (let i = 0; i < 32; i++) {

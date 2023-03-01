@@ -25,6 +25,7 @@ declare global {
     var streamlined_login_ticket: string;
     var user_logged_in: string;
     var user_active_plan: string;
+    var user_metering_balance: number;
     var global_context: vscode.ExtensionContext|undefined;
     var streamlined_login_countdown: number;
     var current_editor_text_edited_event: vscode.Disposable|undefined;
@@ -256,12 +257,12 @@ export function activate(context: vscode.ExtensionContext)
     }, 60000); // Start with 1 minute, change to 24 hours
 
     context.subscriptions.push(login);
-
     let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
         context.globalState.update('codifyFirstRun', false);
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
         global.user_logged_in = "";
         global.user_active_plan = "";
+        global.user_metering_balance = 0;
         global.status_bar.choose_color();
         if(global.side_panel) {
             global.side_panel.update_webview();

@@ -2,6 +2,7 @@
 (function () {
 	const vscode = acquireVsCodeApi();
 	// let presets = document.querySelectorAll(".presets li");
+    const body = document.querySelector("body");
     const sidebar = document.querySelector("#sidebar");
     const toolbox = document.querySelector(".toolbox");
     const toolboxSearch = document.querySelector("#toolbox-search");
@@ -11,38 +12,242 @@
     let longthink_functions_today;
     let editor_selection = false;
 
+    let history = [
+        'Command 1', //0
+        'Command 2', //1
+        'Command 3'//2
+    ];
+         
+
+    let current_history = history.length;
+    let current_command = 0;
+    let history_mode = false;
+    let command_mode = false;
     toolboxSearch.addEventListener("keyup", ( event ) => {
+        event.preventDefault();
         if(event.target.value !== '') {
             toolboxRun.classList.remove("toolbox-run-disabled");
         }
-        else {
-            toolboxRun.classList.add("toolbox-run-disabled");
-        }
-        if (event.key === "Enter") {   
-            vscode.postMessage({ type: "checkSelectionDefault", intent: event.target.value});
+        // else {
+        //     current_history === history.length;
+        //     current_command = 0;
+        //     toolboxRun.classList.add("toolbox-run-disabled");
+        //     let active = document.querySelector(".item-active");
+        //     if(active) {
+        //         active.classList.remove("item-active");   
+        //     }
+        // }
+        if(event.key === "ArrowUp") {
+            if(!command_mode && !history_mode && current_history !== 0) {
+                event.target.value = history[current_history];
+                toolboxRun.classList.remove("toolbox-run-disabled");
+                history_mode = true;
+            }
+            if(!command_mode && history_mode && current_history !== 0) {
+                current_history--;
+                event.target.value = history[current_history];
+                toolboxRun.classList.remove("toolbox-run-disabled");
+                history_mode = true;
+            }
+            if(command_mode && !history_mode && current_command === 0) {
+                current_command = 0;
+                event.target.value = '';
+                let active = document.querySelector(".item-selected");
+                if(active) {
+                    active.classList.remove("item-selected");   
+                }
+                toolboxRun.classList.add("toolbox-run-disabled");
+                command_mode = false;
+            }
+            if(command_mode && !history_mode && current_command !== 0) {
+                const toolboxItems = document.querySelectorAll(".toolbox-item");
+                const all_visible = Array.from(toolboxItems).filter(child => {
+                    return child.style.display !== 'none';
+                });
+                if(current_command < all_visible.length) {
+                    all_visible[current_command].classList.remove('item-selected');
+                    all_visible[current_command - 1].classList.add('item-selected');
+                    event.target.value = all_visible[current_command - 1].dataset.title;
+                    current_command -= 1;
+                }
+                if(current_command === all_visible.length) {
+                    all_visible[current_command - 1].classList.remove('item-selected');
+                    all_visible[current_command - 2].classList.add('item-selected');
+                    event.target.value = all_visible[current_command - 2].dataset.title;
+                    current_command -= 2;
+                }
+                command_mode = true;
+            }
         }
         if(event.key === "ArrowDown") {
-            const firstBlockChild = Array.from(toolboxList.childNodes).find(child => {
-                return child.style.display !== 'none';
-            });
-            if(firstBlockChild) {
-                toolboxSearch.blur();
-                firstBlockChild.focus();
-                firstBlockChild.classList.add('item-selected');
-                toolboxSearch.value = firstBlockChild.dataset.title;
+            if(!command_mode && history_mode && current_history === (history.length - 1)) {
+                current_history = history.length;
+                event.target.value = '';
+                toolboxRun.classList.add("toolbox-run-disabled");
+                history_mode = false;
             }
-            // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
-            // if(index < toolboxItems.length - 1) {
-            //     toolboxItems[index + 1].focus();
-            // }
+            if(!command_mode && history_mode && current_history < (history.length - 1)) {
+                current_history++;
+                event.target.value = history[current_history];
+                history_mode = true;
+            }
+            if(command_mode && !history_mode && current_command >= 1) {
+                const toolbox_items = document.querySelectorAll(".toolbox-item");
+                const all_visible = Array.from(toolbox_items).filter(child => {
+                    return child.style.display !== 'none';
+                });
+                if(current_command < all_visible.length) {
+                    if (current_command > 0) {
+                        all_visible[current_command - 1].classList.remove('item-selected');
+                    }
+                    all_visible[current_command].classList.add('item-selected');
+                    event.target.value = all_visible[current_command].dataset.title;
+                    current_command += 1;
+                }
+                command_mode = true;
+            }
+            if(!command_mode && !history_mode) {
+                const toolbox_items = document.querySelectorAll(".toolbox-item");
+                const all_visible = Array.from(toolbox_items).filter(child => {
+                    return child.style.display !== 'none';
+                });
+                if(current_command < all_visible.length) {
+                    if (current_command > 0) {
+                        all_visible[current_command - 1].classList.remove('item-selected');
+                    }
+                    all_visible[current_command].classList.add('item-selected');
+                    event.target.value = all_visible[current_command].dataset.title;
+                    current_command += 1;
+                }
+                command_mode = true;
+            } 
         }
-        if(event.key === "ArrowUp") {
-            // history
-            // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
-            // if(index < toolboxItems.length - 1) {
-            //     toolboxItems[index - 1].focus();
-            // }
-        }
+
+        body.addEventListener("keyup", (event) => {
+            if(event.key === "Enter") {
+                let selected = document.querySelector(".item-selected");
+                let active = document.querySelector(".item-active");
+                if(!selected && event.target.value !== '') {
+                    history.push(event.target.value);
+                    // vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
+                }
+                if(selected) {
+                    selected.classList.add("item-active");
+                }
+                if(active) {
+                    vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
+                }
+            }
+            if(event.key === "Escape") {
+                event.preventDefault();
+                let active = document.querySelector(".item-active");
+                if(active) {
+                    active.classList.remove("item-active");
+                }
+            }
+        });
+
+        // console.log('sidebar event',event);
+        // if(event.target.className === 'toolbox-search' && event.target.value !== '') {
+        //     toolboxRun.classList.remove("toolbox-run-disabled");
+        // }
+        // else {
+        //     history_index === history.length;
+        //     toolboxRun.classList.add("toolbox-run-disabled");
+        //     let active = document.querySelector(".item-active");
+        //     if(active) {
+        //         active.classList.remove("item-active");   
+        //     }
+        // }
+        // if(event.target.className === 'toolbox-search') {
+        //     if(event.key === "ArrowDown") {
+        //         console.log('ArrowDown',history_index);
+        //         if(history_index === history.length) {
+        //             history_index === history.length;
+        //             console.log('ArrowDown on items ----------------------------->');
+        //             const toolboxItems = document.querySelectorAll(".toolbox-item");
+        //             const allVisible = Array.from(toolboxItems).filter(child => {
+        //                 return child.style.display !== 'none';
+        //             });
+                    
+        //             if (currentIndex < allVisible.length) {
+        //                 if (currentIndex >= 0) {
+        //                     allVisible[currentIndex].classList.remove('item-selected');
+        //                 }
+        //                 currentIndex += 1;
+        //                 allVisible[currentIndex].classList.add('item-selected');
+        //             }
+        //             console.log('allVisible',allVisible);
+        //             // if(firstBlockChild) {
+        //             //     firstBlockChild.classList.add('item-selected');
+        //             //     toolboxSearch.value = firstBlockChild.dataset.title;
+        //             // }
+        //         }
+        //         else {
+        //             history_index++;
+        //             event.target.value = history[history_index];
+        //         }
+        //         // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
+        //         // if(index < toolboxItems.length - 1) {
+        //         //     toolboxItems[index + 1].focus();
+        //         // }
+        //     }
+        //     if(event.key === "ArrowUp") {
+        //         if(history_index >= 1) {
+        //             history_index--;
+        //             event.target.value = history[history_index];
+        //         }
+        //     }
+        // }
+        // if(event.target.className === 'toolbox-item') {
+        //     if(event.key === "Enter") {
+        //         vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
+        //     }
+        //     if(event.key === "ArrowDown") {
+        //         console.log('ArrowDown on items ----------------------------->');
+        //     }
+        //     if(event.key === "ArrowUp") {
+        //         console.log('ArrowUp on items ----------------------------->');
+        //     }
+        // }
+        // if(event.key === "Enter") {   
+        //     vscode.postMessage({ type: "checkSelectionDefault", intent: event.target.value});
+        // }
+        
+        // if(event.key === "ArrowDown") {
+        //     console.log('ArrowDown',history_index);
+        //     if(history_index === history.length - 1) {
+        //         history_index === history.length;
+        //         const firstBlockChild = Array.from(toolboxList.childNodes).find(child => {
+        //             return child.style.display !== 'none';
+        //         });
+        //         if(firstBlockChild) {
+        //             toolboxSearch.blur();
+        //             firstBlockChild.focus();
+        //             firstBlockChild.classList.add('item-selected');
+        //             toolboxSearch.value = firstBlockChild.dataset.title;
+        //         }
+        //     }
+        //     else {
+        //         history_index++;
+        //         event.target.value = history[history_index];
+        //     }
+        //     // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
+        //     // if(index < toolboxItems.length - 1) {
+        //     //     toolboxItems[index + 1].focus();
+        //     // }
+        // }
+        // if(event.key === "ArrowUp") {
+        //     if(history_index >= 1) {
+        //         history_index--;
+        //         event.target.value = history[history_index];
+        //     }
+        //     // history
+        //     // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
+        //     // if(index < toolboxItems.length - 1) {
+        //     //     toolboxItems[index - 1].focus();
+        //     // }
+        // }
     });
 
     toolboxRun.addEventListener("click", ( event ) => {
@@ -86,20 +291,6 @@
         }
     });
 
-    toolbox.addEventListener("keyup",(event) => {
-        if(event.key === "ArrowUp") {
-            if (event.target && event.target.classList.contains("toolbox-item")) {
-                event.target.blur();
-                toolboxItems[toolboxIndex - 1].focus();
-            }
-        }
-        if(event.key === "ArrowDown") {
-            if (event.target && event.target.classList.contains("toolbox-item")) {
-                event.target.blur();
-                toolboxItems[toolboxIndex + 1].focus();
-            }
-        }
-    });
 
     // const quickInput = document.querySelector("#quickinput");
 
@@ -221,6 +412,7 @@
         toolboxList.innerHTML = '';
         keys.forEach((key) => {
             let item = data[key];
+            render_function(data[key]);
             const toolboxItem = document.createElement("div");
             const header = document.createElement("div");
             const body = document.createElement("div");
@@ -228,9 +420,12 @@
             const backButton = document.createElement('button');
             const content = document.createElement("div");
             const bookmark = document.createElement("div");
+            const bookmark_icon = document.createElement("i");
+            const bookmark_button = document.createElement("button");
+            const bookmark_button_icon = document.createElement("i");
             const likes_span = document.createElement("span");
             const likes_icon = document.createElement("i");
-            const bookmark_icon = document.createElement("i");
+            const likes_button = document.createElement("button");
             const body_controls = document.createElement("div");
             const label_wrapper = document.createElement("span");
             const selection_notice = document.createElement("div");
@@ -251,15 +446,16 @@
             }
             if(item.is_bookmarked) {
                 bookmark_icon.classList.add("toolbox-bookmark-checked");
-            } else {
-                bookmark_icon.classList.add("toolbox-bookmark-unchecked");
             }
             body.classList.add("toolbox-body");
             bookmark.classList.add("toolbox-bookmark");
+            bookmark_button.classList.add("toolbox-bookmark-button");
+            likes_button.classList.add("toolbox-likes-button");
             backButton.classList.add('toolbox-back');
             body_controls.classList.add('toolbox-controls');
+            content.classList.add('toolbox-content');
             selection_notice.classList.add('toolbox-notice');
-            selection_notice.innerHTML = `Please select code to run this function.`;
+            selection_notice.innerHTML = `Please select code first.`;
             label_wrapper.innerHTML = item.label;
             header.appendChild(label_wrapper);
             toolboxItem.id = key;
@@ -271,12 +467,22 @@
             likes.appendChild(likes_icon);
             likes.appendChild(likes_span);
             bookmark.appendChild(bookmark_icon);
+
             let likes2 = likes.cloneNode(true);
             let bookmark2 = bookmark.cloneNode(true);
-            header.appendChild(likes);
+            if(item.third_party === 1) {
+                for(let i = 1; i <= item.metering; i++) {
+                    const third_party_icon = document.createElement("i");
+                    third_party_icon.classList.add("toolbox-third-party");
+                    header.appendChild(third_party_icon);
+                }
+            }
             header.appendChild(bookmark);
-            body_controls.appendChild(likes2);
-            body_controls.appendChild(bookmark2);
+            header.appendChild(likes);
+            likes_button.appendChild(likes2);
+            bookmark_button.appendChild(bookmark2);
+            body_controls.appendChild(likes_button);
+            body_controls.appendChild(bookmark_button);
             body.appendChild(backButton);
             body.appendChild(selection_notice);
             body.appendChild(body_controls);
@@ -285,6 +491,14 @@
             toolboxItem.appendChild(body);
             toolboxList.appendChild(toolboxItem);
         });
+    }
+
+    function render_function(item) {
+
+    }
+
+    function render_bookmarks() {
+
     }
 
     function search_filter() {
@@ -379,6 +593,17 @@
                 }
             }
             break;
+        case "editor_state":
+            let state = message.value;
+            console.log('((((((((((((((((((((( state )))))))))))))))))))))',state);
+            // if(editor_selection) {
+            //     toolboxRun.classList.remove("toolbox-run-disabled");
+            //     let notice = document.querySelector(".item-active .toolbox-notice");
+            //     if(notice) {
+            //         notice.classList.add('toolbox-notice-hidden');
+            //     }
+            // }
+            break;
         case "focus":
             toolboxSearch.focus();
             break;
@@ -386,6 +611,7 @@
         case "ts2web":
             let info = document.querySelector('.sidebar-logged');
             let plan = document.querySelector('.sidebar-plan');
+            let coins = document.querySelector('.sidebar-coins');
             let login = document.querySelector('#login');
             let profile = document.querySelector('#profile');
             let data = document.querySelector('#datacollection');
@@ -404,6 +630,11 @@
             profile.style.display = message.ts2web_user ? 'block' : 'none';
             logout.style.display = message.ts2web_user ? 'block' : 'none';
             data.style.display = message.ts2web_user ? 'block' : 'none';
+            coins.style.display = message.ts2web_user ? 'flex' : 'none';
+            
+            if(message.ts2web_metering_balance) {
+                document.querySelector('.sidebar-coins span').innerHTML = message.ts2web_metering_balance / 1000;
+            }
             
             // regHeader.style.display = 'none';
             // regList.style.display = 'none';
