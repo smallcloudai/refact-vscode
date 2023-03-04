@@ -24,7 +24,7 @@ export class ChatTab {
         );
     }
 
-    public static render(context: any) {
+    public static render(context: any, question: string) {
         const panel = vscode.window.createWebviewPanel(
             "codify-chat-tab",
             "Codify Chat",
@@ -33,37 +33,19 @@ export class ChatTab {
                 enableScripts: true,
             }
         );
-        // panel.iconPath = vscode.Uri.joinPath(
-        //     context.extensionUri,
-        //     "images",
-        //     "logo-small.png"
-        // );
 
         ChatTab.currentPanel = new ChatTab(panel, context.extensionUri, context);
+        const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
+        this.update_chat(panel, question_clean);
 
-
-        // panel.webview.onDidReceiveMessage((data) => {
-		// 	switch (data.type) {
-		// 		case "globalDefault": {
-        //             chat.set_global_access(Number(data.value));
-        //             this.update_webview(panel);
-        //             break;
-		// 		}
-		// 		case "deleteOverride": {
-        //             // console.log(data);
-        //             privacy.delete_access_override(data.value);
-        //             this.update_webview(panel);
-        //             break;
-		// 		}
-		// 		case "selectOverride": {
-        //             privacy.set_access_override(data.value[0], Number(data.value[1]));
-        //             // this.update_webview(panel);
-        //             break;
-		// 		}
-		// 	}
-		// });
-        // panel.webview.postMessage({ command: "rules", value: this.rules });
-        // this.update_webview(panel);
+        panel.webview.onDidReceiveMessage((data) => {
+			switch (data.type) {
+				case "chat-message": {
+                    this.update_chat(panel, data.value);
+                    break;
+				}
+			}
+		});
     }
 
     public dispose() {
@@ -79,20 +61,16 @@ export class ChatTab {
         }
     }
 
-    // static update_webview(panel: vscode.WebviewPanel) {
-    //     console.log('--------------------------> update webview');
-    //     if(!panel) {
-    //         return false;
-    //     }
-    //     let accessDefaults = privacy.get_global_access();
-    //     accessDefaults.then((defaults) => {
-    //         panel.webview.postMessage({ command: "defaults", value: defaults });
-    //     });
-    //     let accessOverrides = privacy.get_access_overrides();
-    //     accessOverrides.then((overrides) => {
-    //         panel.webview.postMessage({ command: "overrides", value: overrides });
-    //     });
-    // }
+    static update_chat(panel: vscode.WebviewPanel, question: string) {
+        if(!panel) {
+            return false;
+        }
+        const data = {
+            question: question,
+            answer: "42",
+        };
+        panel.webview.postMessage({ command: "chat-incoming", value: data});
+    }
 
     static getHtmlForWebview(webview: vscode.Webview, extensionUri: any, cnt: any): string {
         const scriptUri = webview.asWebviewUri(
@@ -101,7 +79,6 @@ export class ChatTab {
         const styleMainUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
         );
-
 
         const nonce = ChatTab.getNonce();
 
@@ -116,12 +93,20 @@ export class ChatTab {
                 <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                <title>Your Privacy Rules</title>
+                <title>Codify Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <h1 class="codify-privacy__title">Codify Chat</h1>
-                
+                <div class="codify-chat">
+                    <h1 class="codify-chat__title">Codify Chat</h1>
+                    <div class="codify-chat__content">
+                    </div>
+                    <div class="codify-chat__commands">
+                        <textarea id="chat-input" class="codify-chat__input"></textarea>
+                        <button id="chat-send" class="codify-chat__button">▷</button>
+                    </div>
+                </div>
+
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;

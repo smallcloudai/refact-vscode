@@ -243,7 +243,7 @@
             let active = document.querySelector(".item-active");
             if(event.target.classList.contains('toolbox-search') && event.target.value !== '' && event.target.value.endsWith("?")) {
                 history.push(event.target.value);
-                vscode.postMessage({ type: "runChat"});    
+                vscode.postMessage({ type: "runChat", value: event.target.value});    
                 return;
             }
             if(!selected && toolboxSearch.value !== '') {

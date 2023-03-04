@@ -40,7 +40,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 //     });
                 // }
                 case "runChat": {
-                    vscode.commands.executeCommand('plugin-vscode.codifyChatTab');
+                    vscode.commands.executeCommand('plugin-vscode.codifyChatTab', data.value);
                     break;
                 }
                 case "presetSelected": {

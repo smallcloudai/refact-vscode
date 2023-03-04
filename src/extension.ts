@@ -277,8 +277,8 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(privacySettingsPage);
 
 
-    let chatTabPage = vscode.commands.registerCommand('plugin-vscode.codifyChatTab', () => {
-        ChatTab.render(context);
+    let chatTabPage = vscode.commands.registerCommand('plugin-vscode.codifyChatTab', (value) => {
+        ChatTab.render(context, value);
     });
     context.subscriptions.push(chatTabPage);
 

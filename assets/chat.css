@@ -1,0 +1,60 @@
+body.vscode-light {
+	--color: #000;
+    --secondary: rgba(0,0,0,0.5);
+    --dark: rgba(0,0,0,0.7);
+    --light: rgba(0,0,0,0.1);
+}
+body {
+    overflow: hidden;
+    box-sizing: border-box;
+}
+body.vscode-dark {
+	--color: #FFF;
+    --secondary: rgba(255,255,255,0.5);
+    --dark: rgba(255,255,255,0.7);
+    --light: rgba(255,255,255,0.1);
+}
+.codify-chat {
+    max-width: 900px;
+    box-sizing: border-box;
+}
+.codify-chat__item {
+    margin-bottom: 30px;
+}
+.codify-chat__question {
+    background-color: var(--light);
+    padding: 10px;
+}
+.codify-chat__answer {
+    margin-top: 10px;
+}
+.codify-chat__commands  {
+    margin-top: 30px;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.codify-chat__input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--secondary);
+    padding: 10px;
+    background: transparent !important;
+    color: var(--secodary) !important;
+    font-family: sans-serif !important;
+    font-size: 14px;
+}
+
+.codify-chat__button {
+    position: absolute;
+    bottom: 3px;
+    right: 0px;
+    width: 30px;
+    height: 30px;
+    border: none !important;
+    cursor: pointer;
+    box-sizing: border-box;
+    color: var(--secodary) !important;
+    background: transparent !important;
+    z-index: 999 !important;
+}
