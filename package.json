@@ -89,7 +89,7 @@
 					"description": "For self-hosted inference, set the URL to your inference server, for example http://127.0.0.1:8008/\nLeave blank otherwise.",
 					"default": ""
 				},
-                "codify.autoHideSidebar": {
+				"codify.autoHideSidebar": {
 					"type": "boolean",
 					"description": "Auto hide sidebar after function execution.",
 					"default": false
@@ -233,42 +233,41 @@
 					"fontCharacter": "\\e899"
 				}
 			},
-            "codify-bookmark-unchecked": {
+			"codify-bookmark-unchecked": {
 				"description": "codify bookmark unchecked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\801"
 				}
 			},
-            "codify-bookmark-checked": {
+			"codify-bookmark-checked": {
 				"description": "codify bookmark checked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e800"
 				}
 			},
-            "codify-like": {
+			"codify-like": {
 				"description": "codify like",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\808"
 				}
 			},
-            "codify-life-checked": {
+			"codify-life-checked": {
 				"description": "codify like checked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\807"
 				}
 			},
-            "codify-coin": {
+			"codify-coin": {
 				"description": "codify coin",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\802"
 				}
 			}
-            
 		}
 	},
 	"scripts": {
@@ -283,6 +282,7 @@
 		"esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
 	},
 	"dependencies": {
+		"@types/marked": "^4.0.8",
 		"diff": "^5.1.0",
 		"fetch-h2": "^3.0.2"
 	},

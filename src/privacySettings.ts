@@ -129,29 +129,8 @@ export class PrivacySettings {
         const nonce = PrivacySettings.getNonce();
         const trash_icon = `$(trash)`;
 
-        const rules = [
-            {
-                "value": 0,
-                "name": "Level 0",
-                "short_description": "Turn off",
-                "long_description": "Paranoid mode, Codify has no access to your files.",
-
-            },
-            {
-                "value": 1,
-                "name": "Level 1",
-                "short_description": "Codify can read your files, but only uses AI models hosted at Codify",
-                "long_description": "Data will be sent to Codify servers only. We don't collect datasets on the server side.",
-            },
-            {
-                "value": 2,
-                "name": "Level 2",
-                "short_description": "Codify can use any model, including 3rd party",
-                "long_description": "Data could be sent also to a 3rd party model.",
-            },
-        ];
-
         let items = '';
+        const rules = PrivacySettings.rules;
         for (let i = 0; i < rules.length; i++) {
             items += `
                 <div class="codify-privacy__item">

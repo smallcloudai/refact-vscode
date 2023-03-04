@@ -16,6 +16,7 @@ import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
+import { ChatTab } from './chatTab';
 import { Mode } from "./estate";
 
 
@@ -274,6 +275,12 @@ export function activate(context: vscode.ExtensionContext)
         PrivacySettings.render(context);
     });
     context.subscriptions.push(privacySettingsPage);
+
+
+    let chatTabPage = vscode.commands.registerCommand('plugin-vscode.codifyChatTab', () => {
+        ChatTab.render(context);
+    });
+    context.subscriptions.push(chatTabPage);
 
     context.subscriptions.push(logout);
     context.subscriptions.push(...statusBar.status_bar_init());

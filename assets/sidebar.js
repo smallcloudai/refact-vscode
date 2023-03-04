@@ -28,6 +28,15 @@
         if(event.target.value !== '') {
             toolboxRun.classList.remove("toolbox-run-disabled");
         }
+        if(event.target.value === '') {
+            toolboxRun.classList.add("toolbox-run-disabled");
+            if(document.querySelector('item-selected')) {
+                document.querySelector('item-selected').classList.remove('item-selected');
+            }
+            if(document.querySelector('item-active')) {
+                document.querySelector('item-active').classList.remove('item-active');
+            }
+        }
         // else {
         //     current_history === history.length;
         //     current_command = 0;
@@ -79,7 +88,7 @@
                 command_mode = true;
             }
         }
-        if(event.key === "ArrowDown") {
+        if(event.target.classList.contains('toolbox-search') && event.key === "ArrowDown") {
             if(!command_mode && history_mode && current_history === (history.length - 1)) {
                 current_history = history.length;
                 event.target.value = '';
@@ -122,30 +131,6 @@
                 command_mode = true;
             } 
         }
-
-        body.addEventListener("keyup", (event) => {
-            if(event.key === "Enter") {
-                let selected = document.querySelector(".item-selected");
-                let active = document.querySelector(".item-active");
-                if(!selected && event.target.value !== '') {
-                    history.push(event.target.value);
-                    // vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
-                }
-                if(selected) {
-                    selected.classList.add("item-active");
-                }
-                if(active) {
-                    vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
-                }
-            }
-            if(event.key === "Escape") {
-                event.preventDefault();
-                let active = document.querySelector(".item-active");
-                if(active) {
-                    active.classList.remove("item-active");
-                }
-            }
-        });
 
         // console.log('sidebar event',event);
         // if(event.target.className === 'toolbox-search' && event.target.value !== '') {
@@ -248,6 +233,36 @@
         //     //     toolboxItems[index - 1].focus();
         //     // }
         // }
+    });
+
+
+    body.addEventListener("keyup", (event) => {
+        event.preventDefault();
+        if(event.key === "Enter") {
+            let selected = document.querySelector(".item-selected");
+            let active = document.querySelector(".item-active");
+            if(event.target.classList.contains('toolbox-search') && event.target.value !== '' && event.target.value.endsWith("?")) {
+                history.push(event.target.value);
+                vscode.postMessage({ type: "runChat"});    
+                return;
+            }
+            if(!selected && toolboxSearch.value !== '') {
+                vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
+            }
+            if(selected) {
+                selected.classList.add("item-active");
+            }
+            if(active) {
+                vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
+            }
+        }
+        if(event.key === "Escape" && document.querySelector(".item-active")){
+            event.preventDefault();
+            let active = document.querySelector(".item-active");
+            if(active) {
+                active.classList.remove("item-active");
+            }
+        }
     });
 
     toolboxRun.addEventListener("click", ( event ) => {
@@ -391,6 +406,7 @@
             }
             data[key] = bookmark;
         });
+        console.log('xxxxxxxxxxxxxxxxxxx',data);
         return data;
     }
 
@@ -412,64 +428,101 @@
         toolboxList.innerHTML = '';
         keys.forEach((key) => {
             let item = data[key];
-            render_function(data[key]);
-            const toolboxItem = document.createElement("div");
-            const header = document.createElement("div");
-            const body = document.createElement("div");
-            const likes = document.createElement("div");
-            const backButton = document.createElement('button');
-            const content = document.createElement("div");
-            const bookmark = document.createElement("div");
-            const bookmark_icon = document.createElement("i");
-            const bookmark_button = document.createElement("button");
-            const bookmark_button_icon = document.createElement("i");
-            const likes_span = document.createElement("span");
-            const likes_icon = document.createElement("i");
-            const likes_button = document.createElement("button");
-            const body_controls = document.createElement("div");
-            const label_wrapper = document.createElement("span");
-            const selection_notice = document.createElement("div");
+            // render_function(data[key]);
 
-            toolboxItem.classList.add("toolbox-item");
+            const toolbox_item = document.createElement("div");
+            toolbox_item.classList.add("toolbox-item");
             if(item.catch_all_hl === 0 && item.catch_all_selection === 0) {
-                toolboxItem.classList.add("toolbox-filter");
+                toolbox_item.classList.add("toolbox-filter");
             }
             else {
-                toolboxItem.classList.add("toolbox-static");
+                toolbox_item.classList.add("toolbox-static");
             }
+            toolbox_item.id = key;
+            toolbox_item.dataset.title = item.label;
+            toolbox_item.dataset.function = JSON.stringify(item);
+            
+            const header = document.createElement("div");
             header.classList.add("toolbox-header");
+            const body = document.createElement("div");
+            body.classList.add("toolbox-body");
+            // likes
+            const likes = document.createElement("div");
             likes.classList.add("toolbox-likes");
+            const likes_span = document.createElement("span");
+            const likes_icon = document.createElement("i");
+            likes_span.innerHTML = item.likes;
+            // bookmark
+            const bookmark = document.createElement("div");
+            bookmark.classList.add("toolbox-bookmark");
+            const bookmark_icon = document.createElement("i");
             if(item.is_liked > 0) {
-                likes_icon.classList.add("toolbox-like-checked");
+                likes_icon.classList.add("toolbox-like");
             } else {
-                likes_icon.classList.add("toolbox-like-unchecked");
+                likes_icon.classList.add("toolbox-like-empty");
             }
             if(item.is_bookmarked) {
-                bookmark_icon.classList.add("toolbox-bookmark-checked");
+                bookmark_icon.classList.add("toolbox-mark");
             }
-            body.classList.add("toolbox-body");
-            bookmark.classList.add("toolbox-bookmark");
-            bookmark_button.classList.add("toolbox-bookmark-button");
-            likes_button.classList.add("toolbox-likes-button");
+
+            // back
+            const backButton = document.createElement('button');
             backButton.classList.add('toolbox-back');
-            body_controls.classList.add('toolbox-controls');
+            backButton.innerText = '← Back';
+
+            // content
+            const content = document.createElement("div");
             content.classList.add('toolbox-content');
+            content.innerHTML = item.mini_html;
+            
+            // const likes_button = document.createElement("button");
+            // likes_button.classList.add("toolbox-likes-button");
+            
+            
+            const bookmark_button = document.createElement("button");
+            bookmark_button.classList.add("toolbox-bookmark-button");
+            const third_party = document.createElement("i");
+            third_party.classList.add("toolbox-third-party");
+            const bookmark_button_icon = document.createElement("i");
+            bookmark_button_icon.classList.add("toolbox-mark");
+            if(item.is_bookmarked) {
+                bookmark_button_icon.classList.add("toolbox-mark");
+            }
+            else {
+            }
+            const likes_button = document.createElement("button");
+            likes_button.classList.add("toolbox-likes-button");
+            const likes_button_icon = document.createElement("i");
+            if(item.is_liked > 0) {
+                likes_button_icon.classList.add("toolbox-like");
+            } else {
+                likes_button_icon.classList.add("toolbox-like-empty");
+            }
+            likes_button.appendChild(likes_button_icon);
+            const likes_count = document.createElement("span");
+            likes_count.innerHTML = item.likes;
+            likes_button.appendChild(likes_count);
+
+            const body_controls = document.createElement("div");
+            body_controls.classList.add('toolbox-controls');
+            body_controls.appendChild(third_party);
+            body_controls.appendChild(likes_button);
+            body_controls.appendChild(bookmark_button);
+            
+            
+            // function label
+            const label_wrapper = document.createElement("span");
+            label_wrapper.innerHTML = item.label;
+            // selection notice
+            const selection_notice = document.createElement("div");
             selection_notice.classList.add('toolbox-notice');
             selection_notice.innerHTML = `Please select code first.`;
-            label_wrapper.innerHTML = item.label;
-            header.appendChild(label_wrapper);
-            toolboxItem.id = key;
-            toolboxItem.dataset.title = item.label;
-            toolboxItem.dataset.function = JSON.stringify(item);
-            likes_span.innerHTML = item.likes;
-            content.innerHTML = item.mini_html;
-            backButton.innerText = '← Back';
+
             likes.appendChild(likes_icon);
             likes.appendChild(likes_span);
             bookmark.appendChild(bookmark_icon);
 
-            let likes2 = likes.cloneNode(true);
-            let bookmark2 = bookmark.cloneNode(true);
+            header.appendChild(label_wrapper);
             if(item.third_party === 1) {
                 for(let i = 1; i <= item.metering; i++) {
                     const third_party_icon = document.createElement("i");
@@ -479,17 +532,16 @@
             }
             header.appendChild(bookmark);
             header.appendChild(likes);
-            likes_button.appendChild(likes2);
-            bookmark_button.appendChild(bookmark2);
-            body_controls.appendChild(likes_button);
-            body_controls.appendChild(bookmark_button);
+
             body.appendChild(backButton);
             body.appendChild(selection_notice);
             body.appendChild(body_controls);
             body.appendChild(content);
-            toolboxItem.appendChild(header);
-            toolboxItem.appendChild(body);
-            toolboxList.appendChild(toolboxItem);
+
+            toolbox_item.appendChild(header);
+            toolbox_item.appendChild(body);
+
+            toolboxList.appendChild(toolbox_item);
         });
     }
 

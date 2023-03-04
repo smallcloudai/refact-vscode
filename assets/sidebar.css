@@ -335,7 +335,7 @@ body.vscode-light #logout {
     padding: 3px 0px;
     cursor: pointer;
 }
-.toolbox-header span {
+.toolbox-header > span {
     margin-right: auto;
 }
 .toolbox-header:hover {
@@ -344,97 +344,101 @@ body.vscode-light #logout {
 .toolbox-likes {
     font-weight: bold;
     font-size: 13px;
-    width: 30px;
-    display: block;
+    display: flex;
+    align-items: center;
     text-align: right;
     font-family: 'Courier New', Courier, monospace;
     line-height: 13px;
+    height: 16px;
+}
+.toolbox-likes span {
+    display: block;
+    margin-left: 2px;
 }
 .toolbox-third-party {
     margin-left: 0px;
 }
 .toolbox-third-party::before {
     content: "\e802";
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-family: "codify";
     font-style: normal;
     font-weight: normal;
-    display: inline-flex;
     text-decoration: inherit;
-    width: 0.7em;
-    margin-right: .2em;
-    text-align: center;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1em;
-    margin-left: .2em;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-.toolbox-bookmark {
-    /* margin-left: 5px; */
-}
-.toolbox-bookmark-checked::before {
-    margin: 0 5px;
+.toolbox-mark::before {
     content: "\e800";
+    color: red !important;
     font-family: "codify";
     font-style: normal;
     font-weight: normal;
-    display: inline-block;
     text-decoration: inherit;
     /* margin-right: .2em; */
-    text-align: center;
     font-variant: normal;
     text-transform: none;
-    /* margin-left: .2em; */
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-.toolbox-bookmark-unchecked::before {
+.toolbox-mark-empty::before {
     margin: 0 5px;
     content: "\e801";
+    color: red !important;
+    background: lime !important;
     font-family: "codify";
     font-style: normal;
     font-weight: normal;
-    display: inline-block;
     text-decoration: inherit;
-    text-align: center;
     font-variant: normal;
     text-transform: none;
-    line-height: 1em;
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-.toolbox-like-checked::before {
+.toolbox-like::before {
     content: "\e807";
     font-family: "codify";
     font-style: normal;
     font-weight: normal;
-    display: inline-block;
     text-decoration: inherit;
-    width: 1em;
-    margin-right: .2em;
     text-align: center;
     font-variant: normal;
     text-transform: none;
-    line-height: 1em;
-    margin-left: .2em;
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
-.toolbox-like-unchecked::before {
+.toolbox-like-empty::before {
     content: "\e808";
     font-family: "codify";
     font-style: normal;
     font-weight: normal;
-    display: inline-block;
     text-decoration: inherit;
-    width: 1em;
-    margin-right: .2em;
-    text-align: center;
     font-variant: normal;
     text-transform: none;
-    line-height: 1em;
-    margin-left: .2em;
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -485,18 +489,19 @@ body.vscode-light #logout {
     padding: 4px 6px;
     cursor: pointer;
     height: 20px;
-    margin-left: 4px;
-    justify-content: center;
-    text-align: center;
 }
 .toolbox-likes-button {
-    display: flex;
     background: var(--secondary) !important;
     border: 0 !important;
     color: var(--vscode-editorWidget-background) !important;
     padding: 4px 6px;
     cursor: pointer;
     height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: 0 10px;
 }
 .item-active {
 

@@ -39,6 +39,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 //         this.check_selection();
                 //     });
                 // }
+                case "runChat": {
+                    vscode.commands.executeCommand('plugin-vscode.codifyChatTab');
+                    break;
+                }
                 case "presetSelected": {
                     if(vscode.workspace.getConfiguration().get('codify.autoHideSidebar')) {
                         vscode.commands.executeCommand('workbench.action.toggleSidebarVisibility');
