@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as chat from "./chat";
+// import * as chat from "./chat";
+import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
+
 
 type Rule = {
     value: number;
@@ -74,6 +76,10 @@ export class ChatTab {
         setTimeout(() => {
             panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "4210"}});
         }, 1000);
+        setTimeout(() => {
+            const html = marked.parse('# Marked in Node.js\n\nRendered by **marked**. Question originally asked: ' + question + '.');
+            panel.webview.postMessage({ command: "chat-post-answer", value: {answer: html}});
+        }, 2000);
     }
 
     static get_html_for_webview(

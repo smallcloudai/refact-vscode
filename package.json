@@ -284,7 +284,8 @@
 	"dependencies": {
 		"@types/marked": "^4.0.8",
 		"diff": "^5.1.0",
-		"fetch-h2": "^3.0.2"
+		"fetch-h2": "^3.0.2",
+		"marked": "^4.0.8"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.2.0",

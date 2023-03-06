@@ -7,7 +7,16 @@
 
     chat_send_button.addEventListener('click', () => {
         const message = chat_input.value;
+        chat_input.value = '';
         vscode.postMessage({ type: "question-posted-within-tab", value: message});
+    });
+
+    chat_input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && event.shiftKey === false) {
+            event.preventDefault();
+            chat_send_button.click();
+            return true;
+        }
     });
 
     var last_answer_div = null;
