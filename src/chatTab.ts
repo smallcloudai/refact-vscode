@@ -11,23 +11,25 @@ type Rule = {
 
 export class ChatTab {
     public static currentPanel: ChatTab | undefined;
-    private _editor = vscode.window.activeTextEditor;
+    // private _editor = vscode.window.activeTextEditor;
     public static _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
 
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any) {
+    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
+    {
         ChatTab._panel = panel;
-        ChatTab._panel.webview.html = ChatTab.getHtmlForWebview(
+        ChatTab._panel.webview.html = ChatTab.get_html_for_webview(
             ChatTab._panel.webview,
             extensionUri,
             context
         );
     }
 
-    public static render(context: any, question: string) {
+    public static activate_from_outside(context: any, question: string)
+    {
         const panel = vscode.window.createWebviewPanel(
             "codify-chat-tab",
-            "Codify Chat",
+            "Codify Chat BBB",
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -36,19 +38,20 @@ export class ChatTab {
 
         ChatTab.currentPanel = new ChatTab(panel, context.extensionUri, context);
         const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
-        this.update_chat(panel, question_clean);
+        this.chat_post_question(panel, question_clean);
 
         panel.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
-				case "chat-message": {
-                    this.update_chat(panel, data.value);
+				case "question-posted-within-tab": {
+                    this.chat_post_question(panel, data.value);
                     break;
 				}
 			}
 		});
     }
 
-    public dispose() {
+    public dispose()
+    {
         ChatTab.currentPanel = undefined;
 
         ChatTab._panel.dispose();
@@ -61,7 +64,8 @@ export class ChatTab {
         }
     }
 
-    static update_chat(panel: vscode.WebviewPanel, question: string) {
+    static chat_post_question(panel: vscode.WebviewPanel, question: string)
+    {
         if(!panel) {
             return false;
         }
@@ -69,10 +73,16 @@ export class ChatTab {
             question: question,
             answer: "42",
         };
-        panel.webview.postMessage({ command: "chat-incoming", value: data});
+        panel.webview.postMessage({ command: "chat-post-question", value: data});
+        panel.webview.postMessage({ command: "chat-post-answer", value: data});
     }
 
-    static getHtmlForWebview(webview: vscode.Webview, extensionUri: any, cnt: any): string {
+    static get_html_for_webview(
+        webview: vscode.Webview,
+        extensionUri: any,
+        cnt: any
+    ): string
+    {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "chat.js")
         );
@@ -93,12 +103,12 @@ export class ChatTab {
                 <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                <title>Codify Chat</title>
+                <title>Codify Chat AAA</title>
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
                 <div class="codify-chat">
-                    <h1 class="codify-chat__title">Codify Chat</h1>
+                    <h1 class="codify-chat__title">Codify Chat CCC</h1>
                     <div class="codify-chat__content">
                     </div>
                     <div class="codify-chat__commands">
@@ -112,7 +122,8 @@ export class ChatTab {
             </html>`;
     }
 
-    static getNonce() {
+    static getNonce()
+    {
         let text = "";
         const possible =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

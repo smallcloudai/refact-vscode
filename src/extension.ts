@@ -278,7 +278,7 @@ export function activate(context: vscode.ExtensionContext)
 
 
     let chatTabPage = vscode.commands.registerCommand('plugin-vscode.codifyChatTab', (value) => {
-        ChatTab.render(context, value);
+        ChatTab.activate_from_outside(context, value);
     });
     context.subscriptions.push(chatTabPage);
 
