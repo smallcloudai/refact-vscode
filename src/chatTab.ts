@@ -69,12 +69,11 @@ export class ChatTab {
         if(!panel) {
             return false;
         }
-        const data = {
-            question: question,
-            answer: "42",
-        };
-        panel.webview.postMessage({ command: "chat-post-question", value: data});
-        panel.webview.postMessage({ command: "chat-post-answer", value: data});
+        panel.webview.postMessage({ command: "chat-post-question", value: {question: question}});
+        panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "42"}});
+        setTimeout(() => {
+            panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "4210"}});
+        }, 1000);
     }
 
     static get_html_for_webview(
