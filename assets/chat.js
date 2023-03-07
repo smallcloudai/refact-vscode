@@ -16,7 +16,6 @@
         vscode.postMessage({ type: "question-posted-within-tab", value: message});
     });
 
-<<<<<<< HEAD
     chat_input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && event.shiftKey === false) {
             event.preventDefault();
@@ -29,6 +28,7 @@
 
     function chat_render(data)
     {
+        if (Object.keys(data).length === 0) { return; };
         const message_pair_div = document.createElement('div');
         message_pair_div.classList.add('codify-chat__item');
 
@@ -51,22 +51,7 @@
             last_answer_div.innerHTML = data.answer;
         }
 
-        chat_content.appendChild(message_pair_div);
-=======
-    function chat_render(data) {
-        if(Object.keys(data).length === 0) {return;};
-        const message_wrapper = document.createElement('div');
-        message_wrapper.classList.add('codify-chat__item');
-        const message_question = document.createElement('div');
-        message_question.classList.add('codify-chat__question');
-        message_question.innerHTML = data.question;
-        const message_answer = document.createElement('div');
-        message_answer.classList.add('codify-chat__answer');
-        message_answer.innerHTML = data.answer;
-        message_wrapper.appendChild(message_question);
-        message_wrapper.appendChild(message_answer);
-        chat_content.appendChild(message_wrapper);
->>>>>>> 54d7fec (sidebar + iconfont)
+        chat_content.appendChild(message_pair_div);        
     }
 
     window.addEventListener("message", (event) => {
