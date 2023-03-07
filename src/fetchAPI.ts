@@ -307,6 +307,71 @@ export function fetch_api_promise(
 }
 
 
+export function fetch_chat_promise(
+    cancelToken: vscode.CancellationToken,
+    scope: string,
+    messages: [string, string][],
+    functionName: string,
+    maxTokens: number,
+    stop_tokens: string[],
+): [Promise<fetchH2.Response>, estate.ApiFields]
+{
+    let url = inference_url("/chat-v1/completions");
+    const apiKey = userLogin.secret_api_key();
+    if (!apiKey) {
+        return [Promise.reject("No API key"), new estate.ApiFields()];
+    }
+    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let api_fields = new estate.ApiFields();
+    api_fields.scope = scope;
+    api_fields.url = url;
+    api_fields.function = functionName;
+    api_fields.ts_req = Date.now();
+    let json_messages = [];
+    for (let i=0; i<messages.length; i++) {
+        let role = messages[i][0];
+        let text = messages[i][1];
+        json_messages.push({
+            "role": role,
+            "content": text,
+        });
+    }
+    const body = JSON.stringify({
+        "messages": json_messages,
+        "function": functionName,
+        "max_tokens": maxTokens,
+        "stop": stop_tokens,
+        "temperature": 0.3,
+        "client": `vscode-${client_version}`,
+    });
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+    };
+    let req = new fetchH2.Request(url, {
+        method: "POST",
+        headers: headers,
+        body: body,
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer"
+    });
+    let init: any = {
+        timeout: 20*1000,
+    };
+    if (cancelToken) {
+        let abort = new fetchH2.AbortController();
+        cancelToken.onCancellationRequested(() => {
+            console.log(["API fetch cancelled"]);
+            abort.abort();
+        });
+        init.signal = abort.signal;
+    }
+    let promise = fetchH2.fetch(req, init);
+    return [promise, api_fields];
+}
+
+
 export function look_for_common_errors(json: any, api_fields: estate.ApiFields | undefined): boolean
 {
     if (json === undefined) {

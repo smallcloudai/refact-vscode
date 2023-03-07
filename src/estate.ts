@@ -26,6 +26,7 @@ export class ApiFields {
     public intent: string = "";
     public sources: { [key: string]: string } = {};
     public results: { [key: string]: string } = {};
+    public messages: [string, string][] = [];
     public cursor_file: string = "";
     public cursor_pos0: number = 0;
     public cursor_pos1: number = 0;
