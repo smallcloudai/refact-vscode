@@ -1,3 +1,9 @@
+@font-face {
+    font-family: 'codify';
+    src: url('codify.woff');
+    font-weight: normal;
+    font-style: normal;
+}
 body.vscode-light {
 	--color: #000;
     --secondary: rgba(0,0,0,0.5);
@@ -5,7 +11,6 @@ body.vscode-light {
     --light: rgba(0,0,0,0.1);
 }
 body {
-    overflow: hidden;
     box-sizing: border-box;
 }
 body.vscode-dark {
@@ -43,6 +48,7 @@ body.vscode-dark {
     color: var(--secodary) !important;
     font-family: sans-serif !important;
     font-size: 14px;
+    overflow: hidden;
 }
 
 .codify-chat__button {
@@ -57,4 +63,23 @@ body.vscode-dark {
     color: var(--secodary) !important;
     background: transparent !important;
     z-index: 999 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.codify-chat__button span::before {
+    content: "\e803";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: inherit;
+    font-variant: normal;
+    text-transform: none;
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

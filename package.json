@@ -267,6 +267,41 @@
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\802"
 				}
+			},
+            "codify-chat": {
+				"description": "codify chat",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\804"
+				}
+			},
+            "codify-reload": {
+				"description": "codify reload",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\809"
+				}
+			},
+            "codify-settings": {
+				"description": "codify settings",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\806"
+				}
+			},
+            "codify-link": {
+				"description": "codify link",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\80A"
+				}
+			},
+            "codify-send": {
+				"description": "codify send",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\803"
+				}
 			}
 		}
 	},

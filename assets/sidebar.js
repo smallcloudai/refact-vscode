@@ -27,6 +27,9 @@
         event.preventDefault();
         if(event.target.value !== '') {
             toolboxRun.classList.remove("toolbox-run-disabled");
+            if(document.querySelector('item-active')) {
+                document.querySelector('item-active').classList.remove('item-active');
+            }
         }
         if(event.target.value === '') {
             toolboxRun.classList.add("toolbox-run-disabled");
@@ -285,17 +288,17 @@
     });
 
     toolboxList.addEventListener("click", (event) => {
-        if (event.target && event.target.classList.contains("toolbox-item")) {
-        //     if(event.target.parentElement.classList.contains('muted')) { return; };
-        //     console.log(event.target.id);
-            // vscode.postMessage({ 
-            //     type: "presetSelected", 
-            //     value: event.target.dataset.function, 
-            //     id: event.target.id, 
-            //     data_function: event.target.dataset.function,
-            // });
-        }
-        if (event.target && event.target.classList.contains("toolbox-back")) {
+        // if (event.target && event.target.classList.contains("toolbox-item")) {
+        // //     if(event.target.parentElement.classList.contains('muted')) { return; };
+        // //     console.log(event.target.id);
+        //     // vscode.postMessage({ 
+        //     //     type: "presetSelected", 
+        //     //     value: event.target.dataset.function, 
+        //     //     id: event.target.id, 
+        //     //     data_function: event.target.dataset.function,
+        //     // });
+        // }
+        if (event.target.classList.contains("toolbox-back")) {
             let active = document.querySelector(".item-active");
             document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
             if(active) {
@@ -303,6 +306,16 @@
                 active.classList.remove("item-active");
                 toolboxRun.classList.add("toolbox-run-disabled");
             }
+        }
+        if(event.target.parentElement.classList.contains("toolbox-bookmark-button")) {
+            
+        }
+        if(event.target.parentElement.classList.contains("toolbox-likes-button")) {
+            let parent = event.target.parentElement.parentElement.parentElement.parentElement;
+            vscode.postMessage({ 
+                type: "presetLiked", 
+                value: parent.dataset.function, 
+            });
         }
     });
 
@@ -355,6 +368,11 @@
     //     }
 	// });
 
+
+	const chatButton = document.querySelector("#chat");
+	chatButton.addEventListener("click", () => {
+		vscode.postMessage({ type: "chat_message", value: ''});
+	});
 
 	const settingsButton = document.querySelector("#settings");
 	settingsButton.addEventListener("click", () => {
@@ -484,12 +502,13 @@
             const third_party = document.createElement("i");
             third_party.classList.add("toolbox-third-party");
             const bookmark_button_icon = document.createElement("i");
-            bookmark_button_icon.classList.add("toolbox-mark");
             if(item.is_bookmarked) {
                 bookmark_button_icon.classList.add("toolbox-mark");
             }
             else {
+                bookmark_button_icon.classList.add("toolbox-mark-empty");
             }
+            bookmark_button.appendChild(bookmark_button_icon);
             const likes_button = document.createElement("button");
             likes_button.classList.add("toolbox-likes-button");
             const likes_button_icon = document.createElement("i");

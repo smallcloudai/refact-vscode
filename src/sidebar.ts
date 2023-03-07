@@ -5,6 +5,7 @@ import * as userLogin from "./userLogin";
 import * as dataCollectionPage from "./dataCollectionPage";
 import * as dataCollection from "./dataCollection";
 import * as extension from "./extension";
+import * as fetchH2 from 'fetch-h2';
 
 export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
@@ -39,7 +40,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 //         this.check_selection();
                 //     });
                 // }
-                case "runChat": {
+                case "presetLiked": {
+                    
+                    break;
+                }
+                case "chat_message": {
                     vscode.commands.executeCommand('plugin-vscode.codifyChatTab', data.value);
                     break;
                 }
@@ -133,11 +138,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     public update_editor_state(state: any) {
-        console.log('---------------------___>>> editor state updated');
-        this._view!.webview.postMessage({
-            command: "editor_state",
-            value: estate.state_of_editor(state)
-        });
+        console.log('------------->>> editor state updated');
+        // this._view!.webview.postMessage({
+        //     command: "editor_state",
+        //     value: estate.state_of_editor(state)
+        // });
     }
 
     // public check_selection() {
@@ -279,12 +284,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
                         <div class="sidebar-logged">Account: <b><span></span></b></div>
-                        <div class="sidebar-plan"><span></span><button class="sidebar-plan-button">⟳</button></div>
+                        <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
                         <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
+                        <button tabindex="-1" id="chat"><span></span>Chat</button>
                         <button tabindex="-1" id="login">Login / Register</button>
                         <button tabindex="-1" id="logout">Logout</button>
-                        <button tabindex="-1" id="profile"><span>🔗</span> Your Account...</button>
-                        <button tabindex="-1" id="settings">Settings</button>
+                        <button tabindex="-1" id="profile"><span></span>Your Account...</button>
+                        <button tabindex="-1" id="settings"><span></span>Settings</button>
                     </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
@@ -300,6 +306,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         return text;
     }
+    save_like(function_name: string) {
+    
+    }
 }
+
 
 export default PanelWebview;

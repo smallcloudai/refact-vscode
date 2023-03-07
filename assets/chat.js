@@ -5,12 +5,18 @@
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.codify-chat__content');
 
+    chat_input.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+
     chat_send_button.addEventListener('click', () => {
         const message = chat_input.value;
         chat_input.value = '';
         vscode.postMessage({ type: "question-posted-within-tab", value: message});
     });
 
+<<<<<<< HEAD
     chat_input.addEventListener('keydown', (event) => {
         if (event.key === 'Enter' && event.shiftKey === false) {
             event.preventDefault();
@@ -46,6 +52,21 @@
         }
 
         chat_content.appendChild(message_pair_div);
+=======
+    function chat_render(data) {
+        if(Object.keys(data).length === 0) {return;};
+        const message_wrapper = document.createElement('div');
+        message_wrapper.classList.add('codify-chat__item');
+        const message_question = document.createElement('div');
+        message_question.classList.add('codify-chat__question');
+        message_question.innerHTML = data.question;
+        const message_answer = document.createElement('div');
+        message_answer.classList.add('codify-chat__answer');
+        message_answer.innerHTML = data.answer;
+        message_wrapper.appendChild(message_question);
+        message_wrapper.appendChild(message_answer);
+        chat_content.appendChild(message_wrapper);
+>>>>>>> 54d7fec (sidebar + iconfont)
     }
 
     window.addEventListener("message", (event) => {

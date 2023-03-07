@@ -121,9 +121,20 @@ body.vscode-light #profile {
     color: var(--secondary);
     border-color: var(--secondary);
 }
-#profile span {
-    font-size: 10px !important;
-    overflow: hidden;
+#profile span::before {
+    color: var(--secondary);
+    content: "\e80A";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: inline-flex;
+    text-decoration: inherit;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    font-size: 14px;
+    margin-right: 3px;
 }
 #settings {
     font-size: 13px;
@@ -137,6 +148,21 @@ body.vscode-light #profile {
     width: 100%;
     text-align: center;
     margin: 5px 0;
+}
+#settings span::before {
+    color: var(--secondary);
+    content: "\e80F";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: inline-flex;
+    text-decoration: inherit;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1em;
+    font-size: 13px;
+    margin-right: 3px;
 }
 body.vscode-light #settings {
     color: var(--secondary);
@@ -159,6 +185,44 @@ body.vscode-light #settings {
 body.vscode-light #login {
     color: var(--secondary);
     border-color: var(--secondary);
+}
+
+#chat {
+    font-size: 13px;
+    border: 1px solid var(--secondary);
+    padding: 8px 20px;
+    color: var(--secondary);
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    margin: 5px 0;
+}
+body.vscode-light #chat {
+    color: var(--secondary);
+    border-color: var(--secondary);
+}
+#chat span::before {
+    color: var(--secondary);
+    content: "\e80E";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: flex;
+    text-decoration: inherit;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 14px;
+    font-size: 18px;
+    margin-right: 3px;
+    margin-bottom: -2px;
+    position: relative;
 }
 
 #logout {
@@ -218,17 +282,29 @@ body.vscode-light #logout {
 
 .sidebar-plan-button {
     background-color: transparent !important;
-    height: 16px;
-    width: 16px;
-    display: inline-flex;
+    height: 18px;
+    width: 18px;
+    display: flex;
     border: 0;
-    color: var(--secondary);
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 22px;
     cursor: pointer;
     margin-left: 5px;
+}
+
+.sidebar-plan-button::before {
+    color: var(--color);
+    content: "\e809";
+    font-family: "codify";
+    font-style: normal;
+    font-weight: normal;
+    display: inline-flex;
+    text-decoration: inherit;
+    font-size: 20px;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
 }
 .sidebar-coins {
     display: none;
@@ -247,7 +323,7 @@ body.vscode-light #logout {
     display: block;
 }
 .sidebar-coin::before {
-    color: #fff;
+    color: var(--color);
     content: "\e802";
     font-family: "codify";
     font-style: normal;
@@ -374,7 +450,6 @@ body.vscode-light #logout {
 }
 .toolbox-mark::before {
     content: "\e800";
-    color: red !important;
     font-family: "codify";
     font-style: normal;
     font-weight: normal;
@@ -393,8 +468,6 @@ body.vscode-light #logout {
 .toolbox-mark-empty::before {
     margin: 0 5px;
     content: "\e801";
-    color: red !important;
-    background: lime !important;
     font-family: "codify";
     font-style: normal;
     font-weight: normal;
@@ -483,12 +556,14 @@ body.vscode-light #logout {
 }
 .toolbox-bookmark-button {
     display: flex;
+    align-items: center;
     background: var(--secondary) !important;
     border: 0 !important;
     color: var(--vscode-editorWidget-background) !important;
     padding: 4px 6px;
     cursor: pointer;
     height: 20px;
+    overflow: hidden;
 }
 .toolbox-likes-button {
     background: var(--secondary) !important;
@@ -502,6 +577,7 @@ body.vscode-light #logout {
     justify-content: center;
     text-align: center;
     margin: 0 10px;
+    overflow: hidden;
 }
 .item-active {
 

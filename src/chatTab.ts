@@ -174,7 +174,7 @@ export class ChatTab {
                     </div>
                     <div class="codify-chat__commands">
                         <textarea id="chat-input" class="codify-chat__input"></textarea>
-                        <button id="chat-send" class="codify-chat__button">▷</button>
+                        <button id="chat-send" class="codify-chat__button"><span></span></button>
                     </div>
                 </div>
 
