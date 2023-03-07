@@ -29,6 +29,7 @@ export class ChatTab {
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
+                retainContextWhenHidden: true,
             }
         );
 
