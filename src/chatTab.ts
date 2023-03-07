@@ -7,22 +7,21 @@ import { marked } from 'marked'; // Markdown parser documentation: https://marke
 
 
 export class ChatTab {
-    public static currentPanel: ChatTab | undefined;
-    // private _editor = vscode.window.activeTextEditor;
-    public static _panel: vscode.WebviewPanel;
-    private _disposables: vscode.Disposable[] = [];
+    // public static current_tab: ChatTab | undefined;
+    // private _disposables: vscode.Disposable[] = [];
+    public web_panel: vscode.WebviewPanel;
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
-        ChatTab._panel = panel;
-        ChatTab._panel.webview.html = ChatTab.get_html_for_webview(
-            ChatTab._panel.webview,
+        this.web_panel = panel;
+        this.web_panel.webview.html = ChatTab.get_html_for_webview(
+            this.web_panel.webview,
             extensionUri,
             context
         );
     }
 
-    public static activate_from_outside(context: any, question: string)
+    public static activate_from_outside(context: vscode.ExtensionContext, question: string)
     {
         const panel = vscode.window.createWebviewPanel(
             "codify-chat-tab",
@@ -33,49 +32,64 @@ export class ChatTab {
             }
         );
 
-        ChatTab.currentPanel = new ChatTab(panel, context.extensionUri, context);
+        let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
         const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
-        this.chat_post_question(panel, question_clean);
+        free_floating_tab.chat_post_question(question_clean);
 
         panel.webview.onDidReceiveMessage(async (data) => {
 			switch (data.type) {
 				case "question-posted-within-tab": {
-                    await this.chat_post_question(panel, data.value);
+                    await free_floating_tab.chat_post_question(data.value);
                     break;
 				}
 			}
 		});
     }
 
-    public dispose()
+    // public dispose()
+    // {
+    //     ChatTab.current_tab = undefined;
+    //     this.web_panel.dispose();
+    //     while (this._disposables.length) {
+    //         const disposable = this._disposables.pop();
+    //         if (disposable) {
+    //             disposable.dispose();
+    //         }
+    //     }
+    // }
+
+    private _post_question(question: string)
     {
-        ChatTab.currentPanel = undefined;
-
-        ChatTab._panel.dispose();
-
-        while (this._disposables.length) {
-            const disposable = this._disposables.pop();
-            if (disposable) {
-                disposable.dispose();
-            }
+        let valid_html = false;
+        let html = "";
+        try {
+            html = marked.parse(question);
+            valid_html = true;
+        } catch (e) {
+            valid_html = false;
         }
+        if (!valid_html) {
+            html = question;
+        }
+        this.web_panel.webview.postMessage({ command: "chat-post-question", value: {question: html}});
     }
 
-    static async chat_post_question(panel: vscode.WebviewPanel, question: string)
+    async chat_post_question(question: string)
     {
-        if(!panel) {
+        if(!this.web_panel) {
             return false;
         }
-        panel.webview.postMessage({ command: "chat-post-question", value: {question: question}});
         let login = await userLogin.inference_login();
         if (!login) {
-            panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "Please login first."}});
+            this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "Please login first."}});
             return;
         }
-        panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "⏳"}});
+        this._post_question(question);
+        this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "⏳"}});
         await fetchAPI.wait_until_all_requests_finished();
 
         let answer = "";
+        let stack_web_panel = this.web_panel;
         async function _streaming_callback(json: any)
         {
             if (json === undefined) {
@@ -96,7 +110,8 @@ export class ChatTab {
                         valid_html = false;
                     }
                     if (valid_html) {
-                        panel.webview.postMessage({ command: "chat-post-answer", value: {answer: html}});
+                        stack_web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: html}});
+                        console.log(["chat answer", html]);
                     }
                 }
             }
