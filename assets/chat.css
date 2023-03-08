@@ -27,12 +27,16 @@ body.vscode-dark {
 	margin-bottom: 30px;
 }
 .codify-chat__question {
-	border-top: 2px solid var(--light);
-	border-bottom: 2px solid var(--light);
-	padding: 15px 10px;
+	padding: 5px 10px;
+    max-width: 600px;
+    width: 100%;
+    background-color: var(--light);
 }
 .codify-chat__answer {
 	margin-top: 10px;
+    max-width: 600px;
+    margin-left: auto;
+    padding: 5px 10px;
 }
 .codify-chat__commands {
 	margin-top: 30px;
@@ -98,13 +102,14 @@ body.vscode-dark {
 
 .codify-chat__item pre code {
     display: block;
+    position: relative;
     background: none;
     white-space: pre;
     -webkit-overflow-scrolling: touch;
     overflow-x: scroll;
     max-width: 100%;
     min-width: 100px;
-    padding: 15px;
+    padding: 30px 15px 15px;
     background-color: var(--light);
     font-family: monospace;
     line-height: 1.1;
@@ -113,6 +118,30 @@ body.vscode-dark {
 .codify-chat__item ul {
 	list-style: none;
 	padding: 0;
+}
+.codify-chat__copybutton {
+	position: absolute;
+	top: 3px;
+	right: 3px;
+	width: 40px;
+	height: 20px;
+	border: none !important;
+	cursor: pointer;
+	box-sizing: border-box;
+    text-transform: uppercase;
+    font-size: 8px;
+}
+.codify-chat__newbutton {
+    position: absolute;
+	top: 3px;
+	right: 46px;
+	width: 70px;
+	height: 20px;
+	border: none !important;
+	cursor: pointer;
+	box-sizing: border-box;
+    text-transform: uppercase;
+    font-size: 8px;
 }
 
 .codify-chat__item ul li {

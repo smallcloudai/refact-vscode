@@ -54,6 +54,7 @@ export class PrivacySettings {
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
+                retainContextWhenHidden: true,
             }
         );
         // panel.iconPath = vscode.Uri.joinPath(
@@ -174,7 +175,7 @@ export class PrivacySettings {
                         </div>
                     </div>
                 </div>
-                <div class="codify-help-text">Use a context menu in the file tree panel to add a new rule.</div>
+                <div class="codify-privacy__info">Use a context menu in the file tree panel to add a new rule.</div>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;

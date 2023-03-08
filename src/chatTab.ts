@@ -46,6 +46,16 @@ export class ChatTab {
 
         panel.webview.onDidReceiveMessage(async (data) => {
 			switch (data.type) {
+                case "open-new-file": {
+                    vscode.workspace.openTextDocument().then((document) => {
+                        vscode.window.showTextDocument(document, vscode.ViewColumn.Active).then((editor) => {
+                            editor.edit((editBuilder) => {
+                                editBuilder.insert(new vscode.Position(0, 0), data.value);
+                            });
+                        });
+                    });
+                    break;
+                }
 				case "question-posted-within-tab": {
                     await free_floating_tab.chat_post_question(data.value);
                     break;
@@ -144,6 +154,7 @@ export class ChatTab {
         {
             console.log("streaming end callback");
             stack_this.messages.push(["assistant", answer]);
+            stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
         }
 
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);

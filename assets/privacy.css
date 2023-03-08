@@ -37,7 +37,9 @@ body.vscode-dark {
     margin-top: 20px;
     margin-bottom: 20px;
 }
-
+.codify-privacy__info {
+    font-size: 12px;
+}
 .codify-privacy__item {
     margin-bottom: 20px;
     padding: 0;
