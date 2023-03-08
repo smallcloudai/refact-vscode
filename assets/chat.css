@@ -1,85 +1,139 @@
 @font-face {
-    font-family: 'codify';
-    src: url('codify.woff');
-    font-weight: normal;
-    font-style: normal;
+	font-family: "codify";
+	src: url("codify.woff");
+	font-weight: normal;
+	font-style: normal;
 }
 body.vscode-light {
 	--color: #000;
-    --secondary: rgba(0,0,0,0.5);
-    --dark: rgba(0,0,0,0.7);
-    --light: rgba(0,0,0,0.1);
+	--secondary: rgba(0, 0, 0, 0.5);
+	--dark: rgba(0, 0, 0, 0.7);
+	--light: rgba(0, 0, 0, 0.1);
 }
 body {
-    box-sizing: border-box;
+	box-sizing: border-box;
 }
 body.vscode-dark {
-	--color: #FFF;
-    --secondary: rgba(255,255,255,0.5);
-    --dark: rgba(255,255,255,0.7);
-    --light: rgba(255,255,255,0.1);
+	--color: #fff;
+	--secondary: rgba(255, 255, 255, 0.5);
+	--dark: rgba(255, 255, 255, 0.7);
+	--light: rgba(255, 255, 255, 0.1);
 }
 .codify-chat {
-    max-width: 900px;
-    box-sizing: border-box;
+	max-width: 900px;
+	box-sizing: border-box;
 }
 .codify-chat__item {
-    margin-bottom: 30px;
+	margin-bottom: 30px;
 }
 .codify-chat__question {
-    background-color: var(--light);
-    padding: 10px;
+	border-top: 2px solid var(--light);
+	border-bottom: 2px solid var(--light);
+	padding: 15px 10px;
 }
 .codify-chat__answer {
-    margin-top: 10px;
+	margin-top: 10px;
 }
-.codify-chat__commands  {
-    margin-top: 30px;
-    position: relative;
-    box-sizing: border-box;
+.codify-chat__commands {
+	margin-top: 30px;
+	position: relative;
+	box-sizing: border-box;
+    margin-bottom: 50px;
 }
 
 .codify-chat__input {
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid var(--secondary);
-    padding: 10px;
-    background: transparent !important;
-    color: var(--secodary) !important;
-    font-family: sans-serif !important;
-    font-size: 14px;
-    overflow: hidden;
+	width: 100%;
+	box-sizing: border-box;
+	border: 1px solid var(--secondary);
+	padding: 10px;
+	background: transparent !important;
+	color: var(--secodary) !important;
+	font-family: sans-serif !important;
+	font-size: 14px;
+	overflow: hidden;
 }
 
 .codify-chat__button {
-    position: absolute;
-    bottom: 3px;
-    right: 0px;
-    width: 30px;
-    height: 30px;
-    border: none !important;
-    cursor: pointer;
-    box-sizing: border-box;
-    color: var(--secodary) !important;
-    background: transparent !important;
-    z-index: 999 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+	position: absolute;
+	bottom: 3px;
+	right: 0px;
+	width: 30px;
+	height: 30px;
+	border: none !important;
+	cursor: pointer;
+	box-sizing: border-box;
+	color: var(--secodary) !important;
+	background: transparent !important;
+	z-index: 999 !important;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 .codify-chat__button span::before {
-    content: "\e803";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: inherit;
-    font-variant: normal;
-    text-transform: none;
-    height: 16px;
-    width: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+	content: "\e803";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: inherit;
+	font-variant: normal;
+	text-transform: none;
+	height: 16px;
+	width: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.codify-chat__item table {
+	border-collapse: collapse;
+}
+
+.codify-chat__item td,
+.codify-chat__item th {
+	border: 1px solid var(--secondary);
+    padding: 5px;
+}
+
+.codify-chat__item pre code {
+    display: block;
+    background: none;
+    white-space: pre;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: scroll;
+    max-width: 100%;
+    min-width: 100px;
+    padding: 15px;
+    background-color: var(--light);
+    font-family: monospace;
+    line-height: 1.1;
+}
+
+.codify-chat__item ul {
+	list-style: none;
+	padding: 0;
+}
+
+.codify-chat__item ul li {
+	border-bottom: 1px solid var(--secondary);
+	padding-bottom: 5px;
+}
+.codify-chat__item ol {
+	list-style: none;
+	padding: 0;
+}
+
+.codify-chat__item ol li {
+	border-bottom: 1px solid var(--secondary);
+	counter-increment: step-counter;
+	margin-bottom: 5px;
+	padding-left: 20px;
+}
+
+.codify-chat__item ol li:before {
+	content: counter(step-counter) ".";
+	display: inline-block;
+	width: 20px;
+	margin-left: -20px;
 }

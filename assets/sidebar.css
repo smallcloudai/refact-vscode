@@ -1,39 +1,39 @@
 @font-face {
-    font-family: 'codify';
-    src: url('codify.woff');
-    font-weight: normal;
-    font-style: normal;
-  }
+	font-family: "codify";
+	src: url("codify.woff");
+	font-weight: normal;
+	font-style: normal;
+}
 body.vscode-light {
 	--color: #000;
-    --secondary: rgba(0,0,0,0.5);
-    --dark: rgba(0,0,0,0.7);
+	--secondary: rgba(0, 0, 0, 0.5);
+	--dark: rgba(0, 0, 0, 0.7);
 }
 body {
-    overflow: hidden;
+	overflow: hidden;
 }
 body.vscode-dark {
-	--color: #FFF;
-    --secondary: rgba(255,255,255,0.5);
-    --dark: rgba(255,255,255,0.7);
+	--color: #fff;
+	--secondary: rgba(255, 255, 255, 0.5);
+	--dark: rgba(255, 255, 255, 0.7);
 }
 .presets {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+	list-style: none;
+	padding: 0;
+	margin: 0;
 }
 .presets li {
-    list-style: none;
-    cursor: pointer;
-    font-size: 1.1em;
-    line-height: 1.4em;
+	list-style: none;
+	cursor: pointer;
+	font-size: 1.1em;
+	line-height: 1.4em;
 }
 .presets li:focus {
-    /* background-color: var(--secondary); */
-    outline: none !important;
+	/* background-color: var(--secondary); */
+	outline: none !important;
 }
 .presets li:hover {
-    color: var(--secondary);
+	color: var(--secondary);
 }
 /* #quickbar {
     display: inline;
@@ -76,522 +76,591 @@ body.vscode-light #quicksubmit {
     color: var(--dark);
 } */
 .presets-title {
-    font-size: 14px;
-    padding-bottom: 5px;
-    font-weight: bold;
-    margin-bottom: 5px;
-    border-bottom: 1px solid var(--secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
+	font-size: 14px;
+	padding-bottom: 5px;
+	font-weight: bold;
+	margin-bottom: 5px;
+	border-bottom: 1px solid var(--secondary);
+	text-transform: uppercase;
+	letter-spacing: 1px;
 }
 body.vscode-light .presets-title {
-    border-bottom: 1px solid var(--secondary);
+	border-bottom: 1px solid var(--secondary);
 }
 .sidebar-controls {
-    position: absolute;
-    bottom: 0px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: flex-start;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    box-sizing: border-box;
-    background-color: var(--vscode-sidebar-background) !important;
-    padding: 0 20px 20px;
-    z-index: 10 !important;
-    overflow: hidden;
+	position: absolute;
+	bottom: 0px;
+	left: 0;
+	right: 0;
+	display: flex;
+	justify-content: flex-start;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	background-color: var(--vscode-sidebar-background) !important;
+	padding: 0 20px 20px;
+	z-index: 10 !important;
+	overflow: hidden;
+}
+.sidebar-inline {
+	width: 100%;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 }
 #profile {
-    font-size: 13px;
-    overflow: hidden;
-    border: 1px solid var(--secondary);
-    padding: 8px 20px;
-    color: var(--secondary);
-    background: inherit;
-    cursor: pointer;
-    box-sizing: border-box;
-    display: none;
-    width: 100%;
-    text-align: center;
-    margin: 5px 0;
-}
-body.vscode-light #profile {
-    color: var(--secondary);
-    border-color: var(--secondary);
+	font-size: 13px;
+	overflow: hidden;
+	color: var(--secondary);
+	background: inherit;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-align: center;
+	margin: 0;
+	overflow: 0;
+	padding: 0;
+	border: 0;
+	margin-right: 5px;
+	text-align: left;
+	margin-top: 5px;
+	line-height: 14px;
+	display: none;
 }
 #profile span::before {
-    color: var(--secondary);
-    content: "\e80A";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    display: inline-flex;
-    text-decoration: inherit;
-    text-align: center;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1em;
-    font-size: 14px;
-    margin-right: 3px;
+	color: var(--secondary);
+	content: "\e80A";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: inline-flex;
+	text-decoration: inherit;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1em;
+	font-size: 14px;
+	margin-right: 3px;
+}
+body.vscode-light #profile {
+	color: var(--secondary);
+	border-color: var(--secondary);
 }
 #settings {
-    font-size: 13px;
-    border: 1px solid var(--secondary);
-    padding: 8px 20px;
-    color: var(--secondary);
-    background-color: inherit;
-    cursor: pointer;
-    box-sizing: border-box;
-    display: block;
-    width: 100%;
-    text-align: center;
-    margin: 5px 0;
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 20px;
+	color: var(--secondary);
+	background-color: inherit;
+	cursor: pointer;
+	box-sizing: border-box;
+	display: block;
+	width: 100%;
+	text-align: center;
+	margin: 5px 0;
+	margin-right: 5px;
 }
 #settings span::before {
-    color: var(--secondary);
-    content: "\e80F";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    display: inline-flex;
-    text-decoration: inherit;
-    text-align: center;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1em;
-    font-size: 13px;
-    margin-right: 3px;
+	color: var(--secondary);
+	content: "\e805";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: inline-flex;
+	text-decoration: inherit;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1em;
+	font-size: 13px;
+	margin-right: 5px;
+}
+#privacy {
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 20px;
+	color: var(--secondary);
+	background-color: inherit;
+	cursor: pointer;
+	box-sizing: border-box;
+	display: block;
+	width: 100%;
+	text-align: center;
+	margin: 5px 0;
+	margin-left: 5px;
+}
+#privacy span::before {
+	color: var(--secondary);
+	content: "\e811";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: inline-flex;
+	text-decoration: inherit;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1em;
+	font-size: 13px;
+	margin-right: 5px;
 }
 body.vscode-light #settings {
-    color: var(--secondary);
-    border-color: var(--secondary);
+	color: var(--secondary);
+	border-color: var(--secondary);
 }
 #login {
-    font-size: 13px;
-    border: 1px solid var(--secondary);
-    padding: 8px 20px;
-    color: var(--secondary);
-    background: transparent;
-    cursor: pointer;
-    box-sizing: border-box;
-    text-decoration: none;
-    display: block;
-    width: 100%;
-    text-align: center;
-    margin: 5px 0;
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 20px;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: block;
+	width: 100%;
+	text-align: center;
+	margin: 5px 0;
 }
 body.vscode-light #login {
-    color: var(--secondary);
-    border-color: var(--secondary);
+	color: var(--secondary);
+	border-color: var(--secondary);
 }
 
 #chat {
-    font-size: 13px;
-    border: 1px solid var(--secondary);
-    padding: 8px 20px;
-    color: var(--secondary);
-    background: transparent;
-    cursor: pointer;
-    box-sizing: border-box;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    text-align: center;
-    margin: 5px 0;
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 20px;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	text-align: center;
+	margin: 5px 0;
+	display: none;
 }
 body.vscode-light #chat {
-    color: var(--secondary);
-    border-color: var(--secondary);
+	color: var(--secondary);
+	border-color: var(--secondary);
 }
 #chat span::before {
-    color: var(--secondary);
-    content: "\e80E";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    display: flex;
-    text-decoration: inherit;
-    text-align: center;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 14px;
-    font-size: 18px;
-    margin-right: 3px;
-    margin-bottom: -2px;
-    position: relative;
+	color: var(--secondary);
+	content: "\e804";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: flex;
+	text-decoration: inherit;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 14px;
+	font-size: 18px;
+	margin-right: 3px;
+	margin-bottom: -2px;
+	position: relative;
 }
 
 #logout {
-    font-size: 13px;
-    border: 1px solid var(--secondary);
-    padding: 8px 20px;
-    color: var(--secondary);
-    background: transparent;
-    cursor: pointer;
-    box-sizing: border-box;
-    text-decoration: none;
-    display: block;
-    width: 100%;
-    text-align: center;
-    margin: 5px 0;
-    display: none;
+	font-size: 13px;
+	border: 0;
+	padding: 0;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: inline-flex;
+	text-align: right;
+	margin: 5px 0;
+	margin-top: 5px;
+	margin-left: 5px;
+	display: none;
+	line-height: 14px;
+}
+#logout::before {
+	color: var(--secondary);
+	content: "\e812";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: inline-flex;
+	text-decoration: inherit;
+	font-size: 12px;
+	line-height: 14px;
+	margin-right: 3px;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
 }
 body.vscode-light #logout {
-    color: var(--secondary);
-    border-color: var(--secondary);
+	color: var(--secondary);
+	border-color: var(--secondary);
 }
 
-
 .sidebar-logged {
-    white-space: nowrap;
-    overflow: hidden;
-    display: none;
-    margin-bottom: 5px;
-    padding: 0 20px;
-    width: 100%;
-    justify-content: left;
+	white-space: nowrap;
+	overflow: hidden;
+	display: none;
+	margin-bottom: 5px;
+	padding: 0 20px;
+	width: 100%;
+	justify-content: left;
 }
 
 .sidebar-logged span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-left: 4px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin-left: 4px;
 }
 
-
 .sidebar-plan {
-    white-space: nowrap;
-    overflow: hidden;
-    display: none;
-    margin-bottom: 5px;
-    padding: 0 20px;
-    width: 100%;
-    justify-content: left;
+	white-space: nowrap;
+	overflow: hidden;
+	display: none;
+	margin-bottom: 5px;
+	padding: 0 20px;
+	width: 100%;
+	justify-content: left;
 }
 
 .sidebar-plan span {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .sidebar-plan-button {
-    background-color: transparent !important;
-    height: 18px;
-    width: 18px;
-    display: flex;
-    border: 0;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    cursor: pointer;
-    margin-left: 5px;
+	background-color: transparent !important;
+	height: 18px;
+	width: 18px;
+	display: flex;
+	border: 0;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	cursor: pointer;
+	margin-left: 5px;
 }
 
 .sidebar-plan-button::before {
-    color: var(--color);
-    content: "\e809";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    display: inline-flex;
-    text-decoration: inherit;
-    font-size: 20px;
-    text-align: center;
-    font-variant: normal;
-    text-transform: none;
+	color: var(--color);
+	content: "\e809";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: inline-flex;
+	text-decoration: inherit;
+	font-size: 20px;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
 }
 .sidebar-coins {
-    display: none;
-    white-space: nowrap;
-    overflow: hidden;
-    margin-bottom: 5px;
-    padding: 0 20px;
-    width: 100%;
-    justify-content: left;
+	display: none;
+	white-space: nowrap;
+	overflow: hidden;
+	margin-bottom: 5px;
+	padding: 0 20px;
+	width: 100%;
+	justify-content: left;
 }
 .sidebar-coins span {
-    margin-left: 5px;
-    font-weight: bold;
+	margin-left: 5px;
+	font-weight: bold;
 }
 .sidebar-coin {
-    display: block;
+	display: block;
 }
 .sidebar-coin::before {
-    color: var(--color);
-    content: "\e802";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    display: inline-flex;
-    text-decoration: inherit;
-    width: 1em;
-    margin-right: .2em;
-    text-align: center;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1em;
-    margin-left: .2em;
+	color: var(--color);
+	content: "\e802";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: inline-flex;
+	text-decoration: inherit;
+	width: 1em;
+	margin-right: 0.2em;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1em;
+	margin-left: 0.2em;
 }
 #datacollection {
-    display: none !important;
+	display: none !important;
 }
 .muted li {
-    opacity: 0.3 !important;
+	opacity: 0.3 !important;
 }
 .muted li:hover {
-    color: var(--color) !important;
+	color: var(--color) !important;
 }
 
 .toolbox-inline {
-    display: flex;
-    align-items: center;
+	display: flex;
+	align-items: center;
 }
 
 .toolbox-search {
-    width: 100%;
-    box-sizing: border-box;
-    display: block;
-    padding: 5px 10px;
-    background-color: transparent;
-    border: 1px solid var(--secondary);
-    color: var(--secondary);
-    height: 32px;
+	width: 100%;
+	box-sizing: border-box;
+	display: block;
+	padding: 5px 10px;
+	background-color: transparent;
+	border: 1px solid var(--secondary);
+	color: var(--secondary);
+	height: 32px;
 }
 
 .toolbox-run {
-    width: 60px;
-    height: 32px;
-    border: 0;
-    color: var(--secondary);
-    border: 1px solid transparent;
-    background: transparent;
-    text-align: center;
-    cursor: pointer;
-    text-transform: uppercase;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    outline: none !important;
+	width: 60px;
+	height: 32px;
+	border: 0;
+	color: var(--secondary);
+	border: 1px solid transparent;
+	background: transparent;
+	text-align: center;
+	cursor: pointer;
+	text-transform: uppercase;
+	font-size: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-weight: bold;
+	outline: none !important;
 }
 .toolbox-run span {
-    font-size: 14px;
-    margin-left: 4px;
+	font-size: 14px;
+	margin-left: 4px;
 }
 .toolbox-run-disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+	opacity: 0.3;
+	cursor: not-allowed;
 }
 .toolbox-run:focus {
-    outline: none !important;
-    /* border-color: #da9a35; */
+	outline: none !important;
+	/* border-color: #da9a35; */
 }
 
 .toolbox-container {
-    margin-top: 20px;
+	margin-top: 20px;
 }
 .toolbox-item {
-    margin: 3px 0;
+	margin: 3px 0;
 }
 .toolbox-item:focus {
-    font-weight: bold !important;
+	font-weight: bold !important;
 }
 
 .toolbox-header {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    padding: 3px 0px;
-    cursor: pointer;
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	padding: 3px 0px;
+	cursor: pointer;
 }
 .toolbox-header > span {
-    margin-right: auto;
+	margin-right: auto;
 }
 .toolbox-header:hover {
-    color: var(--secondary);
+	color: var(--secondary);
 }
 .toolbox-likes {
-    font-weight: bold;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    text-align: right;
-    font-family: 'Courier New', Courier, monospace;
-    line-height: 13px;
-    height: 16px;
+	font-weight: bold;
+	font-size: 13px;
+	display: flex;
+	align-items: center;
+	text-align: right;
+	font-family: "Courier New", Courier, monospace;
+	line-height: 13px;
+	height: 16px;
 }
 .toolbox-likes span {
-    display: block;
-    margin-left: 2px;
+	display: block;
+	margin-left: 2px;
 }
 .toolbox-third-party {
-    margin-left: 0px;
+	margin-left: 0px;
 }
 .toolbox-third-party::before {
-    content: "\e802";
-    height: 16px;
-    width: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: inherit;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+	content: "\e802";
+	height: 16px;
+	width: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: inherit;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 .toolbox-mark::before {
-    content: "\e800";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: inherit;
-    /* margin-right: .2em; */
-    font-variant: normal;
-    text-transform: none;
-    height: 16px;
-    width: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+	content: "\e800";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: inherit;
+	/* margin-right: .2em; */
+	font-variant: normal;
+	text-transform: none;
+	height: 16px;
+	width: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 .toolbox-mark-empty::before {
-    margin: 0 5px;
-    content: "\e801";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: inherit;
-    font-variant: normal;
-    text-transform: none;
-    height: 16px;
-    width: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+	margin: 0 5px;
+	content: "\e801";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: inherit;
+	font-variant: normal;
+	text-transform: none;
+	height: 16px;
+	width: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 .toolbox-like::before {
-    content: "\e807";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: inherit;
-    text-align: center;
-    font-variant: normal;
-    text-transform: none;
-    height: 16px;
-    width: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+	content: "\e807";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: inherit;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+	height: 16px;
+	width: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 .toolbox-like-empty::before {
-    content: "\e808";
-    font-family: "codify";
-    font-style: normal;
-    font-weight: normal;
-    text-decoration: inherit;
-    font-variant: normal;
-    text-transform: none;
-    height: 16px;
-    width: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+	content: "\e808";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: inherit;
+	font-variant: normal;
+	text-transform: none;
+	height: 16px;
+	width: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 .toolbox-body {
-    display: none;
-    overflow-y: auto;
-    margin-top: 0px;
-    position: absolute;
-    top: 50px;
-    height: calc(100vh - 50px);
-    left: 0;
-    right: 0;
-    background-color: var(--vscode-editorWidget-background) !important;
-    padding: 0 20px 40px 20px;
+	display: none;
+	overflow-y: auto;
+	margin-top: 0px;
+	position: absolute;
+	top: 50px;
+	height: calc(100vh - 50px);
+	left: 0;
+	right: 0;
+	background-color: var(--vscode-editorWidget-background) !important;
+	padding: 0 20px 40px 20px;
 }
 .toolbox-content {
-    line-height: 1.4;
+	line-height: 1.4;
 }
 .toolbox-content img {
-    width: 100%;
-    height: auto;
-    vertical-align: top;
+	width: 100%;
+	height: auto;
+	vertical-align: top;
 }
 .toolbox-content ul {
-    padding-left: 10px;
+	padding-left: 10px;
 }
 .toolbox-controls {
-    height: 30px;
-    align-items: center;
-    display: flex;
-    justify-content: flex-end;
+	height: 30px;
+	align-items: center;
+	display: flex;
+	justify-content: flex-end;
 }
 .toolbox-back {
-    width: 80px;
-    display: block;
-    background: var(--secondary) !important;
-    border: 0 !important;
-    color: var(--vscode-editorWidget-background) !important;
-    padding: 4px 6px;
-    cursor: pointer;
-    margin-bottom: 10px;
+	width: 80px;
+	display: block;
+	background: var(--secondary) !important;
+	border: 0 !important;
+	color: var(--vscode-editorWidget-background) !important;
+	padding: 4px 6px;
+	cursor: pointer;
+	margin-bottom: 10px;
 }
 .toolbox-bookmark-button {
-    display: flex;
-    align-items: center;
-    background: var(--secondary) !important;
-    border: 0 !important;
-    color: var(--vscode-editorWidget-background) !important;
-    padding: 4px 6px;
-    cursor: pointer;
-    height: 20px;
-    overflow: hidden;
+	display: flex;
+	align-items: center;
+	background: var(--secondary) !important;
+	border: 0 !important;
+	color: var(--vscode-editorWidget-background) !important;
+	padding: 4px 6px;
+	cursor: pointer;
+	height: 20px;
+	overflow: hidden;
 }
 .toolbox-likes-button {
-    background: var(--secondary) !important;
-    border: 0 !important;
-    color: var(--vscode-editorWidget-background) !important;
-    padding: 4px 6px;
-    cursor: pointer;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    margin: 0 10px;
-    overflow: hidden;
+	background: var(--secondary) !important;
+	border: 0 !important;
+	color: var(--vscode-editorWidget-background) !important;
+	padding: 4px 6px;
+	cursor: pointer;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	margin: 0 10px;
+	overflow: hidden;
 }
 .item-active {
-
 }
 .item-selected {
-    font-weight: bold;
+	font-weight: bold;
 }
 .item-active .toolbox-body {
-    display: block;
-    z-index: 999 !important;
+	display: block;
+	z-index: 999 !important;
 }
 .toolbox-notice {
-    color: red;
+	color: red;
 }
 .toolbox-notice-hidden {
-    display: none;
+	display: none;
+}
+@media screen and (max-width: 280px) {
+	.sidebar-inline {
+		flex-direction: column;
+        align-items: flex-start;
+	}
+    #privacy {
+        margin-right: 0;
+        margin-left: 0;
+    }
+    #settings {
+        margin-left: 0;
+        margin-right: 0;
+    }
 }

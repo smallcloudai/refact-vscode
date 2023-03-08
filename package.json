@@ -302,6 +302,20 @@
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\803"
 				}
+			},
+            "codify-logout": {
+				"description": "codify logout",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\812"
+				}
+			},
+            "codify-privacy": {
+				"description": "codify privacy",
+				"default": {
+					"fontPath": "./assets/codify.woff",
+					"fontCharacter": "\\811"
+				}
 			}
 		}
 	},

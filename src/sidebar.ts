@@ -100,6 +100,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand('plugin-vscode.login');
                     break;
                 }
+                case "privacy": {
+                    vscode.commands.executeCommand("plugin-vscode.codifyPrivacySettings");
+                    break;
+                }
                 case "logout": {
                     vscode.commands.executeCommand("plugin-vscode.logout");
                     break;
@@ -288,9 +292,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
                         <button tabindex="-1" id="chat"><span></span>Chat</button>
                         <button tabindex="-1" id="login">Login / Register</button>
-                        <button tabindex="-1" id="logout">Logout</button>
-                        <button tabindex="-1" id="profile"><span></span>Your Account...</button>
-                        <button tabindex="-1" id="settings"><span></span>Settings</button>
+                        <div class="sidebar-inline">
+                            <button tabindex="-1" id="settings"><span></span>Settings</button>
+                            <button tabindex="-1" id="privacy"><span></span>Privacy</button>
+                        </div>
+                        <div class="sidebar-inline">
+                            <button tabindex="-1" id="profile"><span></span>Your Account</button>
+                            <div tabindex="-1" id="logout" class=""><span></span>Logout</div>
+                        </div>
                     </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>

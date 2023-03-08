@@ -400,6 +400,10 @@
 		vscode.postMessage({ type: "login" });
 	});
 
+    const privacyButton = document.querySelector("#privacy");
+    privacyButton.addEventListener("click", () => {
+		vscode.postMessage({ type: "privacy" });
+	});
 
     const refreshButton = document.querySelector(".sidebar-plan-button");
     refreshButton.addEventListener("click", () => {
@@ -687,6 +691,7 @@
             let profile = document.querySelector('#profile');
             let data = document.querySelector('#datacollection');
             let logout = document.querySelector('#logout');
+            let chat = document.querySelector('#chat');
 
             let regHeader = document.querySelector('#regular-header');
             let regList = document.querySelector('#regular-list');
@@ -698,13 +703,14 @@
             document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
             document.querySelector('.sidebar-plan span').innerHTML = message.ts2web_plan;
             login.style.display = message.ts2web_user ? 'none' : 'block';
-            profile.style.display = message.ts2web_user ? 'block' : 'none';
-            logout.style.display = message.ts2web_user ? 'block' : 'none';
+            profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+            logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+            chat.style.display = message.ts2web_user ? 'inline-flex' : 'none';
             data.style.display = message.ts2web_user ? 'block' : 'none';
             coins.style.display = message.ts2web_user ? 'flex' : 'none';
             
             if(message.ts2web_metering_balance) {
-                document.querySelector('.sidebar-coins span').innerHTML = message.ts2web_metering_balance / 1000;
+                document.querySelector('.sidebar-coins span').innerHTML = message.ts2web_metering_balance / 100;
             }
             
             // regHeader.style.display = 'none';
