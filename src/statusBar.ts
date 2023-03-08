@@ -52,19 +52,10 @@ export class StatusBarMenu {
 
     choose_color()
     {
-        console.log("choose_color",this.access_level);
         if (this.access_level === 0) {
             this.menu.text = `$(codify-privacy) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-            this.menu.tooltip = `Access Level 0`;
-        } else if (this.access_level === 1) {
-            this.menu.text = `$(codify-logo) codify`;
-            this.menu.backgroundColor = undefined;
-            this.menu.tooltip = `Access Level 1`;
-        } else if (this.access_level === 2) {
-            this.menu.text = `$(codify-logo) codify`;
-            this.menu.backgroundColor = undefined;
-            this.menu.tooltip = `Access Level 2`;
+            this.menu.tooltip = `Disabled for this file`;
         } else if (this.socketerror) {
             this.menu.text = `$(debug-disconnect) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
@@ -89,12 +80,6 @@ export class StatusBarMenu {
                 }
                 msg += `🗒️ ${this.last_model_name}`;
             }
-            // if (this.language_name) {
-            //     if (msg) {
-            //         msg += "\n";
-            //     }
-            //     msg += `Click to disable Codify for "${this.language_name}"`;
-            // }
             if (_website_message || _inference_message) {
                 msg += "\n";
                 msg += _website_message || _inference_message;
