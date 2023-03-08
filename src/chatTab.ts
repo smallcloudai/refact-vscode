@@ -23,11 +23,11 @@ export class ChatTab {
         this.messages = [];
     }
 
-    public static activate_from_outside(context: vscode.ExtensionContext, question: string)
+    public static activate_from_outside(context: vscode.ExtensionContext, question: string, code_snippet: string|undefined)
     {
         const panel = vscode.window.createWebviewPanel(
             "codify-chat-tab",
-            "Codify Chat BBB",
+            question,
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -37,6 +37,9 @@ export class ChatTab {
 
         let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
         // const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
+        if (code_snippet) {
+            question = "```\n" + code_snippet + "\n```\n" + question;
+        }
         free_floating_tab.chat_post_question(question);
 
         panel.webview.onDidReceiveMessage(async (data) => {
@@ -92,8 +95,9 @@ export class ChatTab {
         let cancelToken = cancellationTokenSource.token;
 
         this.messages.push(["user", question]);
-        if (this.messages.length > 6) {
+        if (this.messages.length > 10) {
             this.messages.shift();
+            this.messages.shift(); // so it always starts with a user
         }
         this._question_to_div(question);
         this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "⏳"}});
@@ -180,7 +184,7 @@ export class ChatTab {
             </head>
             <body>
                 <div class="codify-chat">
-                    <h1 class="codify-chat__title">Codify Chat CCC</h1>
+                    <h2 class="codify-chat__title">Codify Chat</h2>
                     <div class="codify-chat__content">
                     </div>
                     <div class="codify-chat__commands">

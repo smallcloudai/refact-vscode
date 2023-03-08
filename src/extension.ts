@@ -276,9 +276,10 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(privacySettingsPage);
 
-
     let chatTabPage = vscode.commands.registerCommand('plugin-vscode.codifyChatTab', (value) => {
-        ChatTab.activate_from_outside(context, value);
+        const editor = vscode.window.activeTextEditor;
+        const selectedText = editor?.document.getText(editor.selection);
+        ChatTab.activate_from_outside(context, value, selectedText);
     });
     context.subscriptions.push(chatTabPage);
 
