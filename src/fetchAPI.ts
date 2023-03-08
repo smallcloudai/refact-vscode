@@ -312,7 +312,6 @@ export function fetch_chat_promise(
     scope: string,
     messages: [string, string][],
     functionName: string,
-    maxTokens: number,
     stop_tokens: string[],
 ): [Promise<fetchH2.Response>, estate.ApiFields]
 {
@@ -340,9 +339,7 @@ export function fetch_chat_promise(
     const body = JSON.stringify({
         "messages": json_messages,
         "function": functionName,
-        "max_tokens": maxTokens,
         "stop": stop_tokens,
-        "temperature": 0.3,
         "client": `vscode-${client_version}`,
     });
     const headers = {
