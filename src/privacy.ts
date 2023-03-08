@@ -15,15 +15,21 @@ export async function get_global_access()
         await global_context.globalState.update('global_access', 2);
         return 2;
     }
+    if (typeof access !== 'number') {
+        access = Number(access);
+    }
     return access;
 }
 
-export async function set_global_access(globalDefault: number)
+export async function set_global_access(new_global_default: number)
 {
+    if (typeof new_global_default !== 'number') {
+        new_global_default = Number(new_global_default);
+    }
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context !== undefined) {
-        await global_context.globalState.update('global_access', globalDefault);
-        console.log(['Global Access set to:', globalDefault]);
+        await global_context.globalState.update('global_access', new_global_default);
+        console.log(['Global Access set to:', new_global_default]);
         PrivacySettings.update_webview(PrivacySettings._panel);
     }
 }
@@ -98,6 +104,7 @@ export async function get_file_access(uri: string)
         }
         segments.pop();
     }
-    console.log(['=> revert to global default']);
-    return await get_global_access();
+    let g =  await get_global_access();
+    console.log(['=> revert to global default', g]);
+    return g;
 }
