@@ -40,7 +40,9 @@ export class ChatTab {
         if (code_snippet) {
             question = "```\n" + code_snippet + "\n```\n" + question;
         }
-        free_floating_tab.chat_post_question(question);
+        if (question) { // no question => just a button was pressed
+            free_floating_tab.chat_post_question(question);
+        }
 
         panel.webview.onDidReceiveMessage(async (data) => {
 			switch (data.type) {
