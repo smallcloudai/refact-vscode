@@ -54,7 +54,7 @@ export class StatusBarMenu {
     {
         console.log("choose_color",this.access_level);
         if (this.access_level === 0) {
-            this.menu.text = `$(codify-logo) codify`;
+            this.menu.text = `$(codify-privacy) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = `Access Level 0`;
         } else if (this.access_level === 1) {

@@ -237,7 +237,7 @@
 				"description": "codify bookmark unchecked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\801"
+					"fontCharacter": "\\e801"
 				}
 			},
 			"codify-bookmark-checked": {
@@ -251,70 +251,70 @@
 				"description": "codify like",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\808"
+					"fontCharacter": "\\e808"
 				}
 			},
 			"codify-life-checked": {
 				"description": "codify like checked",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\807"
+					"fontCharacter": "\\e807"
 				}
 			},
 			"codify-coin": {
 				"description": "codify coin",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\802"
+					"fontCharacter": "\\e802"
 				}
 			},
             "codify-chat": {
 				"description": "codify chat",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\804"
+					"fontCharacter": "\\e804"
 				}
 			},
             "codify-reload": {
 				"description": "codify reload",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\809"
+					"fontCharacter": "\\e809"
 				}
 			},
             "codify-settings": {
 				"description": "codify settings",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\806"
+					"fontCharacter": "\\e806"
 				}
 			},
             "codify-link": {
 				"description": "codify link",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\80A"
+					"fontCharacter": "\\e80A"
 				}
 			},
             "codify-send": {
 				"description": "codify send",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\803"
+					"fontCharacter": "\\e803"
 				}
 			},
             "codify-logout": {
 				"description": "codify logout",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\812"
+					"fontCharacter": "\\e812"
 				}
 			},
             "codify-privacy": {
 				"description": "codify privacy",
 				"default": {
 					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\811"
+					"fontCharacter": "\\e811"
 				}
 			}
 		}
