@@ -175,6 +175,10 @@ export async function login()
         await usageStats.report_success_or_failure(false, "login (3)", login_url, error, "");
         return "";
     }
+    // HUGE BUG:
+    // fetchH2 thinks it should reuse the session used for login, even though the IP address is not the same!!!
+    await fetchAPI.wait_until_all_requests_finished();
+    await fetchH2.disconnectAll();
     return "OK";
 }
 

@@ -122,7 +122,12 @@ export class ChatTab {
                     let valid_html = false;
                     let html = "";
                     try {
-                        html = marked.parse(answer);
+                        let raw_html = answer;
+                        let backtick_backtick_backtick_count = (answer.match(/```/g) || []).length;
+                        if (backtick_backtick_backtick_count % 2 === 1) {
+                            raw_html = answer + "\n```";
+                        }
+                        html = marked.parse(raw_html);
                         valid_html = true;
                     } catch (e) {
                         valid_html = false;
