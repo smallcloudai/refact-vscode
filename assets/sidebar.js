@@ -17,7 +17,7 @@
         'Command 2', //1
         'Command 3'//2
     ];
-         
+
 
     let current_history = history.length;
     let current_command = 0;
@@ -46,7 +46,7 @@
         //     toolboxRun.classList.add("toolbox-run-disabled");
         //     let active = document.querySelector(".item-active");
         //     if(active) {
-        //         active.classList.remove("item-active");   
+        //         active.classList.remove("item-active");
         //     }
         // }
         if(event.key === "ArrowUp") {
@@ -66,7 +66,7 @@
                 event.target.value = '';
                 let active = document.querySelector(".item-selected");
                 if(active) {
-                    active.classList.remove("item-selected");   
+                    active.classList.remove("item-selected");
                 }
                 toolboxRun.classList.add("toolbox-run-disabled");
                 command_mode = false;
@@ -132,7 +132,7 @@
                     current_command += 1;
                 }
                 command_mode = true;
-            } 
+            }
         }
 
         // console.log('sidebar event',event);
@@ -144,7 +144,7 @@
         //     toolboxRun.classList.add("toolbox-run-disabled");
         //     let active = document.querySelector(".item-active");
         //     if(active) {
-        //         active.classList.remove("item-active");   
+        //         active.classList.remove("item-active");
         //     }
         // }
         // if(event.target.className === 'toolbox-search') {
@@ -157,7 +157,7 @@
         //             const allVisible = Array.from(toolboxItems).filter(child => {
         //                 return child.style.display !== 'none';
         //             });
-                    
+
         //             if (currentIndex < allVisible.length) {
         //                 if (currentIndex >= 0) {
         //                     allVisible[currentIndex].classList.remove('item-selected');
@@ -198,10 +198,10 @@
         //         console.log('ArrowUp on items ----------------------------->');
         //     }
         // }
-        // if(event.key === "Enter") {   
+        // if(event.key === "Enter") {
         //     vscode.postMessage({ type: "checkSelectionDefault", intent: event.target.value});
         // }
-        
+
         // if(event.key === "ArrowDown") {
         //     console.log('ArrowDown',history_index);
         //     if(history_index === history.length - 1) {
@@ -244,11 +244,6 @@
         if(event.key === "Enter") {
             let selected = document.querySelector(".item-selected");
             let active = document.querySelector(".item-active");
-            if(event.target.classList.contains('toolbox-search') && event.target.value !== '' && event.target.value.endsWith("?")) {
-                history.push(event.target.value);
-                vscode.postMessage({ type: "runChat", value: event.target.value});    
-                return;
-            }
             if(!selected && toolboxSearch.value !== '') {
                 vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
             }
@@ -273,10 +268,10 @@
             if(current) {
                 // console.log('Toolbox Run',current);
                 const item_functions = longthink_functions_today[current.id];
-                vscode.postMessage({ 
-                    type: "presetSelected", 
-                    value: JSON.stringify(item_functions.label), 
-                    id: current.id, 
+                vscode.postMessage({
+                    type: "presetSelected",
+                    value: JSON.stringify(item_functions.label),
+                    id: current.id,
                     data_function: JSON.stringify(item_functions),
                 });
             }
@@ -291,10 +286,10 @@
         // if (event.target && event.target.classList.contains("toolbox-item")) {
         // //     if(event.target.parentElement.classList.contains('muted')) { return; };
         // //     console.log(event.target.id);
-        //     // vscode.postMessage({ 
-        //     //     type: "presetSelected", 
-        //     //     value: event.target.dataset.function, 
-        //     //     id: event.target.id, 
+        //     // vscode.postMessage({
+        //     //     type: "presetSelected",
+        //     //     value: event.target.dataset.function,
+        //     //     id: event.target.id,
         //     //     data_function: event.target.dataset.function,
         //     // });
         // }
@@ -308,13 +303,13 @@
             }
         }
         if(event.target.parentElement.classList.contains("toolbox-bookmark-button")) {
-            
+
         }
         if(event.target.parentElement.classList.contains("toolbox-likes-button")) {
             let parent = event.target.parentElement.parentElement.parentElement.parentElement;
-            vscode.postMessage({ 
-                type: "presetLiked", 
-                value: parent.dataset.function, 
+            vscode.postMessage({
+                type: "presetLiked",
+                value: parent.dataset.function,
             });
         }
     });
@@ -371,7 +366,7 @@
 
 	const chatButton = document.querySelector("#chat");
 	chatButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "chat_message", value: ''});
+		vscode.postMessage({ type: "runChat", value: ''});
 	});
 
 	const settingsButton = document.querySelector("#settings");
@@ -393,7 +388,7 @@
     logoutButton.addEventListener("click", () => {
 		vscode.postMessage({ type: "logout" });
 	});
-    
+
 
     const loginButton = document.querySelector("#login");
     loginButton.addEventListener("click", () => {
@@ -418,7 +413,7 @@
                 bookmark = {
                     ...data[key],
                     'is_bookmarked': true
-                }; 
+                };
             }
             else {
                 bookmark = {
@@ -454,7 +449,7 @@
 
             const toolbox_item = document.createElement("div");
             toolbox_item.classList.add("toolbox-item");
-            if(item.catch_all_hl === 0 && item.catch_all_selection === 0) {
+            if(item.catch_all_hl === 0 && item.catch_all_selection === 0 && item.catch_question_mark === 0) {
                 toolbox_item.classList.add("toolbox-filter");
             }
             else {
@@ -463,7 +458,7 @@
             toolbox_item.id = key;
             toolbox_item.dataset.title = item.label;
             toolbox_item.dataset.function = JSON.stringify(item);
-            
+
             const header = document.createElement("div");
             header.classList.add("toolbox-header");
             const body = document.createElement("div");
@@ -496,11 +491,11 @@
             const content = document.createElement("div");
             content.classList.add('toolbox-content');
             content.innerHTML = item.mini_html;
-            
+
             // const likes_button = document.createElement("button");
             // likes_button.classList.add("toolbox-likes-button");
-            
-            
+
+
             const bookmark_button = document.createElement("button");
             bookmark_button.classList.add("toolbox-bookmark-button");
             const third_party = document.createElement("i");
@@ -531,8 +526,8 @@
             body_controls.appendChild(third_party);
             body_controls.appendChild(likes_button);
             body_controls.appendChild(bookmark_button);
-            
-            
+
+
             // function label
             const label_wrapper = document.createElement("span");
             label_wrapper.innerHTML = item.label;
@@ -652,10 +647,10 @@
             if(message.value) {
                 result = keys.find(obj => longthink_functions_today[obj].catch_all_selection === 1);
             }
-            vscode.postMessage({ 
-                type: "presetSelected", 
-                value: message.intent, 
-                id: 'intent', 
+            vscode.postMessage({
+                type: "presetSelected",
+                value: message.intent,
+                id: 'intent',
                 data_function: JSON.stringify(result),
             });
         case "selection":
@@ -697,7 +692,7 @@
             let regList = document.querySelector('#regular-list');
             let tpHeader = document.querySelector('#third-party-header');
             let tpList = document.querySelector('#third-party-list');
-    
+
             info.style.display = message.ts2web_user ? 'flex' : '';
             plan.style.display = message.ts2web_plan ? 'flex' : '';
             document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
@@ -708,16 +703,16 @@
             chat.style.display = message.ts2web_user ? 'inline-flex' : 'none';
             data.style.display = message.ts2web_user ? 'block' : 'none';
             coins.style.display = message.ts2web_user ? 'flex' : 'none';
-            
+
             if(message.ts2web_metering_balance) {
                 document.querySelector('.sidebar-coins span').innerHTML = message.ts2web_metering_balance / 100;
             }
-            
+
             // regHeader.style.display = 'none';
             // regList.style.display = 'none';
             // tpHeader.style.display = 'none';
             // tpList.style.display = 'none';
-            
+
             if (message.longthink_functions) {
                 console.log(message.longthink_functions);
                 longthink_functions_today = message.longthink_functions;
@@ -737,13 +732,13 @@
                 // }
                 // if (tp_functions) {
                 //     tpHeader.style.display = 'block';
-                //     tpList.style.display = 'block';        
+                //     tpList.style.display = 'block';
                 //     tpList.innerHTML = '';
                 //     for (const h of longthinkToHtml(tp_functions)) {
                 //         tpList.appendChild(h);
                 //     }
                 // }
-            }            
+            }
             break;
 		}
 	});

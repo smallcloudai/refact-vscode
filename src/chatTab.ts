@@ -27,7 +27,7 @@ export class ChatTab {
     {
         const panel = vscode.window.createWebviewPanel(
             "codify-chat-tab",
-            question,
+            question || "Codify Chat",
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -144,13 +144,11 @@ export class ChatTab {
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);
         request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
 
-        const max_tokens = 200;
         request.supply_stream(...fetchAPI.fetch_chat_promise(
             cancelToken,
             "chat-tab",
             this.messages,
             "freechat",
-            max_tokens,
             [],
         ));
     }

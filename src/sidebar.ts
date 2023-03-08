@@ -7,6 +7,17 @@ import * as dataCollection from "./dataCollection";
 import * as extension from "./extension";
 import * as fetchH2 from 'fetch-h2';
 
+
+function open_chat_tab(question: string, snippet: string)
+{
+    if (!question) {
+        vscode.commands.executeCommand('plugin-vscode.codifyChatTab', "");
+    } else {
+        vscode.commands.executeCommand('plugin-vscode.codifyChatTab', question, snippet);
+    }
+}
+
+
 export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
     _history: string[] = [];
@@ -45,7 +56,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "runChat": {
-                    vscode.commands.executeCommand('plugin-vscode.codifyChatTab', data.value);
+                    open_chat_tab("", "");
                     break;
                 }
                 case "presetSelected": {
@@ -53,46 +64,49 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         vscode.commands.executeCommand('workbench.action.toggleSidebarVisibility');
                     }
                     console.log('*** presetSelected ***',data);
-                    let editor = vscode.window.activeTextEditor;
-                    if (!editor) {
-                        return;
-                    }
-                    let state = estate.state_of_editor(editor, "presetSelected");
-
                     let data_function: any = data.data_function ? JSON.parse(data.data_function): {};
                     if (!data_function) {
                         console.log(["data_function is not defined", data_function]);
                         return;
                     }
-
-                    let model_force: string = data_function.model;
-                    let selection = editor.selection;
-                    let selection_empty = selection.isEmpty;
+                    let editor = vscode.window.activeTextEditor;
                     let function_name: string = "";
-                    let selected_lines_count = selection.end.line - selection.start.line + 1;
-                    if (selection_empty) {
-                        function_name = data_function.function_highlight;
-                        if (selection_empty && data_function.supports_highlight === false) {
-                            console.log(["no selection, but function", function_name, "doesn't support highlight"]);
-                            return;
+                    let model_suggest: string = data_function.model;
+                    let selected_text = "";
+                    if (editor) {
+                        let state = estate.state_of_editor(editor, "presetSelected");
+                        let selection = editor.selection;
+                        let selection_empty = selection.isEmpty;
+                        let selected_lines_count = selection.end.line - selection.start.line + 1;
+                        if (selection_empty) {
+                            function_name = data_function.function_highlight;
+                            if (selection_empty && data_function.supports_highlight === false) {
+                                console.log(["no selection, but function", function_name, "doesn't support highlight"]);
+                                return;
+                            }
+                        } else {
+                            function_name = data_function.function_selection;
+                            if (data_function.supports_selection === false) {
+                                console.log(["selection present, but", function_name, "doesn't support selection"]);
+                                return;
+                            }
                         }
-                    } else {
-                        function_name = data_function.function_selection;
-                        if (data_function.supports_selection === false) {
-                            console.log(["selection present, but", function_name, "doesn't support selection"]);
-                            return;
+                        if (state) {
+                            state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+                            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+                            await estate.switch_mode(state, estate.Mode.Normal);
                         }
+                        selected_text = editor.document.getText(selection);
                     }
                     if (typeof function_name !== "string") {
                         console.log(["function_name is not a string", function_name]);
                         return;
                     }
-                    if (state) {
-                        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
-                        state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
-                        await estate.switch_mode(state, estate.Mode.Normal);
+                    if (model_suggest === "open-chat") {
+                        open_chat_tab(data.value, selected_text);
+                    } else {
+                        await extension.follow_intent(data.value, function_name, model_suggest);
                     }
-                    await extension.follow_intent(data.value, function_name, model_force);
                     break;
                 }
 
