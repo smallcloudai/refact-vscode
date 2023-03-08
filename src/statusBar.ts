@@ -54,8 +54,8 @@ export class StatusBarMenu {
     {
         if (this.access_level === 0) {
             this.menu.text = `$(codify-privacy) codify`;
-            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-            this.menu.tooltip = `Disabled for this file`;
+            this.menu.backgroundColor = undefined;
+            this.menu.tooltip = `Codify can't access this file because of the privacy rules`;
         } else if (this.socketerror) {
             this.menu.text = `$(debug-disconnect) codify`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');

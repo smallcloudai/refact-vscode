@@ -11,7 +11,7 @@
             event.preventDefault();
             const selectedText = event.target.innerText;
             const selectedValue = event.target.children[0].value;
-            showPopup(`Be careful!<br>You are about to change global privacy default to:<br><br><b> ${selectedText}</b>`, "OK");
+            showPopup(`Be careful!<br><br>You are about to change the global privacy default to:<br><br><b> ${selectedText}</b><br><br>This might affect privacy for many projects and files that don't have their own privacy rule.`, "OK");
             const listenOk = document.querySelector('.privacy-popup-ok').addEventListener("click", (event) => {
                 event.target.children.checked = true;
                 vscode.postMessage({ type: "globalDefault", value: selectedValue });
@@ -78,8 +78,8 @@
         button.addEventListener("click", (event) => {
             currentFile = uri.split("/");
             currentLevel = Number.parseInt(state);
-            const defaultLevel = rules.find(obj => obj.value === Number.parseInt(globalDefault)); 
-            showPopup(`Privacy policy for ${currentFile[currentFile.length - 1]} is now Level ${currentLevel}<br><br>If you delete this rule, the global privacy default and rules for the parent folders will apply.<br><br>New privacy policy for <b>${currentFile[currentFile.length - 1]}</b> will be ${defaultLevel.name} - ${defaultLevel.short_description}.`, "Delete");
+            const defaultLevel = rules.find(obj => obj.value === Number.parseInt(globalDefault));
+            showPopup(`Privacy policy for ${currentFile[currentFile.length - 1]} is currently at Level ${currentLevel}<br><br>If you delete this rule, the global privacy default and rules for the parent folders will apply.`, "Delete");
             const listenDelete = document.querySelector('.privacy-popup-ok').addEventListener("click", (event) => {
                 vscode.postMessage({ type: "deleteOverride", value: uri });
                 popup.remove();
@@ -93,7 +93,7 @@
         row.appendChild(action);
         table.appendChild(row);
     }
-    
+
     function showPopup(text, actionButtonText) {
         popup = document.createElement("div");
         const popupContent = document.createElement("div");

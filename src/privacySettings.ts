@@ -28,7 +28,7 @@ export class PrivacySettings {
           short_description:
             "Codify can read your files, but only uses AI models hosted at Codify",
           long_description:
-            "Data will be sent to Codify servers only. We don't collect datasets on the server side.",
+            "Data will be sent to Codify servers only. We don't collect datasets on the server side. If you use a self-hosting server, your data will be sent only to your server.",
         },
         {
           value: 2,
@@ -159,11 +159,11 @@ export class PrivacySettings {
             <body>
                 <h1 class="codify-privacy__title">Your Privacy Rules</h1>
                 <div class="codify-privacy__global">
-                    <h2 class="codify-privacy__subtitle">Global defaults:</h2>
+                    <h2 class="codify-privacy__subtitle">Global Defaults</h2>
                     <div class="codify-privacy__defaults">
                        ${items}
                     </div>
-                    <h2 class="codify-privacy__subtitle">Global permanent rules to override the default:</h2>
+                    <h2 class="codify-privacy__subtitle">Global Permanent Rules to Override the Default</h2>
                     <div class="codify-privacy__overrides overrides">
                         <div class="overrides__header">
                             <div class="overrides__path">Path</div>
@@ -174,6 +174,7 @@ export class PrivacySettings {
                         </div>
                     </div>
                 </div>
+                <div class="codify-help-text">Use a context menu in the file tree panel to add a new rule.</div>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;
