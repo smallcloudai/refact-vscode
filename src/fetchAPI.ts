@@ -61,7 +61,7 @@ export class PendingRequest {
             }
             break;
         }
-        console.log(["feed = " + removed_prefix]);
+        // console.log(["feed = " + removed_prefix]);
         let json = JSON.parse(removed_prefix);
         if (this.streaming_callback) {
             await this.streaming_callback(json);
@@ -335,6 +335,7 @@ export function fetch_chat_promise(
             "role": role,
             "content": text,
         });
+        console.log([i, "chat", role]);
     }
     const body = JSON.stringify({
         "messages": json_messages,

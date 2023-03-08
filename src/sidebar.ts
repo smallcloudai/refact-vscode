@@ -41,10 +41,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 //     });
                 // }
                 case "presetLiked": {
-                    
+
                     break;
                 }
-                case "chat_message": {
+                case "runChat": {
                     vscode.commands.executeCommand('plugin-vscode.codifyChatTab', data.value);
                     break;
                 }
@@ -307,7 +307,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return text;
     }
     save_like(function_name: string) {
-    
+
     }
 }
 

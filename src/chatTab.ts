@@ -10,6 +10,7 @@ export class ChatTab {
     // public static current_tab: ChatTab | undefined;
     // private _disposables: vscode.Disposable[] = [];
     public web_panel: vscode.WebviewPanel;
+    public messages: [string, string][];
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
@@ -19,6 +20,7 @@ export class ChatTab {
             extensionUri,
             context
         );
+        this.messages = [];
     }
 
     public static activate_from_outside(context: vscode.ExtensionContext, question: string)
@@ -34,8 +36,8 @@ export class ChatTab {
         );
 
         let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
-        const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
-        free_floating_tab.chat_post_question(question_clean);
+        // const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
+        free_floating_tab.chat_post_question(question);
 
         panel.webview.onDidReceiveMessage(async (data) => {
 			switch (data.type) {
@@ -59,7 +61,7 @@ export class ChatTab {
     //     }
     // }
 
-    private _post_question(question: string)
+    private _question_to_div(question: string)
     {
         let valid_html = false;
         let html = "";
@@ -85,12 +87,21 @@ export class ChatTab {
             this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "Please login first."}});
             return;
         }
-        this._post_question(question);
+
+        let cancellationTokenSource = new vscode.CancellationTokenSource();
+        let cancelToken = cancellationTokenSource.token;
+
+        this.messages.push(["user", question]);
+        if (this.messages.length > 6) {
+            this.messages.shift();
+        }
+        this._question_to_div(question);
         this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "⏳"}});
         await fetchAPI.wait_until_all_requests_finished();
 
         let answer = "";
         let stack_web_panel = this.web_panel;
+        let stack_this = this;
         async function _streaming_callback(json: any)
         {
             if (json === undefined) {
@@ -112,7 +123,7 @@ export class ChatTab {
                     }
                     if (valid_html) {
                         stack_web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: html}});
-                        console.log(["chat answer", html]);
+                        // console.log(["chat answer", html]);
                     }
                 }
             }
@@ -121,10 +132,9 @@ export class ChatTab {
         async function _streaming_end_callback()
         {
             console.log("streaming end callback");
+            stack_this.messages.push(["assistant", answer]);
         }
 
-        let cancellationTokenSource = new vscode.CancellationTokenSource();
-        let cancelToken = cancellationTokenSource.token;
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);
         request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
 
@@ -132,7 +142,7 @@ export class ChatTab {
         request.supply_stream(...fetchAPI.fetch_chat_promise(
             cancelToken,
             "chat-tab",
-            [["user", question]],
+            this.messages,
             "freechat",
             max_tokens,
             [],
