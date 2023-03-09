@@ -103,6 +103,7 @@
             break;
         case "chat-post-answer":
             chat_render(message.value);
+            console.log('chat render answer ---------->', message.value);
             break;
         }
     });

@@ -264,6 +264,9 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         }
         let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
         let pos1 = editor.selection.active;
+        if(global.side_panel !== undefined) {
+            global.side_panel.editor_empty_selection(editor.selection.isEmpty);
+        }
         await interactiveDiff.on_cursor_moved(editor, pos1, is_mouse);
         if (state && state.completion_reset_on_cursor_movement) {
             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
@@ -280,9 +283,6 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         }
         on_text_edited(editor);
     });
-    if(global.side_panel !== undefined) {
-        global.side_panel.update_editor_state(state);
-    }
 }
 
 

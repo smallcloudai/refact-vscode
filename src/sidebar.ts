@@ -155,12 +155,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    public update_editor_state(state: any) {
-        console.log('------------->>> editor state updated');
-        // this._view!.webview.postMessage({
-        //     command: "editor_state",
-        //     value: estate.state_of_editor(state)
-        // });
+    public editor_empty_selection(state: boolean = true) {
+        this._view!.webview.postMessage({
+            command: "editor_empty_selection",
+            value: state
+        });
     }
 
     // public check_selection() {
@@ -289,16 +288,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <div class="toolbox">
-                    <div class="toolbox-inline">
-                        <input class="toolbox-search" id="toolbox-search" placeholder="↓ commands; ↑ history">
-                        <button class="toolbox-run toolbox-run-disabled">▶<span>Run</span></button>
-                    </div>
-                    <div class="toolbox-container">
-                        <div class="toolbox-list"></div>
-                    </div>
-                </div>
                 <div id="sidebar" class="sidebar">
+                    <div class="toolbox">
+                        <div class="toolbox-inline">
+                            <input class="toolbox-search" id="toolbox-search" placeholder="↓ commands; ↑ history">
+                        </div>
+                        <div class="toolbox-container">
+                            <div class="toolbox-list"></div>
+                        </div>
+                    </div>
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
                         <div class="sidebar-logged">Account: <b><span></span></b></div>
