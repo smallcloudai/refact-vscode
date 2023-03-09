@@ -5,6 +5,8 @@
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.codify-chat__content');
 
+    chat_input.focus();
+
     chat_input.addEventListener('input', function () {
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
@@ -103,7 +105,6 @@
             break;
         case "chat-post-answer":
             chat_render(message.value);
-            console.log('chat render answer ---------->', message.value);
             break;
         }
     });

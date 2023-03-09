@@ -146,24 +146,25 @@ body.vscode-dark {
 }
 
 .codify-chat__item ul li {
-	border-bottom: 1px solid var(--secondary);
-	padding-bottom: 5px;
+	margin: 5px 0;
 }
 .codify-chat__item ol {
-	list-style: none;
 	padding: 0;
+    counter-reset: mycounter;
 }
 
 .codify-chat__item ol li {
-	border-bottom: 1px solid var(--secondary);
-	counter-increment: step-counter;
-	margin-bottom: 5px;
-	padding-left: 20px;
+	/* margin: 5px 0; */
+    margin-left: 16px;
+    /* padding-left: 0.5em; */
+    margin-top: 5px;
+    margin-bottom: 5px;
 }
-
 .codify-chat__item ol li:before {
-	content: counter(step-counter) ".";
-	display: inline-block;
-	width: 20px;
-	margin-left: -20px;
-}
+    content: counter(mycounter) ".";
+    counter-increment: mycounter;
+    position: absolute;
+    left: -2em;
+    width: 1.5em;
+    text-align: right;
+  }
