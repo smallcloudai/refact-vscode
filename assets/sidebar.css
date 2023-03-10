@@ -549,6 +549,13 @@ body.vscode-light #logout {
 	display: flex;
 	justify-content: flex-end;
 }
+.toolbox-content-actions {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 10px;
+}
 .toolbox-back {
 	width: 80px;
 	display: block;
@@ -557,7 +564,6 @@ body.vscode-light #logout {
 	color: var(--vscode-editorWidget-background) !important;
 	padding: 4px 6px;
 	cursor: pointer;
-	margin-bottom: 10px;
 }
 .toolbox-bookmark-button {
 	display: flex;

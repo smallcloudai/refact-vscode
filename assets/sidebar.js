@@ -245,7 +245,11 @@
                 selected.classList.add("item-active");
             }
             if(active) {
-                vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
+                let searchValue = toolboxSearch.value;
+                if(searchValue === '') {
+                    searchValue = active.dataset.function;
+                }
+                vscode.postMessage({ type: "presetSelected", value: searchValue, data_function: active.dataset.function });
             }
         }
         if(event.key === "Escape" && document.querySelector(".item-active")){
@@ -277,16 +281,14 @@
     // });
 
     toolboxList.addEventListener("click", (event) => {
-        // if (event.target && event.target.classList.contains("toolbox-item")) {
-        // //     if(event.target.parentElement.classList.contains('muted')) { return; };
-        // //     console.log(event.target.id);
-        //     // vscode.postMessage({
-        //     //     type: "presetSelected",
-        //     //     value: event.target.dataset.function,
-        //     //     id: event.target.id,
-        //     //     data_function: event.target.dataset.function,
-        //     // });
-        // }
+        if (event.target && event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
+            let searchValue = toolboxSearch.value;
+            if(searchValue === '') {
+                searchValue = event.target.dataset.function;
+            }
+            let target = event.target.parentElement.parentElement;
+            vscode.postMessage({ type: "presetSelected", value: searchValue, data_function: target.dataset.function });
+        }
         if (event.target.classList.contains("toolbox-back")) {
             let active = document.querySelector(".item-active");
             document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
@@ -400,6 +402,7 @@
             toolbox_item.id = key;
             toolbox_item.dataset.title = item.label;
             toolbox_item.dataset.function = JSON.stringify(item);
+            toolbox_item.dataset.function_name = item.function_name;
 
             const header = document.createElement("div");
             header.classList.add("toolbox-header");
@@ -427,10 +430,15 @@
             // run 
             const run = document.createElement("button");
             run.classList.add('toolbox-run');
+            if(item.supports_selection === 1 && item.supports_highlight === 0 && editor_empty_selection) {
+                run.classList.add('toolbox-run-disabled');
+            }
             run.innerHTML = '▶';
             const run_clone = run.cloneNode(true);
 
             // back
+            const contentActions = document.createElement("div");
+            contentActions.classList.add('toolbox-content-actions');
             const backButton = document.createElement('button');
             backButton.classList.add('toolbox-back');
             backButton.innerText = '← Back';
@@ -474,7 +482,6 @@
             body_controls.appendChild(third_party);
             body_controls.appendChild(likes_button);
             body_controls.appendChild(bookmark_button);
-            body_controls.appendChild(run_clone);
 
 
             // function label
@@ -501,8 +508,10 @@
             header.appendChild(likes);
             header.appendChild(run);
 
-            body.appendChild(backButton);
+            contentActions.appendChild(backButton);
+            contentActions.appendChild(run_clone);
             body.appendChild(selection_notice);
+            body.appendChild(contentActions);
             body.appendChild(body_controls);
             body.appendChild(content);
 
@@ -544,7 +553,6 @@
                         active.classList.remove("item-active");
                     }
                     item.classList.add("item-active");
-                    toolboxSearch.value = item.dataset.title;
                     const item_name = item.id;
                     const item_functions = longthink_functions_today[item_name];
                     if(item_functions.supports_highlight === 1) {
@@ -590,29 +598,32 @@
 	window.addEventListener("message", (event) => {
 		const message = event.data;
 		switch (message.command) {
-        case "selectionDefault":
-            const keys = Object.keys(longthink_functions_today);
-            let result = keys.find(obj => longthink_functions_today[obj].catch_all_hl === 1);
-            if(message.value) {
-                result = keys.find(obj => longthink_functions_today[obj].catch_all_selection === 1);
-            }
-            vscode.postMessage({
-                type: "presetSelected",
-                value: message.intent,
-                id: 'intent',
-                data_function: JSON.stringify(result),
-            });
-        case "selection":
-            editor_selection = message.value;
-            if(editor_selection) {
-                let notice = document.querySelector(".item-active .toolbox-notice");
-                if(notice) {
-                    notice.classList.add('toolbox-notice-hidden');
-                }
-            }
-            break;
+        // case "selectionDefault":
+        //     const keys = Object.keys(longthink_functions_today);
+        //     let result = keys.find(obj => longthink_functions_today[obj].catch_all_hl === 1);
+        //     if(message.value) {
+        //         result = keys.find(obj => longthink_functions_today[obj].catch_all_selection === 1);
+        //     }
+        //     vscode.postMessage({
+        //         type: "presetSelected",
+        //         value: message.intent,
+        //         id: 'intent',
+        //         data_function: JSON.stringify(result),
+        //     });
+        // case "selection":
+        //     editor_selection = message.value;
+        //     if(editor_selection) {
+        //         let notice = document.querySelector(".item-active .toolbox-notice");
+        //         if(notice) {
+        //             notice.classList.add('toolbox-notice-hidden');
+        //         }
+        //     }
+        //     break;
         case "editor_empty_selection":
             editor_empty_selection = message.value;
+            renderToolbox(longthink_functions_today);
+            search_filter();
+            command_handler();
             break;
         case "focus":
             toolboxSearch.focus();
@@ -654,7 +665,7 @@
             // tpList.style.display = 'none';
 
             if (message.longthink_functions) {
-                console.log(message.longthink_functions);
+                console.log('longthink_functions',message.longthink_functions);
                 longthink_functions_today = message.longthink_functions;
                 renderToolbox(message.longthink_functions);
                 search_filter();
