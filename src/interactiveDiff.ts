@@ -174,6 +174,7 @@ export async function query_diff(
         feedback.ts_req = Date.now();
     }
 
+    let third_party = false;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         "query_diff",  // scope
@@ -187,7 +188,8 @@ export async function query_diff(
         max_edits,
         stop_tokens,
         stream,
-        model_force
+        model_force,
+        third_party,
     ));
 }
 

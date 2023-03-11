@@ -198,7 +198,8 @@ export function inference_login_force_retry()
 
 export async function inference_login(): Promise<boolean>
 {
-    let url = fetchAPI.inference_url("/v1/secret-key-activate");
+    let third_party = true;
+    let url = fetchAPI.inference_url("/v1/secret-key-activate", third_party);  // not third_party doesn't need activation, it's a self-hosted server
     if (global.last_positive_result + 600*1000 < Date.now()) {
         console.log("inference_login: last_positive_result too old, force disconnect");
         await fetchH2.disconnectAll();
@@ -211,7 +212,7 @@ export async function inference_login(): Promise<boolean>
     }
     if (global.streamlined_login_countdown >= 0 || url === "") {
         await login();
-        url = fetchAPI.inference_url("/v1/secret-key-activate");
+        url = fetchAPI.inference_url("/v1/secret-key-activate", third_party);
     }
     // Without login it will still work, with inference URL in settings.
     let apiKey = secret_api_key();

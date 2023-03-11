@@ -82,11 +82,11 @@
 				"codify.apiKey": {
 					"type": "string",
 					"default": null,
-					"description": "Secret API Key. It's used to authenticate your requests."
+					"description": "Secret API Key. It's used to authenticate your requests. It's filled automatically on first login, you don't have to change it."
 				},
 				"codify.infurl": {
 					"type": "string",
-					"description": "For self-hosted inference, set the URL to your inference server, for example http://127.0.0.1:8008/\nLeave blank otherwise.",
+					"description": "For self-hosted inference, set the URL to your inference server, for example https://127.0.0.1:8008/\nLeave blank otherwise.",
 					"default": ""
 				},
 				"codify.autoHideSidebar": {

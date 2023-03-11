@@ -99,7 +99,7 @@ export class ChatTab {
         }
         let login = await userLogin.inference_login();
         if (!login) {
-            this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "Please login first."}});
+            this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Codify inference server in currently experiencing issues."}});
             return;
         }
 

@@ -253,7 +253,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                     max_edits,
                     stop_tokens,
                     stream,
-                    "longthink/experimental"
+                    "longthink/experimental",
+                    third_party,
                 );
             } else {
                 [promise, api_fields] = fetch.fetch_api_promise(
@@ -269,6 +270,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                     max_edits,
                     stop_tokens,
                     stream,
+                    "",
+                    third_party,
                 );
             }
             _completion_data_feedback_candidate = api_fields;

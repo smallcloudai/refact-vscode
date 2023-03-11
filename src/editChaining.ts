@@ -103,6 +103,7 @@ export async function query_edit_chaining(animation: boolean): Promise<String>
         interactiveDiff.animation_start(editor, state);
     }
     let stream = false;
+    let third_party = false;
     request.supply_stream(...fetch.fetch_api_promise(
         cancelToken,
         "edit-chain",
@@ -116,6 +117,8 @@ export async function query_edit_chaining(animation: boolean): Promise<String>
         max_edits,
         stop_tokens,
         stream,
+        "",
+        third_party,
     ));
     // if ((state.mode === estate.Mode.DiffWait) && !cancelToken.isCancellationRequested) {
     //     state.mode = estate.Mode.Normal;

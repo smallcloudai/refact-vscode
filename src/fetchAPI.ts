@@ -203,9 +203,9 @@ export function save_url_from_login(url: string)
 }
 
 
-export function inference_url(addthis: string)
+export function inference_url(addthis: string, third_party: boolean)
 {
-    let url_ = vscode.workspace.getConfiguration().get('codify.infurl');
+    let url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
     let url: string;
     if (typeof url_ !== 'string' || url_ === '' || !url_) {
         url = global_inference_url_from_login;
@@ -237,9 +237,10 @@ export function fetch_api_promise(
     stop_tokens: string[],
     stream: boolean,
     suggest_longthink_model: string = "",
+    third_party: boolean = false,
 ): [Promise<fetchH2.Response>, estate.ApiFields]
 {
-    let url = inference_url("/v1/contrast");
+    let url = inference_url("/v1/contrast", third_party);
     let model_ = vscode.workspace.getConfiguration().get('codify.model') || "CONTRASTcode";
     let model_longthink: string = vscode.workspace.getConfiguration().get('codify.longthinkModel') || suggest_longthink_model;
     if (suggest_longthink_model) {
@@ -313,9 +314,10 @@ export function fetch_chat_promise(
     messages: [string, string][],
     functionName: string,
     stop_tokens: string[],
+    third_party: boolean = false,
 ): [Promise<fetchH2.Response>, estate.ApiFields]
 {
-    let url = inference_url("/chat-v1/completions");
+    let url = inference_url("/chat-v1/completions", third_party);
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return [Promise.reject("No API key"), new estate.ApiFields()];
