@@ -10,7 +10,7 @@
     // const toolboxRun = document.querySelector(".toolbox-run");
     let toolboxIndex = 0;
     let longthink_functions_today;
-    let editor_empty_selection = true;
+    let editor_inform_how_many_lines_selected = 0;
 
     let history = [
         'Command 1', //0
@@ -183,7 +183,7 @@
         // }
         // if(event.target.className === 'toolbox-item') {
         //     if(event.key === "Enter") {
-        //         vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
+        //         vscode.postMessage({ type: "function_activated", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
         //     }
         //     if(event.key === "ArrowDown") {
         //         console.log('ArrowDown on items ----------------------------->');
@@ -236,27 +236,33 @@
     body.addEventListener("keyup", (event) => {
         event.preventDefault();
         if(event.key === "Enter") {
-            let selected = document.querySelector(".item-selected");
-            let active = document.querySelector(".item-active");
-            if(!selected && toolboxSearch.value !== '') {
-                vscode.postMessage({ type: "presetSelected", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
-            }
-            if(selected) {
-                selected.classList.add("item-active");
-            }
-            if(active) {
-                let searchValue = toolboxSearch.value;
-                if(searchValue === '') {
-                    searchValue = active.dataset.function;
-                }
-                vscode.postMessage({ type: "presetSelected", value: searchValue, data_function: active.dataset.function });
+            let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
+            let single_page = document.querySelector(".item-active");  // single page
+            if (single_page) {
+                let intent = toolboxSearch.value;
+                vscode.postMessage({
+                    type: "function_activated",
+                    intent: intent,
+                    data_function: active.dataset.function, // this a string containing json
+                });
+            } else if (selected_in_list) {
+                let intent = toolboxSearch.value;
+                vscode.postMessage({
+                    type: "function_activated",
+                    intent: intent,
+                    data_function: selected_in_list.dataset.function, // this a string containing json
+                });
             }
         }
-        if(event.key === "Escape" && document.querySelector(".item-active")){
+        if(event.key === "Escape"){
             event.preventDefault();
             let active = document.querySelector(".item-active");
-            if(active) {
+            if (active) {
                 active.classList.remove("item-active");
+            } else {
+                vscode.postMessage({
+                    type: "focus_back_to_editor",
+                });
             }
         }
     });
@@ -267,7 +273,7 @@
     //             // console.log('Toolbox Run',current);
     //             const item_functions = longthink_functions_today[current.id];
     //             vscode.postMessage({
-    //                 type: "presetSelected",
+    //                 type: "function_activated",
     //                 value: JSON.stringify(item_functions.label),
     //                 id: current.id,
     //                 data_function: JSON.stringify(item_functions),
@@ -282,12 +288,16 @@
 
     toolboxList.addEventListener("click", (event) => {
         if (event.target && event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
-            let searchValue = toolboxSearch.value;
-            if(searchValue === '') {
-                searchValue = event.target.dataset.function;
-            }
+            let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement;
-            vscode.postMessage({ type: "presetSelected", value: searchValue, data_function: target.dataset.function });
+            if (!target) {
+                return;
+            }
+            vscode.postMessage({
+                type: "function_activated",
+                intent: intent,
+                data_function: target.dataset.function
+            });
         }
         if (event.target.classList.contains("toolbox-back")) {
             let active = document.querySelector(".item-active");
@@ -427,10 +437,13 @@
                 bookmark_icon.classList.add("toolbox-mark");
             }
 
-            // run 
+            // run
             const run = document.createElement("button");
             run.classList.add('toolbox-run');
-            if(item.supports_selection === 1 && item.supports_highlight === 0 && editor_empty_selection) {
+            let selection_within_limits = (
+                editor_inform_how_many_lines_selected >= item.selected_lines_min &&
+                editor_inform_how_many_lines_selected <= item.selected_lines_max);
+            if(item.supports_selection === 1 && item.supports_highlight === 0 && !selection_within_limits) {
                 run.classList.add('toolbox-run-disabled');
             }
             run.innerHTML = '▶';
@@ -605,7 +618,7 @@
         //         result = keys.find(obj => longthink_functions_today[obj].catch_all_selection === 1);
         //     }
         //     vscode.postMessage({
-        //         type: "presetSelected",
+        //         type: "function_activated",
         //         value: message.intent,
         //         id: 'intent',
         //         data_function: JSON.stringify(result),
@@ -619,8 +632,8 @@
         //         }
         //     }
         //     break;
-        case "editor_empty_selection":
-            editor_empty_selection = message.value;
+        case "editor_inform_how_many_lines_selected":
+            editor_inform_how_many_lines_selected = message.value;
             renderToolbox(longthink_functions_today);
             search_filter();
             command_handler();

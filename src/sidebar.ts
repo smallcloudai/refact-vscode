@@ -21,6 +21,7 @@ function open_chat_tab(question: string, snippet: string)
 export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
     _history: string[] = [];
+    selected_lines_count: number = -1;
 
     constructor(private readonly _context: any) {}
 
@@ -28,10 +29,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken
-        ) {
-            this._view = webviewView;
+    ) {
+        this._view = webviewView;
 
-            webviewView.webview.options = {
+        // TODO: doesn't work, maybe send later?
+        this._view.webview.postMessage({
+            command: "editor_inform_how_many_lines_selected",
+            value: this.selected_lines_count
+        });
+
+        webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [this._context.extensionUri],
         };
@@ -51,6 +58,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 //         this.check_selection();
                 //     });
                 // }
+                case "focus_back_to_editor": {
+                    vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+                    break;
+                }
                 case "presetLiked": {
 
                     break;
@@ -59,34 +70,41 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     open_chat_tab("", "");
                     break;
                 }
-                case "presetSelected": {
+                case "function_activated": {
                     if(vscode.workspace.getConfiguration().get('codify.autoHideSidebar')) {
                         vscode.commands.executeCommand('workbench.action.toggleSidebarVisibility');
                     }
-                    console.log('*** presetSelected ***',data);
-                    let data_function: any = data.data_function ? JSON.parse(data.data_function): {};
-                    if (!data_function) {
-                        console.log(["data_function is not defined", data_function]);
+                    console.log('*** function_activated ***', data);
+                    if (!data.data_function) {
+                        console.log(["function_dict is not defined", data.data_function]);
                         return;
                     }
+                    let function_dict: any = JSON.parse(data.data_function);
                     let editor = vscode.window.activeTextEditor;
                     let function_name: string = "";
-                    let model_suggest: string = data_function.model;
+                    let model_suggest: string = function_dict.model;
                     let selected_text = "";
                     if (editor) {
-                        let state = estate.state_of_editor(editor, "presetSelected");
+                        let state = estate.state_of_editor(editor, "function_activated");
                         let selection = editor.selection;
                         let selection_empty = selection.isEmpty;
                         let selected_lines_count = selection.end.line - selection.start.line + 1;
+                        // TODO: empty wrong, min < selected_lines_count < max
                         if (selection_empty) {
-                            function_name = data_function.function_highlight;
-                            if (selection_empty && data_function.supports_highlight === false) {
+                            function_name = function_dict.function_highlight;
+                            if (!function_name) {
+                                function_name = function_dict.function_name;
+                            }
+                            if (selection_empty && function_dict.supports_highlight === false) {
                                 console.log(["no selection, but function", function_name, "doesn't support highlight"]);
                                 return;
                             }
                         } else {
-                            function_name = data_function.function_selection;
-                            if (data_function.supports_selection === false) {
+                            function_name = function_dict.function_selection;
+                            if (!function_name) {
+                                function_name = function_dict.function_name;
+                            }
+                            if (function_dict.supports_selection === false) {
                                 console.log(["selection present, but", function_name, "doesn't support selection"]);
                                 return;
                             }
@@ -102,10 +120,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         console.log(["function_name is not a string", function_name]);
                         return;
                     }
-                    if (model_suggest === "open-chat") {
-                        open_chat_tab(data.value, selected_text);
+                    let intent: string;
+                    if (function_dict.model_fixed_intent) {
+                        intent = function_dict.model_fixed_intent;
                     } else {
-                        await extension.follow_intent(data.value, function_name, model_suggest);
+                        if (typeof data.intent !== "string") {
+                            console.log(["data.value is not a string", data.value]);
+                            return;
+                        }
+                        intent = data.intent;
+                    }
+                    if (model_suggest === "open-chat") {
+                        open_chat_tab(intent, selected_text);
+                    } else {
+                        await extension.follow_intent(intent, function_name, model_suggest);
                     }
                     break;
                 }
@@ -155,12 +183,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    public editor_empty_selection(state: boolean = true) {
-        this._view!.webview.postMessage({
-            command: "editor_empty_selection",
-            value: state
-        });
+    public editor_inform_how_many_lines_selected(selected_lines: number)
+    {
+        this.selected_lines_count = selected_lines;
+        if (this._view) {
+            if (this._view.webview) {
+                this._view.webview.postMessage({
+                    command: "editor_inform_how_many_lines_selected",
+                    value: this.selected_lines_count
+                });
+            }
+        }
     }
+
 
     // public check_selection() {
 

@@ -258,14 +258,18 @@ export function keyboard_events_on(editor: vscode.TextEditor)
     }
     state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection(async (ev: vscode.TextEditorSelectionChangeEvent) => {
         completionProvider.on_cursor_moved();
+        let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
         let ev_editor = ev.textEditor;
+        let pos1 = ev_editor.selection.active;
+        if(global.side_panel !== undefined) {
+            let selected_lines = 0;
+            if (!ev_editor.selection.isEmpty) {
+                selected_lines = 1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
+            }
+            global.side_panel.editor_inform_how_many_lines_selected(selected_lines);
+        }
         if (!editor || editor !== ev_editor) {
             return;
-        }
-        let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
-        let pos1 = editor.selection.active;
-        if(global.side_panel !== undefined) {
-            global.side_panel.editor_empty_selection(editor.selection.isEmpty);
         }
         await interactiveDiff.on_cursor_moved(editor, pos1, is_mouse);
         if (state && state.completion_reset_on_cursor_movement) {
@@ -331,23 +335,17 @@ export function on_text_edited(editor: vscode.TextEditor)
 
 function on_change_active_editor(editor: vscode.TextEditor | undefined)
 {
-    if (global.current_editor_text_edited_event) {
-        global.current_editor_text_edited_event.dispose();
-        global.current_editor_text_edited_event = undefined;
+    if (!editor) {
+        return;
     }
-    global.current_editor_text_edited_event = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
-        if (!editor) {
-            return;
+    let state_stored = editor2state.get(editor);
+    if (!state_stored) {
+        let state = state_of_editor(editor, "change_active");
+        if (state) {
+            // this does almost nothing, but the state will be there for inline completion to pick up
+            switch_mode(state, Mode.Normal);
         }
-        let state_stored = editor2state.get(editor);
-        if (!state_stored) {
-            let state = state_of_editor(editor, "change_active");
-            if (state) {
-                // this does almost nothing, but the state will be there for inline completion to pick up
-                switch_mode(state, Mode.Normal);
-            }
-        }
-    });
+    }
 }
 
 

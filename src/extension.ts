@@ -29,7 +29,6 @@ declare global {
     var user_metering_balance: number;
     var global_context: vscode.ExtensionContext|undefined;
     var streamlined_login_countdown: number;
-    var current_editor_text_edited_event: vscode.Disposable|undefined;
     var longthink_functions_today: {[key: string]: {[key: string]: string}} | undefined;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
