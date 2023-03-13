@@ -535,8 +535,27 @@
         });
     }
 
-    function render_function(item) {
-
+    function toolbox_update_selection() {
+        const toolboxItems = document.querySelectorAll(".toolbox-item");
+        toolboxItems.forEach((item) => {
+            let item_functions = JSON.parse(item.dataset.function);
+            let run = item.querySelector(".toolbox-run");
+            let content_run = item.querySelector(".toolbox-content-actions .toolbox-run");
+            let notice = item.querySelector(".toolbox-notice");
+            let selection_within_limits = (
+                editor_inform_how_many_lines_selected >= item_functions.selected_lines_min &&
+                editor_inform_how_many_lines_selected <= item_functions.selected_lines_max);
+            if(item_functions.supports_selection === 1 && item_functions.supports_highlight === 0 && !selection_within_limits) {
+                run.classList.add('toolbox-run-disabled');
+                content_run.classList.add('toolbox-run-disabled');
+                notice.style.display = 'inline-flex';
+            }
+            else {
+                run.classList.remove('toolbox-run-disabled');
+                content_run.classList.remove('toolbox-run-disabled');
+                notice.style.display = 'none';
+            }
+        });
     }
 
     function render_bookmarks() {
@@ -634,9 +653,7 @@
         //     break;
         case "editor_inform_how_many_lines_selected":
             editor_inform_how_many_lines_selected = message.value;
-            renderToolbox(longthink_functions_today);
-            search_filter();
-            command_handler();
+            toolbox_update_selection();
             break;
         case "focus":
             toolboxSearch.focus();
