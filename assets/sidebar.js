@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 (function () {
-	const vscode = acquireVsCodeApi();
-	// let presets = document.querySelectorAll(".presets li");
+    const vscode = acquireVsCodeApi();
+    // let presets = document.querySelectorAll(".presets li");
     const body = document.querySelector("body");
     const sidebar = document.querySelector("#sidebar");
     const toolbox = document.querySelector(".toolbox");
@@ -11,30 +11,26 @@
     let toolboxIndex = 0;
     let longthink_functions_today;
     let editor_inform_how_many_lines_selected = 0;
+    let function_bookmarks = [];
 
-    let history = [
-        'Command 1', //0
-        'Command 2', //1
-        'Command 3'//2
-    ];
-
+    let history = [];
 
     let current_history = history.length;
     let current_command = 0;
     let history_mode = false;
     let command_mode = false;
-    toolboxSearch.addEventListener("keyup", ( event ) => {
+    toolboxSearch.addEventListener("keyup", (event) => {
         event.preventDefault();
-        if(event.target.value !== '') {
-            if(document.querySelector('item-active')) {
+        if (event.target.value !== '') {
+            if (document.querySelector('item-active')) {
                 document.querySelector('item-active').classList.remove('item-active');
             }
         }
-        if(event.target.value === '') {
-            if(document.querySelector('item-selected')) {
+        if (event.target.value === '') {
+            if (document.querySelector('item-selected')) {
                 document.querySelector('item-selected').classList.remove('item-selected');
             }
-            if(document.querySelector('item-active')) {
+            if (document.querySelector('item-active')) {
                 document.querySelector('item-active').classList.remove('item-active');
             }
         }
@@ -47,37 +43,37 @@
         //         active.classList.remove("item-active");
         //     }
         // }
-        if(event.key === "ArrowUp") {
-            if(!command_mode && !history_mode && current_history !== 0) {
+        if (event.key === "ArrowUp") {
+            if (!command_mode && !history_mode && current_history !== 0) {
                 event.target.value = history[current_history];
                 history_mode = true;
             }
-            if(!command_mode && history_mode && current_history !== 0) {
+            if (!command_mode && history_mode && current_history !== 0) {
                 current_history--;
                 event.target.value = history[current_history];
                 history_mode = true;
             }
-            if(command_mode && !history_mode && current_command === 0) {
+            if (command_mode && !history_mode && current_command === 0) {
                 current_command = 0;
                 event.target.value = '';
                 let active = document.querySelector(".item-selected");
-                if(active) {
+                if (active) {
                     active.classList.remove("item-selected");
                 }
                 command_mode = false;
             }
-            if(command_mode && !history_mode && current_command !== 0) {
+            if (command_mode && !history_mode && current_command !== 0) {
                 const toolboxItems = document.querySelectorAll(".toolbox-item");
                 const all_visible = Array.from(toolboxItems).filter(child => {
                     return child.style.display !== 'none';
                 });
-                if(current_command < all_visible.length) {
+                if (current_command < all_visible.length) {
                     all_visible[current_command].classList.remove('item-selected');
                     all_visible[current_command - 1].classList.add('item-selected');
                     event.target.value = all_visible[current_command - 1].dataset.title;
                     current_command -= 1;
                 }
-                if(current_command === all_visible.length) {
+                if (current_command === all_visible.length) {
                     all_visible[current_command - 1].classList.remove('item-selected');
                     all_visible[current_command - 2].classList.add('item-selected');
                     event.target.value = all_visible[current_command - 2].dataset.title;
@@ -86,23 +82,23 @@
                 command_mode = true;
             }
         }
-        if(event.target.classList.contains('toolbox-search') && event.key === "ArrowDown") {
-            if(!command_mode && history_mode && current_history === (history.length - 1)) {
+        if (event.target.classList.contains('toolbox-search') && event.key === "ArrowDown") {
+            if (!command_mode && history_mode && current_history === (history.length - 1)) {
                 current_history = history.length;
                 event.target.value = '';
                 history_mode = false;
             }
-            if(!command_mode && history_mode && current_history < (history.length - 1)) {
+            if (!command_mode && history_mode && current_history < (history.length - 1)) {
                 current_history++;
                 event.target.value = history[current_history];
                 history_mode = true;
             }
-            if(command_mode && !history_mode && current_command >= 1) {
+            if (command_mode && !history_mode && current_command >= 1) {
                 const toolbox_items = document.querySelectorAll(".toolbox-item");
                 const all_visible = Array.from(toolbox_items).filter(child => {
                     return child.style.display !== 'none';
                 });
-                if(current_command < all_visible.length) {
+                if (current_command < all_visible.length) {
                     if (current_command > 0) {
                         all_visible[current_command - 1].classList.remove('item-selected');
                     }
@@ -112,12 +108,12 @@
                 }
                 command_mode = true;
             }
-            if(!command_mode && !history_mode) {
+            if (!command_mode && !history_mode) {
                 const toolbox_items = document.querySelectorAll(".toolbox-item");
                 const all_visible = Array.from(toolbox_items).filter(child => {
                     return child.style.display !== 'none';
                 });
-                if(current_command < all_visible.length) {
+                if (current_command < all_visible.length) {
                     if (current_command > 0) {
                         all_visible[current_command - 1].classList.remove('item-selected');
                     }
@@ -235,7 +231,7 @@
 
     body.addEventListener("keyup", (event) => {
         event.preventDefault();
-        if(event.key === "Enter") {
+        if (event.key === "Enter") {
             let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
             let single_page = document.querySelector(".item-active");  // single page
             if (single_page) {
@@ -254,7 +250,7 @@
                 });
             }
         }
-        if(event.key === "Escape"){
+        if (event.key === "Escape") {
             event.preventDefault();
             let active = document.querySelector(".item-active");
             if (active) {
@@ -266,25 +262,6 @@
             }
         }
     });
-
-    // toolboxRun.addEventListener("click", ( event ) => {
-    //         const current = document.querySelector(".item-active");
-    //         if(current) {
-    //             // console.log('Toolbox Run',current);
-    //             const item_functions = longthink_functions_today[current.id];
-    //             vscode.postMessage({
-    //                 type: "function_activated",
-    //                 value: JSON.stringify(item_functions.label),
-    //                 id: current.id,
-    //                 data_function: JSON.stringify(item_functions),
-    //             });
-    //         }
-    //         else {
-    //             if(toolboxSearch.value !== '') {
-    //                 vscode.postMessage({ type: "checkSelectionDefault", intent: toolboxSearch.value});
-    //             }
-    //         }
-    // });
 
     toolboxList.addEventListener("click", (event) => {
         if (event.target && event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
@@ -302,15 +279,15 @@
         if (event.target.classList.contains("toolbox-back")) {
             let active = document.querySelector(".item-active");
             document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
-            if(active) {
+            if (active) {
                 toolboxSearch.value = '';
                 active.classList.remove("item-active");
             }
         }
-        if(event.target.parentElement.classList.contains("toolbox-bookmark-button")) {
+        if (event.target.parentElement.classList.contains("toolbox-bookmark-button")) {
 
         }
-        if(event.target.parentElement.classList.contains("toolbox-likes-button")) {
+        if (event.target.parentElement.classList.contains("toolbox-likes-button")) {
             let parent = event.target.parentElement.parentElement.parentElement.parentElement;
             vscode.postMessage({
                 type: "presetLiked",
@@ -319,63 +296,67 @@
         }
     });
 
-	const chatButton = document.querySelector("#chat");
-	chatButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "runChat", value: ''});
-	});
+    const chatButton = document.querySelector("#chat");
+    chatButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "runChat", value: '' });
+    });
 
-	const settingsButton = document.querySelector("#settings");
-	settingsButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "openSettings" });
-	});
+    const settingsButton = document.querySelector("#settings");
+    settingsButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "openSettings" });
+    });
 
     const profileButton = document.querySelector("#profile");
-	profileButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "js2ts_goto_profile" });
-	});
+    profileButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "js2ts_goto_profile" });
+    });
 
     const dataButton = document.querySelector("#datacollection");
-	dataButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "js2ts_goto_datacollection" });
-	});
+    dataButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "js2ts_goto_datacollection" });
+    });
 
-	const logoutButton = document.querySelector("#logout");
+    const logoutButton = document.querySelector("#logout");
     logoutButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "logout" });
-	});
+        vscode.postMessage({ type: "logout" });
+    });
 
 
     const loginButton = document.querySelector("#login");
     loginButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "login" });
-	});
+        vscode.postMessage({ type: "login" });
+    });
 
     const privacyButton = document.querySelector("#privacy");
     privacyButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "privacy" });
-	});
+        vscode.postMessage({ type: "privacy" });
+    });
 
     const refreshButton = document.querySelector(".sidebar-plan-button");
     refreshButton.addEventListener("click", () => {
-		vscode.postMessage({ type: "js2ts_refresh_login" });
-	});
+        vscode.postMessage({ type: "js2ts_refresh_login" });
+    });
 
     function check_bookmarked_functions(data) {
         const keys = Object.keys(data);
         keys.forEach((key) => {
             let bookmark = {};
-            if(key === 'staging-explain-code' || key === 'staging-make-code-shorter') {
-                bookmark = {
-                    ...data[key],
-                    'is_bookmarked': true
-                };
-            }
-            else {
-                bookmark = {
-                    ...data[key],
-                    'is_bookmarked': false
-                };
-            }
+            bookmark = {
+                ...data[key],
+                'is_bookmarked': false
+            };
+            // if (key === 'staging-explain-code' || key === 'staging-make-code-shorter') {
+            //     bookmark = {
+            //         ...data[key],
+            //         'is_bookmarked': true
+            //     };
+            // }
+            // else {
+            //     bookmark = {
+            //         ...data[key],
+            //         'is_bookmarked': false
+            //     };
+            // }
             data[key] = bookmark;
         });
         return data;
@@ -384,17 +365,17 @@
     // renderToolbox(data);
     function renderToolbox(data) {
         const bookmarked = check_bookmarked_functions(data);
-        const sortedData = Object.entries(data)
-        .sort(([, a], [, b]) => {
-            if (a.is_bookmarked !== b.is_bookmarked) {
-            return a.is_bookmarked ? -1 : 1; // bookmarked
-            } else if (a.always_visible !== b.always_visible) {
-            return a.always_visible ? 1 : -1; // always_visible
-            } else {
-            return b.likes - a.likes; // likes
-            }
-        })
-        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+        const sortedData = Object.entries(bookmarked)
+            .sort(([, a], [, b]) => {
+                if (a.is_bookmarked !== b.is_bookmarked) {
+                    return a.is_bookmarked ? -1 : 1; // bookmarked
+                } else if (a.always_visible !== b.always_visible) {
+                    return a.always_visible ? 1 : -1; // always_visible
+                } else {
+                    return b.likes - a.likes; // likes
+                }
+            })
+            .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
         const keys = Object.keys(sortedData);
         toolboxList.innerHTML = '';
         keys.forEach((key) => {
@@ -403,7 +384,7 @@
 
             const toolbox_item = document.createElement("div");
             toolbox_item.classList.add("toolbox-item");
-            if(item.catch_all_hl === 0 && item.catch_all_selection === 0 && item.catch_question_mark === 0) {
+            if (item.catch_all_hl === 0 && item.catch_all_selection === 0 && item.catch_question_mark === 0) {
                 toolbox_item.classList.add("toolbox-filter");
             }
             else {
@@ -428,12 +409,12 @@
             const bookmark = document.createElement("div");
             bookmark.classList.add("toolbox-bookmark");
             const bookmark_icon = document.createElement("i");
-            if(item.is_liked > 0) {
+            if (item.is_liked > 0) {
                 likes_icon.classList.add("toolbox-like");
             } else {
                 likes_icon.classList.add("toolbox-like-empty");
             }
-            if(item.is_bookmarked) {
+            if (item.is_bookmarked) {
                 bookmark_icon.classList.add("toolbox-mark");
             }
 
@@ -443,7 +424,7 @@
             let selection_within_limits = (
                 editor_inform_how_many_lines_selected >= item.selected_lines_min &&
                 editor_inform_how_many_lines_selected <= item.selected_lines_max);
-            if(item.supports_selection === 1 && item.supports_highlight === 0 && !selection_within_limits) {
+            if (item.supports_selection === 1 && item.supports_highlight === 0 && !selection_within_limits) {
                 run.classList.add('toolbox-run-disabled');
             }
             run.innerHTML = '▶';
@@ -467,20 +448,37 @@
 
             const bookmark_button = document.createElement("button");
             bookmark_button.classList.add("toolbox-bookmark-button");
+           
             const third_party = document.createElement("i");
             third_party.classList.add("toolbox-third-party");
             const bookmark_button_icon = document.createElement("i");
-            if(item.is_bookmarked) {
+            if (item.is_bookmarked) {
                 bookmark_button_icon.classList.add("toolbox-mark");
             }
             else {
                 bookmark_button_icon.classList.add("toolbox-mark-empty");
             }
             bookmark_button.appendChild(bookmark_button_icon);
+            bookmark_button.addEventListener('click', function () {
+                const current_icon = this.querySelector('i');
+                let current_bookmark_state = false;
+                if(current_icon.classList.contains("toolbox-mark-empty")) {
+                    current_bookmark_state = true;
+                }
+                vscode.postMessage({ type: "submit_bookmark", function_name: item.function_name, state: current_bookmark_state });
+            });
             const likes_button = document.createElement("button");
             likes_button.classList.add("toolbox-likes-button");
+            likes_button.addEventListener('click', function () {
+                const current_icon = this.querySelector('i');
+                let current_like_state = 0;
+                if(current_icon.classList.contains("toolbox-like-empty")) {
+                    current_like_state = 1;
+                }
+                vscode.postMessage({ type: "submit_like", function_name: item.function_name, like: current_like_state });
+            });
             const likes_button_icon = document.createElement("i");
-            if(item.is_liked > 0) {
+            if (item.is_liked > 0) {
                 likes_button_icon.classList.add("toolbox-like");
             } else {
                 likes_button_icon.classList.add("toolbox-like-empty");
@@ -545,7 +543,7 @@
             let selection_within_limits = (
                 editor_inform_how_many_lines_selected >= item_functions.selected_lines_min &&
                 editor_inform_how_many_lines_selected <= item_functions.selected_lines_max);
-            if(item_functions.supports_selection === 1 && item_functions.supports_highlight === 0 && !selection_within_limits) {
+            if (item_functions.supports_selection === 1 && item_functions.supports_highlight === 0 && !selection_within_limits) {
                 run.classList.add('toolbox-run-disabled');
                 content_run.classList.add('toolbox-run-disabled');
                 notice.style.display = 'inline-flex';
@@ -558,13 +556,58 @@
         });
     }
 
-    function render_bookmarks() {
-
+    function update_toolbox(data) {
+        const current_active = document.querySelector(".item-active");
+        renderToolbox(data);
+        
     }
+
+    // function toolbox_update_likes(json) {
+    //     const toolbox_item = document.querySelector('.item-active');
+    //     const like_button = toolbox_item.querySelector(".toolbox-likes-button");
+    //     const toolbox_likes_count = like_button.querySelector("span");
+    //     const toolbox_likes_icon = like_button.querySelector("i");
+    //     if (json.inserted >= 1) {
+    //         console.log('xxxxxxxxxxxxxxxxxx + 1');
+    //         const likes_value = Number(toolbox_likes_count.innerHTML) + Number(json.inserted);
+    //         toolbox_likes_icon.classList.remove("toolbox-like-empty");
+    //         toolbox_likes_icon.classList.add("toolbox-like");
+    //         toolbox_likes_count.innerHTML = likes_value;
+    //     }
+    //     if (json.deleted >= 1) {
+    //         console.log('xxxxxxxxxxxxxxxxxx - 1');
+    //         const likes_value = Number(toolbox_likes_count.innerHTML) - Number(json.deleted);
+    //         toolbox_likes_icon.classList.remove("toolbox-like");
+    //         toolbox_likes_icon.classList.add("toolbox-like-empty");
+    //         toolbox_likes_count.innerHTML = likes_value;
+    //     }
+    // }
+
+    // function toolbox_update_bookmarks(bookmarks) {
+    //     const toolboxItems = document.querySelectorAll(".toolbox-item");
+    //     toolboxItems.forEach((item) => {
+    //         let function_name = item.dataset.function_name;
+    //         let button = item.querySelector(".toolbox-bookmark-button");
+    //         let button_icon = button.querySelector("i");
+    //         let toolbox_bookmark = item.querySelector('.toolbox-bookmark');
+    //         let toolbox_bookmark_icon = toolbox_bookmark.querySelector("i");
+    //         if(bookmarks[function_name]) {
+    //             button_icon.classList.remove("toolbox-mark-empty");
+    //             button_icon.classList.add("toolbox-mark");
+    //             toolbox_bookmark_icon.classList.remove("toolbox-mark-empty");
+    //             toolbox_bookmark_icon.classList.add("toolbox-mark");
+    //         } else {
+    //             button_icon.classList.remove("toolbox-mark");
+    //             button_icon.classList.add("toolbox-mark-empty");
+    //             toolbox_bookmark_icon.classList.remove("toolbox-mark");
+    //             toolbox_bookmark_icon.classList.add("toolbox-mark-empty");
+    //         }
+    //     });
+    // }
 
     function search_filter() {
         const filterItems = document.querySelectorAll(".toolbox-filter");
-        toolboxSearch.addEventListener('input', function() {
+        toolboxSearch.addEventListener('input', function () {
             const searchTerm = this.value.toLowerCase();
             const itemsArray = Array.from(filterItems);
             const filteredDivs = itemsArray.filter(div => {
@@ -579,18 +622,18 @@
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
             item.addEventListener("click", (event) => {
-                if(event.target.tagName === 'SPAN') {
+                if (event.target.tagName === 'SPAN') {
                     let active = document.querySelector(".item-active");
-                    if(active) {
+                    if (active) {
                         active.classList.remove("item-active");
                     }
                     item.classList.add("item-active");
                     const item_name = item.id;
                     const item_functions = longthink_functions_today[item_name];
-                    if(item_functions.supports_highlight === 1) {
+                    if (item_functions.supports_highlight === 1) {
                         document.querySelector(".item-active .toolbox-notice").classList.add('toolbox-notice-hidden');
-                    } else if(item_functions.supports_selection === 1) {
-                        vscode.postMessage({ type: "checkSelection"});
+                    } else if (item_functions.supports_selection === 1) {
+                        vscode.postMessage({ type: "checkSelection" });
                     }
                     // console.log(longthink_functions_today[item_name]);
                 }
@@ -598,129 +641,51 @@
         });
     }
 
+    window.addEventListener("message", (event) => {
+        const message = event.data;
+        switch (message.command) {
+            case "editor_inform_how_many_lines_selected":
+                editor_inform_how_many_lines_selected = message.value;
+                toolbox_update_selection();
+                break;
+            case "focus":
+                toolboxSearch.focus();
+                break;
+            case "update_longthink_functions":
+                update_toolbox(message.value);
+                break;
+            case "ts2web":
+                let info = document.querySelector('.sidebar-logged');
+                let plan = document.querySelector('.sidebar-plan');
+                let coins = document.querySelector('.sidebar-coins');
+                let login = document.querySelector('#login');
+                let profile = document.querySelector('#profile');
+                let data = document.querySelector('#datacollection');
+                let logout = document.querySelector('#logout');
+                let chat = document.querySelector('#chat');
 
-    // function toolboxItemsToHtml(functions)
-    // {
-    //     for (const f of functions) {
-    //         k = f[0];
-    //         v = f[1];
+                info.style.display = message.ts2web_user ? 'flex' : '';
+                plan.style.display = message.ts2web_plan ? 'flex' : '';
+                document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
+                document.querySelector('.sidebar-plan span').innerHTML = message.ts2web_plan;
+                login.style.display = message.ts2web_user ? 'none' : 'block';
+                profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                chat.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                data.style.display = message.ts2web_user ? 'block' : 'none';
+                coins.style.display = message.ts2web_user ? 'flex' : 'none';
 
-    //         let child = document.createElement("div");
-    //         child.innerHTML = v.label;
-    //         child.dataset.function = JSON.stringify(v);
-    //         child.id = k;
-    //         yield child;
-    //     }
-    // }
-
-    function* longthinkToHtml(functions)
-    {
-        for (const f of functions) {
-            k = f[0];
-            v = f[1];
-
-            let child = document.createElement("li");
-            child.innerHTML = v.label;
-            child.dataset.function = JSON.stringify(v);
-            child.id = k;
-            yield child;
+                if (message.ts2web_metering_balance) {
+                    document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
+                }
+                if (message.longthink_functions) {
+                    console.log('longthink_functions ------>',message.longthink_functions);
+                    longthink_functions_today = message.longthink_functions;
+                    renderToolbox(message.longthink_functions);
+                    search_filter();
+                    command_handler();
+                }
+                break;
         }
-    }
-
-	window.addEventListener("message", (event) => {
-		const message = event.data;
-		switch (message.command) {
-        // case "selectionDefault":
-        //     const keys = Object.keys(longthink_functions_today);
-        //     let result = keys.find(obj => longthink_functions_today[obj].catch_all_hl === 1);
-        //     if(message.value) {
-        //         result = keys.find(obj => longthink_functions_today[obj].catch_all_selection === 1);
-        //     }
-        //     vscode.postMessage({
-        //         type: "function_activated",
-        //         value: message.intent,
-        //         id: 'intent',
-        //         data_function: JSON.stringify(result),
-        //     });
-        // case "selection":
-        //     editor_selection = message.value;
-        //     if(editor_selection) {
-        //         let notice = document.querySelector(".item-active .toolbox-notice");
-        //         if(notice) {
-        //             notice.classList.add('toolbox-notice-hidden');
-        //         }
-        //     }
-        //     break;
-        case "editor_inform_how_many_lines_selected":
-            editor_inform_how_many_lines_selected = message.value;
-            toolbox_update_selection();
-            break;
-        case "focus":
-            toolboxSearch.focus();
-            break;
-
-        case "ts2web":
-            let info = document.querySelector('.sidebar-logged');
-            let plan = document.querySelector('.sidebar-plan');
-            let coins = document.querySelector('.sidebar-coins');
-            let login = document.querySelector('#login');
-            let profile = document.querySelector('#profile');
-            let data = document.querySelector('#datacollection');
-            let logout = document.querySelector('#logout');
-            let chat = document.querySelector('#chat');
-
-            let regHeader = document.querySelector('#regular-header');
-            let regList = document.querySelector('#regular-list');
-            let tpHeader = document.querySelector('#third-party-header');
-            let tpList = document.querySelector('#third-party-list');
-
-            info.style.display = message.ts2web_user ? 'flex' : '';
-            plan.style.display = message.ts2web_plan ? 'flex' : '';
-            document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
-            document.querySelector('.sidebar-plan span').innerHTML = message.ts2web_plan;
-            login.style.display = message.ts2web_user ? 'none' : 'block';
-            profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-            logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-            chat.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-            data.style.display = message.ts2web_user ? 'block' : 'none';
-            coins.style.display = message.ts2web_user ? 'flex' : 'none';
-
-            if(message.ts2web_metering_balance) {
-                document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
-            }
-
-            // regHeader.style.display = 'none';
-            // regList.style.display = 'none';
-            // tpHeader.style.display = 'none';
-            // tpList.style.display = 'none';
-
-            if (message.longthink_functions) {
-                console.log('longthink_functions',message.longthink_functions);
-                longthink_functions_today = message.longthink_functions;
-                renderToolbox(message.longthink_functions);
-                search_filter();
-                command_handler();
-                // reg_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] === 0);
-                // tp_functions = Object.entries(message.longthink_functions).filter(([, v]) => v['metering'] > 0);
-
-                // if (reg_functions) {
-                //     regHeader.style.display = 'block';
-                //     regList.style.display = 'block';
-                //     regList.innerHTML = '';
-                //     for (const h of longthinkToHtml(reg_functions)) {
-                //         regList.appendChild(h);
-                //     }
-                // }
-                // if (tp_functions) {
-                //     tpHeader.style.display = 'block';
-                //     tpList.style.display = 'block';
-                //     tpList.innerHTML = '';
-                //     for (const h of longthinkToHtml(tp_functions)) {
-                //         tpList.appendChild(h);
-                //     }
-                // }
-            }
-            break;
-		}
-	});
+    });
 })();

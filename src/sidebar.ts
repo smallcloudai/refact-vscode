@@ -62,8 +62,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
                     break;
                 }
-                case "presetLiked": {
-
+                case "submit_like": {
+                    this.submit_like(data.function_name, data.like);
+                    break;
+                }
+                case "submit_bookmark": {
+                    this.set_bookmark(data.function_name, data.state);
                     break;
                 }
                 case "runChat": {
@@ -196,49 +200,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
     }
 
-
-    // public check_selection() {
-
-    //     let current_selection = false;
-    //     let editor = vscode.window.activeTextEditor;
-    //     if (!editor) {
-    //         return false;
-    //     }
-    //     let selection = editor.selection;
-    //     if( selection) {
-    //         current_selection = true;
-    //     }
-    //     if (selection.isEmpty) {
-    //         current_selection = false;
-    //     }
-    //     console.log('xxxxxxxxxxxxxxxxxxxxxx checking selection',current_selection);
-    //     this._view!.webview.postMessage({
-    //         command: "selection",
-    //         value: current_selection
-    //     });
-    // }
-
-    // public check_selection_default(intent: string) {
-
-    //     let current_selection = false;
-    //     let editor = vscode.window.activeTextEditor;
-    //     if (!editor) {
-    //         return false;
-    //     }
-    //     let selection = editor.selection;
-    //     if( selection) {
-    //         current_selection = true;
-    //     }
-    //     if (selection.isEmpty) {
-    //         current_selection = false;
-    //     }
-    //     this._view!.webview.postMessage({
-    //         command: "selectionDefault",
-    //         value: current_selection,
-    //         intent: intent
-    //     });
-    // }
-
     public update_webview()
     {
         if (!this._view) {
@@ -257,6 +218,72 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2web_metering_balance: global.user_metering_balance,
             longthink_functions: global.longthink_functions_today,
         });
+    }
+
+    public async set_bookmark(function_name: string, state: boolean) {
+        let global_context: vscode.ExtensionContext|undefined = global.global_context;
+        if (global_context === undefined) {
+            return;
+        }
+        let data: {[key: string]: boolean} = {};
+        let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('codifyBookmarks');
+        if (bookmarks !== undefined) {
+            data = bookmarks;
+        }
+        data[function_name] = state;
+        console.log(['Setting bookmark:', function_name, state]);
+        await global_context.globalState.update('codifyBookmarks', data);
+        this.get_bookmarks();
+    }
+
+    public async get_bookmarks() {
+        let global_context: vscode.ExtensionContext|undefined = global.global_context;
+        if (global_context === undefined) {
+            return 0;
+        }
+        let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('codifyBookmarks');
+        return this._view!.webview.postMessage({ command: "update_longthink_functions", value: longthink_functions_today });
+    }
+
+    public async submit_like(function_name: string, like: number) {
+        const apiKey = userLogin.secret_api_key();
+        if (!apiKey) {
+            return;
+        }
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiKey}`,
+        };
+        let url = `https://www.smallcloud.ai/v1/longthink-like?function_name=${function_name}&like=${like}`;
+        let response = await fetchH2.fetch(url, {
+            method: "GET",
+            headers: headers,
+        });
+        if (response.status !== 200) {
+            console.log([response.status, url]);
+            return;
+        }
+        if (response.status === 200) {
+            let json = await response.json();
+            if(json.retcode === 'OK') {
+                let longthink_functions_today: {[key: string]: {[key: string]: any}} | undefined = global.longthink_functions_today; // any or number
+                if(longthink_functions_today !== undefined) {
+                    for (const key of Object.keys(longthink_functions_today)) {
+                        if(key === function_name) {
+                            if(json.inserted === 1) {
+                                longthink_functions_today[key].likes += 1;
+                                longthink_functions_today[key].is_liked = 1;
+                            }
+                            if(json.deleted === 1) {
+                                longthink_functions_today[key].likes -= 1;
+                                longthink_functions_today[key].is_liked = 0;
+                            }
+                            this._view!.webview.postMessage({ command: "update_longthink_functions", value: longthink_functions_today});
+                        }
+                    }
+                }
+            }
+        }
     }
 
 

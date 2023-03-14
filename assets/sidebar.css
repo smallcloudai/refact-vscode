@@ -467,7 +467,6 @@ body.vscode-light #logout {
 	-moz-osx-font-smoothing: grayscale;
 }
 .toolbox-mark-empty::before {
-	margin: 0 5px;
 	content: "\e801";
 	font-family: "codify";
 	font-style: normal;
