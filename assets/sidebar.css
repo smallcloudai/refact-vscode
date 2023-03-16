@@ -413,6 +413,8 @@ body.vscode-light #logout {
 }
 .toolbox-header > span {
 	margin-right: auto;
+    display: block;
+    width: 100%;
 }
 .toolbox-header:hover {
 	color: var(--secondary);
@@ -457,7 +459,7 @@ body.vscode-light #logout {
 	/* margin-right: .2em; */
 	font-variant: normal;
 	text-transform: none;
-    color: red;
+    color: blueviolet;
 	height: 16px;
 	width: 16px;
 	display: flex;
@@ -498,6 +500,7 @@ body.vscode-light #logout {
 	justify-content: center;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+    color: red !important;
 }
 .toolbox-like-empty::before {
 	content: "\e808";

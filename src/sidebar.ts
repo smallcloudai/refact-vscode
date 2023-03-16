@@ -46,6 +46,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
         this.update_webview();
+        this.get_bookmarks();
 
         vscode.commands.registerCommand('workbench.action.focusSideBar', () => {
             webviewView.webview.postMessage({ command: "focus" });
@@ -71,7 +72,21 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "runChat": {
-                    open_chat_tab("", "");
+                    if(data.value !== "") {
+                        let editor = vscode.window.activeTextEditor;
+                        if (editor) {
+                            let selection = editor.selection;
+                            if(selection.isEmpty) {
+                                open_chat_tab(data.value, "");
+                            }
+                            else {
+                                let selected_text = editor.document.getText(selection);
+                                open_chat_tab(data.value, selected_text);
+                            }
+                        }
+                    } else {
+                        open_chat_tab("", "");
+                    }
                     break;
                 }
                 case "function_activated": {
@@ -242,7 +257,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return 0;
         }
         let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('codifyBookmarks');
-        return this._view!.webview.postMessage({ command: "update_longthink_functions", value: longthink_functions_today });
+        return this._view!.webview.postMessage({ command: "update_bookmarks_list", value: bookmarks });
     }
 
     public async submit_like(function_name: string, like: number) {

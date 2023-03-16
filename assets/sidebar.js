@@ -22,16 +22,16 @@
     toolboxSearch.addEventListener("keyup", (event) => {
         event.preventDefault();
         if (event.target.value !== '') {
-            if (document.querySelector('item-active')) {
-                document.querySelector('item-active').classList.remove('item-active');
+            if (document.querySelector('.item-active')) {
+                document.querySelector('.item-active').classList.remove('item-active');
             }
         }
         if (event.target.value === '') {
-            if (document.querySelector('item-selected')) {
-                document.querySelector('item-selected').classList.remove('item-selected');
+            if (document.querySelector('.item-selected')) {
+                document.querySelector('.item-selected').classList.remove('item-selected');
             }
-            if (document.querySelector('item-active')) {
-                document.querySelector('item-active').classList.remove('item-active');
+            if (document.querySelector('.item-active')) {
+                document.querySelector('.item-active').classList.remove('item-active');
             }
         }
         // else {
@@ -124,108 +124,6 @@
                 command_mode = true;
             }
         }
-
-        // console.log('sidebar event',event);
-        // if(event.target.className === 'toolbox-search' && event.target.value !== '') {
-        //     toolboxRun.classList.remove("toolbox-run-disabled");
-        // }
-        // else {
-        //     history_index === history.length;
-        //     toolboxRun.classList.add("toolbox-run-disabled");
-        //     let active = document.querySelector(".item-active");
-        //     if(active) {
-        //         active.classList.remove("item-active");
-        //     }
-        // }
-        // if(event.target.className === 'toolbox-search') {
-        //     if(event.key === "ArrowDown") {
-        //         console.log('ArrowDown',history_index);
-        //         if(history_index === history.length) {
-        //             history_index === history.length;
-        //             console.log('ArrowDown on items ----------------------------->');
-        //             const toolboxItems = document.querySelectorAll(".toolbox-item");
-        //             const allVisible = Array.from(toolboxItems).filter(child => {
-        //                 return child.style.display !== 'none';
-        //             });
-
-        //             if (currentIndex < allVisible.length) {
-        //                 if (currentIndex >= 0) {
-        //                     allVisible[currentIndex].classList.remove('item-selected');
-        //                 }
-        //                 currentIndex += 1;
-        //                 allVisible[currentIndex].classList.add('item-selected');
-        //             }
-        //             console.log('allVisible',allVisible);
-        //             // if(firstBlockChild) {
-        //             //     firstBlockChild.classList.add('item-selected');
-        //             //     toolboxSearch.value = firstBlockChild.dataset.title;
-        //             // }
-        //         }
-        //         else {
-        //             history_index++;
-        //             event.target.value = history[history_index];
-        //         }
-        //         // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
-        //         // if(index < toolboxItems.length - 1) {
-        //         //     toolboxItems[index + 1].focus();
-        //         // }
-        //     }
-        //     if(event.key === "ArrowUp") {
-        //         if(history_index >= 1) {
-        //             history_index--;
-        //             event.target.value = history[history_index];
-        //         }
-        //     }
-        // }
-        // if(event.target.className === 'toolbox-item') {
-        //     if(event.key === "Enter") {
-        //         vscode.postMessage({ type: "function_activated", value: event.target.dataset.function, id: event.target.id, data_function: event.target.dataset.function });
-        //     }
-        //     if(event.key === "ArrowDown") {
-        //         console.log('ArrowDown on items ----------------------------->');
-        //     }
-        //     if(event.key === "ArrowUp") {
-        //         console.log('ArrowUp on items ----------------------------->');
-        //     }
-        // }
-        // if(event.key === "Enter") {
-        //     vscode.postMessage({ type: "checkSelectionDefault", intent: event.target.value});
-        // }
-
-        // if(event.key === "ArrowDown") {
-        //     console.log('ArrowDown',history_index);
-        //     if(history_index === history.length - 1) {
-        //         history_index === history.length;
-        //         const firstBlockChild = Array.from(toolboxList.childNodes).find(child => {
-        //             return child.style.display !== 'none';
-        //         });
-        //         if(firstBlockChild) {
-        //             toolboxSearch.blur();
-        //             firstBlockChild.focus();
-        //             firstBlockChild.classList.add('item-selected');
-        //             toolboxSearch.value = firstBlockChild.dataset.title;
-        //         }
-        //     }
-        //     else {
-        //         history_index++;
-        //         event.target.value = history[history_index];
-        //     }
-        //     // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
-        //     // if(index < toolboxItems.length - 1) {
-        //     //     toolboxItems[index + 1].focus();
-        //     // }
-        // }
-        // if(event.key === "ArrowUp") {
-        //     if(history_index >= 1) {
-        //         history_index--;
-        //         event.target.value = history[history_index];
-        //     }
-        //     // history
-        //     // let index = Array.prototype.indexOf.call(toolboxItems, event.target);
-        //     // if(index < toolboxItems.length - 1) {
-        //     //     toolboxItems[index - 1].focus();
-        //     // }
-        // }
     });
 
 
@@ -234,7 +132,11 @@
         if (event.key === "Enter") {
             let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
             let single_page = document.querySelector(".item-active");  // single page
-            if (single_page) {
+            if(toolboxSearch.value.endsWith("?")) {
+                let intent = toolboxSearch.value.slice(0, -1);
+                vscode.postMessage({ type: "runChat", value: intent });
+            }
+            else if (single_page) {
                 let intent = toolboxSearch.value;
                 vscode.postMessage({
                     type: "function_activated",
@@ -247,6 +149,17 @@
                     type: "function_activated",
                     intent: intent,
                     data_function: selected_in_list.dataset.function, // this a string containing json
+                });
+            } else {
+                let intent = toolboxSearch.value;
+                let function_to_run = JSON.stringify(longthink_functions_today['hl-and-fix']);
+                if(editor_inform_how_many_lines_selected > 0) {
+                    function_to_run = JSON.stringify(longthink_functions_today['select-and-refactor']);
+                }
+                vscode.postMessage({
+                    type: "function_activated",
+                    intent: intent,
+                    data_function: function_to_run, // this
                 });
             }
         }
@@ -280,19 +193,10 @@
             let active = document.querySelector(".item-active");
             document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
             if (active) {
-                toolboxSearch.value = '';
+                // toolboxSearch.value = '';
                 active.classList.remove("item-active");
+                toolbox_update_likes();
             }
-        }
-        if (event.target.parentElement.classList.contains("toolbox-bookmark-button")) {
-
-        }
-        if (event.target.parentElement.classList.contains("toolbox-likes-button")) {
-            let parent = event.target.parentElement.parentElement.parentElement.parentElement;
-            vscode.postMessage({
-                type: "presetLiked",
-                value: parent.dataset.function,
-            });
         }
     });
 
@@ -341,22 +245,18 @@
         const keys = Object.keys(data);
         keys.forEach((key) => {
             let bookmark = {};
-            bookmark = {
-                ...data[key],
-                'is_bookmarked': false
-            };
-            // if (key === 'staging-explain-code' || key === 'staging-make-code-shorter') {
-            //     bookmark = {
-            //         ...data[key],
-            //         'is_bookmarked': true
-            //     };
-            // }
-            // else {
-            //     bookmark = {
-            //         ...data[key],
-            //         'is_bookmarked': false
-            //     };
-            // }
+            if (function_bookmarks[key]) {
+                bookmark = {
+                    ...data[key],
+                    'is_bookmarked': true
+                };
+            }
+            else {
+                bookmark = {
+                    ...data[key],
+                    'is_bookmarked': false
+                };
+            }
             data[key] = bookmark;
         });
         return data;
@@ -369,8 +269,10 @@
             .sort(([, a], [, b]) => {
                 if (a.is_bookmarked !== b.is_bookmarked) {
                     return a.is_bookmarked ? -1 : 1; // bookmarked
-                } else if (a.always_visible !== b.always_visible) {
-                    return a.always_visible ? 1 : -1; // always_visible
+                } else if (a.catch_all_hl === 1 || a.catch_all_selection === 1) {
+                    return 1; // move a to the bottom
+                } else if (b.catch_all_hl === 1 || b.catch_all_selection === 1) {
+                    return -1; // move b to the bottom
                 } else {
                     return b.likes - a.likes; // likes
                 }
@@ -461,9 +363,16 @@
             bookmark_button.appendChild(bookmark_button_icon);
             bookmark_button.addEventListener('click', function () {
                 const current_icon = this.querySelector('i');
-                let current_bookmark_state = false;
+                let current_bookmark_state;
                 if(current_icon.classList.contains("toolbox-mark-empty")) {
+                    current_icon.classList.remove("toolbox-mark-empty")
+                    current_icon.classList.add("toolbox-mark")
                     current_bookmark_state = true;
+                }
+                else {
+                    current_icon.classList.remove("toolbox-mark")
+                    current_icon.classList.add("toolbox-mark-empty")
+                    current_bookmark_state = false;
                 }
                 vscode.postMessage({ type: "submit_bookmark", function_name: item.function_name, state: current_bookmark_state });
             });
@@ -471,9 +380,18 @@
             likes_button.classList.add("toolbox-likes-button");
             likes_button.addEventListener('click', function () {
                 const current_icon = this.querySelector('i');
-                let current_like_state = 0;
+                let current_like_state;
                 if(current_icon.classList.contains("toolbox-like-empty")) {
+                    current_icon.classList.remove("toolbox-like-empty")
+                    current_icon.classList.add("toolbox-like")
                     current_like_state = 1;
+                    this.querySelector('span').innerHTML = Number(this.querySelector('span').innerHTML) + Number(1);
+                }
+                else {
+                    current_icon.classList.remove("toolbox-like")
+                    current_icon.classList.add("toolbox-like-empty")
+                    current_like_state = 0;
+                    this.querySelector('span').innerHTML = Number(this.querySelector('span').innerHTML) - Number(1);
                 }
                 vscode.postMessage({ type: "submit_like", function_name: item.function_name, like: current_like_state });
             });
@@ -556,65 +474,43 @@
         });
     }
 
-    function update_toolbox(data) {
-        const current_active = document.querySelector(".item-active");
-        renderToolbox(data);
-        
+    function toolbox_update_likes() {
+        renderToolbox(longthink_functions_today);
+        search_filter();
+        command_handler();
     }
-
-    // function toolbox_update_likes(json) {
-    //     const toolbox_item = document.querySelector('.item-active');
-    //     const like_button = toolbox_item.querySelector(".toolbox-likes-button");
-    //     const toolbox_likes_count = like_button.querySelector("span");
-    //     const toolbox_likes_icon = like_button.querySelector("i");
-    //     if (json.inserted >= 1) {
-    //         console.log('xxxxxxxxxxxxxxxxxx + 1');
-    //         const likes_value = Number(toolbox_likes_count.innerHTML) + Number(json.inserted);
-    //         toolbox_likes_icon.classList.remove("toolbox-like-empty");
-    //         toolbox_likes_icon.classList.add("toolbox-like");
-    //         toolbox_likes_count.innerHTML = likes_value;
-    //     }
-    //     if (json.deleted >= 1) {
-    //         console.log('xxxxxxxxxxxxxxxxxx - 1');
-    //         const likes_value = Number(toolbox_likes_count.innerHTML) - Number(json.deleted);
-    //         toolbox_likes_icon.classList.remove("toolbox-like");
-    //         toolbox_likes_icon.classList.add("toolbox-like-empty");
-    //         toolbox_likes_count.innerHTML = likes_value;
-    //     }
-    // }
-
-    // function toolbox_update_bookmarks(bookmarks) {
-    //     const toolboxItems = document.querySelectorAll(".toolbox-item");
-    //     toolboxItems.forEach((item) => {
-    //         let function_name = item.dataset.function_name;
-    //         let button = item.querySelector(".toolbox-bookmark-button");
-    //         let button_icon = button.querySelector("i");
-    //         let toolbox_bookmark = item.querySelector('.toolbox-bookmark');
-    //         let toolbox_bookmark_icon = toolbox_bookmark.querySelector("i");
-    //         if(bookmarks[function_name]) {
-    //             button_icon.classList.remove("toolbox-mark-empty");
-    //             button_icon.classList.add("toolbox-mark");
-    //             toolbox_bookmark_icon.classList.remove("toolbox-mark-empty");
-    //             toolbox_bookmark_icon.classList.add("toolbox-mark");
-    //         } else {
-    //             button_icon.classList.remove("toolbox-mark");
-    //             button_icon.classList.add("toolbox-mark-empty");
-    //             toolbox_bookmark_icon.classList.remove("toolbox-mark");
-    //             toolbox_bookmark_icon.classList.add("toolbox-mark-empty");
-    //         }
-    //     });
-    // }
 
     function search_filter() {
         const filterItems = document.querySelectorAll(".toolbox-filter");
-        toolboxSearch.addEventListener('input', function () {
+        toolboxSearch.addEventListener('input', function (event) {
             const searchTerm = this.value.toLowerCase();
             const itemsArray = Array.from(filterItems);
-            const filteredDivs = itemsArray.filter(div => {
-                return div.dataset.title.toLowerCase().includes(searchTerm);
-            });
-            filterItems.forEach(div => div.style.display = 'none');
-            filteredDivs.forEach(div => div.style.display = 'block');
+            if(searchTerm.endsWith("?")) {
+                const chat = document.querySelector('[data-function_name="free-chat"]');
+                chat.style.display = 'block';
+                // chat.classList.add('item-selected');
+                const parent = chat.parentNode;
+                parent.insertBefore(chat, parent.firstChild);
+            }
+            else {
+                const filteredDivs = itemsArray.filter(div => {
+                    return div.dataset.title.toLowerCase().includes(searchTerm);
+                });
+                filterItems.forEach(div => div.style.display = 'none');
+                filteredDivs.forEach(div => div.style.display = 'block');
+                if(filteredDivs.length === 0) {
+                    if(editor_inform_how_many_lines_selected > 0 && searchTerm.length > 0) {
+                        const refactor = document.querySelector('[data-function_name="select-and-refactor"]');
+                        const parent = refactor.parentNode;
+                        parent.insertBefore(refactor, parent.firstChild);
+                    }
+                    else {
+                        const hl = document.querySelector('[data-function_name="hl-and-fix"]');
+                        const parent = hl.parentNode;
+                        parent.insertBefore(hl, parent.firstChild);
+                    }
+                }
+            }
         });
     }
 
@@ -652,7 +548,13 @@
                 toolboxSearch.focus();
                 break;
             case "update_longthink_functions":
-                update_toolbox(message.value);
+                longthink_functions_today = message.value;
+                break
+            // case "update_likes":
+            //     longthink_functions_today = message.response;
+            //     break;
+            case "update_bookmarks_list":
+                function_bookmarks = message.value;
                 break;
             case "ts2web":
                 let info = document.querySelector('.sidebar-logged');
