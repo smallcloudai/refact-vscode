@@ -177,11 +177,14 @@
     });
 
     toolboxList.addEventListener("click", (event) => {
-        if (event.target && event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
+        if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement;
             if (!target) {
                 return;
+            }
+            if(target.classList.contains('toolbox-body')) {
+                target = target.parentElement;
             }
             vscode.postMessage({
                 type: "function_activated",

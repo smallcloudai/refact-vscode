@@ -376,18 +376,24 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     </div>
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
-                        <div class="sidebar-logged">Account: <b><span></span></b></div>
-                        <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
-                        <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
-                        <button tabindex="-1" id="chat"><span></span>Chat</button>
+                        
                         <button tabindex="-1" id="login">Login / Register</button>
                         <div class="sidebar-inline">
-                            <button tabindex="-1" id="settings"><span></span>Settings</button>
+                            <button tabindex="-1" id="chat"><span></span>Chat</button>
                             <button tabindex="-1" id="privacy"><span></span>Privacy</button>
+                            <button tabindex="-1" id="settings"><span></span></button>
                         </div>
                         <div class="sidebar-inline">
-                            <button tabindex="-1" id="profile"><span></span>Your Account</button>
-                            <div tabindex="-1" id="logout" class=""><span></span>Logout</div>
+                            <div class="sidebar-logged"><b><span></span></b></div>
+                        </div>
+                        <div class="sidebar-inline">
+                            <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
+                            <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
+                        </div>
+                        <div class="sidebar-inline">
+                            <button tabindex="-1" id="profile"><span></span>Your&nbsp;Account</button>
+                            <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
+                            <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
                         </div>
                     </div>
                 </div>
