@@ -41,6 +41,14 @@ body.vscode-dark {
     box-sizing: border-box;
     margin-bottom: 5px;
 }
+.sidebar-group {
+    width: 100%;
+    min-width: 57%;
+    display: flex;
+	justify-content: space-between;
+	align-items: center;
+    box-sizing: border-box;
+}
 #profile {
 	font-size: 13px;
 	border: 0;
@@ -144,12 +152,13 @@ body.vscode-light #profile {
 	padding: 8px 18px;
 	color: var(--secondary);
 	background-color: inherit;
+    height: 33px;
 	cursor: pointer;
 	box-sizing: border-box;
 	display: block;
 	width: 100%;
 	text-align: center;
-	margin: 5px;
+	margin: 5px 5px 5px 0;
 }
 #privacy span::before {
 	color: var(--secondary);
@@ -204,6 +213,7 @@ body.vscode-light #login {
 	width: 100%;
 	text-align: center;
 	margin: 5px 0;
+    margin-right: 5px;
 	display: none;
 }
 body.vscode-light #chat {
@@ -638,8 +648,6 @@ body.vscode-light #logout {
         align-items: flex-start;
 	}
     #privacy {
-        margin-right: 0;
-        margin-left: 0;
     }
     #settings {
         margin-left: 0;
