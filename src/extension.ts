@@ -396,6 +396,7 @@ export async function follow_intent(intent: string, function_name: string = "", 
 
 export function deactivate(context: vscode.ExtensionContext)
 {
+    usageStats.report_usage_stats();
     global.global_context = undefined;
 }
 
