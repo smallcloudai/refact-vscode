@@ -19,6 +19,18 @@
     let current_command = 0;
     let history_mode = false;
     let command_mode = false;
+
+    function reset_everything_about_commands()
+    {
+        current_history = 0;
+        command_mode = false;
+        history_mode = false;
+        let active = document.querySelector(".item-selected");
+        if (active) {
+            active.classList.remove("item-selected");
+        }
+    }
+
     toolboxSearch.addEventListener("keyup", (event) => {
         event.preventDefault();
         if (event.target.value !== '') {
@@ -26,36 +38,17 @@
                 document.querySelector('.item-active').classList.remove('item-active');
             }
         }
-        if (event.target.value === '') {
-            if (document.querySelector('.item-selected')) {
-                document.querySelector('.item-selected').classList.remove('item-selected');
-            }
-            if (document.querySelector('.item-active')) {
-                document.querySelector('.item-active').classList.remove('item-active');
-            }
-        }
-        // else {
-        //     current_history === history.length;
-        //     current_command = 0;
-        //     toolboxRun.classList.add("toolbox-run-disabled");
-        //     let active = document.querySelector(".item-active");
-        //     if(active) {
-        //         active.classList.remove("item-active");
-        //     }
-        // }
         if (event.key === "ArrowUp") {
             if (!command_mode && !history_mode && current_history !== 0) {
-                event.target.value = history[current_history];
+                toolboxSearch.value = history[current_history];
                 history_mode = true;
             }
             if (!command_mode && history_mode && current_history !== 0) {
                 current_history--;
-                event.target.value = history[current_history];
+                toolboxSearch.value = history[current_history];
                 history_mode = true;
             }
             if (command_mode && !history_mode && current_command === 0) {
-                current_command = 0;
-                event.target.value = '';
                 let active = document.querySelector(".item-selected");
                 if (active) {
                     active.classList.remove("item-selected");
@@ -67,61 +60,43 @@
                 const all_visible = Array.from(toolboxItems).filter(child => {
                     return child.style.display !== 'none';
                 });
-                if (current_command < all_visible.length) {
+                if (current_command > 0) {
                     all_visible[current_command].classList.remove('item-selected');
-                    all_visible[current_command - 1].classList.add('item-selected');
-                    event.target.value = all_visible[current_command - 1].dataset.title;
                     current_command -= 1;
+                    all_visible[current_command].classList.add('item-selected');
                 }
-                if (current_command === all_visible.length) {
-                    all_visible[current_command - 1].classList.remove('item-selected');
-                    all_visible[current_command - 2].classList.add('item-selected');
-                    event.target.value = all_visible[current_command - 2].dataset.title;
-                    current_command -= 2;
-                }
-                command_mode = true;
             }
         }
-        if (event.target.classList.contains('toolbox-search') && event.key === "ArrowDown") {
+        if (event.key === "ArrowDown") {
             if (!command_mode && history_mode && current_history === (history.length - 1)) {
                 current_history = history.length;
-                event.target.value = '';
+                toolboxSearch.value = '';
                 history_mode = false;
             }
             if (!command_mode && history_mode && current_history < (history.length - 1)) {
                 current_history++;
-                event.target.value = history[current_history];
+                toolboxSearch.value = history[current_history];
                 history_mode = true;
             }
-            if (command_mode && !history_mode && current_command >= 1) {
+            if (command_mode && !history_mode && current_command >= 0) {
                 const toolbox_items = document.querySelectorAll(".toolbox-item");
                 const all_visible = Array.from(toolbox_items).filter(child => {
                     return child.style.display !== 'none';
                 });
-                if (current_command < all_visible.length) {
-                    if (current_command > 0) {
-                        all_visible[current_command - 1].classList.remove('item-selected');
-                    }
-                    all_visible[current_command].classList.add('item-selected');
-                    event.target.value = all_visible[current_command].dataset.title;
+                all_visible[current_command].classList.remove('item-selected');
+                if (current_command < all_visible.length - 1) {
                     current_command += 1;
                 }
-                command_mode = true;
+                all_visible[current_command].classList.add('item-selected');
             }
             if (!command_mode && !history_mode) {
+                command_mode = true;
                 const toolbox_items = document.querySelectorAll(".toolbox-item");
                 const all_visible = Array.from(toolbox_items).filter(child => {
                     return child.style.display !== 'none';
                 });
-                if (current_command < all_visible.length) {
-                    if (current_command > 0) {
-                        all_visible[current_command - 1].classList.remove('item-selected');
-                    }
-                    all_visible[current_command].classList.add('item-selected');
-                    event.target.value = all_visible[current_command].dataset.title;
-                    current_command += 1;
-                }
-                command_mode = true;
+                current_command = 0;
+                all_visible[current_command].classList.add('item-selected');
             }
         }
     });
@@ -133,7 +108,7 @@
             let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
             let single_page = document.querySelector(".item-active");  // single page
             if(toolboxSearch.value.endsWith("?")) {
-                let intent = toolboxSearch.value.slice(0, -1);
+                let intent = toolboxSearch.value;
                 vscode.postMessage({ type: "runChat", value: intent });
             }
             else if (single_page) {
@@ -162,10 +137,12 @@
                     data_function: function_to_run, // this
                 });
             }
+            reset_everything_about_commands();
             toolboxSearch.value = '';
             vscode.postMessage({
                 type: "focus_back_to_editor",
             });
+            toolbox_update_likes();
         }
         if (event.key === "Escape") {
             event.preventDefault();
@@ -490,6 +467,7 @@
     function search_filter() {
         const filterItems = document.querySelectorAll(".toolbox-filter");
         toolboxSearch.addEventListener('input', function (event) {
+            reset_everything_about_commands();
             const searchTerm = this.value.toLowerCase();
             const itemsArray = Array.from(filterItems);
             if(searchTerm.endsWith("?")) {
@@ -499,7 +477,7 @@
                 const parent = chat.parentNode;
                 parent.insertBefore(chat, parent.firstChild);
             }
-            else {
+            else if (searchTerm !== '') {
                 const filteredDivs = itemsArray.filter(div => {
                     return div.dataset.title.toLowerCase().includes(searchTerm);
                 });
@@ -517,6 +495,8 @@
                         parent.insertBefore(hl, parent.firstChild);
                     }
                 }
+            } else {
+                toolbox_update_likes();
             }
         });
     }
