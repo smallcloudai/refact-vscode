@@ -28,7 +28,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     ) {
         this._view = webviewView;
 
-        // TODO: doesn't work, maybe send later?
         setTimeout(() => {
             webviewView.webview.postMessage({
                 command: "editor_inform_how_many_lines_selected",

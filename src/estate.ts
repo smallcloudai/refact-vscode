@@ -67,6 +67,7 @@ export class StateOfEditor {
     public showing_diff_move_cursor: boolean = false;
     public showing_diff_for_range: vscode.Range | undefined = undefined;
     public showing_diff_for_function: string | undefined = undefined;
+    public showing_diff_for_model: string | undefined = undefined;
     public showing_diff_edit_chain: vscode.Range | undefined = undefined;
     public diff_load_animation_head: number = 0;
     public diff_load_animation_mid: string = "";
