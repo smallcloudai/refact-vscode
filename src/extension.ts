@@ -162,10 +162,8 @@ async function f1_pressed()
     if (state && state.get_mode() === Mode.Diff) {
         rollback_and_regen(editor);
     } else {
-        let success = await ask_and_save_intent();
-        if (success) {
-            await follow_intent(estate.global_intent);
-        }
+        vscode.commands.executeCommand("codify-presets.focus");
+        vscode.commands.executeCommand("workbench.action.focusSideBar");
     }
 }
 
@@ -200,11 +198,7 @@ export function activate(context: vscode.ExtensionContext)
 
     let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', pressed_tab);
-    // let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', f1_pressed);
-    let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', ()=> {
-        vscode.commands.executeCommand("codify-presets.focus");
-        vscode.commands.executeCommand("workbench.action.focusSideBar");
-    });
+    let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', f1_pressed);
     let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining',  manual_edit_chaining);
     let disposable9 = vscode.commands.registerCommand('plugin-vscode.codifyDisabled', (uri:vscode.Uri) => {
         privacy.set_access_override(uri.fsPath, 0);

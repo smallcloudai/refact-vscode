@@ -10,11 +10,7 @@ import * as fetchH2 from 'fetch-h2';
 
 function open_chat_tab(question: string, snippet: string)
 {
-    if (!question) {
-        vscode.commands.executeCommand('plugin-vscode.codifyChatTab', "");
-    } else {
-        vscode.commands.executeCommand('plugin-vscode.codifyChatTab', question, snippet);
-    }
+    vscode.commands.executeCommand('plugin-vscode.codifyChatTab', question, snippet);
 }
 
 
@@ -72,20 +68,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "runChat": {
-                    if(data.value !== "") {
-                        let editor = vscode.window.activeTextEditor;
-                        if (editor) {
-                            let selection = editor.selection;
-                            if(selection.isEmpty) {
-                                open_chat_tab(data.value, "");
-                            }
-                            else {
-                                let selected_text = editor.document.getText(selection);
-                                open_chat_tab(data.value, selected_text);
-                            }
+                    let question = data.value;
+                    if (!question) {
+                        question = "";
+                    }
+                    let editor = vscode.window.activeTextEditor;
+                    if (editor) {
+                        let selection = editor.selection;
+                        if(selection.isEmpty) {
+                            open_chat_tab(question, "");
                         }
-                    } else {
-                        open_chat_tab("", "");
+                        else {
+                            let selected_text = editor.document.getText(selection);
+                            open_chat_tab(question, selected_text);
+                        }
                     }
                     break;
                 }
@@ -368,7 +364,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div id="sidebar" class="sidebar">
                     <div class="toolbox">
                         <div class="toolbox-inline">
-                            <input class="toolbox-search" id="toolbox-search" placeholder="↓ commands; ↑ history">
+                            <input class="toolbox-search" id="toolbox-search" placeholder="press F1; ↓ commands; ↑ history">
                         </div>
                         <div class="toolbox-container">
                             <div class="toolbox-list"></div>
@@ -376,7 +372,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     </div>
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
-                        
+
                         <button tabindex="-1" id="login">Login / Register</button>
                         <div class="sidebar-inline">
                             <button tabindex="-1" id="chat"><span></span>Chat</button>

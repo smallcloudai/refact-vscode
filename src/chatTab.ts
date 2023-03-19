@@ -37,11 +37,15 @@ export class ChatTab {
 
         let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
         // const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
-        if (code_snippet) {
-            question = "```\n" + code_snippet + "\n```\n" + question;
-        }
-        if (question) { // no question => just a button was pressed
-            free_floating_tab.chat_post_question(question);
+        if (question) {
+            if (code_snippet) {
+                question = "```\n" + code_snippet + "\n```\n" + question;
+            }
+            if (question) { // no question => just a button was pressed
+                free_floating_tab.chat_post_question(question);
+            }
+        } else {
+            panel.webview.postMessage({ command: "chat-set-question-text", value: {question: "```\n" + code_snippet + "\n```\n"}});
         }
 
         panel.webview.onDidReceiveMessage(async (data) => {
@@ -105,6 +109,10 @@ export class ChatTab {
 
         let cancellationTokenSource = new vscode.CancellationTokenSource();
         let cancelToken = cancellationTokenSource.token;
+
+        if (this.messages.length === 0) {
+            this.web_panel.title = question;
+        }
 
         this.messages.push(["user", question]);
         if (this.messages.length > 10) {

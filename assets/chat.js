@@ -53,7 +53,7 @@
             last_answer_div.innerHTML = data.answer;
         }
         if(message_pair_div.children.length > 0) {
-            chat_content.appendChild(message_pair_div);    
+            chat_content.appendChild(message_pair_div);
         }
     }
 
@@ -105,6 +105,13 @@
             break;
         case "chat-post-answer":
             chat_render(message.value);
+            break;
+        case "chat-set-question-text":
+            chat_input.value = message.value.question;
+            setTimeout(() => {
+                chat_input.style.height = 'auto';
+                chat_input.style.height = chat_input.scrollHeight + 'px';
+            }, 100);
             break;
         }
     });
