@@ -34,6 +34,7 @@ export class ChatTab {
                 retainContextWhenHidden: true,
             }
         );
+        panel.iconPath = vscode.Uri.file(context.asAbsolutePath("images/discussion-bubble.svg"));
 
         let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
         // const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
@@ -45,7 +46,11 @@ export class ChatTab {
                 free_floating_tab.chat_post_question(question);
             }
         } else {
-            panel.webview.postMessage({ command: "chat-set-question-text", value: {question: "```\n" + code_snippet + "\n```\n"}});
+            let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
+            if (code_snippet) {
+                pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
+            }
+            panel.webview.postMessage(pass_dict);
         }
 
         panel.webview.onDidReceiveMessage(async (data) => {
@@ -112,6 +117,10 @@ export class ChatTab {
 
         if (this.messages.length === 0) {
             this.web_panel.title = question;
+        }
+
+        if (this.messages.length > 0 && this.messages[this.messages.length - 1][0] === "user") {
+            this.messages.length -= 1;
         }
 
         this.messages.push(["user", question]);

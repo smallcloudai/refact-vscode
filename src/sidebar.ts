@@ -82,6 +82,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             let selected_text = editor.document.getText(selection);
                             open_chat_tab(question, selected_text);
                         }
+                    } else {
+                        open_chat_tab("", "");
                     }
                     break;
                 }
