@@ -162,6 +162,10 @@
                     data_function: function_to_run, // this
                 });
             }
+            toolboxSearch.value = '';
+            vscode.postMessage({
+                type: "focus_back_to_editor",
+            });
         }
         if (event.key === "Escape") {
             event.preventDefault();
@@ -353,7 +357,7 @@
 
             const bookmark_button = document.createElement("button");
             bookmark_button.classList.add("toolbox-bookmark-button");
-           
+
             const third_party = document.createElement("i");
             third_party.classList.add("toolbox-third-party");
             const bookmark_button_icon = document.createElement("i");
