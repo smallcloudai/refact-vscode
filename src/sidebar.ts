@@ -17,7 +17,7 @@ function open_chat_tab(question: string, snippet: string)
 export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
     _history: string[] = [];
-    selected_lines_count: number = -1;
+    selected_lines_count: number = 0;
 
     constructor(private readonly _context: any) {}
 
@@ -29,10 +29,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view = webviewView;
 
         // TODO: doesn't work, maybe send later?
-        this._view.webview.postMessage({
-            command: "editor_inform_how_many_lines_selected",
-            value: this.selected_lines_count
-        });
+        setTimeout(() => {
+            webviewView.webview.postMessage({
+                command: "editor_inform_how_many_lines_selected",
+                value: this.selected_lines_count
+            });
+        }, 1000);
 
         webviewView.webview.options = {
             enableScripts: true,

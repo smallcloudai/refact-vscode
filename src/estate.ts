@@ -256,11 +256,9 @@ export function keyboard_events_on(editor: vscode.TextEditor)
     if (state.text_edited_event) {
         state.text_edited_event.dispose();
     }
-    state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection(async (ev: vscode.TextEditorSelectionChangeEvent) => {
-        completionProvider.on_cursor_moved();
-        let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
-        let ev_editor = ev.textEditor;
-        let pos1 = ev_editor.selection.active;
+
+    function launch(ev_editor: vscode.TextEditor)
+    {
         if(global.side_panel !== undefined) {
             let selected_lines = 0;
             if (!ev_editor.selection.isEmpty) {
@@ -268,6 +266,14 @@ export function keyboard_events_on(editor: vscode.TextEditor)
             }
             global.side_panel.editor_inform_how_many_lines_selected(selected_lines);
         }
+    }
+
+    state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection(async (ev: vscode.TextEditorSelectionChangeEvent) => {
+        completionProvider.on_cursor_moved();
+        let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
+        let ev_editor = ev.textEditor;
+        let pos1 = ev_editor.selection.active;
+        launch(ev_editor);
         if (!editor || editor !== ev_editor) {
             return;
         }
@@ -287,6 +293,10 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         }
         on_text_edited(editor);
     });
+    let active_editor = vscode.window.activeTextEditor;
+    if (active_editor) {
+        launch(active_editor);
+    }
 }
 
 

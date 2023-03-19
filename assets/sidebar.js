@@ -11,6 +11,7 @@
     let toolboxIndex = 0;
     let longthink_functions_today;
     let editor_inform_how_many_lines_selected = 0;
+    let editor_ignore_selection_changes = false;
     let function_bookmarks = [];
 
     let history = [];
@@ -29,6 +30,19 @@
         if (active) {
             active.classList.remove("item-selected");
         }
+    }
+
+    toolboxSearch.addEventListener("focus", (event) => {
+        editor_ignore_selection_changes = false;
+        on_how_many_lines_selected();
+    });
+
+    function ignore_selection_changes()
+    {
+        editor_ignore_selection_changes = true;
+        setTimeout(() => {
+            editor_ignore_selection_changes = false;
+        }, 100);
     }
 
     toolboxSearch.addEventListener("keyup", (event) => {
@@ -118,6 +132,7 @@
                     intent: intent,
                     data_function: active.dataset.function, // this a string containing json
                 });
+                ignore_selection_changes();
             } else if (selected_in_list) {
                 let intent = toolboxSearch.value;
                 vscode.postMessage({
@@ -125,6 +140,7 @@
                     intent: intent,
                     data_function: selected_in_list.dataset.function, // this a string containing json
                 });
+                ignore_selection_changes();
             } else {
                 let intent = toolboxSearch.value;
                 let function_to_run = JSON.stringify(longthink_functions_today['hl-and-fix']);
@@ -136,6 +152,7 @@
                     intent: intent,
                     data_function: function_to_run, // this
                 });
+                ignore_selection_changes();
             }
             reset_everything_about_commands();
             toolboxSearch.value = '';
@@ -172,6 +189,7 @@
                 intent: intent,
                 data_function: target.dataset.function
             });
+            ignore_selection_changes();
         }
         if (event.target.classList.contains("toolbox-back")) {
             let active = document.querySelector(".item-active");
@@ -435,7 +453,7 @@
         });
     }
 
-    function toolbox_update_selection() {
+    function on_how_many_lines_selected() {
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
             let item_functions = JSON.parse(item.dataset.function);
@@ -461,7 +479,7 @@
     function toolbox_update_likes() {
         renderToolbox(longthink_functions_today);
         search_filter();
-        command_handler();
+        add_click_handler_on_toolbox_items();
     }
 
     function search_filter() {
@@ -501,7 +519,7 @@
         });
     }
 
-    function command_handler(command) {
+    function add_click_handler_on_toolbox_items(command) {
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
             item.addEventListener("click", (event) => {
@@ -515,10 +533,9 @@
                     const item_functions = longthink_functions_today[item_name];
                     if (item_functions.supports_highlight === 1) {
                         document.querySelector(".item-active .toolbox-notice").classList.add('toolbox-notice-hidden');
-                    } else if (item_functions.supports_selection === 1) {
-                        vscode.postMessage({ type: "checkSelection" });
+                    } else {
+                        on_how_many_lines_selected();
                     }
-                    // console.log(longthink_functions_today[item_name]);
                 }
             });
         });
@@ -529,14 +546,17 @@
         switch (message.command) {
             case "editor_inform_how_many_lines_selected":
                 editor_inform_how_many_lines_selected = message.value;
-                toolbox_update_selection();
+                if (!editor_ignore_selection_changes) {
+                    on_how_many_lines_selected();
+                }
                 break;
             case "focus":
                 toolboxSearch.focus();
                 break;
             case "update_longthink_functions":
                 longthink_functions_today = message.value;
-                break
+                // toolbox_update_likes(); -- updates anyway, not needed
+                break;
             // case "update_likes":
             //     longthink_functions_today = message.response;
             //     break;
@@ -570,9 +590,7 @@
                 if (message.longthink_functions) {
                     console.log('longthink_functions ------>',message.longthink_functions);
                     longthink_functions_today = message.longthink_functions;
-                    renderToolbox(message.longthink_functions);
-                    search_filter();
-                    command_handler();
+                    toolbox_update_likes();
                 }
                 break;
         }
