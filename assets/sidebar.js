@@ -424,7 +424,7 @@
             // selection notice
             const selection_notice = document.createElement("div");
             selection_notice.classList.add('toolbox-notice');
-            selection_notice.innerHTML = `Please select code first.`;
+            selection_notice.innerHTML = `Please select ${item.selected_lines_min}-${item.selected_lines_max} lines of code.`;
 
             likes.appendChild(likes_icon);
             likes.appendChild(likes_span);

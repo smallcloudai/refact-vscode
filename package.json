@@ -13,6 +13,14 @@
 	},
 	"homepage": "https://codify.smallcloud.ai",
 	"author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/smallcloudai/codify-plugin-vscode"
+    },
+    "bugs": {
+        "url": "https://github.com/smallcloudai/codify-plugin-vscode/issues",
+        "email": "support@smallcloud.tech"
+    },
 	"version": "1.0.22",
 	"engines": {
 		"vscode": "^1.69.0"

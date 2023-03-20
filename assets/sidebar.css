@@ -28,7 +28,7 @@ body.vscode-dark {
 	align-items: center;
 	width: 100%;
 	box-sizing: border-box;
-	background-color: var(--vscode-editorWidget-background) !important;
+	background-color: var(--vscode-sideBar-background) !important;
 	padding: 0 20px 20px;
 	z-index: 10 !important;
 	overflow: hidden;
@@ -449,7 +449,12 @@ body.vscode-light #logout {
     width: 100%;
 }
 .toolbox-header:hover {
-	color: var(--secondary);
+	color: var(--vscode-list-hoverForeground);
+    background-color: var(--vscode-list-hoverBackground);
+}
+.item-selected .toolbox-header:hover {
+	background-color: var(--vscode-list-activeSelectionBackground) !important;
+	color: var(--vscode-list-activeSelectionForeground) !important;
 }
 .toolbox-likes {
 	font-weight: bold;
@@ -532,7 +537,6 @@ body.vscode-light #logout {
 	justify-content: center;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-    color: red !important;
 }
 .toolbox-like-empty::before {
 	content: "\e808";
@@ -563,7 +567,7 @@ body.vscode-light #logout {
 	height: calc(100vh - 50px);
 	left: 0;
 	right: 0;
-	background-color: var(--vscode-editorWidget-background) !important;
+	background-color: var(--vscode-sideBar-background);
 	padding: 0 20px 40px 20px;
 }
 .toolbox-content {
@@ -598,39 +602,61 @@ body.vscode-light #logout {
 	color: var(--vscode-editorWidget-background) !important;
 	padding: 4px 6px;
 	cursor: pointer;
+    height: 28px;
 }
 .toolbox-bookmark-button {
 	display: flex;
 	align-items: center;
-	background: var(--secondary) !important;
-	border: 0 !important;
-	color: var(--vscode-editorWidget-background) !important;
-	padding: 4px 6px;
+	border: 0;
+	color: var(--vscode-activityBar-background) !important;
+	padding: 6px 6px;
 	cursor: pointer;
-	height: 20px;
+	height: 26px;
 	overflow: hidden;
-}
-.toolbox-bookmark-button .toolbox-mark::before {
-    color: var(--vscode-editorWidget-background) !important;
+    background: var(--vscode-button-foreground) !important;
+    box-shadow: 1px 1px 1px -1px rgba(0,0,0,0.28);
 }
 .toolbox-likes-button {
-	background: var(--secondary) !important;
-	border: 0 !important;
-	color: var(--vscode-editorWidget-background) !important;
-	padding: 4px 6px;
+	border: 0;
+	/* color: var(--color) !important; */
+    color: var(--vscode-foreground) !important;
+	padding: 6px 6px;
 	cursor: pointer;
-	height: 20px;
+	height: 26px;
+    background: transparent;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	text-align: center;
 	margin: 0 10px;
+    /* background: var(--color) !important; */
+    background: var(--vscode-button-foreground) !important;
 	overflow: hidden;
+    box-shadow: 1px 1px 1px -1px rgba(0,0,0,0.28);
 }
-.item-active {
+.toolbox-likes-button .toolbox-like::before {
+    color: red !important;
 }
+.item-active .toolbox-run {
+    box-shadow: 1px 1px 1px -1px rgba(0,0,0,0.28);
+    background-color: var(--vscode-button-foreground) !important;
+    padding: 6px 6px !important;
+    height: 28px;
+    width: 28px;
+}
+.vscode-dark .toolbox-likes-button {
+    color: var(--vscode-sideBar-background) !important;
+}
+.vscode-dark .item-active .toolbox-run {
+    color: var(--vscode-sideBar-background) !important;
+}
+
 .item-selected {
-	font-weight: bold;
+	background-color: var(--vscode-list-activeSelectionBackground) !important;
+	color: var(--vscode-list-activeSelectionForeground) !important;
+}
+.item-selected .toolbox-run {
+    color: var(--vscode-list-activeSelectionForeground) !important;
 }
 .item-active .toolbox-body {
 	display: block;
