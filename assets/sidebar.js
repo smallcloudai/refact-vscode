@@ -190,6 +190,9 @@
                 data_function: target.dataset.function
             });
             ignore_selection_changes();
+            vscode.postMessage({
+                type: "focus_back_to_editor",
+            });
         }
         if (event.target.classList.contains("toolbox-back")) {
             let active = document.querySelector(".item-active");
