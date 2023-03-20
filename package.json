@@ -21,7 +21,7 @@
         "url": "https://github.com/smallcloudai/codify-plugin-vscode/issues",
         "email": "support@smallcloud.tech"
     },
-	"version": "1.0.22",
+	"version": "1.0.23",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
