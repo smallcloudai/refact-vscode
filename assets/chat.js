@@ -116,4 +116,12 @@
         }
     });
 
+    let currentHeight = document.documentElement.scrollHeight;
+    setInterval(() => {
+    let newHeight = document.documentElement.scrollHeight;
+        if (newHeight !== currentHeight) {
+            window.scrollTo(0, newHeight);
+            currentHeight = newHeight;
+        }
+    }, 1000);
 })();

@@ -345,9 +345,16 @@
             backButton.innerText = '← Back';
 
             // content
+            const content_title = document.createElement("h3");
+            content_title.classList.add('toolbox-content-title');
+            content_title.innerHTML = item.label;
+
             const content = document.createElement("div");
+            const content_text = document.createElement("div");
             content.classList.add('toolbox-content');
-            content.innerHTML = item.mini_html;
+            content.appendChild(content_title);
+            content_text.innerHTML = item.mini_html;
+            content.appendChild(content_text);
 
             // const likes_button = document.createElement("button");
             // likes_button.classList.add("toolbox-likes-button");

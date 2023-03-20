@@ -29,7 +29,7 @@ body.vscode-dark {
 	width: 100%;
 	box-sizing: border-box;
 	background-color: var(--vscode-sideBar-background) !important;
-	padding: 0 20px 20px;
+	padding: 0 0 10px 0;
 	z-index: 10 !important;
 	overflow: hidden;
 }
@@ -425,9 +425,40 @@ body.vscode-light #logout {
     color: var(--dark);
     margin-left: 5px;
 }
-
+.sidebar {
+    position: relative;
+    box-sizing: border-box;
+    height: 100vh;
+}
+.toolbox {
+    height: 100%;
+    box-sizing: border-box;
+}
 .toolbox-container {
 	margin-top: 20px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.toolbox-list {
+    overflow-y: auto;
+    height: calc(100% - 200px);
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.toolbox-body {
+	display: none;
+	overflow-y: auto;
+	margin-top: 0px;
+	position: absolute;
+	top: 50px;
+	height: calc(100vh - 50px);
+	left: 0;
+	right: 0;
+	background-color: var(--vscode-sideBar-background);
+	padding: 0 0px 20px 0px;
+    color: var(--color) !important;
 }
 .toolbox-item {
 	margin: 3px 0;
@@ -553,22 +584,6 @@ body.vscode-light #logout {
 	justify-content: center;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
-}
-.toolbox {
-    overflow-y: auto;
-    height: calc(100vh - 200px);
-}
-.toolbox-body {
-	display: none;
-	overflow-y: auto;
-	margin-top: 0px;
-	position: absolute;
-	top: 50px;
-	height: calc(100vh - 50px);
-	left: 0;
-	right: 0;
-	background-color: var(--vscode-sideBar-background);
-	padding: 0 20px 40px 20px;
 }
 .toolbox-content {
 	line-height: 1.4;
