@@ -37,7 +37,6 @@ export class ChatTab {
         panel.iconPath = vscode.Uri.file(context.asAbsolutePath("images/discussion-bubble.svg"));
 
         let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
-        // const question_clean = question.endsWith('?') ? question.slice(0, -1) : question;
         if (question) {
             if (code_snippet) {
                 question = "```\n" + code_snippet + "\n```\n" + question;
@@ -116,7 +115,14 @@ export class ChatTab {
         let cancelToken = cancellationTokenSource.token;
 
         if (this.messages.length === 0) {
-            this.web_panel.title = question;
+            // find first 15 characters, non space, non newline, non special character
+            let first_normal_char_index = question.search(/[^ \n\r\t`]/);
+            let first_15_characters = question.substring(first_normal_char_index, first_normal_char_index + 15);
+            let first_16_characters = question.substring(first_normal_char_index, first_normal_char_index + 16);
+            if (first_15_characters !== first_16_characters) {
+                first_15_characters += "…";
+            }
+            this.web_panel.title = first_15_characters;
         }
 
         if (this.messages.length > 0 && this.messages[this.messages.length - 1][0] === "user") {
