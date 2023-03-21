@@ -15,8 +15,7 @@
     let function_bookmarks = [];
 
     let history = [];
-
-    let current_history = history.length;
+    let current_history = 0;
     let current_command = 0;
     let history_mode = false;
     let command_mode = false;
@@ -53,14 +52,14 @@
             }
         }
         if (event.key === "ArrowUp") {
-            if (!command_mode && !history_mode && current_history !== 0) {
+            if (!command_mode && history_mode && current_history >= 0 && current_history < (history.length - 1)) {
+                current_history++;
                 toolboxSearch.value = history[current_history];
-                history_mode = true;
             }
-            if (!command_mode && history_mode && current_history !== 0) {
-                current_history--;
+            if (!command_mode && !history_mode) {
                 toolboxSearch.value = history[current_history];
                 history_mode = true;
+                current_history = 0;
             }
             if (command_mode && !history_mode && current_command === 0) {
                 let active = document.querySelector(".item-selected");
@@ -82,13 +81,13 @@
             }
         }
         if (event.key === "ArrowDown") {
-            if (!command_mode && history_mode && current_history === (history.length - 1)) {
-                current_history = history.length;
+            if (!command_mode && history_mode && current_history === 0) {
+                current_history = 0;
                 toolboxSearch.value = '';
                 history_mode = false;
             }
-            if (!command_mode && history_mode && current_history < (history.length - 1)) {
-                current_history++;
+            if (!command_mode && history_mode && current_history > 0) {
+                current_history--;
                 toolboxSearch.value = history[current_history];
                 history_mode = true;
             }
@@ -127,6 +126,7 @@
             }
             else if (single_page) {
                 let intent = toolboxSearch.value;
+                history.push(intent);
                 vscode.postMessage({
                     type: "function_activated",
                     intent: intent,
@@ -135,6 +135,7 @@
                 ignore_selection_changes();
             } else if (selected_in_list) {
                 let intent = toolboxSearch.value;
+                history.push(intent);
                 vscode.postMessage({
                     type: "function_activated",
                     intent: intent,
@@ -143,6 +144,7 @@
                 ignore_selection_changes();
             } else {
                 let intent = toolboxSearch.value;
+                history.push(intent);
                 let function_to_run = JSON.stringify(longthink_functions_today['hl-and-fix']);
                 if(editor_inform_how_many_lines_selected > 0) {
                     function_to_run = JSON.stringify(longthink_functions_today['select-and-refactor']);
@@ -160,6 +162,7 @@
                 type: "focus_back_to_editor",
             });
             toolbox_update_likes();
+            console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxx history',history);
         }
         if (event.key === "Escape") {
             event.preventDefault();
@@ -184,6 +187,7 @@
             if(target.classList.contains('toolbox-body')) {
                 target = target.parentElement;
             }
+            history.push(intent);
             vscode.postMessage({
                 type: "function_activated",
                 intent: intent,
