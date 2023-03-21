@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-// import * as chat from "./chat";
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/

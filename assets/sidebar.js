@@ -215,6 +215,11 @@
         vscode.postMessage({ type: "openSettings" });
     });
 
+    const reportBugsButton = document.querySelector("#report_bugs");
+    reportBugsButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "reportBugs" });
+    });
+
     const profileButton = document.querySelector("#profile");
     profileButton.addEventListener("click", () => {
         vscode.postMessage({ type: "js2ts_goto_profile" });

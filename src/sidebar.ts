@@ -164,6 +164,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand("plugin-vscode.codifyPrivacySettings");
                     break;
                 }
+                case "reportBugs": {
+                    vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/codify-plugin-vscode/issues`));
+                    break;
+                }
                 case "logout": {
                     vscode.commands.executeCommand("plugin-vscode.logout");
                     break;
