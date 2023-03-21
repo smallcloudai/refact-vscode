@@ -259,7 +259,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (global_context === undefined) {
             return 0;
         }
-        let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('codifyBookmarks');
+        let bookmarks_: {[key: string]: boolean}|undefined = await global_context.globalState.get('codifyBookmarks');
+        let bookmarks: {[key: string]: boolean} = {};
+        if (bookmarks_ !== undefined) {
+            bookmarks = bookmarks_;
+        }
         return this._view!.webview.postMessage({ command: "update_bookmarks_list", value: bookmarks });
     }
 
