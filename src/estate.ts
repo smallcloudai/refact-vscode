@@ -126,7 +126,7 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
         if (!oldest_state) {
             throw new Error("Internal error");
         }
-        console.log(["forget state of", oldest_state.editor.document.fileName, oldest_state.fn]);
+        // console.log(["forget state of", oldest_state.editor.document.fileName, oldest_state.fn]);
         switch_mode(oldest_state, Mode.Dispose);
         editor2state.delete(oldest_state.editor);
     }
@@ -136,11 +136,11 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
         for (const [other_editor, other_state] of editor2state) {
             if (other_editor.document === editor.document) {
                 if (other_state.editor === current_editor) {
-                    console.log([reqfrom, "return other AKA current", other_state.fn]);
+                    console.log([reqfrom, "state return other AKA current", other_state.fn]);
                     return other_state;
                 }
                 if (editor === current_editor) {
-                    console.log([reqfrom, "delete/add AKA new is current", other_state.fn]);
+                    console.log([reqfrom, "state delete/add AKA new is current", other_state.fn]);
                     editor2state.delete(other_editor);
                     editor2state.set(editor, other_state);
                     state = other_state;
@@ -150,14 +150,14 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
             }
         }
     } else {
-        console.log([reqfrom, "found", state.fn]);
+        // console.log([reqfrom, "found", state.fn]);
     }
     if (!state) {
         state = new StateOfEditor(editor);
         state.last_used_ts = Date.now();
         state.fn = editor.document.fileName;
         editor2state.set(editor, state);
-        console.log([reqfrom, "create new", state.fn]);
+        console.log([reqfrom, "state create new", state.fn]);
     }
     state.last_used_ts = Date.now();
     return state;
