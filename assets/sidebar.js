@@ -591,6 +591,8 @@
                 let data = document.querySelector('#datacollection');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
+                let bug = document.querySelector('#report_bugs');
+                let privacy = document.querySelector('#privacy');
 
                 info.style.display = message.ts2web_user ? 'flex' : '';
                 plan.style.display = message.ts2web_plan ? 'flex' : '';
@@ -602,7 +604,15 @@
                 chat.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
+                bug.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                privacy.style.display = message.ts2web_user ? 'flex' : 'none';
 
+                
+                if(message.ts2web_user === undefined) {
+                    privacy.style.display = 'none';
+                    bug.style.display = 'none';
+                }
+                
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
                 }

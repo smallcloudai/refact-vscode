@@ -85,6 +85,7 @@ body.vscode-light #profile {
 	border-color: var(--secondary);
 }
 #report_bugs {
+    display: none;
     font-size: 13px;
 	border: 0;
 	padding: 0;
@@ -93,7 +94,6 @@ body.vscode-light #profile {
 	cursor: pointer;
 	box-sizing: border-box;
 	text-decoration: none;
-	display: inline-flex;
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
@@ -147,6 +147,7 @@ body.vscode-light #profile {
 	font-size: 13px;
 }
 #privacy {
+    display: none;
 	font-size: 13px;
 	border: 1px solid var(--secondary);
 	padding: 8px 18px;
@@ -155,7 +156,6 @@ body.vscode-light #profile {
     height: 33px;
 	cursor: pointer;
 	box-sizing: border-box;
-	display: block;
 	width: 100%;
 	text-align: center;
 	margin: 5px 5px 5px 0;
