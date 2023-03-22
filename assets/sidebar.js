@@ -15,6 +15,7 @@
     let function_bookmarks = [];
 
     let history = [];
+    let history_backup = "";
     let current_history = 0;
     let current_command = 0;
     let history_mode = false;
@@ -57,6 +58,7 @@
                 toolboxSearch.value = history[current_history];
             }
             if (!command_mode && !history_mode) {
+                history_backup = toolboxSearch.value;
                 toolboxSearch.value = history[current_history];
                 history_mode = true;
                 current_history = 0;
@@ -83,15 +85,14 @@
         if (event.key === "ArrowDown") {
             if (!command_mode && history_mode && current_history === 0) {
                 current_history = 0;
-                toolboxSearch.value = '';
+                toolboxSearch.value = history_backup;
                 history_mode = false;
-            }
-            if (!command_mode && history_mode && current_history > 0) {
+
+            } else if (!command_mode && history_mode && current_history > 0) {
                 current_history--;
                 toolboxSearch.value = history[current_history];
-                history_mode = true;
-            }
-            if (command_mode && !history_mode && current_command >= 0) {
+
+            } else if (command_mode && !history_mode && current_command >= 0) {
                 const toolbox_items = document.querySelectorAll(".toolbox-item");
                 const all_visible = Array.from(toolbox_items).filter(child => {
                     return child.style.display !== 'none';
@@ -101,8 +102,8 @@
                     current_command += 1;
                 }
                 all_visible[current_command].classList.add('item-selected');
-            }
-            if (!command_mode && !history_mode) {
+
+            } else if (!command_mode && !history_mode) {
                 command_mode = true;
                 const toolbox_items = document.querySelectorAll(".toolbox-item");
                 const all_visible = Array.from(toolbox_items).filter(child => {
@@ -126,7 +127,7 @@
             }
             else if (single_page) {
                 let intent = toolboxSearch.value;
-                history.push(intent);
+                history.splice(0, 0, intent);
                 vscode.postMessage({
                     type: "function_activated",
                     intent: intent,
@@ -135,7 +136,7 @@
                 ignore_selection_changes();
             } else if (selected_in_list) {
                 let intent = toolboxSearch.value;
-                history.push(intent);
+                history.splice(0, 0, intent);
                 vscode.postMessage({
                     type: "function_activated",
                     intent: intent,
@@ -144,7 +145,7 @@
                 ignore_selection_changes();
             } else {
                 let intent = toolboxSearch.value;
-                history.push(intent);
+                history.splice(0, 0, intent);
                 let function_to_run = JSON.stringify(longthink_functions_today['hl-and-fix']);
                 if(editor_inform_how_many_lines_selected > 0) {
                     function_to_run = JSON.stringify(longthink_functions_today['select-and-refactor']);
@@ -162,7 +163,6 @@
                 type: "focus_back_to_editor",
             });
             toolbox_update_likes();
-            console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxx history',history);
         }
         if (event.key === "Escape") {
             event.preventDefault();
@@ -187,7 +187,7 @@
             if(target.classList.contains('toolbox-body')) {
                 target = target.parentElement;
             }
-            history.push(intent);
+            history.splice(0, 0, intent);
             vscode.postMessage({
                 type: "function_activated",
                 intent: intent,
@@ -607,12 +607,12 @@
                 bug.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 privacy.style.display = message.ts2web_user ? 'flex' : 'none';
 
-                
+
                 if(message.ts2web_user === undefined) {
                     privacy.style.display = 'none';
                     bug.style.display = 'none';
                 }
-                
+
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
                 }
