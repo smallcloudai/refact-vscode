@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
+import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 
 
@@ -43,16 +44,15 @@ export async function report_success_or_failure(
     }
     if (!positive) {
         await fetchH2.disconnectAll();
+        await fetchAPI.non_verifying_ctx.disconnectAll()
     } else {
         global.last_positive_result = Date.now();
     }
     if (invalid_session || conn_refused) {
-        // await fetchH2.disconnectAll();
         userLogin.inference_login_force_retry();
         console.log(["INVALID_SESSION, ECONNREFUSED => inference_login_force_retry"]);
     }
     if (timedout) {
-        // await fetchH2.disconnectAll();
         userLogin.inference_login_force_retry();
         // console.log(["ETIMEDOUT => disconnectAll"]);
     }

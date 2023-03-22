@@ -230,6 +230,8 @@ export async function inference_login(): Promise<boolean>
     ) {
         return _last_inference_login_cached_result;
     }
+    await fetchH2.disconnectAll();
+    await fetchAPI.non_verifying_ctx.disconnectAll();
     console.log(["perform inference login", url]);
     if (!url) {
         return false;

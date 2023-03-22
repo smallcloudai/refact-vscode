@@ -206,6 +206,7 @@ export function save_url_from_login(url: string)
 export function inference_url(addthis: string, third_party: boolean)
 {
     let url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
+    // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
     let url: string;
     if (typeof url_ !== 'string' || url_ === '' || !url_) {
         url = global_inference_url_from_login;
@@ -220,6 +221,33 @@ export function inference_url(addthis: string, third_party: boolean)
     }
     url += addthis;
     return url;
+}
+
+
+export let non_verifying_ctx = fetchH2.context({
+    session: {
+        rejectUnauthorized: false,
+    },
+});
+
+
+export function inference_context(third_party: boolean)
+{
+    let modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    // If user has modified the URL, we don't check the certificate, because we assume it's self-signed self-hosted server.
+    // Unless it's a third party request -- that always has a valid certificate.
+    let dont_check_certificate: boolean = !third_party && !!modified_url;
+    if (dont_check_certificate) {
+        return non_verifying_ctx;
+    } else {
+        return {
+            disconnect: fetchH2.disconnect,
+            disconnectAll: fetchH2.disconnectAll,
+            fetch: fetchH2.fetch,
+            onPush: fetchH2.onPush,
+            setup: fetchH2.setup,
+        };
+    }
 }
 
 
@@ -241,6 +269,7 @@ export function fetch_api_promise(
 ): [Promise<fetchH2.Response>, estate.ApiFields]
 {
     let url = inference_url("/v1/contrast", third_party);
+    let ctx = inference_context(third_party);
     let model_ = vscode.workspace.getConfiguration().get('codify.model') || "CONTRASTcode";
     let model_longthink: string = vscode.workspace.getConfiguration().get('codify.longthinkModel') || suggest_longthink_model;
     if (suggest_longthink_model) {
@@ -303,7 +332,7 @@ export function fetch_api_promise(
         });
         init.signal = abort.signal;
     }
-    let promise = fetchH2.fetch(req, init);
+    let promise = ctx.fetch(req, init);
     return [promise, api_fields];
 }
 
