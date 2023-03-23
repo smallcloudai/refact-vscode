@@ -1,17 +1,20 @@
 Dual Licence
 ------------
 
-Codify plugin is available under both Open Source - GPLv3 or a commercial license agreement with Small Magellanic Cloud AI Ltd.
+Refact.ai Visual Studio Code Plugin is available under both Open Source - GPLv3 or a commercial license agreement with Small Magellanic Cloud AI Ltd.
 
 Please contact Small Magellanic Cloud AI Ltd to inquire about a commercial license over email at info@smallcloud.tech.
-Key concepts
 
-The majority of all Codify development is done by Small Magellanic Cloud AI Ltd engineers, but contributions from outside are welcome! If you are making a contribution, you agree that your work will be licensed under the same terms, including commercial use.
+
+Key concepts
+------------
+
+The majority of all Refact.ai Pligin development is done by Small Magellanic Cloud AI Ltd engineers, but contributions from outside are welcome! If you are making a contribution, you agree that your work will be licensed under the same terms, including the commercial use.
 The products provided under our different licenses are not identical.
 
-If you use Codify under GPL, you must use only the GPL version, and you must abide by the source code-sharing requirements of GPL.
+If you use Refact.ai Pligin under GPL, you must use only the GPL version, and you must abide by the source code-sharing requirements of GPL.
 
-If you use Codify under one of our commercial licenses, you must use our commercial release only, and you must abide by our commercial license terms. Also, if you purchase support for our commercial release you must not request support for the GPL version.
+If you use Refact.ai Pligin under one of our commercial licenses, you must use our commercial release only, and you must abide by our commercial license terms. Also, if you purchase support for our commercial release you must not request support for the GPL version.
 
 This page does not represent legal advice. We strongly encourage developers and/or companies to review the specific licensing text made available on the GNU web site.
 
@@ -19,8 +22,8 @@ This page does not represent legal advice. We strongly encourage developers and/
 Commercial Licensing
 --------------------
 
-Small Magellanic Cloud AI Ltd is the exclusive commercial licensing agent for Codify.
+Small Magellanic Cloud AI Ltd is the exclusive commercial licensing agent for Refact.ai Pligin.
 
-The kind of distribution or use you plan to make of Codify will determine whether you need a commercial license from Small Magellanic Cloud AI Ltd. If you plan to distribute Codify in one of your products or make them available to your SaaS or ASP customers, you should understand the differences between these licenses.
+The kind of distribution or use you plan to make of Refact.ai Pligin will determine whether you need a commercial license from Small Magellanic Cloud AI Ltd. If you plan to distribute Refact.ai Pligin in one of your products or make them available to your SaaS or ASP customers, you should understand the differences between these licenses.
 
 Please note that the conditions apply even if you ship or make available a free demonstration version of your own product or application.
