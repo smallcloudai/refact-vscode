@@ -44,7 +44,7 @@ export async function report_success_or_failure(
     }
     if (!positive) {
         await fetchH2.disconnectAll();
-        await fetchAPI.non_verifying_ctx.disconnectAll()
+        await fetchAPI.non_verifying_ctx.disconnectAll();
     } else {
         global.last_positive_result = Date.now();
     }
