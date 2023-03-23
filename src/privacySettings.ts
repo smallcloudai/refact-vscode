@@ -49,8 +49,8 @@ export class PrivacySettings {
 
     public static render(context: any) {
         const panel = vscode.window.createWebviewPanel(
-            "codify-privacy",
-            "Codify Privacy Settings",
+            "refact-privacy-tab",
+            "Refact.ai Privacy Settings",
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -134,12 +134,12 @@ export class PrivacySettings {
         const rules = PrivacySettings.rules;
         for (let i = 0; i < rules.length; i++) {
             items += `
-                <div class="codify-privacy__item">
+                <div class="refactcss-privacy__item">
                     <label for="codify-access-${rules[i].value}">
-                        <input type="radio" id="codify-access-${rules[i].value}" name="codify-access" class="codify-radio" value="${rules[i].value}">
+                        <input type="radio" id="codify-access-${rules[i].value}" name="codify-access" class="refactcss-radio" value="${rules[i].value}">
                         ${rules[i].name}: ${rules[i].short_description}
                     </label>
-                    <p class="codify-help-text">${rules[i].long_description}</p>
+                    <p class="refactcss-help-text">${rules[i].long_description}</p>
                 </div>
             `;
         }
@@ -158,14 +158,14 @@ export class PrivacySettings {
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <h1 class="codify-privacy__title">Your Privacy Rules</h1>
-                <div class="codify-privacy__global">
-                    <h2 class="codify-privacy__subtitle">Global Defaults</h2>
-                    <div class="codify-privacy__defaults">
+                <h1 class="refactcss-privacy__title">Your Privacy Rules</h1>
+                <div class="refactcss-privacy__global">
+                    <h2 class="refactcss-privacy__subtitle">Global Defaults</h2>
+                    <div class="refactcss-privacy__defaults">
                        ${items}
                     </div>
-                    <h2 class="codify-privacy__subtitle">Global Permanent Rules to Override the Default</h2>
-                    <div class="codify-privacy__overrides overrides">
+                    <h2 class="refactcss-privacy__subtitle">Global Permanent Rules to Override the Default</h2>
+                    <div class="refactcss-privacy__overrides overrides">
                         <div class="overrides__header">
                             <div class="overrides__path">Path</div>
                             <div class="overrides__selector">Codify Access</div>
@@ -175,7 +175,7 @@ export class PrivacySettings {
                         </div>
                     </div>
                 </div>
-                <div class="codify-privacy__info">Use a context menu in the file tree panel to add a new rule.</div>
+                <div class="refactcss-privacy__info">Use a context menu in the file tree panel to add a new rule.</div>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;

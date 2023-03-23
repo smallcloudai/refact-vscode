@@ -318,8 +318,8 @@
 					"fontCharacter": "\\e812"
 				}
 			},
-            "codify-privacy": {
-				"description": "codify privacy",
+            "refact-privacy-tab": {
+				"description": "refacticon privacy",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e811"

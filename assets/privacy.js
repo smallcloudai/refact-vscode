@@ -47,7 +47,6 @@
     function addOverride(uri, state) {
         const table = document.querySelector('.overrides__body');
         let row = document.createElement("div");
-        // row.innerHTML = 'asdasd';
         row.classList.add("overrides__item");
         let path = document.createElement("div");
         path.classList.add("overrides__path");
