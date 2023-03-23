@@ -24,6 +24,7 @@
             chat_send_button.click();
             return true;
         }
+        auto_scroll();
     });
 
     var last_answer_div = null;
@@ -94,6 +95,15 @@
         document.body.removeChild(textarea);
     }
 
+    let currentHeight = document.documentElement.scrollHeight;
+    function auto_scroll() {
+        let newHeight = document.documentElement.scrollHeight;
+        if (newHeight !== currentHeight) {
+            window.scrollTo(0, newHeight);
+            currentHeight = newHeight;
+        }
+    }
+
     window.addEventListener("message", (event) => {
 		const message = event.data;
 		switch (message.command) {
@@ -114,14 +124,6 @@
             }, 100);
             break;
         }
+        auto_scroll();
     });
-
-    let currentHeight = document.documentElement.scrollHeight;
-    setInterval(() => {
-    let newHeight = document.documentElement.scrollHeight;
-        if (newHeight !== currentHeight) {
-            window.scrollTo(0, newHeight);
-            currentHeight = newHeight;
-        }
-    }, 1000);
 })();
