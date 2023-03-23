@@ -253,7 +253,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(login);
     let logout = vscode.commands.registerCommand('refactaicmd.logout', () => {
         context.globalState.update('codifyFirstRun', false);
-        vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
+        vscode.workspace.getConfiguration().update('refactai.apiKey', '', vscode.ConfigurationTarget.Global);
         global.user_logged_in = "";
         global.user_active_plan = "";
         global.user_metering_balance = 0;

@@ -205,8 +205,12 @@ export function save_url_from_login(url: string)
 
 export function inference_url(addthis: string, third_party: boolean)
 {
-    let url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
     // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
+    let url_ = vscode.workspace.getConfiguration().get(third_party ? 'refactai.infurl3rd' : 'refactai.infurl');
+    if (!url_) {
+        // Backward compatibility: codify is the old name
+        url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
+    }
     let url: string;
     if (typeof url_ !== 'string' || url_ === '' || !url_) {
         url = global_inference_url_from_login;
@@ -233,7 +237,11 @@ export let non_verifying_ctx = fetchH2.context({
 
 export function inference_context(third_party: boolean)
 {
-    let modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    let modified_url = vscode.workspace.getConfiguration().get('refactai.infurl');
+    if (!modified_url) {
+        // Backward compatibility: codify is the old name
+        modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    }
     // If user has modified the URL, we don't check the certificate, because we assume it's self-signed self-hosted server.
     // Unless it's a third party request -- that always has a valid certificate.
     let dont_check_certificate: boolean = !third_party && !!modified_url;

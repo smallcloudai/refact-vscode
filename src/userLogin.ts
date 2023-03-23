@@ -49,7 +49,11 @@ export function check_if_login_worked()
 
 export function secret_api_key(): string
 {
-    const key = vscode.workspace.getConfiguration().get('codify.apiKey');
+    let key = vscode.workspace.getConfiguration().get('refactai.apiKey');
+    if (!key) {
+        // Backward compatibility: codify is the old name
+        key = vscode.workspace.getConfiguration().get('codify.apiKey');
+    }
     if (!key) { return ""; }
     if (typeof key !== 'string') { return ""; }
     return key;
@@ -83,7 +87,7 @@ export async function login()
             if (json.retcode === "OK") {
                 apiKey = json.secret_key;
                 global.streamlined_login_ticket = "";
-                await vscode.workspace.getConfiguration().update('codify.apiKey', apiKey, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', apiKey, vscode.ConfigurationTarget.Global);
                 await usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
                 // fall through
             } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("The API key") && global.streamlined_login_countdown !== -1) {
@@ -214,9 +218,13 @@ export async function inference_login(): Promise<boolean>
         await login();
         url = fetchAPI.inference_url("/v1/secret-key-activate", third_party);
     }
-    // Without login it will still work, with inference URL in settings.
+    // Without login it will still work, with inference URL in settings. (this happens if the website is down)
     let apiKey = secret_api_key();
-    let _conf_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    let _conf_url = vscode.workspace.getConfiguration().get('refactai.infurl');
+    if (!_conf_url) {
+        // Backward compatibility: codify is the old name
+        _conf_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    }
     let conf_url = "";
     if (typeof _conf_url === 'string') {
         conf_url = _conf_url;

@@ -53,7 +53,7 @@ export class StatusBarMenu {
     choose_color()
     {
         if (this.access_level === 0) {
-            this.menu.text = `$(codify-privacy) Refact.ai`;
+            this.menu.text = `$(refact-icon-privacy) Refact.ai`;
             this.menu.backgroundColor = undefined;
             this.menu.tooltip = `Codify can't access this file because of the privacy rules`;
         } else if (this.socketerror) {

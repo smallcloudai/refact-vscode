@@ -89,7 +89,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "function_activated": {
-                    if(vscode.workspace.getConfiguration().get('codify.autoHideSidebar')) {
+                    if(vscode.workspace.getConfiguration().get('refactai.autoHideSidebar')) {
                         vscode.commands.executeCommand('workbench.action.toggleSidebarVisibility');
                     }
                     console.log('*** function_activated ***', data);
