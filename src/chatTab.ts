@@ -221,13 +221,13 @@ export class ChatTab {
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <div class="refact-chat">
-                    <h2 class="refact-chat__title">Refact.ai Chat</h2>
-                    <div class="refact-chat__content">
+                <div class="refactcss-chat">
+                    <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
+                    <div class="refactcss-chat__content">
                     </div>
-                    <div class="refact-chat__commands">
-                        <textarea id="chat-input" class="refact-chat__input"></textarea>
-                        <button id="chat-send" class="refact-chat__button"><span></span></button>
+                    <div class="refactcss-chat__commands">
+                        <textarea id="chat-input" class="refactcss-chat__input"></textarea>
+                        <button id="chat-send" class="refactcss-chat__button"><span></span></button>
                     </div>
                 </div>
 
