@@ -1,7 +1,7 @@
 (function () {
 	const vscode = acquireVsCodeApi();
-    const globalDefaultsSelector = document.querySelectorAll('.codify-radio');
-    const globalLabels = document.querySelectorAll('.codify-privacy__item label');
+    const globalDefaultsSelector = document.querySelectorAll('.refactcss-radio');
+    const globalLabels = document.querySelectorAll('.refactcss-privacy__item label');
     let globalDefault;
     let popup;
     let rules;

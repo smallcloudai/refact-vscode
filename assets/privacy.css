@@ -13,14 +13,14 @@ body.vscode-dark {
     --secondary: rgba(255,255,255,0.5);
     --dark: rgba(255,255,255,0.7);
 }
-.codify-privacy {}
+.refactcss-privacy {}
 
-.codify-privacy__global {
+.refactcss-privacy__global {
     margin-bottom: 50px;
     font-size: 16px;
 }
 
-.codify-privacy__title {
+.refactcss-privacy__title {
     text-transform: uppercase;
     font-size: 20px;
     margin-bottom: 1px;
@@ -29,23 +29,23 @@ body.vscode-dark {
     padding-bottom: 1px;
 }
 
-.codify-privacy__subtitle {
+.refactcss-privacy__subtitle {
     font-size: 18px;
     margin-top: 40px;
 }
 
-.codify-privacy__defaults {
+.refactcss-privacy__defaults {
     margin-top: 20px;
     margin-bottom: 20px;
 }
-.codify-privacy__info {
+.refactcss-privacy__info {
     font-size: 12px;
 }
-.codify-privacy__item {
+.refactcss-privacy__item {
     margin-bottom: 20px;
     padding: 0;
 }
-.codify-privacy__item label {
+.refactcss-privacy__item label {
     font-size: 15px;
     margin: 0;
     padding: 0;
@@ -54,7 +54,7 @@ body.vscode-dark {
     overflow: hidden;
 }
 
-.codify-radio {
+.refactcss-radio {
     pointer-events: none;
     position: relative;
     margin: 0;
@@ -68,13 +68,13 @@ body.vscode-dark {
 
 }
 
-.codify-help-text {
+.refactcss-help-text {
     margin: 5px 0 0 25px;
     padding: 0;
     font-size: 12px;
 }
 
-.codify-privacy__overrides {}
+.refactcss-privacy__overrides {}
 
 /* Overrides */
 
@@ -147,17 +147,17 @@ body.vscode-dark {
 
 
 
-/* .codify-privacy__inline {
+/* .refactcss-privacy__inline {
     display: flex;
     align-items: center;
 }
 
-.codify-privacy__select {
+.refactcss-privacy__select {
     margin-left: 10px;
     border: 1px solid var(--secondary);
     padding-right: 4px;
 }
-.codify-privacy__select select {
+.refactcss-privacy__select select {
     border: 0;
     padding: 4px 8px;
     color: var(--secondary);
