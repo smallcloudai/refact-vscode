@@ -1,37 +1,41 @@
 # Refact.ai Visual Studio Code Pligin: The AI Assistant for Code Writing and Refactoring
 
-Boost your productivity by employing AI to pair program with you or make more fun out of
-your work by delegating boring tasks to the AI.
+
+Refact is a cutting-edge AI tool designed to assist developers in writing and refining code.
+It’s fast and supports Python, Java, PHP, C++, Javascript, TypeScript, and 20 more programming languages.
+
+Try for free today and make your programming more enjoyable!
+
+🔒 We put your privacy first. Refact allows you to restrict access to particular files or projects, ensuring that your private code or confidential files are protected. And we don't collect datasets on the server side.
 
 
 ![Code completion](autocomplete.gif)
 
 
-## Refact.ai 1.2 Release
 
-Refact.ai is an AI coding assistant, available for Jet Brains IDEs and Visual Studio Code. In this major release, we introduce:
+## Functions That You Can Use in Refact
 
-1. All new AI Toolbox, that allows you to operate on existing code. You can automatically make your code shorter, cleaner, fix bugs — improving your efficiency as an engineer.
+ * Code Completion: As you write code, Refact suggests potential code completions based on the context of your code, looking up and down. It can suggest whole functions, classes, commonly used programming patterns, libraries, and APIs usage.
 
-2. The new Refact.ai Chat integration is ready to give you hints on APIs usage, documentation links, and much more.
+ * Code Transformation: You can automatically make your code shorter, cleaner, and fix bugs — improving your efficiency as an engineer. Whether you're looking to optimize, improve, or explain your code, Refact has you covered.
 
-3. The new Privacy Settings page lets you point out which code is OK to send to the cloud for inference, and which isn’t. This works on per project and even per file basis.
-
-Our code completion is still fast & responsive, looks up and down from the cursor position, and works for 20+ programming languages!
-
-In the Pro version, you can enjoy all of those AI features, integrated into a single package that follows your privacy settings.
-
-Check out our Trial version, ready to start working for you in seconds!
-
-
-## Self Hosting
-
-If you have your own NVIDIA GPU, you can try the [self-hosted version](https://refact.smallcloud.ai/docker).
-Our own [AI model behind](https://www.smallcloud.ai/) Refact.ai is state-of-the-art (for the size and latency). The weights are free to [download on Huggingface](https://huggingface.co/smallcloudai).
-
+ * Integrated Chat: Use natural language to generate, modify, and refine your code. Chat can automatically pick up the selected code and put back the results. It also provides you with documentation links.
 
 
 ## Getting Started
 
-Once installed, look for Refact.ai logo in the status bar or the sidebar, click 'login'. Agree to T&C, ta-da it works in Trial mode!
+Once installed, look for the Refact.ai logo in the status bar or the sidebar, click 'login' and agree to T&C. Start typing some code, and autocomplete will make suggestions automatically! Press F1 to access the AI toolbox functions. Refact has a simple, user-friendly interface that makes it easy to use, even for those new to AI tools.
+
+
+## Self-Hosting
+
+Our own AI model behind Refact.ai is state-of-the-art (for the size and latency). The weights are free to [download on Huggingface](https://huggingface.co/smallcloudai).
+
+If you have your own NVIDIA GPU, you can try the [self-hosted version](https://refact.smallcloud.ai/docker).
+
+
+## Support & Feedback
+
+Join [our Discord](https://www.smallcloud.ai/discord) to get to know other community members, send us feedback or suggestions and get support.
+
 
