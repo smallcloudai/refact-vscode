@@ -25,8 +25,8 @@ export class ChatTab {
     public static activate_from_outside(context: vscode.ExtensionContext, question: string, code_snippet: string|undefined)
     {
         const panel = vscode.window.createWebviewPanel(
-            "codify-chat-tab",
-            question || "Codify Chat",
+            "refact-chat-tab",
+            "Refact.ai Chat",
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -106,7 +106,7 @@ export class ChatTab {
         }
         let login = await userLogin.inference_login();
         if (!login) {
-            this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Codify inference server in currently experiencing issues."}});
+            this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server in currently experiencing issues."}});
             return;
         }
 
@@ -217,17 +217,17 @@ export class ChatTab {
                 <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                <title>Codify Chat AAA</title>
+                <title>Refact.ai Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <div class="codify-chat">
-                    <h2 class="codify-chat__title">Codify Chat</h2>
-                    <div class="codify-chat__content">
+                <div class="refact-chat">
+                    <h2 class="refact-chat__title">Refact.ai Chat</h2>
+                    <div class="refact-chat__content">
                     </div>
-                    <div class="codify-chat__commands">
-                        <textarea id="chat-input" class="codify-chat__input"></textarea>
-                        <button id="chat-send" class="codify-chat__button"><span></span></button>
+                    <div class="refact-chat__commands">
+                        <textarea id="chat-input" class="refact-chat__input"></textarea>
+                        <button id="chat-send" class="refact-chat__button"><span></span></button>
                     </div>
                 </div>
 
