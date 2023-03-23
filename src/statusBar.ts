@@ -24,7 +24,7 @@ export function set_inference_message(msg: string)
 
 export class StatusBarMenu {
     menu: any = {};
-    command: string = 'plugin-vscode.statusBarClick';
+    command: string = 'refactaicmd.statusBarClick';
     socketerror: boolean = false;
     socketerror_msg: string = '';
     spinner: boolean = false;
@@ -41,7 +41,7 @@ export class StatusBarMenu {
         item.command = this.command;
 
         context.subscriptions.push(item);
-        item.text = `$(codify-logo) codify`;
+        item.text = `$(codify-logo) Refact.ai`;
         item.tooltip = `Settings`;
         item.show();
 
@@ -53,11 +53,11 @@ export class StatusBarMenu {
     choose_color()
     {
         if (this.access_level === 0) {
-            this.menu.text = `$(codify-privacy) codify`;
+            this.menu.text = `$(codify-privacy) Refact.ai`;
             this.menu.backgroundColor = undefined;
             this.menu.tooltip = `Codify can't access this file because of the privacy rules`;
         } else if (this.socketerror) {
-            this.menu.text = `$(debug-disconnect) codify`;
+            this.menu.text = `$(debug-disconnect) Refact.ai`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             if (this.socketerror_msg.indexOf("no model") !== -1) {
                 this.menu.tooltip = `Either an outage on the server side, or your settings might be outdated:\n${this.socketerror_msg}`;
@@ -65,10 +65,10 @@ export class StatusBarMenu {
                 this.menu.tooltip = `Cannot reach the server:\n` + this.socketerror_msg;
             }
         } else if (this.spinner) {
-            this.menu.text = `$(sync~spin) codify`;
+            this.menu.text = `$(sync~spin) Refact.ai`;
             this.menu.backgroundColor = undefined;
         } else if (this.inference_attempted) {
-            this.menu.text = `$(codify-logo) codify`;
+            this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
             let msg: string = "";
             if (this.last_url) {
@@ -86,11 +86,11 @@ export class StatusBarMenu {
             }
             this.menu.tooltip = msg;
         } else if (!userLogin.check_if_login_worked()) { // condition here must be the same as in status_bar_clicked()
-            this.menu.text = `$(account) codify`;
+            this.menu.text = `$(account) Refact.ai`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
             this.menu.tooltip = _website_message || `Click to login`;
         } else {
-            this.menu.text = `$(codify-logo) codify`;
+            this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
             this.menu.tooltip = _website_message || _inference_message;
         }

@@ -60,7 +60,7 @@ async function pressed_escape()
             await estate.back_to_normal(state);
         }
         if (state && state.get_mode() === Mode.Normal) {
-            await vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+            await vscode.commands.executeCommand('setContext', 'refactai.runEsc', false);
             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
             console.log(["ESC OFF"]);
         }
@@ -76,7 +76,7 @@ async function pressed_tab()
         if (state && state.get_mode() === Mode.Diff) {
             interactiveDiff.like_and_accept(editor);
         } else {
-            vscode.commands.executeCommand("setContext", "codify.runTab", false);
+            vscode.commands.executeCommand("setContext", "refactai.runTab", false);
         }
     }
 }
@@ -162,7 +162,7 @@ async function f1_pressed()
     if (state && state.get_mode() === Mode.Diff) {
         rollback_and_regen(editor);
     } else {
-        vscode.commands.executeCommand("codify-presets.focus");
+        vscode.commands.executeCommand("refactai-toolbox.focus");
         vscode.commands.executeCommand("workbench.action.focusSideBar");
     }
 }
@@ -181,8 +181,8 @@ export function activate(context: vscode.ExtensionContext)
     global.enable_longthink_completion = false;
     global.streamlined_login_countdown = -1;
     global.last_positive_result = 0;
-    let disposable1 = vscode.commands.registerCommand('plugin-vscode.inlineAccepted', inline_accepted);
-    let disposable2 = vscode.commands.registerCommand('plugin-vscode.codeLensClicked', code_lens_clicked);
+    let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
+    let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();
     global.status_bar.createStatusBarBlock(context);
 
@@ -196,17 +196,17 @@ export function activate(context: vscode.ExtensionContext)
     const comp = new completionProvider.MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
-    let disposable4 = vscode.commands.registerCommand('plugin-vscode.esc', pressed_escape);
-    let disposable5 = vscode.commands.registerCommand('plugin-vscode.tab', pressed_tab);
-    let disposable3 = vscode.commands.registerCommand('plugin-vscode.highlight', f1_pressed);
-    let disposable8 = vscode.commands.registerCommand('plugin-vscode.editChaining',  manual_edit_chaining);
-    let disposable9 = vscode.commands.registerCommand('plugin-vscode.codifyDisabled', (uri:vscode.Uri) => {
+    let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
+    let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
+    let disposable3 = vscode.commands.registerCommand('refactaicmd.highlight', f1_pressed);
+    let disposable8 = vscode.commands.registerCommand('refactaicmd.editChaining',  manual_edit_chaining);
+    let disposable9  = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride0', (uri:vscode.Uri) => {
         privacy.set_access_override(uri.fsPath, 0);
     });
-    let disposable10 = vscode.commands.registerCommand('plugin-vscode.codifyOnly', (uri:vscode.Uri) => {
+    let disposable10 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride1', (uri:vscode.Uri) => {
         privacy.set_access_override(uri.fsPath, 1);
     });
-    let disposable11 = vscode.commands.registerCommand('plugin-vscode.codifyThirdParty', (uri:vscode.Uri) => {
+    let disposable11 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride2', (uri:vscode.Uri) => {
         privacy.set_access_override(uri.fsPath, 2);
     });
 
@@ -225,18 +225,18 @@ export function activate(context: vscode.ExtensionContext)
 
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
-        'codify-presets',
+        'refactai-toolbox',
         global.side_panel,
         {webviewOptions: {retainContextWhenHidden: true}}
     );
     context.subscriptions.push(view);
 
-    let settingsCommand = vscode.commands.registerCommand('plugin-vscode.openSettings', () => {
+    let settingsCommand = vscode.commands.registerCommand('refactaicmd.openSettings', () => {
         vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.codify' );
     });
     context.subscriptions.push(settingsCommand);
 
-    let login = vscode.commands.registerCommand('plugin-vscode.login', () => {
+    let login = vscode.commands.registerCommand('refactaicmd.login', () => {
         login_clicked();
     });
 
@@ -251,7 +251,7 @@ export function activate(context: vscode.ExtensionContext)
     }, 60000); // Start with 1 minute, change to 24 hours
 
     context.subscriptions.push(login);
-    let logout = vscode.commands.registerCommand('plugin-vscode.logout', () => {
+    let logout = vscode.commands.registerCommand('refactaicmd.logout', () => {
         context.globalState.update('codifyFirstRun', false);
         vscode.workspace.getConfiguration().update('codify.apiKey', '',vscode.ConfigurationTarget.Global);
         global.user_logged_in = "";
@@ -264,12 +264,12 @@ export function activate(context: vscode.ExtensionContext)
         vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     });
 
-    let privacySettingsPage = vscode.commands.registerCommand('plugin-vscode.codifyPrivacySettings', () => {
+    let privacySettingsPage = vscode.commands.registerCommand('refactaicmd.refactPrivacySettings', () => {
         PrivacySettings.render(context);
     });
     context.subscriptions.push(privacySettingsPage);
 
-    let chatTabPage = vscode.commands.registerCommand('plugin-vscode.codifyChatTab', (question, snippet) => {
+    let chatTabPage = vscode.commands.registerCommand('refactaicmd.refactChatTab', (question, snippet) => {
         ChatTab.activate_from_outside(context, question, snippet);
     });
     context.subscriptions.push(chatTabPage);
@@ -417,9 +417,6 @@ export async function status_bar_clicked()
     let access_level = await privacy.get_file_access(document_filename);
     let chunks = document_filename.split("/");
     if (access_level === 0) {
-        // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: false }, vscode.ConfigurationTarget.Global);
-        // console.log(["disable", lang]);
-        // global.status_bar.set_access_level(0);
         global.status_bar.choose_color();
         let selection = await vscode.window.showInformationMessage(
             chunks[chunks.length - 1] + ": Access level " + access_level,
@@ -427,13 +424,10 @@ export async function status_bar_clicked()
             "Privacy Rules",
         );
         if (selection === "Enable") {
-            // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
-            // console.log(["enable", lang]);
-            // global.status_bar.set_language_enabled(false, lang);
             privacy.set_access_override(document_filename, 1);
             global.status_bar.set_access_level(1);
         } else if (selection === "Privacy Rules") {
-            vscode.commands.executeCommand("plugin-vscode.codifyPrivacySettings");
+            vscode.commands.executeCommand("refactaicmd.refactPrivacySettings");
         }
     } else {
         let selection = await vscode.window.showInformationMessage(
@@ -444,11 +438,8 @@ export async function status_bar_clicked()
         if (selection === "Disable") {
             privacy.set_access_override(document_filename, 0);
             global.status_bar.set_access_level(0);
-            // await vscode.workspace.getConfiguration().update("codify.lang", { [lang]: true }, vscode.ConfigurationTarget.Global);
-            // console.log(["enable", lang]);
-            // global.status_bar.set_language_enabled(false, lang);
         } else if (selection === "Privacy Rules") {
-            vscode.commands.executeCommand("plugin-vscode.codifyPrivacySettings");
+            vscode.commands.executeCommand("refactaicmd.refactPrivacySettings");
         }
     }
 }

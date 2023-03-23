@@ -9,9 +9,9 @@ import * as statusBar from "./statusBar";
 
 export async function login_message()
 {
-    let selection = await vscode.window.showInformationMessage("Click to login to Codify", "Login");
+    let selection = await vscode.window.showInformationMessage("Click to login to Refact.ai", "Login");
     if(selection === "Login") {
-        vscode.commands.executeCommand('plugin-vscode.login');
+        vscode.commands.executeCommand('refactaicmd.login');
     }
     global.status_bar.choose_color();
 }
@@ -19,9 +19,9 @@ export async function login_message()
 
 export async function welcome_message()
 {
-    let selection = await vscode.window.showInformationMessage("Welcome to Codify!\nPress login to start.", "Login");
+    let selection = await vscode.window.showInformationMessage("Welcome to Refact.ai!\nPress login to start.", "Login");
     if(selection === "Login") {
-        vscode.commands.executeCommand('plugin-vscode.login');
+        vscode.commands.executeCommand('refactaicmd.login');
     }
     global.status_bar.choose_color();
 }

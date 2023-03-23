@@ -12,7 +12,7 @@ class ExperimentalLens extends vscode.CodeLens {
         if (arg0.length > 0) {
             super(range, {
                 title: msg,
-                command: 'plugin-vscode.codeLensClicked',
+                command: 'refactaicmd.codeLensClicked',
                 arguments: [arg0]
             });
         } else {

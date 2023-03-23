@@ -10,7 +10,7 @@ import * as fetchH2 from 'fetch-h2';
 
 function open_chat_tab(question: string, snippet: string)
 {
-    vscode.commands.executeCommand('plugin-vscode.codifyChatTab', question, snippet);
+    vscode.commands.executeCommand('refactaicmd.refactChatTab', question, snippet);
 }
 
 
@@ -157,19 +157,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 }
 
                 case "login": {
-                    vscode.commands.executeCommand('plugin-vscode.login');
+                    vscode.commands.executeCommand('refactaicmd.login');
                     break;
                 }
                 case "privacy": {
-                    vscode.commands.executeCommand("plugin-vscode.codifyPrivacySettings");
+                    vscode.commands.executeCommand("refactaicmd.refactPrivacySettings");
                     break;
                 }
                 case "reportBugs": {
-                    vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/codify-plugin-vscode/issues`));
+                    vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/refact-vscode/issues`));
                     break;
                 }
                 case "logout": {
-                    vscode.commands.executeCommand("plugin-vscode.logout");
+                    vscode.commands.executeCommand("refactaicmd.logout");
                     break;
                 }
                 case "js2ts_goto_profile": {
@@ -191,7 +191,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "openSettings": {
-                    vscode.commands.executeCommand("plugin-vscode.openSettings");
+                    vscode.commands.executeCommand("refactaicmd.openSettings");
                 }
                 // case "checkSelection": {
                 //     this.check_selection();
@@ -244,13 +244,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return;
         }
         let data: {[key: string]: boolean} = {};
-        let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('codifyBookmarks');
+        let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('refactBookmarks');
         if (bookmarks !== undefined) {
             data = bookmarks;
         }
         data[function_name] = state;
         console.log(['Setting bookmark:', function_name, state]);
-        await global_context.globalState.update('codifyBookmarks', data);
+        await global_context.globalState.update('refactBookmarks', data);
         this.get_bookmarks();
     }
 
@@ -259,7 +259,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (global_context === undefined) {
             return 0;
         }
-        let bookmarks_: {[key: string]: boolean}|undefined = await global_context.globalState.get('codifyBookmarks');
+        let bookmarks_: {[key: string]: boolean}|undefined = await global_context.globalState.get('refactBookmarks');
         let bookmarks: {[key: string]: boolean} = {};
         if (bookmarks_ !== undefined) {
             bookmarks = bookmarks_;

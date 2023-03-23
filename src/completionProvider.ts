@@ -114,7 +114,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
 
         let command = {
-            command: "plugin-vscode.inlineAccepted",
+            command: "refactaicmd.inlineAccepted",
             title: "inlineAccepted",
             arguments: [this_completion_serial_number],
         };
