@@ -3,7 +3,7 @@
     const vscode = acquireVsCodeApi();
     const chat_input = document.querySelector('#chat-input');
     const chat_send_button = document.querySelector('#chat-send');
-    const chat_content = document.querySelector('.codify-chat__content');
+    const chat_content = document.querySelector('.refactcss-chat__content');
 
     chat_input.focus();
 
@@ -32,11 +32,11 @@
     {
         if (Object.keys(data).length === 0) { return; };
         const message_pair_div = document.createElement('div');
-        message_pair_div.classList.add('codify-chat__item');
+        message_pair_div.classList.add('refactcss-chat__item');
 
         if (data.question) {
             const question_div = document.createElement('div');
-            question_div.classList.add('codify-chat__question');
+            question_div.classList.add('refactcss-chat__question');
             question_div.innerHTML = data.question;
             message_pair_div.appendChild(question_div);
             last_answer_div = null;
@@ -44,7 +44,7 @@
 
         if (!last_answer_div && data.answer) {
             const answer_div = document.createElement('div');
-            answer_div.classList.add('codify-chat__answer');
+            answer_div.classList.add('refactcss-chat__answer');
             message_pair_div.appendChild(answer_div);
             last_answer_div = answer_div;
         }
@@ -58,20 +58,20 @@
     }
 
     function chat_add_buttons() {
-        const chats = document.querySelectorAll('.codify-chat__item');
+        const chats = document.querySelectorAll('.refactcss-chat__item');
         if (chats.length === 0) { return; };
         const last = chats[chats.length - 1];
-        const last_content = last.querySelector('.codify-chat__answer');
+        const last_content = last.querySelector('.refactcss-chat__answer');
         if (!last_content) { return; };
         const snippets = last_content.querySelectorAll('pre code');
         snippets.forEach(snippet => {
             const original_content = snippet.innerHTML;
             const copy_button = document.createElement('button');
             const new_file_button = document.createElement('button');
-            copy_button.classList.add('codify-chat__copybutton');
+            copy_button.classList.add('refactcss-chat__copybutton');
             copy_button.innerText = 'Copy';
             new_file_button.innerText = 'New File';
-            new_file_button.classList.add('codify-chat__newbutton');
+            new_file_button.classList.add('refactcss-chat__newbutton');
             copy_button.addEventListener('click', () => {
                 copy_to_clipboard(original_content);
             });

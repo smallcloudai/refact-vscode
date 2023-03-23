@@ -19,34 +19,34 @@ body.vscode-dark {
 	--dark: rgba(255, 255, 255, 0.7);
 	--light: rgba(255, 255, 255, 0.1);
 }
-.codify-chat {
+.refactcss-chat {
 	max-width: 900px;
 	box-sizing: border-box;
 }
-.codify-chat__item {
+.refactcss-chat__item {
 	margin-bottom: 30px;
 }
-.codify-chat__question {
+.refactcss-chat__question {
 	padding: 5px 10px;
     max-width: 600px;
     width: 100%;
     background-color: var(--light);
     margin-left: auto;
 }
-.codify-chat__answer {
+.refactcss-chat__answer {
 	margin-top: 10px;
     max-width: 600px;
     margin-right: auto;
     padding: 5px 10px;
 }
-.codify-chat__commands {
+.refactcss-chat__commands {
 	margin-top: 30px;
 	position: relative;
 	box-sizing: border-box;
     margin-bottom: 50px;
 }
 
-.codify-chat__input {
+.refactcss-chat__input {
 	width: 100%;
 	box-sizing: border-box;
 	border: 1px solid var(--secondary);
@@ -58,7 +58,7 @@ body.vscode-dark {
 	overflow: hidden;
 }
 
-.codify-chat__button {
+.refactcss-chat__button {
 	position: absolute;
 	bottom: 3px;
 	right: 0px;
@@ -74,7 +74,7 @@ body.vscode-dark {
 	align-items: center;
 	justify-content: center;
 }
-.codify-chat__button span::before {
+.refactcss-chat__button span::before {
 	content: "\e803";
 	font-family: "codify";
 	font-style: normal;
@@ -91,17 +91,17 @@ body.vscode-dark {
 	-moz-osx-font-smoothing: grayscale;
 }
 
-.codify-chat__item table {
+.refactcss-chat__item table {
 	border-collapse: collapse;
 }
 
-.codify-chat__item td,
-.codify-chat__item th {
+.refactcss-chat__item td,
+.refactcss-chat__item th {
 	border: 1px solid var(--secondary);
     padding: 5px;
 }
 
-.codify-chat__item pre code {
+.refactcss-chat__item pre code {
     display: block;
     position: relative;
     background: none;
@@ -116,11 +116,11 @@ body.vscode-dark {
     line-height: 1.1;
 }
 
-.codify-chat__item ul {
+.refactcss-chat__item ul {
 	list-style: none;
 	padding: 0;
 }
-.codify-chat__copybutton {
+.refactcss-chat__copybutton {
 	position: absolute;
 	top: 3px;
 	right: 3px;
@@ -132,7 +132,7 @@ body.vscode-dark {
     text-transform: uppercase;
     font-size: 8px;
 }
-.codify-chat__newbutton {
+.refactcss-chat__newbutton {
     position: absolute;
 	top: 3px;
 	right: 46px;
@@ -145,22 +145,22 @@ body.vscode-dark {
     font-size: 8px;
 }
 
-.codify-chat__item ul li {
+.refactcss-chat__item ul li {
 	margin: 5px 0;
 }
-.codify-chat__item ol {
+.refactcss-chat__item ol {
 	padding: 0;
     counter-reset: mycounter;
 }
 
-.codify-chat__item ol li {
+.refactcss-chat__item ol li {
 	/* margin: 5px 0; */
     margin-left: 16px;
     /* padding-left: 0.5em; */
     margin-top: 5px;
     margin-bottom: 5px;
 }
-.codify-chat__item ol li:before {
+.refactcss-chat__item ol li:before {
     content: counter(mycounter) ".";
     counter-increment: mycounter;
     position: absolute;
