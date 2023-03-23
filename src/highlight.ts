@@ -5,21 +5,34 @@ import * as userLogin from "./userLogin";
 import { Mode } from "./estate";
 import * as estate from "./estate";
 import * as crlf from "./crlf";
+import * as privacy from "./privacy";
 
 
-
-export async function query_highlight(editor: vscode.TextEditor, intent: string | undefined)
-{
+export async function query_highlight(
+    editor: vscode.TextEditor,
+    intent: string,
+    model_function: string,
+    longthink_model: string,
+    third_party: boolean,
+) {
     let state = estate.state_of_editor(editor, "query_highlight");
     if (!state) {
         return;
     }
-    if (intent === undefined) {
+    if (!intent) {
         intent = estate.global_intent;
     } else {
         estate.save_intent(intent);  // need it to return to previous selection
     }
     let doc = editor.document;
+    let access_level = await privacy.get_file_access(doc.fileName);
+    if (third_party && access_level < 2) {
+        return;
+    }
+    if (!third_party && access_level < 1) {
+        return;
+    }
+
     let whole_doc = doc.getText();
     let cursor = doc.offsetAt(editor.selection.active);
     let cursors: number[];
@@ -38,13 +51,12 @@ export async function query_highlight(editor: vscode.TextEditor, intent: string 
     global.status_bar.statusbarLoading(true);
     let max_tokens = 0;
     let stream = false;
-    let third_party = false;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
-        "highlight",     // scope
+        model_function || "highlight",     // scope
         sources,
         intent,
-        "highlight",     // scratchpad function
+        model_function || "highlight",     // function
         fn,
         cursor,
         cursor,
@@ -52,7 +64,7 @@ export async function query_highlight(editor: vscode.TextEditor, intent: string 
         1,
         stop_tokens,
         stream,
-        "",
+        longthink_model,
         third_party,
     ));
     hl_animation_start(editor, editor.selection);
@@ -62,6 +74,9 @@ export async function query_highlight(editor: vscode.TextEditor, intent: string 
         return;
     }
     state.highlight_json_backup = json;
+    state.highlight_function = model_function;
+    state.highlight_model = longthink_model;
+    state.highlight_thirdparty = third_party;
     estate.switch_mode(state, Mode.Highlight);
 }
 

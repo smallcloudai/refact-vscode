@@ -10,6 +10,7 @@ import * as highlight from "./highlight";
 import * as codeLens from "./codeLens";
 import * as dataCollection from "./dataCollection";
 import * as crlf from "./crlf";
+import * as privacy from "./privacy";
 
 
 let global_nav_counter: number = 0;
@@ -31,7 +32,7 @@ export async function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Pos
                     return;
                 }
                 if (global_nav_counter === my_counter) {
-                    query_diff(editor, element.range, "diff-atcursor");
+                    query_diff(editor, element.range, "diff-atcursor", "", false);
                 }
             }, is_mouse ? 0 : 300);
         }
@@ -51,7 +52,8 @@ export async function query_diff(
     editor: vscode.TextEditor,
     sensitive_area: vscode.Range,
     model_function: string,
-    model_force: string = "",
+    model_force: string,
+    third_party: boolean,
 ) {
     // NOT called from estate switch mode
     let state = estate.state_of_editor(editor, "query_diff");
@@ -59,6 +61,13 @@ export async function query_diff(
         return;
     }
     let doc = editor.document;
+    let access_level = await privacy.get_file_access(doc.fileName);
+    if (third_party && access_level < 2) {
+        return;
+    }
+    if (!third_party && access_level < 1) {
+        return;
+    }
 
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancelToken = cancellationTokenSource.token;
@@ -126,6 +135,7 @@ export async function query_diff(
                 }
                 state.showing_diff_for_function = model_function;
                 state.showing_diff_for_model = model_force;
+                state.showing_diff_thirdparty = third_party;
                 state.showing_diff_edit_chain = undefined;
                 state.showing_diff_modif_doc = modif_doc;
                 await estate.switch_mode(state, estate.Mode.DiffWait);
@@ -175,7 +185,6 @@ export async function query_diff(
         feedback.ts_req = Date.now();
     }
 
-    let third_party = false;
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
         "query_diff",  // scope
@@ -535,13 +544,10 @@ export async function like_and_accept(editor: vscode.TextEditor)
         if (state.highlight_json_backup) {
             state.highlight_json_backup = undefined;
             await estate.back_to_normal(state);
-            highlight.query_highlight(editor, undefined);
+            highlight.query_highlight(editor, "", state.highlight_function, state.highlight_model, state.highlight_thirdparty);
         } else {
             state.highlight_json_backup = undefined;
             await estate.back_to_normal(state);
-            // console.log(["TRIGGER SUGGEST"]);
-            // state.inline_prefer_edit_chaining = true;
-            // vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         }
         codeLens.quick_refresh();
         let feedback = state.data_feedback_candidate;
@@ -572,9 +578,9 @@ export async function query_the_same_thing_again(editor: vscode.TextEditor)
     //     }
     //     return;
     // }
-    if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined) {
+    if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined && state.showing_diff_for_model !== undefined) {
         _remove_decoration(editor);
-        query_diff(editor, state.showing_diff_for_range, state.showing_diff_for_function, state.showing_diff_for_model);
+        query_diff(editor, state.showing_diff_for_range, state.showing_diff_for_function, state.showing_diff_for_model, state.showing_diff_thirdparty);
     }
 }
 

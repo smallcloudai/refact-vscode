@@ -50,6 +50,9 @@ export class StateOfEditor {
     public inline_prefer_edit_chaining: boolean = false; // Delete?
 
     public highlight_json_backup: any = undefined;
+    public highlight_function: string = "";
+    public highlight_model: string = "";
+    public highlight_thirdparty: boolean = false;
     public highlights: any = [];
     public sensitive_ranges: vscode.DecorationOptions[] = [];
 
@@ -68,6 +71,7 @@ export class StateOfEditor {
     public showing_diff_for_range: vscode.Range | undefined = undefined;
     public showing_diff_for_function: string | undefined = undefined;
     public showing_diff_for_model: string | undefined = undefined;
+    public showing_diff_thirdparty: boolean = true;
     public showing_diff_edit_chain: vscode.Range | undefined = undefined;
     public diff_load_animation_head: number = 0;
     public diff_load_animation_mid: string = "";
@@ -247,7 +251,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         state.text_edited_event.dispose();
     }
 
-    function launch(ev_editor: vscode.TextEditor)
+    function info2sidebar(ev_editor: vscode.TextEditor)
     {
         if(global.side_panel !== undefined) {
             let selected_lines = 0;
@@ -263,7 +267,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         let is_mouse = ev.kind === vscode.TextEditorSelectionChangeKind.Mouse;
         let ev_editor = ev.textEditor;
         let pos1 = ev_editor.selection.active;
-        launch(ev_editor);
+        info2sidebar(ev_editor);
         if (!editor || editor !== ev_editor) {
             return;
         }
@@ -285,7 +289,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
     });
     let active_editor = vscode.window.activeTextEditor;
     if (active_editor) {
-        launch(active_editor);
+        info2sidebar(active_editor);
     }
 }
 

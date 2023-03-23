@@ -151,7 +151,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     if (model_suggest === "open-chat") {
                         open_chat_tab(intent, selected_text);
                     } else {
-                        await extension.follow_intent(intent, function_name, model_suggest);
+                        await extension.follow_intent(intent, function_name, model_suggest, !!function_dict.third_party);
                     }
                     break;
                 }
@@ -205,7 +205,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    public editor_inform_how_many_lines_selected(selected_lines: number)
+    public async editor_inform_how_many_lines_selected(selected_lines: number)
     {
         this.selected_lines_count = selected_lines;
         if (this._view) {

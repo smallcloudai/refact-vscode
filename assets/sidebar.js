@@ -11,6 +11,7 @@
     let toolboxIndex = 0;
     let longthink_functions_today;
     let editor_inform_how_many_lines_selected = 0;
+    let editor_inform_good_for_thirdparty = 0;
     let editor_ignore_selection_changes = false;
     let function_bookmarks = [];
 
