@@ -105,7 +105,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             } else {
                 state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
             }
-            vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+            vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
             codeLens.quick_refresh();
         }
 

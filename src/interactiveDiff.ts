@@ -528,9 +528,9 @@ export async function like_and_accept(editor: vscode.TextEditor)
         }
         state.diff_changing_doc = false;
         _remove_decoration(editor);
-        vscode.commands.executeCommand('setContext', 'codify.runTab', false);
+        vscode.commands.executeCommand('setContext', 'refactcx.runTab', false);
         console.log(["TAB OFF DIFF"]);
-        vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+        vscode.commands.executeCommand('setContext', 'refactcx.runEsc', false);
         console.log(["ESC OFF DIFF"]);
         if (state.highlight_json_backup) {
             state.highlight_json_backup = undefined;

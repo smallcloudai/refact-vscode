@@ -68,7 +68,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     this.set_bookmark(data.function_name, data.state);
                     break;
                 }
-                case "runChat": {
+                case "open_new_chat": {
                     let question = data.value;
                     if (!question) {
                         question = "";
@@ -173,7 +173,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "js2ts_goto_profile": {
-                    vscode.env.openExternal(vscode.Uri.parse(`https://codify.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
+                    vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
                     break;
                 }
                 case "js2ts_goto_datacollection": {

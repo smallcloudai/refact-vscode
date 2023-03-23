@@ -1,6 +1,6 @@
 {
 	"name": "codify",
-	"displayName": "Codify",
+	"displayName": "Refact.ai Assistant",
 	"description": "The AI Assistant for Code Writing and Refactoring",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
@@ -11,8 +11,8 @@
 	"vsce": {
 		"baseImagesUrl": "https://www.smallcloud.ai/img/"
 	},
-	"homepage": "https://codify.smallcloud.ai",
-	"author": "Codify <info@smallcloud.ai> (https://codify.smallcloud.ai)",
+	"homepage": "https://refact.smallcloud.ai",
+	"author": "Small Magellanic Cloud AI <info@smallcloud.ai> (https://refact.smallcloud.ai)",
     "repository": {
         "type": "git",
         "url": "https://github.com/smallcloudai/refact-vscode"
@@ -109,82 +109,82 @@
 			{
 				"command": "refactaicmd.highlight",
 				"title": "Ask Intent and Highlight",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.login",
 				"title": "Login",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.logout",
 				"title": "Logout",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.editChaining",
 				"title": "Edit Chaining",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.openSettings",
 				"title": "Settings Page",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.openLogin",
 				"title": "Login / Register",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.privacySettings",
 				"title": "Privacy Rules",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.addPrivacyOverride0",
 				"title": "Level 0: Turn off",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.addPrivacyOverride1",
 				"title": "Level 1",
-				"category": "Codify"
+				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.addPrivacyOverride2",
 				"title": "Level 2",
-				"category": "Codify"
+				"category": "Refact.ai"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
-					"submenu": "codifyaccess",
+					"submenu": "refact-access-menu",
 					"group": "z_commands"
 				}
 			],
-			"codifyaccess": [
+			"refact-access-menu": [
 				{
 					"command": "refactaicmd.addPrivacyOverride0",
-					"group": "codifyprivacy.codify@1"
+					"group": "refact-privacy-item.currentfile@1"
 				},
 				{
 					"command": "refactaicmd.addPrivacyOverride1",
-					"group": "codifyprivacy.codify@2"
+					"group": "refact-privacy-item.currentfile@2"
 				},
 				{
 					"command": "refactaicmd.addPrivacyOverride2",
-					"group": "codifyprivacy.codify@3"
+					"group": "refact-privacy-item.currentfile@3"
 				},
 				{
 					"command": "refactaicmd.privacySettings",
-					"group": "codifyprivacy.codify2"
+					"group": "refact-privacy-item.justopen"
 				}
 			],
 			"explorer/context": [
 				{
-					"submenu": "codifyaccess",
+					"submenu": "refact-access-menu",
 					"group": "z_commands"
 				}
 			]
@@ -192,7 +192,7 @@
 		"submenus": [
 			{
 				"label": "Codify Access",
-				"id": "codifyaccess"
+				"id": "refact-access-menu"
 			}
 		],
 		"keybindings": [
@@ -207,25 +207,25 @@
 			{
 				"command": "refactaicmd.esc",
 				"key": "escape",
-				"when": "codify.runEsc"
+				"when": "refactcx.runEsc"
 			},
 			{
 				"command": "refactaicmd.tab",
 				"key": "tab",
-				"when": "codify.runTab"
+				"when": "refactcx.runTab"
 			}
 		],
 		"viewsContainers": {
 			"activitybar": [
 				{
-					"id": "codify-pane",
+					"id": "refact-toolbox-pane",
 					"title": "Codify",
 					"icon": "$(codify-logo)"
 				}
 			]
 		},
 		"views": {
-			"codify-pane": [
+			"refact-toolbox-pane": [
 				{
 					"type": "webview",
 					"id": "refactai-toolbox",

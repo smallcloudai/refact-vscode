@@ -123,7 +123,7 @@
             let single_page = document.querySelector(".item-active");  // single page
             if(toolboxSearch.value.endsWith("?")) {
                 let intent = toolboxSearch.value;
-                vscode.postMessage({ type: "runChat", value: intent });
+                vscode.postMessage({ type: "open_new_chat", value: intent });
             }
             else if (single_page) {
                 let intent = toolboxSearch.value;
@@ -211,7 +211,7 @@
 
     const chatButton = document.querySelector("#chat");
     chatButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "runChat", value: '' });
+        vscode.postMessage({ type: "open_new_chat", value: '' });
     });
 
     const settingsButton = document.querySelector("#settings");

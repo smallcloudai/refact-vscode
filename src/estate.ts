@@ -98,17 +98,6 @@ export class StateOfEditor {
 let editor2state = new Map<vscode.TextEditor, StateOfEditor>();
 
 
-export function is_lang_enabled(document: vscode.TextDocument): boolean
-{
-    let lang = document.languageId;
-    let enabled: boolean|undefined = vscode.workspace.getConfiguration().get(`codify.lang.${lang}`);
-    if (enabled === undefined || enabled === true || enabled === null) {
-        return true;
-    }
-    return false;
-}
-
-
 export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: string): StateOfEditor | undefined
 {
     if (!editor) {
@@ -199,8 +188,8 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
 
     if (old_mode === Mode.Diff) {
         await interactiveDiff.dislike_and_rollback(state.editor);
-        vscode.commands.executeCommand('setContext', 'codify.runTab', false);
-        vscode.commands.executeCommand('setContext', 'codify.runEsc', false);
+        vscode.commands.executeCommand('setContext', 'refactcx.runTab', false);
+        vscode.commands.executeCommand('setContext', 'refactcx.runEsc', false);
     } else if (old_mode === Mode.Highlight) {
         highlight.hl_clear(state.editor);
     } else if (old_mode === Mode.DiffWait) {
@@ -211,8 +200,8 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         if (state.showing_diff_modif_doc !== undefined) {
             await interactiveDiff.present_diff_to_user(state.editor, state.showing_diff_modif_doc, state.showing_diff_move_cursor);
             state.showing_diff_move_cursor = false;
-            vscode.commands.executeCommand('setContext', 'codify.runTab', true);
-            vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+            vscode.commands.executeCommand('setContext', 'refactcx.runTab', true);
+            vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
         } else {
             console.log(["cannot enter diff state, no diff modif doc"]);
         }
@@ -232,7 +221,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         keyboard_events_on(state.editor);
     }
     if (new_mode !== Mode.Normal) {
-        vscode.commands.executeCommand('setContext', 'codify.runEsc', true);
+        vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
     } else {
         // keyboard_events_off(state);
     }

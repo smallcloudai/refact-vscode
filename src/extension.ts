@@ -60,7 +60,7 @@ async function pressed_escape()
             await estate.back_to_normal(state);
         }
         if (state && state.get_mode() === Mode.Normal) {
-            await vscode.commands.executeCommand('setContext', 'refactai.runEsc', false);
+            await vscode.commands.executeCommand('setContext', 'refactcx.runEsc', false);
             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
             console.log(["ESC OFF"]);
         }
@@ -76,7 +76,7 @@ async function pressed_tab()
         if (state && state.get_mode() === Mode.Diff) {
             interactiveDiff.like_and_accept(editor);
         } else {
-            vscode.commands.executeCommand("setContext", "refactai.runTab", false);
+            vscode.commands.executeCommand("setContext", "refactcx.runTab", false);
         }
     }
 }
@@ -411,8 +411,6 @@ export async function status_bar_clicked()
         // - file bug report
         return;
     }
-    // let lang = editor.document.languageId;
-    // let enabled = estate.is_lang_enabled(editor.document);
     let document_filename = editor.document.fileName;
     let access_level = await privacy.get_file_access(document_filename);
     let chunks = document_filename.split("/");

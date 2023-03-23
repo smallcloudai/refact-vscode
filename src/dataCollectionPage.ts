@@ -26,7 +26,7 @@ export class DataReviewPage {
     public static render(context: any)
     {
         const panel = vscode.window.createWebviewPanel(
-            "codify-review-data",
+            "refactai-review-data",
             "Codify Review Data",
             vscode.ViewColumn.One,
             {
@@ -72,7 +72,6 @@ export class DataReviewPage {
         );
 
         var store = cnt.globalState;
-        const apiKey = store.get('codify_apiKey');
 
         const nonce = this.getNonce();
 
