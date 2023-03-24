@@ -616,7 +616,7 @@
                 data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
                 bug.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                privacy.style.display = message.ts2web_user ? 'flex' : 'none';
+                privacy.style.display = message.ts2web_user ? 'inline-flex' : 'none';
 
 
                 if(message.ts2web_user === undefined) {
