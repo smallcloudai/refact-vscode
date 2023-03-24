@@ -6,6 +6,7 @@ import * as dataCollectionPage from "./dataCollectionPage";
 import * as dataCollection from "./dataCollection";
 import * as extension from "./extension";
 import * as fetchH2 from 'fetch-h2';
+import * as privacy from "./privacy";
 
 
 function open_chat_tab(question: string, snippet: string)
@@ -30,7 +31,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         setTimeout(() => {
             webviewView.webview.postMessage({
-                command: "editor_inform_how_many_lines_selected",
+                command: "editor_inform",
                 value: this.selected_lines_count
             });
         }, 1000);
@@ -205,14 +206,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    public async editor_inform_how_many_lines_selected(selected_lines: number)
+    public async editor_inform_how_many_lines_selected(ev_editor: vscode.TextEditor)
     {
+        let selected_lines: number = 0;
+        if (!ev_editor.selection.isEmpty) {
+            selected_lines = 1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
+        }
         this.selected_lines_count = selected_lines;
+        let access_level = await privacy.get_file_access(ev_editor.document.fileName);
         if (this._view) {
             if (this._view.webview) {
                 this._view.webview.postMessage({
-                    command: "editor_inform_how_many_lines_selected",
-                    value: this.selected_lines_count
+                    command: "editor_inform",
+                    selected_lines_count: this.selected_lines_count,
+                    access_level: access_level,   // this doesn't decide to proceed or not, this is just for the UI
                 });
             }
         }

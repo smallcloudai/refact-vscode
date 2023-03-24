@@ -45,7 +45,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 return [];
             }
         }
-        if (await privacy.get_file_access(document.fileName) < 1) {
+        let access_level = await privacy.get_file_access(document.fileName);
+        if (access_level < 1) {
             return [];
         }
         let file_name = storeVersions.filename_from_document(document);
@@ -86,6 +87,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let completion = "";
         let this_completion_serial_number = -1;
         if (state) {
+            // let third_party = Boolean(state.completion_longthink && multiline);
+            let third_party = false;
             [completion, this_completion_serial_number] = await this.cached_request(
                 state,
                 cancelToken,
@@ -95,7 +98,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 cursor_cr,
                 cursor_transmit,
                 multiline,
-                Boolean(state.completion_longthink && multiline),
+                third_party
             );
         }
 
@@ -203,7 +206,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cursor_cr: number,
         cursor_transmit: number,
         multiline: boolean,
-        third_party: boolean = false,
+        third_party: boolean,
     ): Promise<[string, number]>
     {
         let left = whole_doc.substring(0, cursor_cr);

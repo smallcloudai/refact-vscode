@@ -254,11 +254,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
     function info2sidebar(ev_editor: vscode.TextEditor)
     {
         if(global.side_panel !== undefined) {
-            let selected_lines = 0;
-            if (!ev_editor.selection.isEmpty) {
-                selected_lines = 1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
-            }
-            global.side_panel.editor_inform_how_many_lines_selected(selected_lines);
+            global.side_panel.editor_inform_how_many_lines_selected(ev_editor);
         }
     }
 

@@ -11,7 +11,7 @@
     let toolboxIndex = 0;
     let longthink_functions_today;
     let editor_inform_how_many_lines_selected = 0;
-    let editor_inform_good_for_thirdparty = 0;
+    let editor_inform_file_access_level = 0;
     let editor_ignore_selection_changes = false;
     let function_bookmarks = [];
 
@@ -483,12 +483,27 @@
             let selection_within_limits = (
                 editor_inform_how_many_lines_selected >= item_functions.selected_lines_min &&
                 editor_inform_how_many_lines_selected <= item_functions.selected_lines_max);
-            if (item_functions.supports_selection === 1 && item_functions.supports_highlight === 0 && !selection_within_limits) {
+            let good_access_level = true;
+            let access_level_msg = "";
+            if (editor_inform_file_access_level === 0) {
+                good_access_level = false;
+                access_level_msg = "Privacy: access to this file is restricted.";
+            }
+            if (editor_inform_file_access_level === 1 && item_functions.third_party) {
+                good_access_level = false;
+                access_level_msg = "Privacy: this function uses a third party API, which is not allowed for this file.";
+            }
+            if (!good_access_level) {
                 run.classList.add('toolbox-run-disabled');
                 content_run.classList.add('toolbox-run-disabled');
                 notice.style.display = 'inline-flex';
-            }
-            else {
+                notice.innerHTML = access_level_msg;
+            } else if (item_functions.supports_selection === 1 && item_functions.supports_highlight === 0 && !selection_within_limits) {
+                run.classList.add('toolbox-run-disabled');
+                content_run.classList.add('toolbox-run-disabled');
+                notice.style.display = 'inline-flex';
+                notice.innerHTML = `Please select ${item_functions.selected_lines_min}-${item_functions.selected_lines_max} lines of code.`;
+            } else {
                 run.classList.remove('toolbox-run-disabled');
                 content_run.classList.remove('toolbox-run-disabled');
                 notice.style.display = 'none';
@@ -564,8 +579,9 @@
     window.addEventListener("message", (event) => {
         const message = event.data;
         switch (message.command) {
-            case "editor_inform_how_many_lines_selected":
-                editor_inform_how_many_lines_selected = message.value;
+            case "editor_inform":
+                editor_inform_how_many_lines_selected = message.selected_lines_count;
+                editor_inform_file_access_level = message.access_level;
                 if (!editor_ignore_selection_changes) {
                     on_how_many_lines_selected();
                 }
