@@ -107,8 +107,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         let state = estate.state_of_editor(editor, "function_activated");
                         let selection = editor.selection;
                         let selection_empty = selection.isEmpty;
-                        let selected_lines_count = selection.end.line - selection.start.line + 1;
-                        // TODO: empty wrong, min < selected_lines_count < max
+                        // let selected_lines_count = selection.end.line - selection.start.line + 1;
+                        // let access_level = await privacy.get_file_access(editor.document.fileName);
+                        // TODO: should be, min < selected_lines_count < max, but we don't care because UI was disabled so wrong function is not likely to
+                        // happen, and we have the access level check closer to the socket in query_diff()
                         if (selection_empty) {
                             function_name = function_dict.function_highlight;
                             if (!function_name) {

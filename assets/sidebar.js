@@ -338,12 +338,6 @@
             // run
             const run = document.createElement("button");
             run.classList.add('toolbox-run');
-            let selection_within_limits = (
-                editor_inform_how_many_lines_selected >= item.selected_lines_min &&
-                editor_inform_how_many_lines_selected <= item.selected_lines_max);
-            if (item.supports_selection === 1 && item.supports_highlight === 0 && !selection_within_limits) {
-                run.classList.add('toolbox-run-disabled');
-            }
             run.innerHTML = '▶';
             const run_clone = run.cloneNode(true);
 
@@ -387,13 +381,13 @@
                 const current_icon = this.querySelector('i');
                 let current_bookmark_state;
                 if(current_icon.classList.contains("toolbox-mark-empty")) {
-                    current_icon.classList.remove("toolbox-mark-empty")
-                    current_icon.classList.add("toolbox-mark")
+                    current_icon.classList.remove("toolbox-mark-empty");
+                    current_icon.classList.add("toolbox-mark");
                     current_bookmark_state = true;
                 }
                 else {
-                    current_icon.classList.remove("toolbox-mark")
-                    current_icon.classList.add("toolbox-mark-empty")
+                    current_icon.classList.remove("toolbox-mark");
+                    current_icon.classList.add("toolbox-mark-empty");
                     current_bookmark_state = false;
                 }
                 vscode.postMessage({ type: "submit_bookmark", function_name: item.function_name, state: current_bookmark_state });
@@ -404,14 +398,14 @@
                 const current_icon = this.querySelector('i');
                 let current_like_state;
                 if(current_icon.classList.contains("toolbox-like-empty")) {
-                    current_icon.classList.remove("toolbox-like-empty")
-                    current_icon.classList.add("toolbox-like")
+                    current_icon.classList.remove("toolbox-like-empty");
+                    current_icon.classList.add("toolbox-like");
                     current_like_state = 1;
                     this.querySelector('span').innerHTML = Number(this.querySelector('span').innerHTML) + Number(1);
                 }
                 else {
-                    current_icon.classList.remove("toolbox-like")
-                    current_icon.classList.add("toolbox-like-empty")
+                    current_icon.classList.remove("toolbox-like");
+                    current_icon.classList.add("toolbox-like-empty");
                     current_like_state = 0;
                     this.querySelector('span').innerHTML = Number(this.querySelector('span').innerHTML) - Number(1);
                 }
@@ -441,7 +435,7 @@
             // selection notice
             const selection_notice = document.createElement("div");
             selection_notice.classList.add('toolbox-notice');
-            selection_notice.innerHTML = `Please select ${item.selected_lines_min}-${item.selected_lines_max} lines of code.`;
+            selection_notice.innerHTML = "";
 
             likes.appendChild(likes_icon);
             likes.appendChild(likes_span);
@@ -471,25 +465,26 @@
 
             toolboxList.appendChild(toolbox_item);
         });
-    }
+        on_how_many_lines_selected();
+    } // it was renderToolbox()
 
     function on_how_many_lines_selected() {
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
-            let item_functions = JSON.parse(item.dataset.function);
+            let function_dict = JSON.parse(item.dataset.function);
             let run = item.querySelector(".toolbox-run");
             let content_run = item.querySelector(".toolbox-content-actions .toolbox-run");
             let notice = item.querySelector(".toolbox-notice");
             let selection_within_limits = (
-                editor_inform_how_many_lines_selected >= item_functions.selected_lines_min &&
-                editor_inform_how_many_lines_selected <= item_functions.selected_lines_max);
+                editor_inform_how_many_lines_selected >= function_dict.selected_lines_min &&
+                editor_inform_how_many_lines_selected <= function_dict.selected_lines_max);
             let good_access_level = true;
             let access_level_msg = "";
             if (editor_inform_file_access_level === 0) {
                 good_access_level = false;
                 access_level_msg = "Privacy: access to this file is restricted.";
             }
-            if (editor_inform_file_access_level === 1 && item_functions.third_party) {
+            if (editor_inform_file_access_level === 1 && function_dict.third_party) {
                 good_access_level = false;
                 access_level_msg = "Privacy: this function uses a third party API, which is not allowed for this file.";
             }
@@ -498,11 +493,11 @@
                 content_run.classList.add('toolbox-run-disabled');
                 notice.style.display = 'inline-flex';
                 notice.innerHTML = access_level_msg;
-            } else if (item_functions.supports_selection === 1 && item_functions.supports_highlight === 0 && !selection_within_limits) {
+            } else if (function_dict.supports_selection === 1 && function_dict.supports_highlight === 0 && !selection_within_limits) {
                 run.classList.add('toolbox-run-disabled');
                 content_run.classList.add('toolbox-run-disabled');
                 notice.style.display = 'inline-flex';
-                notice.innerHTML = `Please select ${item_functions.selected_lines_min}-${item_functions.selected_lines_max} lines of code.`;
+                notice.innerHTML = `Please select ${function_dict.selected_lines_min}-${function_dict.selected_lines_max} lines of code.`;
             } else {
                 run.classList.remove('toolbox-run-disabled');
                 content_run.classList.remove('toolbox-run-disabled');
