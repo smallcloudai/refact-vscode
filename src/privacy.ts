@@ -96,7 +96,7 @@ export async function get_file_access(uri: string)
     let segments_cnt = segments.length;
     for(let i = 0; i < segments_cnt; i++) {
         let temp = segments.join('/');
-        console.log(['checking', temp]);
+        // console.log(['checking', temp]);
         if(storage[temp] !== undefined) {
             console.log(['=> found override', storage[temp]]);
             global.status_bar.choose_color();
@@ -105,6 +105,6 @@ export async function get_file_access(uri: string)
         segments.pop();
     }
     let g =  await get_global_access();
-    console.log(['=> revert to global default', g]);
+    // console.log(['=> revert to global default', g]);
     return g;
 }

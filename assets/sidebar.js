@@ -8,8 +8,9 @@
     const toolboxSearch = document.querySelector("#toolbox-search");
     const toolboxList = document.querySelector(".toolbox-list");
     // const toolboxRun = document.querySelector(".toolbox-run");
-    let toolboxIndex = 0;
+    // let toolboxIndex = 0;
     let longthink_functions_today;
+    let longthink_functions_json;
     let editor_inform_how_many_lines_selected = 0;
     let editor_inform_file_access_level = 0;
     let editor_ignore_selection_changes = false;
@@ -543,8 +544,6 @@
                         parent.insertBefore(hl, parent.firstChild);
                     }
                 }
-            } else {
-                toolbox_update_likes();
             }
         });
     }
@@ -628,10 +627,13 @@
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
                 }
-                if (message.longthink_functions) {
-                    console.log('longthink_functions ------>',message.longthink_functions);
-                    longthink_functions_today = message.longthink_functions;
-                    toolbox_update_likes();
+                if (message.ts2web_longthink_functions) {
+                    let json2 = JSON.stringify(message.ts2web_longthink_functions, null, 4);
+                    if (longthink_functions_json !== json2) {
+                        longthink_functions_today = message.ts2web_longthink_functions;
+                        longthink_functions_json = json2;
+                        toolbox_update_likes();
+                    }
                 }
                 break;
         }

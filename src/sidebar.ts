@@ -243,7 +243,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2web_user: global.user_logged_in,
             ts2web_plan: plan_msg,
             ts2web_metering_balance: global.user_metering_balance,
-            longthink_functions: global.longthink_functions_today,
+            ts2web_longthink_functions: global.longthink_functions_today,
         });
     }
 
