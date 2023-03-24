@@ -380,7 +380,11 @@ export async function follow_intent(intent: string, function_name: string, model
     } else {
         editor.selection = new vscode.Selection(selection.start, selection.start);  // this clears the selection, moves cursor up
         if (selection.end.line > selection.start.line && selection.end.character === 0) {
-            selection = new vscode.Selection(selection.start, selection.end.translate(-1, 0));
+            let end_pos_in_chars = editor.document.lineAt(selection.end.line - 1).range.end.character;
+            selection = new vscode.Selection(
+                selection.start,
+                new vscode.Position(selection.end.line - 1, end_pos_in_chars)
+            );
         }
         estate.save_intent(intent);
         await interactiveDiff.query_diff(editor, selection, function_name || "diff-selection", model_name, third_party);
