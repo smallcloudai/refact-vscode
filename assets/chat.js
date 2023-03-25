@@ -4,6 +4,7 @@
     const chat_input = document.querySelector('#chat-input');
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.refactcss-chat__content');
+    const stop_button = document.querySelector('#chat-stop');
 
     chat_input.focus();
 
@@ -25,6 +26,11 @@
         const message = chat_input.value;
         chat_input.value = '';
         vscode.postMessage({ type: "question-posted-within-tab", value: message});
+    });
+
+    stop_button.addEventListener('click', () => {
+        vscode.postMessage({ type: "stop-clicked" });
+        visibility_control(true);
     });
 
     chat_input.addEventListener('keydown', (event) => {
@@ -67,7 +73,7 @@
         }
     }
 
-    function chat_add_buttons() {
+    function chat_add_code_buttons() {
         const chats = document.querySelectorAll('.refactcss-chat__item');
         if (chats.length === 0) { return; };
         const last = chats[chats.length - 1];
@@ -116,9 +122,15 @@
 
     window.addEventListener("message", (event) => {
 		const message = event.data;
+        let input_should_be_visible = false;
 		switch (message.command) {
         case "chat-end-streaming":
-            chat_add_buttons();
+            input_should_be_visible = true;
+            chat_add_code_buttons();
+            break;
+        case "chat-error-streaming":
+            input_should_be_visible = true;
+            chat_input.value = message.backup_user_phrase;
             break;
         case "chat-post-question":
             chat_render(message.value);
@@ -126,17 +138,30 @@
         case "chat-post-answer":  // streaming also goes there, with partial answers
             chat_render(message.value);
             break;
-        case "chat-error-streaming":
-            chat_input.value = message.backup_user_phrase;
-            break;
         case "chat-set-question-text":
+            input_should_be_visible = true;
             chat_input.value = message.value.question;
             setTimeout(() => {
                 input_care();
             }, 100);
             input_care();
             break;
+        case "nop":
+            break;
+        }
+        visibility_control(input_should_be_visible);
+    });
+
+    function visibility_control(input_should_be_visible) {
+        if (input_should_be_visible) {
+            stop_button.style.display = 'none';
+            chat_input.style.display = 'block';
+            chat_send_button.style.display = 'block';
+        } else {
+            stop_button.style.display = 'block';
+            chat_input.style.display = 'none';
+            chat_send_button.style.display = 'none';
         }
         auto_scroll();
-    });
+    }
 })();

@@ -62,6 +62,7 @@ export class PendingRequest {
             }
             if (removed_prefix === "[ERROR]") { // same as done
                 cursor--;
+                console.log("Streaming error");
                 this.streaming_error = true;
                 removed_prefix = "";
                 continue;
@@ -80,6 +81,7 @@ export class PendingRequest {
 
     supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: estate.ApiFields)
     {
+        this.streaming_error = false;
         this.api_fields = api_fields;
         h2stream.catch((error) => {
             if (!error.message.includes("aborted")) {
@@ -114,8 +116,8 @@ export class PendingRequest {
                             await this.look_for_completed_data_in_streaming_buf();
                         }
                     });
-                    readable.on("end", async () => {
-                        // console.log(["readable end", this.streaming_buf]);
+                    readable.on("close", async () => {
+                        console.log(["readable end", this.streaming_buf]);
                         if (this.streaming_end_callback) {
                             await this.streaming_end_callback(this.streaming_error);
                         }
@@ -408,7 +410,7 @@ export function fetch_chat_promise(
     if (cancelToken) {
         let abort = new fetchH2.AbortController();
         cancelToken.onCancellationRequested(() => {
-            console.log(["API fetch cancelled"]);
+            console.log(["chat cancelled"]);
             abort.abort();
         });
         init.signal = abort.signal;

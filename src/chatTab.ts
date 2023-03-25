@@ -10,6 +10,7 @@ export class ChatTab {
     // private _disposables: vscode.Disposable[] = [];
     public web_panel: vscode.WebviewPanel;
     public messages: [string, string][];
+    public cancellationTokenSource: vscode.CancellationTokenSource;
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
@@ -20,6 +21,7 @@ export class ChatTab {
             context
         );
         this.messages = [];
+        this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
     public static activate_from_outside(context: vscode.ExtensionContext, question: string, code_snippet: string|undefined)
@@ -67,6 +69,10 @@ export class ChatTab {
                     await free_floating_tab.chat_post_question(data.value);
                     break;
 				}
+                case "stop-clicked": {
+                    free_floating_tab.cancellationTokenSource.cancel();
+                    break;
+                }
 			}
 		});
     }
@@ -110,8 +116,8 @@ export class ChatTab {
             return;
         }
 
-        let cancellationTokenSource = new vscode.CancellationTokenSource();
-        let cancelToken = cancellationTokenSource.token;
+        this.cancellationTokenSource = new vscode.CancellationTokenSource();
+        let cancelToken = this.cancellationTokenSource.token;
 
         if (this.messages.length === 0) {
             // find first 15 characters, non space, non newline, non special character
@@ -242,7 +248,7 @@ export class ChatTab {
                     <div class="refactcss-chat__content">
                     </div>
                     <div class="refactcss-chat__commands">
-                        <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop generating</button>  
+                        <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
                         <textarea id="chat-input" class="refactcss-chat__input"></textarea>
                         <button id="chat-send" class="refactcss-chat__button"><span></span></button>
                     </div>
