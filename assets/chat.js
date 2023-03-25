@@ -158,7 +158,7 @@
             chat_input.style.display = 'block';
             chat_send_button.style.display = 'block';
         } else {
-            stop_button.style.display = 'block';
+            stop_button.style.display = 'flex';
             chat_input.style.display = 'none';
             chat_send_button.style.display = 'none';
         }
