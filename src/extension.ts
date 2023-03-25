@@ -15,7 +15,6 @@ import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
-import { ChatTab } from './chatTab';
 import { Mode } from "./estate";
 
 
@@ -279,11 +278,6 @@ export function activate(context: vscode.ExtensionContext)
         }
         vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     });
-
-    let chatTabPage = vscode.commands.registerCommand('refactaicmd.refactChatTab', (question, snippet) => {
-        ChatTab.activate_from_outside(context, question, snippet);
-    });
-    context.subscriptions.push(chatTabPage);
 
     context.subscriptions.push(logout);
     context.subscriptions.push(...statusBar.status_bar_init());

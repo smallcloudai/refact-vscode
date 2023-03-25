@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
+import * as estate from "./estate";
 
 
 export class ChatTab {
@@ -11,6 +12,9 @@ export class ChatTab {
     public web_panel: vscode.WebviewPanel;
     public messages: [string, string][];
     public cancellationTokenSource: vscode.CancellationTokenSource;
+    public working_on_snippet_code: string = "";
+    public working_on_snippet_range: vscode.Range | undefined = undefined;
+    public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
@@ -24,8 +28,13 @@ export class ChatTab {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
-    public static activate_from_outside(context: vscode.ExtensionContext, question: string, code_snippet: string|undefined)
+    public static activate_from_outside(question: string, editor: vscode.TextEditor | undefined)
     {
+        let context: vscode.ExtensionContext | undefined = global.global_context;
+        if (!context) {
+            return;
+        }
+
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab",
             "Refact.ai Chat",
@@ -38,6 +47,15 @@ export class ChatTab {
         panel.iconPath = vscode.Uri.file(context.asAbsolutePath("images/discussion-bubble.svg"));
 
         let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
+        let code_snippet = "";
+        if (editor) {
+            let selection = editor.selection;
+            selection = new vscode.Selection(selection.start.line, 0, selection.end.line, 999999);
+            code_snippet = editor.document.getText(selection);
+            free_floating_tab.working_on_snippet_range = selection;
+        }
+        free_floating_tab.working_on_snippet_editor = editor;
+        free_floating_tab.working_on_snippet_code = code_snippet;
         if (question) {
             if (code_snippet) {
                 question = "```\n" + code_snippet + "\n```\n" + question;
@@ -63,6 +81,34 @@ export class ChatTab {
                             });
                         });
                     });
+                    break;
+                }
+                case "diff-paste-back": {
+                    if (!free_floating_tab.working_on_snippet_editor) {
+                        return;
+                    }
+                    await vscode.window.showTextDocument(free_floating_tab.working_on_snippet_editor.document, vscode.ViewColumn.Active);
+                    let state = estate.state_of_document(free_floating_tab.working_on_snippet_editor.document);
+                    if (!state) {
+                        return;
+                    }
+                    let editor = state.editor;
+                    if (state.get_mode() !== estate.Mode.Normal) {
+                        return;
+                    }
+                    if (!free_floating_tab.working_on_snippet_range) {
+                        return;
+                    }
+                    let verify_snippet = editor.document.getText(free_floating_tab.working_on_snippet_range!);
+                    if (verify_snippet !== free_floating_tab.working_on_snippet_code) {
+                        return;
+                    }
+                    let text = editor.document.getText();
+                    let snippet_ofs0 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.start);
+                    let snippet_ofs1 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.end);
+                    state.showing_diff_modif_doc = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
+                    state.showing_diff_move_cursor = true;
+                    estate.switch_mode(state, estate.Mode.Diff);
                     break;
                 }
 				case "question-posted-within-tab": {
@@ -102,7 +148,11 @@ export class ChatTab {
         if (!valid_html) {
             html = question;
         }
-        this.web_panel.webview.postMessage({ command: "chat-post-question", value: {question: html}});
+        this.web_panel.webview.postMessage({
+            command: "chat-post-question",
+            question_html: html,
+            question_raw: question
+        });
     }
 
     async chat_post_question(question: string)
@@ -112,7 +162,11 @@ export class ChatTab {
         }
         let login = await userLogin.inference_login();
         if (!login) {
-            this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server in currently experiencing issues."}});
+            this.web_panel.webview.postMessage({
+                command: "chat-post-answer",
+                answer_html: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
+                answer_raw: ""
+            });
             return;
         }
 
@@ -140,7 +194,11 @@ export class ChatTab {
             this.messages.shift(); // so it always starts with a user
         }
         this._question_to_div(question);
-        this.web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: "⏳"}});
+        this.web_panel.webview.postMessage({
+            command: "chat-post-answer",
+            answer_html: "⏳",
+            answer_raw: ""
+        });
         await fetchAPI.wait_until_all_requests_finished();
 
         let answer = "";
@@ -172,8 +230,12 @@ export class ChatTab {
                         valid_html = false;
                     }
                     if (valid_html) {
-                        stack_web_panel.webview.postMessage({ command: "chat-post-answer", value: {answer: html}});
-                        // console.log(["chat answer", html]);
+                        stack_web_panel.webview.postMessage({
+                            command: "chat-post-answer",
+                            answer_html: html,
+                            answer_raw: answer
+                        });
+                        // console.log(["assistant", answer]);
                     }
                 }
             }

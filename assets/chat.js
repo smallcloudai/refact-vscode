@@ -46,27 +46,33 @@
 
     function chat_render(data)
     {
+        // question_html: html,
+        // question_raw: question
+        // answer_html: html,
+        // answer_raw: answer
         if (Object.keys(data).length === 0) { return; };
         const message_pair_div = document.createElement('div');
         message_pair_div.classList.add('refactcss-chat__item');
 
-        if (data.question) {
+        if (data.question_html) {
             const question_div = document.createElement('div');
             question_div.classList.add('refactcss-chat__question');
-            question_div.innerHTML = data.question;
+            question_div.innerHTML = data.question_html;
+            question_div.dataset.raw = data.question_raw;
             message_pair_div.appendChild(question_div);
             last_answer_div = null;
         }
 
-        if (!last_answer_div && data.answer) {
+        if (!last_answer_div && data.answer_html) {
             const answer_div = document.createElement('div');
             answer_div.classList.add('refactcss-chat__answer');
             message_pair_div.appendChild(answer_div);
             last_answer_div = answer_div;
         }
 
-        if (last_answer_div && data.answer) {
-            last_answer_div.innerHTML = data.answer;
+        if (last_answer_div && data.answer_html) {
+            last_answer_div.innerHTML = data.answer_html;
+            last_answer_div.dataset.raw = data.answer_raw;
         }
         if(message_pair_div.children.length > 0) {
             chat_content.appendChild(message_pair_div);
@@ -75,28 +81,43 @@
 
     function chat_add_code_buttons() {
         const chats = document.querySelectorAll('.refactcss-chat__item');
-        if (chats.length === 0) { return; };
+        if (chats.length === 0) { return; }
         const last = chats[chats.length - 1];
-        const last_content = last.querySelector('.refactcss-chat__answer');
-        if (!last_content) { return; };
-        const snippets = last_content.querySelectorAll('pre code');
-        snippets.forEach(snippet => {
-            const original_content = snippet.innerHTML;
+        const answer_div = last.querySelector('.refactcss-chat__answer');
+        if (!answer_div) { return; }
+        const snippets = answer_div.querySelectorAll('pre code');
+        const raw = answer_div.dataset.raw;
+        const raw_snippets = raw.split('```');
+        for (let i = 0; i<snippets.length; i++) {
+            let pre = snippets[i];
+            // const code = pre.innerHTML;
+            if (raw_snippets.length < 2*i + 1) {
+                continue;
+            }
+            const code = raw_snippets[2*i + 1];
             const copy_button = document.createElement('button');
-            const new_file_button = document.createElement('button');
-            copy_button.classList.add('refactcss-chat__copybutton');
+            const new_button = document.createElement('button');
+            const diff_button = document.createElement('button');
             copy_button.innerText = 'Copy';
-            new_file_button.innerText = 'New File';
-            new_file_button.classList.add('refactcss-chat__newbutton');
+            copy_button.classList.add('refactcss-chat__copybutton');
+            new_button.innerText = 'New File';
+            new_button.classList.add('refactcss-chat__newbutton');
+            diff_button.innerText = 'Diff';
+            diff_button.classList.add('refactcss-chat__diffbutton');
             copy_button.addEventListener('click', () => {
-                copy_to_clipboard(original_content);
+                copy_to_clipboard(code);
             });
-            new_file_button.addEventListener('click', () => {
-                vscode.postMessage({ type: "open-new-file", value: original_content});
+            new_button.addEventListener('click', () => {
+                vscode.postMessage({ type: "open-new-file", value: code });
             });
-            snippet.appendChild(copy_button);
-            snippet.appendChild(new_file_button);
-        });
+            diff_button.addEventListener('click', () => {
+                vscode.postMessage({ type: "diff-paste-back", value: code });
+                diff_button.style.display = 'none';
+            });
+            pre.appendChild(diff_button);
+            pre.appendChild(copy_button);
+            pre.appendChild(new_button);
+        }
     }
 
     function copy_to_clipboard(text) {
@@ -133,10 +154,10 @@
             chat_input.value = message.backup_user_phrase;
             break;
         case "chat-post-question":
-            chat_render(message.value);
+            chat_render(message);
             break;
         case "chat-post-answer":  // streaming also goes there, with partial answers
-            chat_render(message.value);
+            chat_render(message);
             break;
         case "chat-set-question-text":
             input_should_be_visible = true;

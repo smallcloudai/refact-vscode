@@ -565,16 +565,6 @@ export async function query_the_same_thing_again(editor: vscode.TextEditor)
     if (!state) {
         return;
     }
-    // if (state.showing_diff_edit_chain !== undefined) {
-    //     await editChaining.query_edit_chaining(true);
-    //     let modif_doc = state.edit_chain_modif_doc;
-    //     if (modif_doc) {
-    //         state.showing_diff_for_range = undefined;
-    //         state.showing_diff_for_function = "edit-chain";
-    //         await present_diff_to_user(editor, modif_doc, true);
-    //     }
-    //     return;
-    // }
     if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined && state.showing_diff_for_model !== undefined) {
         _remove_decoration(editor);
         query_diff(editor, state.showing_diff_for_range, state.showing_diff_for_function, state.showing_diff_for_model, state.showing_diff_thirdparty);
