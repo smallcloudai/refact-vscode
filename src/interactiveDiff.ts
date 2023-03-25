@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-import * as editChaining from "./editChaining";
 import * as storeVersions from './storeVersions';
 import * as estate from './estate';
 import * as highlight from "./highlight";
@@ -475,7 +474,6 @@ function _remove_decoration(editor: vscode.TextEditor)
 
 export async function dislike_and_rollback(editor: vscode.TextEditor)
 {
-    editChaining.cleanup_edit_chaining_in_state(editor);
     let state = estate.state_of_editor(editor, "dislike_and_rollback");
     if (!state) {
         return;
@@ -563,7 +561,6 @@ export async function like_and_accept(editor: vscode.TextEditor)
 
 export async function query_the_same_thing_again(editor: vscode.TextEditor)
 {
-    editChaining.cleanup_edit_chaining_in_state(editor);
     let state = estate.state_of_editor(editor, "query_the_same_thing_again");
     if (!state) {
         return;

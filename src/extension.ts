@@ -6,7 +6,6 @@ import * as highlight from "./highlight";
 import * as storeVersions from "./storeVersions";
 import * as statusBar from "./statusBar";
 import * as codeLens from "./codeLens";
-import * as editChaining from "./editChaining";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 import * as fetchAPI from "./fetchAPI";
@@ -198,37 +197,45 @@ export function activate(context: vscode.ExtensionContext)
 
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
-    let disposable3 = vscode.commands.registerCommand('refactaicmd.highlight', f1_pressed);
-    let disposable8 = vscode.commands.registerCommand('refactaicmd.editChaining',  manual_edit_chaining);
+    let disposable3 = vscode.commands.registerCommand('refactaicmd.activateToolbox', f1_pressed);
     let disposable9  = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride0', (uri:vscode.Uri) => {
+        if (!uri || !uri.fsPath) {
+            return;
+        }
         privacy.set_access_override(uri.fsPath, 0);
         PrivacySettings.render(context);
     });
     let disposable10 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride1', (uri:vscode.Uri) => {
+        if (!uri || !uri.fsPath) {
+            return;
+        }
         privacy.set_access_override(uri.fsPath, 1);
         PrivacySettings.render(context);
     });
     let disposable11 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride2', (uri:vscode.Uri) => {
+        if (!uri || !uri.fsPath) {
+            return;
+        }
         privacy.set_access_override(uri.fsPath, 2);
         PrivacySettings.render(context);
     });
     let disposable12 = vscode.commands.registerCommand('refactaicmd.privacySettings', () => {
         PrivacySettings.render(context);
     });
-
-    let disposables = storeVersions.store_versions_init();
+    let disposable13 = vscode.commands.registerCommand('refactaicmd.completionManual', async () => {
+        await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
+    });
 
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
     context.subscriptions.push(disposable1);
     context.subscriptions.push(disposable2);
-    context.subscriptions.push(disposable8);
     context.subscriptions.push(disposable9);
     context.subscriptions.push(disposable10);
     context.subscriptions.push(disposable11);
     context.subscriptions.push(disposable12);
-    context.subscriptions.push(...disposables);
+    context.subscriptions.push(disposable13);
 
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
@@ -240,6 +247,7 @@ export function activate(context: vscode.ExtensionContext)
 
     let settingsCommand = vscode.commands.registerCommand('refactaicmd.openSettings', () => {
         vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.codify' );
+        // vscode.commands.executeCommand( 'workbench.action.openGlobalKeybindings', 'Refact.ai' );
     });
     context.subscriptions.push(settingsCommand);
 
@@ -295,40 +303,6 @@ export function first_run_message(context: vscode.ExtensionContext)
     if (firstRun) { return; };
     context.globalState.update('codifyFirstRun', true);
     userLogin.welcome_message();
-}
-
-
-export async function manual_edit_chaining()
-{
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        return;
-    }
-    let state = estate.state_of_editor(editor, "manual_edit_chaining");
-    if (state) {
-        state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
-        if (state.get_mode() === Mode.Diff) {
-            await rollback_and_regen(editor);
-            return;
-        }
-        await estate.switch_mode(state, estate.Mode.DiffWait);
-        try {
-            let s = await editChaining.query_edit_chaining(true);
-            if (!s) {
-                return;
-            }
-        } finally {
-            await estate.back_to_normal(state);
-        }
-        let modif_doc = state.edit_chain_modif_doc;
-        if (modif_doc) {
-            state.showing_diff_modif_doc = modif_doc;
-            state.showing_diff_move_cursor = true;
-            state.showing_diff_for_function = "edit-chain";
-            state.showing_diff_for_range = undefined;
-            await estate.switch_mode(state, estate.Mode.Diff);
-        }
-    }
 }
 
 
@@ -421,30 +395,21 @@ export async function status_bar_clicked()
     let document_filename = editor.document.fileName;
     let access_level = await privacy.get_file_access(document_filename);
     let chunks = document_filename.split("/");
-    if (access_level === 0) {
-        global.status_bar.choose_color();
-        let selection = await vscode.window.showInformationMessage(
-            chunks[chunks.length - 1] + ": Access level " + access_level,
-            "Enable",
-            "Privacy Rules",
-        );
-        if (selection === "Enable") {
-            privacy.set_access_override(document_filename, 1);
-            global.status_bar.set_access_level(1);
-        } else if (selection === "Privacy Rules") {
-            vscode.commands.executeCommand("refactaicmd.privacySettings");
-        }
-    } else {
-        let selection = await vscode.window.showInformationMessage(
-            chunks[chunks.length - 1] + ": Access level " + access_level,
-            "Disable",
-            "Privacy Rules",
-        );
-        if (selection === "Disable") {
-            privacy.set_access_override(document_filename, 0);
-            global.status_bar.set_access_level(0);
-        } else if (selection === "Privacy Rules") {
-            vscode.commands.executeCommand("refactaicmd.privacySettings");
-        }
+    let pause_completion = vscode.workspace.getConfiguration().get('refactai.pauseCompletion');
+    let buttons: string[] = [];
+    if (access_level > 0) {
+        buttons.push(pause_completion ? "Resume Completion" : "Pause Completion");
+    }
+    buttons.push("Privacy Rules");
+    let selection = await vscode.window.showInformationMessage(
+        chunks[chunks.length - 1] + ": Access level " + access_level,
+        ...buttons
+    );
+    if (selection === "Pause Completion") {
+        vscode.workspace.getConfiguration().update('refactai.pauseCompletion', true, true);
+    } else if (selection === "Resume Completion") {
+        vscode.workspace.getConfiguration().update('refactai.pauseCompletion', false, true);
+    } else if (selection === "Privacy Rules") {
+        vscode.commands.executeCommand("refactaicmd.privacySettings");
     }
 }

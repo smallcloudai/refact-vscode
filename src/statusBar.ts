@@ -55,7 +55,7 @@ export class StatusBarMenu {
         if (this.access_level === 0) {
             this.menu.text = `$(refact-icon-privacy) Refact.ai`;
             this.menu.backgroundColor = undefined;
-            this.menu.tooltip = `Codify can't access this file because of the privacy rules`;
+            this.menu.tooltip = `Refact can't access this file because of the privacy rules`;
         } else if (this.socketerror) {
             this.menu.text = `$(debug-disconnect) Refact.ai`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');

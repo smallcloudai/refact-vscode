@@ -26,14 +26,14 @@ export class PrivacySettings {
           value: 1,
           name: "Level 1",
           short_description:
-            "Codify can read your files, but only uses AI models hosted at Codify",
+            "Refact can read your files, but only uses AI models hosted at Codify",
           long_description:
             "Data will be sent to Codify servers only. We don't collect datasets on the server side. If you use a self-hosting server, your data will be sent only to your server.",
         },
         {
           value: 2,
           name: "Level 2",
-          short_description: "Codify can use any model, including 3rd party",
+          short_description: "Refact can use any model, including 3rd party",
           long_description: "Data could be sent also to a 3rd party model.",
         },
       ];

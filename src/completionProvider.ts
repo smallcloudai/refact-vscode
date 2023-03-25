@@ -49,6 +49,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (access_level < 1) {
             return [];
         }
+        let pause_completion = vscode.workspace.getConfiguration().get('refactai.pauseCompletion');
+        if (pause_completion && context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) {
+            return [];
+        }
+
         let file_name = storeVersions.filename_from_document(document);
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);

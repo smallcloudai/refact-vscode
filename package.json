@@ -85,7 +85,7 @@
 	"contributes": {
 		"configuration": {
 			"type": "object",
-			"title": "Codify",
+			"title": "Refact.ai Assistant",
 			"properties": {
 				"refactai.apiKey": {
 					"type": "string",
@@ -102,9 +102,14 @@
 					"description": "For self-hosted inference, set the URL to your inference server, for example https://127.0.0.1:8008/\nLeave blank otherwise.",
 					"default": ""
 				},
+				"refactai.pauseCompletion": {
+					"type": "boolean",
+					"description": "Pause automatic code suggestions. Manual activation still works.",
+					"default": false
+				},
 				"refactai.autoHideSidebar": {
 					"type": "boolean",
-					"description": "Auto hide sidebar after function execution.",
+					"description": "Auto hide sidebar after function activation.",
 					"default": false
 				}
 			}
@@ -112,8 +117,8 @@
 		"properties": [],
 		"commands": [
 			{
-				"command": "refactaicmd.highlight",
-				"title": "Ask Intent and Highlight",
+				"command": "refactaicmd.activateToolbox",
+				"title": "Activate",
 				"category": "Refact.ai"
 			},
 			{
@@ -122,23 +127,18 @@
 				"category": "Refact.ai"
 			},
 			{
+				"command": "refactaicmd.completionManual",
+				"title": "Manual Completion Trigger",
+				"category": "Refact.ai"
+			},
+			{
 				"command": "refactaicmd.logout",
 				"title": "Logout",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.editChaining",
-				"title": "Edit Chaining",
-				"category": "Refact.ai"
-			},
-			{
 				"command": "refactaicmd.openSettings",
 				"title": "Settings Page",
-				"category": "Refact.ai"
-			},
-			{
-				"command": "refactaicmd.openLogin",
-				"title": "Login / Register",
 				"category": "Refact.ai"
 			},
 			{
@@ -148,17 +148,17 @@
 			},
 			{
 				"command": "refactaicmd.addPrivacyOverride0",
-				"title": "Level 0: Turn off",
+				"title": "Add Privacy Rule: Turn off",
 				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.addPrivacyOverride1",
-				"title": "Level 1",
+				"title": "Add Privacy Rule: Level 1",
 				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.addPrivacyOverride2",
-				"title": "Level 2",
+				"title": "Add Privacy Rule: Level 2",
 				"category": "Refact.ai"
 			}
 		],
@@ -196,18 +196,18 @@
 		},
 		"submenus": [
 			{
-				"label": "Codify Access",
+				"label": "Refact.ai Privacy",
 				"id": "refact-access-menu"
 			}
 		],
 		"keybindings": [
 			{
-				"command": "refactaicmd.highlight",
+				"command": "refactaicmd.activateToolbox",
 				"key": "F1"
 			},
 			{
-				"command": "refactaicmd.editChaining",
-				"key": "Ctrl+Q"
+				"command": "refactaicmd.completionManual",
+				"key": "alt+space"
 			},
 			{
 				"command": "refactaicmd.esc",
@@ -224,7 +224,7 @@
 			"activitybar": [
 				{
 					"id": "refact-toolbox-pane",
-					"title": "Codify",
+					"title": "Refact",
 					"icon": "$(codify-logo)"
 				}
 			]
