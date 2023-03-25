@@ -58,12 +58,11 @@ body.vscode-dark {
 	cursor: pointer;
 	box-sizing: border-box;
 	text-decoration: none;
-	display: inline-flex;
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
-	display: none;
 	line-height: 14px;
+    display: none;
 }
 #profile span::before {
 	content: "\e80A";
@@ -85,7 +84,6 @@ body.vscode-light #profile {
 	border-color: var(--secondary);
 }
 #report_bugs {
-    display: none;
     font-size: 13px;
 	border: 0;
 	padding: 0;
@@ -114,6 +112,35 @@ body.vscode-light #profile {
 	font-variant: normal;
 	text-transform: none;
 }
+#discord {
+    font-size: 13px;
+	border: 0;
+	padding: 0;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	text-align: right;
+	margin: 5px 0;
+	margin-top: 5px;
+	line-height: 14px;
+}
+#discord span::before {
+	content: "\e80F";
+	color: var(--secondary);
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	display: inline-flex;
+	text-decoration: inherit;
+	font-size: 12px;
+	line-height: 14px;
+	margin-right: 3px;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+}
 #settings {
     font-size: 13px;
 	border: 1px solid var(--secondary);
@@ -122,7 +149,6 @@ body.vscode-light #profile {
 	cursor: pointer;
 	box-sizing: border-box;
 	text-decoration: none;
-	display: flex;
     flex: 1 0 auto;
     width: 32px;
     height: 33px;
@@ -130,7 +156,7 @@ body.vscode-light #profile {
 	justify-content: center;
 	text-align: center;
 	margin: 5px 0;
-	/* display: none; */
+    display: none;
 }
 #settings span::before {
 	color: var(--secondary);
@@ -147,7 +173,6 @@ body.vscode-light #profile {
 	font-size: 13px;
 }
 #privacy {
-    display: none;
 	font-size: 13px;
 	border: 1px solid var(--secondary);
 	padding: 8px 18px;
@@ -160,6 +185,7 @@ body.vscode-light #profile {
 	text-align: center;
     justify-content: center;
 	margin: 5px 5px 5px 0;
+    display: none;
 }
 #privacy span::before {
 	color: var(--secondary);
@@ -215,7 +241,7 @@ body.vscode-light #login {
 	text-align: center;
 	margin: 5px 0;
     margin-right: 5px;
-	display: none;
+    display: none;
 }
 body.vscode-light #chat {
 	color: var(--secondary);
@@ -252,8 +278,8 @@ body.vscode-light #chat {
 	text-align: right;
 	margin: 5px 0;
 	margin-left: 5px;
-	display: none;
 	line-height: 14px;
+    display: none;
 }
 #logout::before {
 	content: "\e812";
@@ -278,9 +304,9 @@ body.vscode-light #logout {
 .sidebar-logged {
 	white-space: nowrap;
 	overflow: hidden;
-	display: none;
 	width: 100%;
 	justify-content: left;
+    display: none;
 }
 
 .sidebar-logged span {
@@ -292,8 +318,8 @@ body.vscode-light #logout {
 .sidebar-plan {
 	white-space: nowrap;
 	overflow: hidden;
-	display: none;
 	justify-content: left;
+    display: none;
 }
 
 .sidebar-plan span {
@@ -329,9 +355,8 @@ body.vscode-light #logout {
 	text-transform: none;
 }
 .sidebar-coins {
-	display: none;
 	white-space: nowrap;
-	overflow: hidden;
+    display: none;
 }
 .sidebar-coins span {
 	margin-left: 5px;

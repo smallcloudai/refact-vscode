@@ -617,7 +617,7 @@
                 login.style.display = message.ts2web_user ? 'none' : 'block';
                 profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                chat.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                chat.style.display = message.ts2web_user ? 'flex' : 'none';
                 data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
                 privacy.style.display = message.ts2web_user ? 'inline-flex' : 'none';
