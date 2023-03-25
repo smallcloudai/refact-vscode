@@ -7,9 +7,18 @@
 
     chat_input.focus();
 
+    function input_care()
+    {
+        chat_input.style.height = 'auto';
+        chat_input.style.height = chat_input.scrollHeight + 'px';
+        const message = chat_input.value;
+        let bad = message.trim() === '' || message.length >= 4000;
+        chat_send_button.disabled = bad;
+        chat_send_button.style.opacity = bad ? 0.5 : 1;
+    }
+
     chat_input.addEventListener('input', function () {
-        this.style.height = 'auto';
-        this.style.height = this.scrollHeight + 'px';
+        input_care();
     });
 
     chat_send_button.addEventListener('click', () => {
@@ -97,8 +106,7 @@
 
     let currentHeight = document.documentElement.scrollHeight;
     function auto_scroll() {
-        chat_input.style.height = 'auto';
-        chat_input.style.height = chat_input.scrollHeight + 'px';
+        input_care();
         let newHeight = document.documentElement.scrollHeight;
         if (newHeight !== currentHeight) {
             window.scrollTo(0, newHeight);
@@ -121,9 +129,9 @@
         case "chat-set-question-text":
             chat_input.value = message.value.question;
             setTimeout(() => {
-                chat_input.style.height = 'auto';
-                chat_input.style.height = chat_input.scrollHeight + 'px';
+                input_care();
             }, 100);
+            input_care();
             break;
         }
         auto_scroll();
