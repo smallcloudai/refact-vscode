@@ -383,13 +383,7 @@ export async function status_bar_clicked()
         userLogin.login_message();
         return;
     }
-    // no login
-    // "It takes two clicks to join the waitlist"
-    // - login
     if (!editor) {
-        // no open text editor:
-        // - visit website
-        // - file bug report
         return;
     }
     let document_filename = editor.document.fileName;
