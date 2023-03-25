@@ -19,6 +19,7 @@ export class PendingRequest {
     streaming_callback: Function | undefined;
     streaming_end_callback: Function | undefined;
     streaming_buf: string = "";
+    streaming_error: boolean = false;
 
     constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken)
     {
@@ -59,6 +60,12 @@ export class PendingRequest {
                 cursor--;
                 continue;
             }
+            if (removed_prefix === "[ERROR]") { // same as done
+                cursor--;
+                this.streaming_error = true;
+                continue;
+            }
+
             break;
         }
         // console.log(["feed = " + removed_prefix]);
@@ -108,7 +115,7 @@ export class PendingRequest {
                     readable.on("end", async () => {
                         // console.log(["readable end", this.streaming_buf]);
                         if (this.streaming_end_callback) {
-                            await this.streaming_end_callback();
+                            await this.streaming_end_callback(this.streaming_error);
                         }
                     });
                     resolve("");

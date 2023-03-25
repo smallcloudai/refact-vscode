@@ -28,16 +28,19 @@ body.vscode-dark {
 }
 .refactcss-chat__question {
 	padding: 5px 10px;
+    width: 90%;
     max-width: 600px;
-    width: 100%;
     background-color: var(--light);
     margin-left: auto;
+    overflow: hidden;
 }
 .refactcss-chat__answer {
 	margin-top: 10px;
+    width: 90%;
     max-width: 600px;
     margin-right: auto;
     padding: 5px 10px;
+    overflow: hidden;
 }
 .refactcss-chat__commands {
 	margin-top: 30px;

@@ -140,6 +140,7 @@ export class ChatTab {
         let answer = "";
         let stack_web_panel = this.web_panel;
         let stack_this = this;
+
         async function _streaming_callback(json: any)
         {
             if (json === undefined) {
@@ -172,9 +173,9 @@ export class ChatTab {
             }
         }
 
-        async function _streaming_end_callback()
+        async function _streaming_end_callback(any_error: boolean)
         {
-            console.log("streaming end callback");
+            console.log("streaming end callback, error: " + any_error);
             stack_this.messages.push(["assistant", answer]);
             stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
         }

@@ -143,7 +143,7 @@ export async function query_diff(
         }
     }
 
-    async function _streaming_end_callback()
+    async function _streaming_end_callback(any_error: boolean)
     {
         if (!state) {
             return;

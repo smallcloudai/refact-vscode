@@ -97,6 +97,8 @@
 
     let currentHeight = document.documentElement.scrollHeight;
     function auto_scroll() {
+        chat_input.style.height = 'auto';
+        chat_input.style.height = chat_input.scrollHeight + 'px';
         let newHeight = document.documentElement.scrollHeight;
         if (newHeight !== currentHeight) {
             window.scrollTo(0, newHeight);
@@ -113,7 +115,7 @@
         case "chat-post-question":
             chat_render(message.value);
             break;
-        case "chat-post-answer":
+        case "chat-post-answer":  // streaming also goes there, with partial answers
             chat_render(message.value);
             break;
         case "chat-set-question-text":
