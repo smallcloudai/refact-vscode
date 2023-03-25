@@ -47,6 +47,9 @@ body.vscode-dark {
 	position: relative;
 	box-sizing: border-box;
     margin-bottom: 50px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 
 .refactcss-chat__input {
@@ -171,3 +174,37 @@ body.vscode-dark {
     width: 1.5em;
     text-align: right;
   }
+
+  .refactcss-chat__stop {
+    margin-left: auto;
+    background: transparent !important;
+    border: 1px solid var(--secondary) !important;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 34px;
+    color: var(--secondary) !important;
+    margin-bottom: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+  }
+  .refactcss-chat__stop span {
+    margin-right: 4px;
+  }
+  .refactcss-chat__stop span::before {
+	content: "\e80E";
+	font-family: "codify";
+	font-style: normal;
+	font-weight: normal;
+	text-decoration: inherit;
+	font-variant: normal;
+	text-transform: none;
+	height: 16px;
+	width: 16px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}

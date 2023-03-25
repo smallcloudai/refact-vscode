@@ -242,6 +242,7 @@ export class ChatTab {
                     <div class="refactcss-chat__content">
                     </div>
                     <div class="refactcss-chat__commands">
+                        <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop generating</button>  
                         <textarea id="chat-input" class="refactcss-chat__input"></textarea>
                         <button id="chat-send" class="refactcss-chat__button"><span></span></button>
                     </div>
