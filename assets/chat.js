@@ -126,6 +126,9 @@
         case "chat-post-answer":  // streaming also goes there, with partial answers
             chat_render(message.value);
             break;
+        case "chat-error-streaming":
+            chat_input.value = message.backup_user_phrase;
+            break;
         case "chat-set-question-text":
             chat_input.value = message.value.question;
             setTimeout(() => {

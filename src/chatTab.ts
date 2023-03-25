@@ -176,8 +176,23 @@ export class ChatTab {
         async function _streaming_end_callback(any_error: boolean)
         {
             console.log("streaming end callback, error: " + any_error);
-            stack_this.messages.push(["assistant", answer]);
-            stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
+            if (any_error) {
+                let backup_user_phrase = "";
+                for (let i = stack_this.messages.length - 1; i < stack_this.messages.length; i++) {
+                    if (i >= 0) {
+                        if (stack_this.messages[i][0] === "user") {
+                            backup_user_phrase = stack_this.messages[i][1];
+                            stack_this.messages.length -= 1;
+                            break;
+                        }
+                    }
+                }
+                console.log("backup_user_phrase:" + backup_user_phrase);
+                stack_this.web_panel.webview.postMessage({ command: "chat-error-streaming", backup_user_phrase: backup_user_phrase });
+            } else {
+                stack_this.messages.push(["assistant", answer]);
+                stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
+            }
         }
 
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);

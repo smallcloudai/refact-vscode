@@ -49,7 +49,7 @@ export class PendingRequest {
         }
         let removed_prefix: string = "";
         let cursor = split_slash_n_slash_n.length - 2;
-        while (1) {
+        while (cursor >= 0) {
             let before_last = split_slash_n_slash_n[cursor];
             if (before_last.substring(0, 6) !== "data: ") {
                 console.log("Unexpected data in streaming buf: " + before_last);
@@ -63,15 +63,17 @@ export class PendingRequest {
             if (removed_prefix === "[ERROR]") { // same as done
                 cursor--;
                 this.streaming_error = true;
+                removed_prefix = "";
                 continue;
             }
-
             break;
         }
         // console.log(["feed = " + removed_prefix]);
-        let json = JSON.parse(removed_prefix);
-        if (this.streaming_callback) {
-            await this.streaming_callback(json);
+        if (removed_prefix) {
+            let json = JSON.parse(removed_prefix);
+            if (this.streaming_callback) {
+                await this.streaming_callback(json);
+            }
         }
         this.streaming_buf = "";
     }
