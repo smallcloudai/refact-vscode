@@ -53,8 +53,11 @@ export class ChatTab {
             selection = new vscode.Selection(selection.start.line, 0, selection.end.line, 999999);
             code_snippet = editor.document.getText(selection);
             free_floating_tab.working_on_snippet_range = selection;
+            free_floating_tab.working_on_snippet_editor = editor;
+        } else {
+            free_floating_tab.working_on_snippet_range = undefined;
+            free_floating_tab.working_on_snippet_editor = undefined;
         }
-        free_floating_tab.working_on_snippet_editor = editor;
         free_floating_tab.working_on_snippet_code = code_snippet;
         if (question) {
             if (code_snippet) {
@@ -165,7 +168,8 @@ export class ChatTab {
             this.web_panel.webview.postMessage({
                 command: "chat-post-answer",
                 answer_html: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
-                answer_raw: ""
+                answer_raw: "",
+                have_editor: false,
             });
             return;
         }
@@ -197,7 +201,8 @@ export class ChatTab {
         this.web_panel.webview.postMessage({
             command: "chat-post-answer",
             answer_html: "⏳",
-            answer_raw: ""
+            answer_raw: "",
+            have_editor: false,
         });
         await fetchAPI.wait_until_all_requests_finished();
 
@@ -233,7 +238,8 @@ export class ChatTab {
                         stack_web_panel.webview.postMessage({
                             command: "chat-post-answer",
                             answer_html: html,
-                            answer_raw: answer
+                            answer_raw: answer,
+                            have_editor: Boolean(stack_this.working_on_snippet_editor)
                         });
                         // console.log(["assistant", answer]);
                     }

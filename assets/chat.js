@@ -73,6 +73,7 @@
         if (last_answer_div && data.answer_html) {
             last_answer_div.innerHTML = data.answer_html;
             last_answer_div.dataset.raw = data.answer_raw;
+            last_answer_div.dataset.have_editor = data.have_editor;
         }
         if(message_pair_div.children.length > 0) {
             chat_content.appendChild(message_pair_div);
@@ -97,24 +98,28 @@
             const code = raw_snippets[2*i + 1];
             const copy_button = document.createElement('button');
             const new_button = document.createElement('button');
-            const diff_button = document.createElement('button');
             copy_button.innerText = 'Copy';
             copy_button.classList.add('refactcss-chat__copybutton');
             new_button.innerText = 'New File';
             new_button.classList.add('refactcss-chat__newbutton');
-            diff_button.innerText = 'Diff';
-            diff_button.classList.add('refactcss-chat__diffbutton');
             copy_button.addEventListener('click', () => {
                 copy_to_clipboard(code);
             });
             new_button.addEventListener('click', () => {
                 vscode.postMessage({ type: "open-new-file", value: code });
             });
-            diff_button.addEventListener('click', () => {
-                vscode.postMessage({ type: "diff-paste-back", value: code });
-                diff_button.style.display = 'none';
-            });
-            pre.appendChild(diff_button);
+            // console.log("HAVE EDITOR", answer_div.dataset.have_editor, typeof answer_div.dataset.have_editor);
+            // it's a string for some reason
+            if (answer_div.dataset.have_editor === 'true') {
+                const diff_button = document.createElement('button');
+                diff_button.addEventListener('click', () => {
+                    vscode.postMessage({ type: "diff-paste-back", value: code });
+                    diff_button.style.display = 'none';
+                });
+                diff_button.innerText = 'Diff';
+                diff_button.classList.add('refactcss-chat__diffbutton');
+                pre.appendChild(diff_button);
+            }
             pre.appendChild(copy_button);
             pre.appendChild(new_button);
         }
