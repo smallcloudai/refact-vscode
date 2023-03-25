@@ -202,12 +202,18 @@ export function activate(context: vscode.ExtensionContext)
     let disposable8 = vscode.commands.registerCommand('refactaicmd.editChaining',  manual_edit_chaining);
     let disposable9  = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride0', (uri:vscode.Uri) => {
         privacy.set_access_override(uri.fsPath, 0);
+        PrivacySettings.render(context);
     });
     let disposable10 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride1', (uri:vscode.Uri) => {
         privacy.set_access_override(uri.fsPath, 1);
+        PrivacySettings.render(context);
     });
     let disposable11 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride2', (uri:vscode.Uri) => {
         privacy.set_access_override(uri.fsPath, 2);
+        PrivacySettings.render(context);
+    });
+    let disposable12 = vscode.commands.registerCommand('refactaicmd.privacySettings', () => {
+        PrivacySettings.render(context);
     });
 
     let disposables = storeVersions.store_versions_init();
@@ -221,6 +227,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable9);
     context.subscriptions.push(disposable10);
     context.subscriptions.push(disposable11);
+    context.subscriptions.push(disposable12);
     context.subscriptions.push(...disposables);
 
     global.side_panel = new sidebar.PanelWebview(context);
@@ -251,9 +258,10 @@ export function activate(context: vscode.ExtensionContext)
     }, 60000); // Start with 1 minute, change to 24 hours
 
     context.subscriptions.push(login);
-    let logout = vscode.commands.registerCommand('refactaicmd.logout', () => {
+    let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
         context.globalState.update('codifyFirstRun', false);
-        vscode.workspace.getConfiguration().update('refactai.apiKey', '', vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
         global.user_logged_in = "";
         global.user_active_plan = "";
         global.user_metering_balance = 0;
@@ -263,11 +271,6 @@ export function activate(context: vscode.ExtensionContext)
         }
         vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     });
-
-    let privacySettingsPage = vscode.commands.registerCommand('refactaicmd.refactPrivacySettings', () => {
-        PrivacySettings.render(context);
-    });
-    context.subscriptions.push(privacySettingsPage);
 
     let chatTabPage = vscode.commands.registerCommand('refactaicmd.refactChatTab', (question, snippet) => {
         ChatTab.activate_from_outside(context, question, snippet);

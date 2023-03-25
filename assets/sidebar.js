@@ -223,7 +223,7 @@
 
     const reportBugsButton = document.querySelector("#report_bugs");
     reportBugsButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "reportBugs" });
+        vscode.postMessage({ type: "js2ts_report_bug" });
     });
 
     const profileButton = document.querySelector("#profile");
@@ -238,7 +238,12 @@
 
     const logoutButton = document.querySelector("#logout");
     logoutButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "logout" });
+        vscode.postMessage({ type: "js2ts_logout" });
+    });
+
+    const discordButton = document.querySelector("#discord");
+    discordButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "js2ts_discord" });
     });
 
 
@@ -604,7 +609,11 @@
                 let chat = document.querySelector('#chat');
                 let bug = document.querySelector('#report_bugs');
                 let privacy = document.querySelector('#privacy');
+                let discord = document.querySelector('#discord');
+                let settings = document.querySelector('#settings');
 
+                discord.style.display = 'inline-flex';
+                bug.style.display = 'inline-flex';
                 info.style.display = message.ts2web_user ? 'flex' : '';
                 plan.style.display = message.ts2web_plan ? 'flex' : '';
                 document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
@@ -615,14 +624,8 @@
                 chat.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
-                bug.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 privacy.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-
-
-                if(message.ts2web_user === undefined) {
-                    privacy.style.display = 'none';
-                    bug.style.display = 'none';
-                }
+                settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
 
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);

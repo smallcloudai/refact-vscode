@@ -167,11 +167,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand("refactaicmd.refactPrivacySettings");
                     break;
                 }
-                case "reportBugs": {
+                case "js2ts_report_bug": {
                     vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/refact-vscode/issues`));
                     break;
                 }
-                case "logout": {
+                case "js2ts_discord": {
+                    vscode.env.openExternal(vscode.Uri.parse(`https://www.smallcloud.ai/discord`));
+                    break;
+                }
+                case "js2ts_logout": {
                     vscode.commands.executeCommand("refactaicmd.logout");
                     break;
                 }
@@ -403,15 +407,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </div>
                         <div class="sidebar-inline">
                             <div class="sidebar-logged"><b><span></span></b></div>
+                            <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
                         </div>
                         <div class="sidebar-inline">
                             <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
-                            <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
+                            <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
                         </div>
                         <div class="sidebar-inline">
                             <button tabindex="-1" id="profile"><span></span>Your&nbsp;Account</button>
                             <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
-                            <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
+                            <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
                         </div>
                     </div>
                 </div>
