@@ -105,7 +105,7 @@ export class PrivacySettings {
 
     static update_webview(panel: vscode.WebviewPanel) {
         console.log('--------------------------> update webview');
-        if(!panel) {
+        if(!panel || !panel.webview) {
             return false;
         }
         let accessDefaults = privacy.get_global_access();

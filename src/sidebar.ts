@@ -164,7 +164,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "privacy": {
-                    vscode.commands.executeCommand("refactaicmd.refactPrivacySettings");
+                    vscode.commands.executeCommand("refactaicmd.privacySettings");
                     break;
                 }
                 case "js2ts_report_bug": {

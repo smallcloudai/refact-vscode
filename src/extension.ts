@@ -432,7 +432,7 @@ export async function status_bar_clicked()
             privacy.set_access_override(document_filename, 1);
             global.status_bar.set_access_level(1);
         } else if (selection === "Privacy Rules") {
-            vscode.commands.executeCommand("refactaicmd.refactPrivacySettings");
+            vscode.commands.executeCommand("refactaicmd.privacySettings");
         }
     } else {
         let selection = await vscode.window.showInformationMessage(
@@ -444,7 +444,7 @@ export async function status_bar_clicked()
             privacy.set_access_override(document_filename, 0);
             global.status_bar.set_access_level(0);
         } else if (selection === "Privacy Rules") {
-            vscode.commands.executeCommand("refactaicmd.refactPrivacySettings");
+            vscode.commands.executeCommand("refactaicmd.privacySettings");
         }
     }
 }
