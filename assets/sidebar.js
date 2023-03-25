@@ -514,13 +514,8 @@
 
     function toolbox_update_likes() {
         renderToolbox(longthink_functions_today);
-        search_filter();
-        add_click_handler_on_toolbox_items();
-    }
-
-    function search_filter() {
-        const filterItems = document.querySelectorAll(".toolbox-filter");
         toolboxSearch.addEventListener('input', function (event) {
+            const filterItems = document.querySelectorAll(".toolbox-filter");
             reset_everything_about_commands();
             const searchTerm = this.value.toLowerCase();
             const itemsArray = Array.from(filterItems);
@@ -531,9 +526,9 @@
                 const parent = chat.parentNode;
                 parent.insertBefore(chat, parent.firstChild);
             }
-            else if (searchTerm !== '') {
+            else {
                 const filteredDivs = itemsArray.filter(div => {
-                    return div.dataset.title.toLowerCase().includes(searchTerm);
+                    return div.dataset.title.toLowerCase().includes(searchTerm) || searchTerm==='';
                 });
                 filterItems.forEach(div => div.style.display = 'none');
                 filteredDivs.forEach(div => div.style.display = 'block');
@@ -551,6 +546,7 @@
                 }
             }
         });
+        add_click_handler_on_toolbox_items();
     }
 
     function add_click_handler_on_toolbox_items(command) {
