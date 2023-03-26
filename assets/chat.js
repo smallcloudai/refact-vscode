@@ -80,6 +80,20 @@
         }
     }
 
+    function backquote_backquote_backquote_remove_syntax_highlighting(code) {
+        // this removes ```python or ```json or similar, assuming ``` itself is already not there
+        while (1) {
+            if (code.startsWith('\n')) {
+                return code.substring(1);
+            }
+            let first_char = code[0];
+            if (first_char >= 'a' && first_char <= 'z' || first_char >= '0' && first_char <= '9') {
+                code = code.substring(1);
+                continue;
+            }
+        }
+    }
+
     function chat_add_code_buttons() {
         const chats = document.querySelectorAll('.refactcss-chat__item');
         if (chats.length === 0) { return; }
@@ -95,7 +109,7 @@
             if (raw_snippets.length < 2*i + 1) {
                 continue;
             }
-            const code = raw_snippets[2*i + 1];
+            const code = backquote_backquote_backquote_remove_syntax_highlighting(raw_snippets[2*i + 1]);
             const copy_button = document.createElement('button');
             const new_button = document.createElement('button');
             copy_button.innerText = 'Copy';
