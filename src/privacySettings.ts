@@ -168,7 +168,7 @@ export class PrivacySettings {
                     <div class="refactcss-privacy__overrides overrides">
                         <div class="overrides__header">
                             <div class="overrides__path">Path</div>
-                            <div class="overrides__selector">Codify Access</div>
+                            <div class="overrides__selector">Refact Access</div>
                             <div class="overrides__action"></div>
                         </div>
                         <div class="overrides__body">
