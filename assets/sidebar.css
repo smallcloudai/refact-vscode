@@ -192,20 +192,26 @@ body.vscode-light #profile {
     display: none;
 }
 #keys span::before {
-	color: var(--secondary);
-	content: "Ctrl";
+	color: var(--vscode-sideBar-background);
+	text-align: center;
+	justify-content: center;
+	align-items: center;
+	content: "F1";
+	font-family: "codify";
 	font-style: normal;
 	font-weight: normal;
 	display: flex;
+	width: 16px;
+	height: 16px;
+	font-size: 8px;
+	font-weight: bold;
+	font-family: Arial, Helvetica, sans-serif;
+	background-color: var(--secondary);
 	text-decoration: inherit;
 	text-align: center;
 	font-variant: normal;
 	text-transform: none;
 	line-height: 1em;
-	font-size: 9px;
-	position: absolute;
-	bottom: 5px;
-	left: 5px;
 }
 #privacy {
 	font-size: 13px;
