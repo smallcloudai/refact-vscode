@@ -103,6 +103,16 @@ body.vscode-dark {
     padding-right: 10px;
 
 }
+.overrides__item .overrides__path {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+@media screen and (max-width: 350px) {
+    .overrides__item .overrides__path {
+        direction: rtl;
+    }
+}
 .overrides__selector select {
     border: 0;
     padding: 4px 8px;

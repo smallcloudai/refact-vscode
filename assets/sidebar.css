@@ -172,6 +172,41 @@ body.vscode-light #profile {
 	line-height: 1em;
 	font-size: 13px;
 }
+#keys {
+    font-size: 13px;
+	border: 1px solid var(--secondary);
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+    flex: 1 0 auto;
+    width: 32px;
+    height: 33px;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	margin: 5px 0;
+	margin-left: 5px;
+	position: relative;
+    display: none;
+}
+#keys span::before {
+	color: var(--secondary);
+	content: "Ctrl";
+	font-style: normal;
+	font-weight: normal;
+	display: flex;
+	text-decoration: inherit;
+	text-align: center;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1em;
+	font-size: 9px;
+	position: absolute;
+	bottom: 5px;
+	left: 5px;
+}
 #privacy {
 	font-size: 13px;
 	border: 1px solid var(--secondary);
@@ -709,7 +744,7 @@ body.vscode-light #logout {
 .toolbox-notice-hidden {
 	display: none;
 }
-@media screen and (max-width: 280px) {
+@media screen and (max-width: 380px) {
 	.sidebar-inline {
 		flex-direction: column;
         align-items: flex-start;

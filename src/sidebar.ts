@@ -206,6 +206,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 }
                 case "openSettings": {
                     vscode.commands.executeCommand("refactaicmd.openSettings");
+                    break;
+                }
+                case "openKeys": {
+                    vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
+                    break;
                 }
                 // case "checkSelection": {
                 //     this.check_selection();
@@ -423,6 +428,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <div class="sidebar-group">
                                 <button tabindex="-1" id="privacy"><span></span>Privacy</button>
                                 <button tabindex="-1" id="settings"><span></span></button>
+                                <button tabindex="-1" id="keys"><span></span></button>
                             </div>
                         </div>
                         <div class="sidebar-inline">

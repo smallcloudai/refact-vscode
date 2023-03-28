@@ -207,6 +207,11 @@
         vscode.postMessage({ type: "openSettings" });
     });
 
+    const keysButton = document.querySelector("#keys");
+    keysButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "openKeys" });
+    });
+
     const reportBugsButton = document.querySelector("#report_bugs");
     reportBugsButton.addEventListener("click", () => {
         vscode.postMessage({ type: "js2ts_report_bug" });
@@ -598,6 +603,7 @@
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
                 let settings = document.querySelector('#settings');
+                let keys = document.querySelector('#keys');
 
                 discord.style.display = 'inline-flex';
                 bug.style.display = 'inline-flex';
@@ -613,6 +619,7 @@
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
                 privacy.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
 
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
