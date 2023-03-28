@@ -31,7 +31,7 @@ export class StatusBarMenu {
     last_url: string = "";
     last_model_name: string = "";
     inference_attempted: boolean = false;
-    access_level: number = 0;
+    access_level: number = -1;
     // disable_lang: boolean = true;
     // language_name: string = "";
 
@@ -92,7 +92,7 @@ export class StatusBarMenu {
         } else {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
-            this.menu.tooltip = _website_message || _inference_message;
+            this.menu.tooltip = _website_message || _inference_message || "Welcome to Refact.ai";
         }
     }
 

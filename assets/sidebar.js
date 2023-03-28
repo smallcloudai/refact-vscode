@@ -13,7 +13,6 @@
     let longthink_functions_json;
     let editor_inform_how_many_lines_selected = 0;
     let editor_inform_file_access_level = 0;
-    let editor_ignore_selection_changes = false;
     let function_bookmarks = [];
 
     let history = [];
@@ -35,17 +34,8 @@
     }
 
     toolboxSearch.addEventListener("focus", (event) => {
-        editor_ignore_selection_changes = false;
         on_how_many_lines_selected();
     });
-
-    function ignore_selection_changes()
-    {
-        editor_ignore_selection_changes = true;
-        setTimeout(() => {
-            editor_ignore_selection_changes = false;
-        }, 100);
-    }
 
     toolboxSearch.addEventListener("keyup", (event) => {
         event.preventDefault();
@@ -135,7 +125,6 @@
                     intent: intent,
                     data_function: active.dataset.function, // this a string containing json
                 });
-                ignore_selection_changes();
             } else if (selected_in_list) {
                 let intent = toolboxSearch.value;
                 history.splice(0, 0, intent);
@@ -144,7 +133,6 @@
                     intent: intent,
                     data_function: selected_in_list.dataset.function, // this a string containing json
                 });
-                ignore_selection_changes();
             } else {
                 let intent = toolboxSearch.value;
                 history.splice(0, 0, intent);
@@ -157,7 +145,6 @@
                     intent: intent,
                     data_function: function_to_run, // this
                 });
-                ignore_selection_changes();
             }
             reset_everything_about_commands();
             toolboxSearch.value = '';
@@ -195,7 +182,6 @@
                 intent: intent,
                 data_function: target.dataset.function
             });
-            ignore_selection_changes();
             vscode.postMessage({
                 type: "focus_back_to_editor",
             });
@@ -584,9 +570,7 @@
             case "editor_inform":
                 editor_inform_how_many_lines_selected = message.selected_lines_count;
                 editor_inform_file_access_level = message.access_level;
-                if (!editor_ignore_selection_changes) {
-                    on_how_many_lines_selected();
-                }
+                on_how_many_lines_selected();
                 break;
             case "focus":
                 toolboxSearch.focus();

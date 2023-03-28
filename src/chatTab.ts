@@ -48,15 +48,17 @@ export class ChatTab {
 
         let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
         let code_snippet = "";
+        free_floating_tab.working_on_snippet_range = undefined;
+        free_floating_tab.working_on_snippet_editor = undefined;
         if (editor) {
             let selection = editor.selection;
-            selection = new vscode.Selection(selection.start.line, 0, selection.end.line, 999999);
-            code_snippet = editor.document.getText(selection);
-            free_floating_tab.working_on_snippet_range = selection;
-            free_floating_tab.working_on_snippet_editor = editor;
-        } else {
-            free_floating_tab.working_on_snippet_range = undefined;
-            free_floating_tab.working_on_snippet_editor = undefined;
+            let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
+            if (!empty) {
+                selection = new vscode.Selection(selection.start.line, 0, selection.end.line, 999999);
+                code_snippet = editor.document.getText(selection);
+                free_floating_tab.working_on_snippet_range = selection;
+                free_floating_tab.working_on_snippet_editor = editor;
+            }
         }
         free_floating_tab.working_on_snippet_code = code_snippet;
         if (question) {

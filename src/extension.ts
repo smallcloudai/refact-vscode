@@ -153,16 +153,15 @@ async function login_clicked()
 async function f1_pressed()
 {
     let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        return;
+    if (editor) {
+        let state = estate.state_of_editor(editor, "f1_pressed");
+        if (state && state.get_mode() === Mode.Diff) {
+            rollback_and_regen(editor);
+            return;
+        }
     }
-    let state = estate.state_of_editor(editor, "f1_pressed");
-    if (state && state.get_mode() === Mode.Diff) {
-        rollback_and_regen(editor);
-    } else {
-        vscode.commands.executeCommand("refactai-toolbox.focus");
-        vscode.commands.executeCommand("workbench.action.focusSideBar");
-    }
+    await vscode.commands.executeCommand("refactai-toolbox.focus");
+    await vscode.commands.executeCommand("workbench.action.focusSideBar");
 }
 
 
@@ -377,27 +376,34 @@ export async function status_bar_clicked()
         userLogin.login_message();
         return;
     }
+    let selection: string | undefined;
     if (!editor) {
-        return;
+        selection = await vscode.window.showInformationMessage(
+            "Welcome to Refact.ai 👋",
+            "Open Panel (F1)",
+        );
+    } else {
+        let document_filename = editor.document.fileName;
+        let access_level = await privacy.get_file_access(document_filename);
+        let chunks = document_filename.split("/");
+        let pause_completion = vscode.workspace.getConfiguration().get('refactai.pauseCompletion');
+        let buttons: string[] = [];
+        if (access_level > 0) {
+            buttons.push(pause_completion ? "Resume Completion" : "Pause Completion");
+        }
+        buttons.push("Privacy Rules");
+        selection = await vscode.window.showInformationMessage(
+            chunks[chunks.length - 1] + ": Access level " + access_level,
+            ...buttons
+        );
     }
-    let document_filename = editor.document.fileName;
-    let access_level = await privacy.get_file_access(document_filename);
-    let chunks = document_filename.split("/");
-    let pause_completion = vscode.workspace.getConfiguration().get('refactai.pauseCompletion');
-    let buttons: string[] = [];
-    if (access_level > 0) {
-        buttons.push(pause_completion ? "Resume Completion" : "Pause Completion");
-    }
-    buttons.push("Privacy Rules");
-    let selection = await vscode.window.showInformationMessage(
-        chunks[chunks.length - 1] + ": Access level " + access_level,
-        ...buttons
-    );
     if (selection === "Pause Completion") {
         vscode.workspace.getConfiguration().update('refactai.pauseCompletion', true, true);
     } else if (selection === "Resume Completion") {
         vscode.workspace.getConfiguration().update('refactai.pauseCompletion', false, true);
     } else if (selection === "Privacy Rules") {
         vscode.commands.executeCommand("refactaicmd.privacySettings");
+    } else if (selection === "Open Panel (F1)") {
+        vscode.commands.executeCommand("refactaicmd.activateToolbox");
     }
 }

@@ -73,7 +73,9 @@ export async function query_diff(
     let request = new fetchAPI.PendingRequest(undefined, cancelToken);
 
     await fetchAPI.cancel_all_requests_and_wait_until_finished();
-    await estate.back_to_normal(state);
+    if (state.get_mode() !== estate.Mode.Normal) {
+        await estate.back_to_normal(state);
+    }
     request.cancellationTokenSource = cancellationTokenSource;
     let login = await userLogin.inference_login();
     if (!login) { return; }

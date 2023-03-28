@@ -111,7 +111,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         let selection_empty = selection.isEmpty;
                         // let selected_lines_count = selection.end.line - selection.start.line + 1;
                         // let access_level = await privacy.get_file_access(editor.document.fileName);
-                        // TODO: should be, min < selected_lines_count < max, but we don't care because UI was disabled so wrong function is not likely to
+                        // should be, min < selected_lines_count < max, but we don't care because UI was disabled so wrong function is not likely to
                         // happen, and we have the access level check closer to the socket in query_diff()
                         if (selection_empty) {
                             function_name = function_dict.function_highlight;
@@ -133,6 +133,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             }
                         }
                         if (state) {
+                            let current_mode = state.get_mode();
+                            if (current_mode !== estate.Mode.Normal && current_mode !== estate.Mode.Highlight) {
+                                console.log([`don't run "${function_name}" because mode is ${current_mode}`]);
+                                return;
+                            }
                             state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
                             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
                             await estate.switch_mode(state, estate.Mode.Normal);
@@ -211,8 +216,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 //     break;
                 // }
             }
-        });
-    }
+        }); // onDidReceiveMessage
+
+        webviewView.webview.postMessage({ command: "focus" });
+    } // resolveWebView
 
     public async editor_inform_how_many_lines_selected(ev_editor: vscode.TextEditor|undefined)
     {
@@ -223,6 +230,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 selected_lines = 1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
             }
             access_level = await privacy.get_file_access(ev_editor.document.fileName);
+        }
+        let state = estate.state_of_editor(ev_editor, "how_many_lines_selected");
+        if (state) {
+            let current_mode = state.get_mode();
+            if (current_mode !== estate.Mode.Normal && current_mode !== estate.Mode.Highlight) {
+                access_level = -1;
+            }
         }
         this.selected_lines_count = selected_lines;
         this.access_level = access_level;
