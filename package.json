@@ -11,8 +11,8 @@
 	"vsce": {
 		"baseImagesUrl": "https://www.smallcloud.ai/img/"
 	},
-	"homepage": "https://refact.smallcloud.ai",
-	"author": "Small Magellanic Cloud AI <info@smallcloud.ai> (https://refact.smallcloud.ai)",
+	"homepage": "https://refact.ai",
+	"author": "Small Magellanic Cloud AI <info@smallcloud.tech> (https://refact.ai)",
     "repository": {
         "type": "git",
         "url": "https://github.com/smallcloudai/refact-vscode"
@@ -21,7 +21,7 @@
         "url": "https://github.com/smallcloudai/refact-vscode/issues",
         "email": "support@smallcloud.tech"
     },
-	"version": "1.0.27",
+	"version": "1.0.28",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
