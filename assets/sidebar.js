@@ -486,6 +486,9 @@
                 editor_inform_how_many_lines_selected <= function_dict.selected_lines_max);
             let good_access_level = true;
             let access_level_msg = "";
+            if (editor_inform_file_access_level === -1) {
+                good_access_level = false;
+            }
             if (editor_inform_file_access_level === 0) {
                 good_access_level = false;
                 access_level_msg = "Privacy: access to this file is restricted.";
@@ -497,8 +500,12 @@
             if (!good_access_level) {
                 run.classList.add('toolbox-run-disabled');
                 content_run.classList.add('toolbox-run-disabled');
-                notice.style.display = 'inline-flex';
-                notice.innerHTML = access_level_msg;
+                if (access_level_msg) {
+                    notice.style.display = 'inline-flex';
+                    notice.innerHTML = access_level_msg;
+                } else {
+                    notice.style.display = 'none';
+                }
             } else if (function_dict.supports_selection === 1 && function_dict.supports_highlight === 0 && !selection_within_limits) {
                 run.classList.add('toolbox-run-disabled');
                 content_run.classList.add('toolbox-run-disabled');

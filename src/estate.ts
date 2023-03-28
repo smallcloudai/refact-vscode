@@ -238,6 +238,14 @@ export async function back_to_normal(state: StateOfEditor)
 }
 
 
+function info2sidebar(ev_editor: vscode.TextEditor|undefined)
+{
+    if(global.side_panel !== undefined) {
+        global.side_panel.editor_inform_how_many_lines_selected(ev_editor);
+    }
+}
+
+
 export function keyboard_events_on(editor: vscode.TextEditor)
 {
     let state = state_of_editor(editor, "keyb_on");
@@ -249,13 +257,6 @@ export function keyboard_events_on(editor: vscode.TextEditor)
     }
     if (state.text_edited_event) {
         state.text_edited_event.dispose();
-    }
-
-    function info2sidebar(ev_editor: vscode.TextEditor)
-    {
-        if(global.side_panel !== undefined) {
-            global.side_panel.editor_inform_how_many_lines_selected(ev_editor);
-        }
     }
 
     state.cursor_move_event = vscode.window.onDidChangeTextEditorSelection(async (ev: vscode.TextEditorSelectionChangeEvent) => {
@@ -283,10 +284,7 @@ export function keyboard_events_on(editor: vscode.TextEditor)
         }
         on_text_edited(editor);
     });
-    let active_editor = vscode.window.activeTextEditor;
-    if (active_editor) {
-        info2sidebar(active_editor);
-    }
+    info2sidebar(vscode.window.activeTextEditor);
 }
 
 
@@ -335,17 +333,17 @@ export function on_text_edited(editor: vscode.TextEditor)
 
 function on_change_active_editor(editor: vscode.TextEditor | undefined)
 {
-    if (!editor) {
-        return;
-    }
-    let state_stored = editor2state.get(editor);
-    if (!state_stored) {
-        let state = state_of_editor(editor, "change_active");
-        if (state) {
-            // this does almost nothing, but the state will be there for inline completion to pick up
-            switch_mode(state, Mode.Normal);
+    if (editor) {
+        let state_stored = editor2state.get(editor);
+        if (!state_stored) {
+            let state = state_of_editor(editor, "change_active");
+            if (state) {
+                // this does almost nothing, but the state will be there for inline completion to pick up
+                switch_mode(state, Mode.Normal);
+            }
         }
     }
+    info2sidebar(editor);
 }
 
 

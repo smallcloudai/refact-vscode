@@ -20,6 +20,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
     _history: string[] = [];
     selected_lines_count: number = 0;
+    access_level: number = -1;
 
     constructor(private readonly _context: any) {}
 
@@ -33,7 +34,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         setTimeout(() => {
             webviewView.webview.postMessage({
                 command: "editor_inform",
-                value: this.selected_lines_count
+                selected_lines_count: this.selected_lines_count,
+                access_level: this.access_level,
             });
         }, 1000);
 
@@ -212,14 +214,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    public async editor_inform_how_many_lines_selected(ev_editor: vscode.TextEditor)
+    public async editor_inform_how_many_lines_selected(ev_editor: vscode.TextEditor|undefined)
     {
         let selected_lines: number = 0;
-        if (!ev_editor.selection.isEmpty) {
-            selected_lines = 1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
+        let access_level: number = -1;
+        if (ev_editor) {
+            if (!ev_editor.selection.isEmpty) {
+                selected_lines = 1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
+            }
+            access_level = await privacy.get_file_access(ev_editor.document.fileName);
         }
         this.selected_lines_count = selected_lines;
-        let access_level = await privacy.get_file_access(ev_editor.document.fileName);
+        this.access_level = access_level;
         if (this._view) {
             if (this._view.webview) {
                 this._view.webview.postMessage({
