@@ -1,4 +1,4 @@
-# Refact.ai Visual Studio Code Pligin: The AI Assistant for Code Writing and Refactoring
+# Refact.ai Visual Studio Code Extension: The AI Assistant for Code Writing and Refactoring
 
 
 Refact is a cutting-edge AI tool designed to assist developers in writing and refining code.
