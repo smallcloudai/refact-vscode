@@ -10,9 +10,9 @@ import * as privacy from "./privacy";
 import { ChatTab } from './chatTab';
 
 
-async function open_chat_tab(question: string, editor: vscode.TextEditor | undefined, model: string = "")
+async function open_chat_tab(question: string, editor: vscode.TextEditor | undefined, attach_default: boolean, model: string)
 {
-    ChatTab.activate_from_outside(question, editor, model);
+    await ChatTab.activate_from_outside(question, editor, attach_default, model);
 }
 
 
@@ -73,21 +73,22 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 case "open_new_chat": {
-                    let question = data.value;
+                    let question = data.question;
+                    let chat_empty = data.chat_empty;
                     if (!question) {
                         question = "";
                     }
                     let editor = vscode.window.activeTextEditor;
                     if (editor) {
                         let selection = editor.selection;
+                        let attach_default = !selection.isEmpty || !chat_empty;
                         if(selection.isEmpty) {
-                            await open_chat_tab(question, undefined);
-                        }
-                        else {
-                            await open_chat_tab(question, editor);
+                            await open_chat_tab(question, editor, attach_default, data.chat_model);
+                        } else {
+                            await open_chat_tab(question, editor, attach_default, data.chat_model);
                         }
                     } else {
-                        await open_chat_tab("", undefined);
+                        await open_chat_tab("", undefined, false, "");
                     }
                     break;
                 }
@@ -158,8 +159,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         }
                         intent = data.intent;
                     }
-                    if (model_suggest === "open-chat") {
-                        await open_chat_tab(intent, editor);
+                    if (function_name.includes("free-chat")) {
+                        await open_chat_tab(intent, editor, true, model_suggest);
                     } else {
                         await extension.follow_intent(intent, function_name, model_suggest, !!function_dict.third_party);
                     }
@@ -424,7 +425,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                         <button tabindex="-1" id="login">Login / Register</button>
                         <div class="sidebar-inline">
-                            <button tabindex="-1" id="chat"><span></span>Chat</button>
+                            <button tabindex="-1" id="chat"><span></span>New Chat</button>
                             <div class="sidebar-group">
                                 <button tabindex="-1" id="privacy"><span></span>Privacy</button>
                                 <button tabindex="-1" id="settings"><span></span></button>

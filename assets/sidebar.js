@@ -49,7 +49,7 @@
                 current_history++;
                 toolboxSearch.value = history[current_history];
             }
-            if (!command_mode && !history_mode) {
+            if (!command_mode && !history_mode && history.length > 0) {
                 history_backup = toolboxSearch.value;
                 toolboxSearch.value = history[current_history];
                 history_mode = true;
@@ -115,7 +115,7 @@
             let single_page = document.querySelector(".item-active");  // single page
             if(toolboxSearch.value.endsWith("?")) {
                 let intent = toolboxSearch.value;
-                vscode.postMessage({ type: "open_new_chat", value: intent });
+                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: active.dataset.model });
             }
             else if (single_page) {
                 let intent = toolboxSearch.value;
@@ -199,7 +199,7 @@
 
     const chatButton = document.querySelector("#chat");
     chatButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "open_new_chat", value: '' });
+        vscode.postMessage({ type: "open_new_chat", question: '', chat_empty: true, chat_model: "" });
     });
 
     const settingsButton = document.querySelector("#settings");
@@ -425,10 +425,13 @@
             body_controls.appendChild(likes_button);
             body_controls.appendChild(bookmark_button);
 
-
             // function label
             const label_wrapper = document.createElement("span");
-            label_wrapper.innerHTML = item.label;
+            if (item.third_party) {
+                label_wrapper.innerHTML = item.label + " " + item.model;
+            } else {
+                label_wrapper.innerHTML = item.label;
+            }
             // selection notice
             const selection_notice = document.createElement("div");
             selection_notice.classList.add('toolbox-notice');
@@ -497,7 +500,12 @@
                 } else {
                     notice.style.display = 'none';
                 }
-            } else if (function_dict.supports_selection === 1 && function_dict.supports_highlight === 0 && !selection_within_limits) {
+            } else if (
+                !function_dict.function_name.includes("free-chat") &&
+                function_dict.supports_selection === 1 &&
+                function_dict.supports_highlight === 0 &&
+                !selection_within_limits
+            ) {
                 run.classList.add('toolbox-run-disabled');
                 content_run.classList.add('toolbox-run-disabled');
                 notice.style.display = 'inline-flex';

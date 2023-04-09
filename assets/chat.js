@@ -24,8 +24,9 @@
         const message = chat_input.value;
         let chat_model_combo = document.getElementById("chat-model");
         let chat_model = chat_model_combo.options[chat_model_combo.selectedIndex].value;
+        let chat_attach_file = document.getElementById("chat-attach");
         chat_input.value = '';
-        vscode.postMessage({ type: "question-posted-within-tab", chat_question: message, chat_model: chat_model });
+        vscode.postMessage({ type: "question-posted-within-tab", chat_question: message, chat_model: chat_model, chat_attach_file: chat_attach_file.checked });
     });
 
     stop_button.addEventListener('click', () => {
@@ -166,7 +167,7 @@
 		switch (message.command) {
         case "chat-set-fireup-options":
             let chat_attach_file = document.getElementById("chat-attach");
-            chat_attach_file.checked = !!message.chat_attach_file;
+            chat_attach_file.checked = message.chat_attach_default;
             let label = document.getElementById("chat-attach-label");
             if (message.chat_attach_file) {
                 label.innerText = `Attach ${message.chat_attach_file}`;

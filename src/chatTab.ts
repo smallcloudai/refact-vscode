@@ -13,6 +13,7 @@ export class ChatTab {
     public web_panel: vscode.WebviewPanel;
     public messages: [string, string][];
     public cancellationTokenSource: vscode.CancellationTokenSource;
+    public working_on_attach_code: string = "";
     public working_on_snippet_code: string = "";
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
@@ -29,7 +30,7 @@ export class ChatTab {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
-    public static async activate_from_outside(question: string, editor: vscode.TextEditor | undefined, use_model: string)
+    public static async activate_from_outside(question: string, editor: vscode.TextEditor | undefined, attach_default: boolean, use_model: string)
     {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -60,6 +61,7 @@ export class ChatTab {
             chat_models: [""],
             chat_use_model: use_model,
             chat_attach_file: "",
+            chat_attach_default: false,
         };
         if (global.longthink_functions_today) {
             fireup_message["chat_models"] = [];
@@ -76,7 +78,8 @@ export class ChatTab {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
             if (!empty) {
-                selection = new vscode.Selection(selection.start.line, 0, selection.end.line, 999999);
+                let last_line_empty = selection.end.character === 0;
+                selection = new vscode.Selection(selection.start.line, 0, selection.end.line, last_line_empty ? 0 : 999999);
                 code_snippet = editor.document.getText(selection);
                 free_floating_tab.working_on_snippet_range = selection;
                 free_floating_tab.working_on_snippet_editor = editor;
@@ -85,15 +88,37 @@ export class ChatTab {
             let fn = editor.document.fileName;
             let short_fn = fn.replace(/.*[\/\\]/, "");
             fireup_message["chat_attach_file"] = short_fn;
+            fireup_message["chat_attach_default"] = attach_default;
+            let pos0 = selection.start;
+            let pos1 = selection.end;
+            let attach = "";
+            while (1) {
+                let attach_test = editor.document.getText(new vscode.Range(pos0, pos1));
+                if (attach_test.length > 2000) {
+                    break;
+                }
+                attach = attach_test;
+                let moved = false;
+                if (pos0.line > 0) {
+                    pos0 = new vscode.Position(pos0.line - 1, 0);
+                    moved = true;
+                }
+                if (pos1.line < editor.document.lineCount - 1) {
+                    pos1 = new vscode.Position(pos1.line + 1, 999999);
+                    moved = true;
+                }
+                if (!moved) {
+                    break;
+                }
+            }
+            free_floating_tab.working_on_attach_code = attach;
         }
         free_floating_tab.working_on_snippet_code = code_snippet;
         if (question) {
             if (code_snippet) {
                 question = "```\n" + code_snippet + "\n```\n" + question;
             }
-            if (question) { // no question => just a button was pressed
-                free_floating_tab.chat_post_question(question, use_model);
-            }
+            free_floating_tab.chat_post_question(question, use_model, !!code_snippet);
         } else {
             let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
             if (code_snippet) {
@@ -145,7 +170,7 @@ export class ChatTab {
                     break;
                 }
 				case "question-posted-within-tab": {
-                    await free_floating_tab.chat_post_question(data.chat_question, data.chat_model);
+                    await free_floating_tab.chat_post_question(data.chat_question, data.chat_model, data.chat_attach_file);
                     break;
 				}
                 case "stop-clicked": {
@@ -190,7 +215,7 @@ export class ChatTab {
         });
     }
 
-    async chat_post_question(question: string, model: string)
+    async chat_post_question(question: string, model: string, attach_file: boolean)
     {
         if(!this.web_panel) {
             return false;
@@ -218,6 +243,10 @@ export class ChatTab {
                 first_15_characters += "…";
             }
             this.web_panel.title = first_15_characters;
+            if (attach_file) {
+                this.messages.push(["user", this.working_on_attach_code]);
+                this.messages.push(["assistant", "Thanks for context, what's your question?"]);
+            }
         }
 
         if (this.messages.length > 0 && this.messages[this.messages.length - 1][0] === "user") {
