@@ -4,6 +4,7 @@ import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 import * as estate from "./estate";
+import * as crlf from "./crlf";
 
 
 export class ChatTab {
@@ -15,6 +16,7 @@ export class ChatTab {
     public working_on_snippet_code: string = "";
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
+    public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
@@ -38,7 +40,7 @@ export class ChatTab {
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab",
             "Refact.ai Chat",
-            vscode.ViewColumn.One,
+            vscode.ViewColumn.Two,
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
@@ -50,6 +52,7 @@ export class ChatTab {
         let code_snippet = "";
         free_floating_tab.working_on_snippet_range = undefined;
         free_floating_tab.working_on_snippet_editor = undefined;
+        free_floating_tab.working_on_snippet_column = undefined;
         if (editor) {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
@@ -58,6 +61,7 @@ export class ChatTab {
                 code_snippet = editor.document.getText(selection);
                 free_floating_tab.working_on_snippet_range = selection;
                 free_floating_tab.working_on_snippet_editor = editor;
+                free_floating_tab.working_on_snippet_column = editor.viewColumn;
             }
         }
         free_floating_tab.working_on_snippet_code = code_snippet;
@@ -92,7 +96,7 @@ export class ChatTab {
                     if (!free_floating_tab.working_on_snippet_editor) {
                         return;
                     }
-                    await vscode.window.showTextDocument(free_floating_tab.working_on_snippet_editor.document, vscode.ViewColumn.Active);
+                    await vscode.window.showTextDocument(free_floating_tab.working_on_snippet_editor.document, free_floating_tab.working_on_snippet_column);
                     let state = estate.state_of_document(free_floating_tab.working_on_snippet_editor.document);
                     if (!state) {
                         return;
@@ -111,7 +115,9 @@ export class ChatTab {
                     let text = editor.document.getText();
                     let snippet_ofs0 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.start);
                     let snippet_ofs1 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.end);
-                    state.showing_diff_modif_doc = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
+                    let modif_doc: string = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
+                    [modif_doc, ] = crlf.cleanup_cr_lf(modif_doc, []);
+                    state.showing_diff_modif_doc = modif_doc;
                     state.showing_diff_move_cursor = true;
                     estate.switch_mode(state, estate.Mode.Diff);
                     break;
@@ -251,6 +257,7 @@ export class ChatTab {
 
         async function _streaming_end_callback(any_error: boolean)
         {
+            // stack_this.web_panel.reveal();
             console.log("streaming end callback, error: " + any_error);
             if (any_error) {
                 let backup_user_phrase = "";

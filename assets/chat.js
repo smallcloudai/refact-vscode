@@ -6,8 +6,6 @@
     const chat_content = document.querySelector('.refactcss-chat__content');
     const stop_button = document.querySelector('#chat-stop');
 
-    chat_input.focus();
-
     function input_care()
     {
         chat_input.style.height = 'auto';
@@ -190,6 +188,9 @@
             break;
         }
         visibility_control(input_should_be_visible);
+        if (message.command.includes("streaming")) {
+            chat_input.focus();
+        }
     });
 
     function visibility_control(input_should_be_visible) {
@@ -204,4 +205,6 @@
         }
         auto_scroll();
     }
+
+    chat_input.focus();
 })();
