@@ -117,7 +117,12 @@ export class PendingRequest {
                         }
                     });
                     readable.on("close", async () => {
-                        console.log(["readable end", this.streaming_buf]);
+                        // console.log(["readable end", this.streaming_buf]);
+                        if (this.streaming_buf.startsWith("{")) {
+                            // likely a error, because it's not a stream, no "data: " prefix
+                            console.log(["looks like a error", this.streaming_buf]);
+                            this.streaming_error = true;
+                        }
                         if (this.streaming_end_callback) {
                             await this.streaming_end_callback(this.streaming_error);
                         }
@@ -360,7 +365,8 @@ export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
     messages: [string, string][],
-    functionName: string,
+    function_name: string,
+    model: string,
     stop_tokens: string[],
     third_party: boolean = false,
 ): [Promise<fetchH2.Response>, estate.ApiFields]
@@ -374,8 +380,9 @@ export function fetch_chat_promise(
     let api_fields = new estate.ApiFields();
     api_fields.scope = scope;
     api_fields.url = url;
-    api_fields.function = functionName;
+    api_fields.function = function_name;
     api_fields.ts_req = Date.now();
+    api_fields.model = model;
     let json_messages = [];
     for (let i=0; i<messages.length; i++) {
         let role = messages[i][0];
@@ -388,8 +395,9 @@ export function fetch_chat_promise(
     }
     const body = JSON.stringify({
         "messages": json_messages,
-        "function": functionName,
+        "function": function_name,
         "stop": stop_tokens,
+        "model": model,
         "client": `vscode-${client_version}`,
     });
     const headers = {

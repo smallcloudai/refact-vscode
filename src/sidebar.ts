@@ -10,9 +10,9 @@ import * as privacy from "./privacy";
 import { ChatTab } from './chatTab';
 
 
-async function open_chat_tab(question: string, editor: vscode.TextEditor | undefined)
+async function open_chat_tab(question: string, editor: vscode.TextEditor | undefined, model: string = "")
 {
-    ChatTab.activate_from_outside(question, editor);
+    ChatTab.activate_from_outside(question, editor, model);
 }
 
 

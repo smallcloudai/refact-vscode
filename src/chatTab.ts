@@ -17,7 +17,6 @@ export class ChatTab {
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
-    public use_model: string = "";
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
@@ -30,7 +29,7 @@ export class ChatTab {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
-    public static async activate_from_outside(question: string, editor: vscode.TextEditor | undefined)
+    public static async activate_from_outside(question: string, editor: vscode.TextEditor | undefined, use_model: string)
     {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -53,7 +52,9 @@ export class ChatTab {
         free_floating_tab.working_on_snippet_range = undefined;
         free_floating_tab.working_on_snippet_editor = undefined;
         free_floating_tab.working_on_snippet_column = undefined;
-        let use_model: string =  await chat_model_get();
+        if (!use_model) {
+            use_model =  await chat_model_get();
+        }
         let fireup_message = {
             command: "chat-set-fireup-options",
             chat_models: [""],
@@ -91,7 +92,7 @@ export class ChatTab {
                 question = "```\n" + code_snippet + "\n```\n" + question;
             }
             if (question) { // no question => just a button was pressed
-                free_floating_tab.chat_post_question(question);
+                free_floating_tab.chat_post_question(question, use_model);
             }
         } else {
             let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
@@ -310,6 +311,7 @@ export class ChatTab {
             "chat-tab",
             this.messages,
             "freechat",
+            model,
             [],
         ));
     }
@@ -395,6 +397,9 @@ export async function chat_model_set(chat_model: string)
 {
     let context: vscode.ExtensionContext | undefined = global.global_context;
     if (!context) {
+        return;
+    }
+    if (!chat_model) {
         return;
     }
     await context.globalState.update("chat_model", chat_model);
