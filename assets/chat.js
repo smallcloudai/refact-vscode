@@ -22,8 +22,10 @@
 
     chat_send_button.addEventListener('click', () => {
         const message = chat_input.value;
+        let chat_model_combo = document.getElementById("chat-model");
+        let chat_model = chat_model_combo.options[chat_model_combo.selectedIndex].value;
         chat_input.value = '';
-        vscode.postMessage({ type: "question-posted-within-tab", value: message});
+        vscode.postMessage({ type: "question-posted-within-tab", chat_question: message, chat_model: chat_model });
     });
 
     stop_button.addEventListener('click', () => {
@@ -162,6 +164,31 @@
 		const message = event.data;
         let input_should_be_visible = false;
 		switch (message.command) {
+        case "chat-set-fireup-options":
+            let chat_attach_file = document.getElementById("chat-attach");
+            chat_attach_file.checked = !!message.chat_attach_file;
+            let label = document.getElementById("chat-attach-label");
+            if (message.chat_attach_file) {
+                label.innerText = `Attach ${message.chat_attach_file}`;
+            } else {
+                label.innerText = `Attach file`;
+                label.style.opacity = 0.5;
+            }
+            let chat_model_combo = document.getElementById("chat-model");
+            for (let i = 0; i < message.chat_models.length; i++) {
+                let option = document.createElement("option");
+                option.value = message.chat_models[i];
+                option.text = message.chat_models[i];
+                if (message.chat_use_model === message.chat_models[i]) {
+                    option.selected = true;
+                }
+                if (message.chat_use_model==="" && i===0) {
+                    option.selected = true;
+                }
+                chat_model_combo.appendChild(option);
+            }
+            input_should_be_visible = true;
+            break;
         case "chat-end-streaming":
             input_should_be_visible = true;
             chat_add_code_buttons();

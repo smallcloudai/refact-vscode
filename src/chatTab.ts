@@ -17,6 +17,7 @@ export class ChatTab {
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
+    public use_model: string = "";
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
@@ -24,13 +25,12 @@ export class ChatTab {
         this.web_panel.webview.html = ChatTab.get_html_for_webview(
             this.web_panel.webview,
             extensionUri,
-            context
         );
         this.messages = [];
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
-    public static activate_from_outside(question: string, editor: vscode.TextEditor | undefined)
+    public static async activate_from_outside(question: string, editor: vscode.TextEditor | undefined)
     {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -53,6 +53,24 @@ export class ChatTab {
         free_floating_tab.working_on_snippet_range = undefined;
         free_floating_tab.working_on_snippet_editor = undefined;
         free_floating_tab.working_on_snippet_column = undefined;
+        let use_model: string =  await chat_model_get();
+        let fireup_message = {
+            command: "chat-set-fireup-options",
+            chat_models: [""],
+            chat_use_model: use_model,
+            chat_attach_file: "",
+        };
+        if (global.longthink_functions_today) {
+            fireup_message["chat_models"] = [];
+            const keys = Object.keys(global.longthink_functions_today);
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                if (key.includes("chat-")) {
+                    let function_dict = global.longthink_functions_today[key];
+                    fireup_message["chat_models"].push(function_dict.model);
+                }
+            }
+        }
         if (editor) {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
@@ -63,6 +81,9 @@ export class ChatTab {
                 free_floating_tab.working_on_snippet_editor = editor;
                 free_floating_tab.working_on_snippet_column = editor.viewColumn;
             }
+            let fn = editor.document.fileName;
+            let short_fn = fn.replace(/.*[\/\\]/, "");
+            fireup_message["chat_attach_file"] = short_fn;
         }
         free_floating_tab.working_on_snippet_code = code_snippet;
         if (question) {
@@ -123,7 +144,7 @@ export class ChatTab {
                     break;
                 }
 				case "question-posted-within-tab": {
-                    await free_floating_tab.chat_post_question(data.value);
+                    await free_floating_tab.chat_post_question(data.chat_question, data.chat_model);
                     break;
 				}
                 case "stop-clicked": {
@@ -132,6 +153,8 @@ export class ChatTab {
                 }
 			}
 		});
+
+        panel.webview.postMessage(fireup_message);
     }
 
     // public dispose()
@@ -166,7 +189,7 @@ export class ChatTab {
         });
     }
 
-    async chat_post_question(question: string)
+    async chat_post_question(question: string, model: string)
     {
         if(!this.web_panel) {
             return false;
@@ -275,6 +298,7 @@ export class ChatTab {
             } else {
                 stack_this.messages.push(["assistant", answer]);
                 stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
+                chat_model_set(model);  // successfully used model, save it
             }
         }
 
@@ -293,7 +317,6 @@ export class ChatTab {
     static get_html_for_webview(
         webview: vscode.Webview,
         extensionUri: any,
-        cnt: any
     ): string
     {
         const scriptUri = webview.asWebviewUri(
@@ -322,6 +345,9 @@ export class ChatTab {
             <body>
                 <div class="refactcss-chat">
                     <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
+                    <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
+                    <div>Use model:<select id="chat-model">
+                    </select></div>
                     <div class="refactcss-chat__content">
                     </div>
                     <div class="refactcss-chat__commands">
@@ -346,6 +372,32 @@ export class ChatTab {
         }
         return text;
     }
+}
+
+
+export async function chat_model_get(): Promise<string>
+{
+    let context: vscode.ExtensionContext | undefined = global.global_context;
+    if (!context) {
+        return "";
+    }
+    let chat_model_ = await context.globalState.get("chat_model");
+    let chat_model: string = "";
+    if (typeof chat_model_ !== "string") {
+        chat_model = "";
+    } else {
+        chat_model = chat_model_;
+    }
+    return chat_model;
+}
+
+export async function chat_model_set(chat_model: string)
+{
+    let context: vscode.ExtensionContext | undefined = global.global_context;
+    if (!context) {
+        return;
+    }
+    await context.globalState.update("chat_model", chat_model);
 }
 
 export default ChatTab;

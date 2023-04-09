@@ -10,7 +10,7 @@ import * as privacy from "./privacy";
 import { ChatTab } from './chatTab';
 
 
-function open_chat_tab(question: string, editor: vscode.TextEditor | undefined)
+async function open_chat_tab(question: string, editor: vscode.TextEditor | undefined)
 {
     ChatTab.activate_from_outside(question, editor);
 }
@@ -81,13 +81,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     if (editor) {
                         let selection = editor.selection;
                         if(selection.isEmpty) {
-                            open_chat_tab(question, undefined);
+                            await open_chat_tab(question, undefined);
                         }
                         else {
-                            open_chat_tab(question, editor);
+                            await open_chat_tab(question, editor);
                         }
                     } else {
-                        open_chat_tab("", undefined);
+                        await open_chat_tab("", undefined);
                     }
                     break;
                 }
@@ -159,7 +159,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         intent = data.intent;
                     }
                     if (model_suggest === "open-chat") {
-                        open_chat_tab(intent, editor);
+                        await open_chat_tab(intent, editor);
                     } else {
                         await extension.follow_intent(intent, function_name, model_suggest, !!function_dict.third_party);
                     }
