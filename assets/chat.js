@@ -5,6 +5,7 @@
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.refactcss-chat__content');
     const stop_button = document.querySelector('#chat-stop');
+    let chat_controls_moved = false;
 
     function input_care()
     {
@@ -27,6 +28,14 @@
         let chat_attach_file = document.getElementById("chat-attach");
         chat_input.value = '';
         vscode.postMessage({ type: "question-posted-within-tab", chat_question: message, chat_model: chat_model, chat_attach_file: chat_attach_file.checked });
+        if(!chat_controls_moved) {
+            const chat_controls = document.querySelector('.refactcss-chat__controls');
+            const chat_content = document.querySelector('.refactcss-chat__content');
+            chat_content.appendChild(chat_controls);
+            chat_controls_moved = true;
+            const chat_label = document.getElementById("chat-attach-label");
+            chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
+        }
     });
 
     stop_button.addEventListener('click', () => {
@@ -151,14 +160,10 @@
         document.body.removeChild(textarea);
     }
 
-    let currentHeight = document.documentElement.scrollHeight;
+    let currentHeight = document.querySelector('.refactcss-chat__content');
     function auto_scroll() {
         input_care();
-        let newHeight = document.documentElement.scrollHeight;
-        if (newHeight !== currentHeight) {
-            window.scrollTo(0, newHeight);
-            currentHeight = newHeight;
-        }
+        currentHeight.scrollTop = currentHeight.scrollHeight;
     }
 
     window.addEventListener("message", (event) => {
@@ -174,6 +179,8 @@
             } else {
                 label.innerText = `Attach file`;
                 label.style.opacity = 0.5;
+                label.parentElement.style.opacity = 0.35;
+                label.parentElement.style.pointerEvents = 'none';
             }
             let chat_model_combo = document.getElementById("chat-model");
             for (let i = 0; i < message.chat_models.length; i++) {
