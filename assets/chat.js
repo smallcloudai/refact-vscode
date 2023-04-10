@@ -107,7 +107,7 @@
         for (let i = 0; i<snippets.length; i++) {
             let pre = snippets[i];
             // const code = pre.innerHTML;
-            if (raw_snippets.length < 2*i + 1) {
+            if (raw_snippets.length <= 2*i + 1) {
                 continue;
             }
             const code = backquote_backquote_backquote_remove_syntax_highlighting(raw_snippets[2*i + 1]);
