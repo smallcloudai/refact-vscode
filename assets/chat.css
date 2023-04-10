@@ -86,6 +86,7 @@ body.vscode-dark {
     margin-left: auto;
     overflow: hidden;
 	box-sizing: border-box;
+	position: relative;
 }
 .refactcss-chat__answer {
 	margin-top: 10px;

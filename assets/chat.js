@@ -52,7 +52,8 @@
         auto_scroll();
     });
 
-    var last_answer_div = null;
+    let last_answer_div = null;  // unfinished answers go the same div
+    let answer_counter = 0;
 
     function chat_render(data)
     {
@@ -63,14 +64,39 @@
         if (Object.keys(data).length === 0) { return; };
         const message_pair_div = document.createElement('div');
         message_pair_div.classList.add('refactcss-chat__item');
+        message_pair_div.dataset.answer_counter = answer_counter;
 
         if (data.question_html) {
+            answer_counter += 1;
             const question_div = document.createElement('div');
             question_div.classList.add('refactcss-chat__question');
             question_div.innerHTML = data.question_html;
             question_div.dataset.raw = data.question_raw;
+            question_div.dataset.messages_backup = JSON.stringify(data.messages_backup);
+            question_div.dataset.question_backup = data.question_raw;
             message_pair_div.appendChild(question_div);
             last_answer_div = null;
+            const retry_button = document.createElement('button');
+            retry_button.innerText = 'Retry';
+            retry_button.classList.add('refactcss-chat__copybutton');
+            question_div.appendChild(retry_button);
+            retry_button.addEventListener('click', () => {
+                vscode.postMessage({
+                    type: "reset-messages",
+                    messages_backup: JSON.parse(question_div.dataset.messages_backup)
+                });
+                chat_input.value = question_div.dataset.question_backup;
+                answer_counter = parseInt(message_pair_div.dataset.answer_counter);
+                const chats = document.querySelectorAll('.refactcss-chat__item');
+                for (let i = chats.length - 1; i >= 0; i--) {
+                    const chat = chats[i];
+                    if (parseInt(chat.dataset.answer_counter) >= answer_counter) {
+                        chat.remove();
+                    }
+                }
+                visibility_control(true);
+                chat_input.focus();
+            });
         }
 
         if (!last_answer_div && data.answer_html) {
