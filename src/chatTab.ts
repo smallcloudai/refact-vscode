@@ -177,6 +177,10 @@ export class ChatTab {
                     free_floating_tab.cancellationTokenSource.cancel();
                     break;
                 }
+                case "reset-messages": {
+                    free_floating_tab.messages = data.messages_backup;
+                    break;
+                }
 			}
 		});
 
@@ -195,7 +199,7 @@ export class ChatTab {
     //     }
     // }
 
-    private _question_to_div(question: string)
+    private _question_to_div(question: string, messages_backup: [string, string][])
     {
         let valid_html = false;
         let html = "";
@@ -211,7 +215,8 @@ export class ChatTab {
         this.web_panel.webview.postMessage({
             command: "chat-post-question",
             question_html: html,
-            question_raw: question
+            question_raw: question,
+            messages_backup: messages_backup,
         });
     }
 
@@ -253,12 +258,13 @@ export class ChatTab {
             this.messages.length -= 1;
         }
 
+        let messages_backup = this.messages.slice();
         this.messages.push(["user", question]);
         if (this.messages.length > 10) {
             this.messages.shift();
             this.messages.shift(); // so it always starts with a user
         }
-        this._question_to_div(question);
+        this._question_to_div(question, messages_backup);
         this.web_panel.webview.postMessage({
             command: "chat-post-answer",
             answer_html: "⏳",
