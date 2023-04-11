@@ -136,9 +136,9 @@
             } else {
                 let intent = toolboxSearch.value;
                 history.splice(0, 0, intent);
-                let function_to_run = JSON.stringify(longthink_functions_today['hl-and-fix']);
+                let function_to_run = JSON.stringify(longthink_functions_today['hl-and-fix'] || longthink_functions_today['staging-hl-and-fix']);
                 if(editor_inform_how_many_lines_selected > 0) {
-                    function_to_run = JSON.stringify(longthink_functions_today['select-and-refactor']);
+                    function_to_run = JSON.stringify(longthink_functions_today['select-and-refactor'] || longthink_functions_today['staging-select-and-refactor']);
                 }
                 vscode.postMessage({
                     type: "function_activated",
