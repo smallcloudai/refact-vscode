@@ -428,7 +428,7 @@
             // function label
             const label_wrapper = document.createElement("span");
             if (item.third_party) {
-                label_wrapper.innerHTML = item.label + " " + item.model;
+                label_wrapper.innerHTML = key;
             } else {
                 label_wrapper.innerHTML = item.label;
             }
