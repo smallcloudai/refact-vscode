@@ -35,6 +35,7 @@
             chat_controls_moved = true;
             const chat_label = document.getElementById("chat-attach-label");
             chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
+            document.querySelector('.refactcss-chat__panel').style.maxHeight = '180px';
         }
     });
 

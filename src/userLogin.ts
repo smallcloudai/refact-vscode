@@ -131,8 +131,12 @@ export async function login()
             global.user_logged_in = json.account;
             global.user_metering_balance = json.metering_balance;
             global.streamlined_login_ticket = "";
+            console.log('................................ json ', json);
             if (json['longthink-functions-today']){
                 global.longthink_functions_today = json['longthink-functions-today-v2'];
+            }
+            if (json['longthink-filters']){
+                global.longthink_filters = json['longthink-filters'];
             }
             if (json.inference_url) {
                 fetchAPI.save_url_from_login(json.inference_url);

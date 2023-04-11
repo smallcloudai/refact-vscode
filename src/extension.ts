@@ -28,6 +28,7 @@ declare global {
     var global_context: vscode.ExtensionContext|undefined;
     var streamlined_login_countdown: number;
     var longthink_functions_today: {[key: string]: {[key: string]: string}} | undefined;
+    var longthink_filters: string[];
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
 }
