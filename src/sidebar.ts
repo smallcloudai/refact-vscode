@@ -274,6 +274,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2web_plan: plan_msg,
             ts2web_metering_balance: global.user_metering_balance,
             ts2web_longthink_functions: global.longthink_functions_today,
+            ts2web_longthink_filters: global.longthink_filters,
         });
     }
 
@@ -415,6 +416,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="toolbox">
                         <div class="toolbox-inline">
                             <input class="toolbox-search" id="toolbox-search" placeholder="press F1; ↓ commands; ↑ history">
+                        </div>
+                        <div class="toolbox-tags">
                         </div>
                         <div class="toolbox-container">
                             <div class="toolbox-list"></div>
