@@ -762,3 +762,27 @@ body.vscode-light #logout {
         margin-right: 0;
     }
 }
+
+.toolbox-tags {
+	display: flex;
+	margin-top: 5px;
+}
+.toolbox-tag {
+	display: flex;
+	padding: 2px 4px;
+	background-color: var(--secondary);
+	color: var(--vscode-sideBar-background);
+	text-transform: uppercase;
+	font-size: 9px;
+	font-weight: bold;
+	margin-right: 3px;
+	cursor: pointer;
+	opacity: 1;
+}
+.toolbox-tag:hover {
+	opacity: 1;
+	background-color: var(--color);
+}
+.toolbox-tag-inactive {
+	opacity: 0.5;
+}

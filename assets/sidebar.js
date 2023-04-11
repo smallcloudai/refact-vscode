@@ -11,6 +11,7 @@
     // let toolboxIndex = 0;
     let longthink_functions_today;
     let longthink_functions_json;
+    let longthink_filters;
     let editor_inform_how_many_lines_selected = 0;
     let editor_inform_file_access_level = 0;
     let function_bookmarks = [];
@@ -468,6 +469,55 @@
         on_how_many_lines_selected();
     } // it was renderToolbox()
 
+    let current_filter = "";
+    function renderTags(data) {
+        const filters_bar = document.querySelector('.toolbox-tags');
+        filters_bar.innerHTML = "";
+        data.forEach((item) => {
+            const filter = document.createElement("div");
+            filter.classList.add("toolbox-tag");
+            filter.dataset.title = item;
+            filter.innerHTML = item;
+            filters_bar.appendChild(filter);
+        });
+        const tags = document.querySelectorAll('.toolbox-tag');
+        tags.forEach((item) => {
+            item.addEventListener('click', function (event) {
+                if(current_filter !== this.dataset.title) {
+                    tags.forEach((item) => {
+                        item.classList.remove("toolbox-tag-inactive");
+                        item.classList.add("toolbox-tag-inactive");
+                    });
+                    this.classList.remove('toolbox-tag-inactive');
+                    const tag = this.dataset.title;
+                    const filterItems = document.querySelectorAll(".toolbox-item");
+                    const itemsArray = Array.from(filterItems);
+                    filterItems.forEach(item => {
+                        console.log(item.dataset.function_name);
+                        item.style.display = 'none'
+                    });
+                    const filteredDivs = itemsArray.filter(div => {
+                        console.log(div.dataset.function_name.toLowerCase() + ' xxxxxxxxxxxxxxxx ' + tag.toLowerCase());
+                        return div.dataset.function_name.toLowerCase().endsWith(tag.toLowerCase());
+                    });
+                    filteredDivs.forEach(div => {
+                        div.style.display = 'block';
+                    });
+                    current_filter = this.dataset.title;
+                }
+                else {
+                    tags.forEach((item) => {
+                        item.classList.remove("toolbox-tag-inactive");
+                    });
+                    const filterItems = document.querySelectorAll(".toolbox-item");
+                    const itemsArray = Array.from(filterItems);
+                    filterItems.forEach(item => item.style.display = 'block');
+                    current_filter = "";
+                }
+            });
+        });
+    }
+
     function on_how_many_lines_selected() {
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
@@ -520,6 +570,7 @@
 
     function toolbox_update_likes() {
         renderToolbox(longthink_functions_today);
+        renderTags(longthink_filters);
         toolboxSearch.addEventListener('input', function (event) {
             const filterItems = document.querySelectorAll(".toolbox-filter");
             reset_everything_about_commands();
@@ -637,6 +688,7 @@
                     if (longthink_functions_json !== json2) {
                         longthink_functions_today = message.ts2web_longthink_functions;
                         longthink_functions_json = json2;
+                        longthink_filters = message.ts2web_longthink_filters;
                         toolbox_update_likes();
                     }
                 }

@@ -131,7 +131,6 @@ export async function login()
             global.user_logged_in = json.account;
             global.user_metering_balance = json.metering_balance;
             global.streamlined_login_ticket = "";
-            console.log('................................ json ', json);
             if (json['longthink-functions-today']){
                 global.longthink_functions_today = json['longthink-functions-today-v2'];
             }
