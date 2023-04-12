@@ -125,6 +125,7 @@ export class PendingRequest {
                         }
                         if (this.streaming_end_callback) {
                             await this.streaming_end_callback(this.streaming_error);
+                            this.streaming_end_callback = undefined;
                         }
                     });
                     resolve("");
@@ -143,9 +144,13 @@ export class PendingRequest {
                     usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
                     resolve(json_arrived);
                 }
-            }).catch((error) => {
+            }).catch(async (error) => {
                 if (error && !error.message.includes("aborted")) {
                     usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
+                }
+                if (this.streaming_end_callback) {
+                    await this.streaming_end_callback(error !== undefined);
+                    this.streaming_end_callback = undefined;
                 }
                 reject();
             });

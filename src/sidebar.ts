@@ -161,8 +161,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
                     if (function_name.includes("free-chat")) {
                         await open_chat_tab(intent, editor, true, model_suggest);
+                    } else if (function_dict.supports_highlight && selected_text === "") {
+                        await extension.follow_intent_highlight(intent, function_name, model_suggest, !!function_dict.third_party);
+                    } else if (function_dict.supports_selection && selected_text !== "") {
+                        await extension.follow_intent_diff(intent, function_name, model_suggest, !!function_dict.third_party);
+                    } else if (!function_dict.supports_selection && selected_text === "") {
+                        await extension.follow_intent_diff(intent, function_name, model_suggest, !!function_dict.third_party);
                     } else {
-                        await extension.follow_intent(intent, function_name, model_suggest, !!function_dict.third_party);
+                        console.log(["don't know how to run function", function_name]);
                     }
                     break;
                 }
