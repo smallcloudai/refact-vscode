@@ -275,6 +275,15 @@
         return data;
     }
 
+    function function_tag(function_name) {
+        let result = false;
+        longthink_filters.forEach((item) => {
+            if(function_name.toLowerCase().endsWith(item.toLowerCase())) {
+                result = item;
+            }
+        });
+        return result;
+    }
     // renderToolbox(data);
     function renderToolbox(data) {
         const bookmarked = check_bookmarked_functions(data);
@@ -296,6 +305,17 @@
         keys.forEach((key) => {
             let item = data[key];
             // render_function(data[key]);
+
+            if(document.querySelector(`.toolbox-item[data-title="${item.label}"]`)) {
+                let tag = function_tag(item.function_name);
+                if(tag) {
+                    const label_model = document.createElement("span");
+                    label_model.classList.add('toolbox-function');
+                    label_model.innerHTML = tag;
+                    document.querySelector(`.toolbox-item[data-title="${item.label}"] .toolbox-title`).appendChild(label_model);
+                }
+                return;
+            }
 
             const toolbox_item = document.createElement("div");
             toolbox_item.classList.add("toolbox-item");
@@ -428,11 +448,21 @@
 
             // function label
             const label_wrapper = document.createElement("span");
-            if (item.third_party) {
-                label_wrapper.innerHTML = key;
-            } else {
-                label_wrapper.innerHTML = item.label;
+            label_wrapper.classList.add('toolbox-title');
+            // if (item.third_party) {
+                //     label_wrapper.innerHTML = key;
+                // } else {
+                    // }
+            label_wrapper.innerHTML = item.label;
+            
+            let tag = function_tag(item.function_name);
+            if(tag) {
+                const label_model = document.createElement("span");
+                label_model.classList.add('toolbox-function');
+                label_model.innerHTML = tag;
+                label_wrapper.appendChild(label_model);
             }
+
             // selection notice
             const selection_notice = document.createElement("div");
             selection_notice.classList.add('toolbox-notice');
@@ -493,11 +523,9 @@
                     const filterItems = document.querySelectorAll(".toolbox-item");
                     const itemsArray = Array.from(filterItems);
                     filterItems.forEach(item => {
-                        console.log(item.dataset.function_name);
                         item.style.display = 'none'
                     });
                     const filteredDivs = itemsArray.filter(div => {
-                        console.log(div.dataset.function_name.toLowerCase() + ' xxxxxxxxxxxxxxxx ' + tag.toLowerCase());
                         return div.dataset.function_name.toLowerCase().endsWith(tag.toLowerCase());
                     });
                     filteredDivs.forEach(div => {

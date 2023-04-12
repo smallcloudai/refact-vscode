@@ -519,8 +519,8 @@ body.vscode-light #logout {
 	overflow-y: auto;
 	margin-top: 0px;
 	position: absolute;
-	top: 50px;
-	height: calc(100vh - 50px);
+	top: 36px;
+	height: calc(100vh - 36px);
 	left: 0;
 	right: 0;
 	background-color: var(--vscode-sideBar-background);
@@ -785,4 +785,22 @@ body.vscode-light #logout {
 }
 .toolbox-tag-inactive {
 	opacity: 0.5;
+}
+.toolbox-title {
+	display: flex !important;
+	justify-content: flex-start;
+	width: 100%;
+	align-items: center;
+}
+.toolbox-function {
+	display: inline-flex;
+	font-size: 7px;
+	border: 1px solid var(--secondary);
+	color: var(--secondary);
+	padding: 2px 4px;
+	margin-left: auto !important;
+	text-transform: uppercase;
+	margin-right: 10px;
+	margin-top: 1px;
+	font-weight: bold;
 }
