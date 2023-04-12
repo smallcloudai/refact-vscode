@@ -92,8 +92,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let completion = "";
         let this_completion_serial_number = -1;
         if (state) {
-            // let third_party = Boolean(state.completion_longthink && multiline);
-            let third_party = false;
+            let third_party = Boolean(state.completion_longthink && multiline);
+            // let third_party = false;
             [completion, this_completion_serial_number] = await this.cached_request(
                 state,
                 cancelToken,
@@ -105,6 +105,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 multiline,
                 third_party
             );
+            if (third_party) {
+                state.completion_reset_on_cursor_movement = true;
+            }
         }
 
         if (state) {
@@ -248,12 +251,27 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let stream = false;
             let api_fields: estate.ApiFields;
             if (third_party) {
+                let use_model = "longthink/stable";
+                let func = "completion-gpt3.5";
+                // TODO: let the user choose
+                if (global.longthink_functions_today) {
+                    const keys = Object.keys(global.longthink_functions_today);
+                    for (let i = 0; i < keys.length; i++) {
+                        let key = keys[i];
+                        if (key.includes("completion-")) {
+                            let function_dict = global.longthink_functions_today[key];
+                            use_model = function_dict.model;
+                            func = function_dict.function_name;
+                        }
+                    }
+                }
+                max_tokens = 200;
                 [promise, api_fields] = fetch.fetch_api_promise(
                     cancelToken,
                     "completion", // scope
                     sources,
                     "Infill", // intent
-                    "complete-selected-code",
+                    func,
                     file_name,
                     cursor_transmit,
                     cursor_transmit,
@@ -261,7 +279,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                     max_edits,
                     stop_tokens,
                     stream,
-                    "longthink/experimental",
+                    use_model,
                     third_party,
                 );
             } else {
@@ -349,6 +367,10 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         if (!fail) {
             fail = completion.length === 0;
+        }
+        if (third_party) {
+            // dont cache third party
+            return [completion, _completion_data_feedback_candidate.serial_number];
         }
         for (let i = 0; i < Math.min(completion.length + 1, CACHE_AHEAD); i++) {
             let more_left = left + completion.substring(0, i);
