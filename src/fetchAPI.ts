@@ -247,6 +247,7 @@ export function inference_url(addthis: string, third_party: boolean)
 export let non_verifying_ctx = fetchH2.context({
     session: {
         rejectUnauthorized: false,
+        sessionTimeout: 600,
     },
 });
 
