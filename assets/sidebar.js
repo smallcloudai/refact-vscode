@@ -312,7 +312,14 @@
                     const label_model = document.createElement("span");
                     label_model.classList.add('toolbox-function');
                     label_model.innerHTML = tag;
-                    document.querySelector(`.toolbox-item[data-title="${item.label}"] .toolbox-title`).appendChild(label_model);
+                    let current_item = document.querySelector(`.toolbox-item[data-title="${item.label}"]`);
+                    current_item.querySelector('.toolbox-header-tags').appendChild(label_model);
+                    let current_ids = JSON.parse(current_item.dataset.ids);
+                    let current_tags = JSON.parse(current_item.dataset.tags_filter);
+                    current_ids.push(key);
+                    current_tags.push(tag);
+                    current_item.dataset.ids = JSON.stringify(current_ids);
+                    current_item.dataset.tags_filter = JSON.stringify(current_tags);
                 }
                 return;
             }
@@ -331,7 +338,14 @@
             toolbox_item.dataset.function_name = item.function_name;
 
             const header = document.createElement("div");
+            const header_tags = document.createElement("div");
+            const header_commands = document.createElement("div");
+            const header_box = document.createElement("div");
             header.classList.add("toolbox-header");
+            header_box.classList.add("toolbox-header-box");
+            header_tags.classList.add("toolbox-header-tags");
+            header_commands.classList.add("toolbox-header-commands");
+
             const body = document.createElement("div");
             body.classList.add("toolbox-body");
             // likes
@@ -360,11 +374,30 @@
             const run_clone = run.cloneNode(true);
 
             // back
-            const contentActions = document.createElement("div");
-            contentActions.classList.add('toolbox-content-actions');
+            const content_back = document.createElement("div");
+            content_back.classList.add('toolbox-content-back');
             const backButton = document.createElement('button');
             backButton.classList.add('toolbox-back');
             backButton.innerText = '← Back';
+
+
+            // actions
+            const contentActions = document.createElement("div");
+            contentActions.classList.add('toolbox-content-actions');
+            
+            const dropdown_wrapper = document.createElement("div");
+            dropdown_wrapper.classList.add('toolbox-dropdown-wrapper');
+
+            const dropdown = document.createElement('select');
+
+            // tags_list.map(item => {
+            //     const option = document.createElement('option');
+            //     option.text = item;
+            //     dropdown.add(option);
+            // });
+            dropdown_wrapper.appendChild(dropdown);
+            
+
 
             // content
             const content_title = document.createElement("h3");
@@ -460,7 +493,9 @@
                 const label_model = document.createElement("span");
                 label_model.classList.add('toolbox-function');
                 label_model.innerHTML = tag;
-                label_wrapper.appendChild(label_model);
+                header_tags.appendChild(label_model);
+                toolbox_item.dataset.tags_filter = JSON.stringify([tag]);
+                toolbox_item.dataset.ids = JSON.stringify([toolbox_item.id]);
             }
 
             // selection notice
@@ -480,12 +515,18 @@
             //         header.appendChild(third_party_icon);
             //     }
             // }
-            header.appendChild(bookmark);
-            header.appendChild(likes);
-            header.appendChild(run);
+            
+            header_commands.appendChild(bookmark);
+            header_commands.appendChild(likes);
+            header_commands.appendChild(run);
+            header_box.appendChild(header_tags);
+            header_box.appendChild(header_commands);
+            header.appendChild(header_box);
 
-            contentActions.appendChild(backButton);
+            content_back.appendChild(backButton);
+            contentActions.appendChild(dropdown_wrapper);
             contentActions.appendChild(run_clone);
+            body.appendChild(content_back);
             body.appendChild(selection_notice);
             body.appendChild(contentActions);
             body.appendChild(body_controls);
@@ -644,8 +685,24 @@
                         active.classList.remove("item-active");
                     }
                     item.classList.add("item-active");
+
                     const item_name = item.id;
                     const item_functions = longthink_functions_today[item_name];
+                    const item_title = item.dataset.title;
+
+                    const current_item = document.querySelector(`.item-active`);
+                    const all_ids = JSON.parse(current_item.dataset.ids);
+                    const all_tags = JSON.parse(current_item.dataset.tags_filter);
+                    const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
+                    for (let index = 0; index < all_ids.length; index++) {
+                        const element = all_ids[index];
+                        const tag = all_tags[index];
+                        const option = document.createElement('option');
+                        option.text = tag;
+                        option.id = element;
+                        select.add(option);
+                    }
+
                     if (item_functions.supports_highlight === 1) {
                         document.querySelector(".item-active .toolbox-notice").classList.add('toolbox-notice-hidden');
                     } else {

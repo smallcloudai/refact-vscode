@@ -536,16 +536,17 @@ body.vscode-light #logout {
 
 .toolbox-header {
 	display: flex;
-	justify-content: flex-end;
-	align-items: center;
+	justify-content: space-between;
+	align-items: flex-start;
 	padding: 3px 0px;
 	cursor: pointer;
+	flex-wrap: nowrap;
 }
-.toolbox-header > span {
+/* .toolbox-header > span {
 	margin-right: auto;
     display: block;
     width: 100%;
-}
+} */
 .toolbox-header:hover {
 	color: var(--vscode-list-hoverForeground);
     background-color: var(--vscode-list-hoverBackground);
@@ -787,10 +788,11 @@ body.vscode-light #logout {
 	opacity: 0.5;
 }
 .toolbox-title {
-	display: flex !important;
+	display: flex;
 	justify-content: flex-start;
-	width: 100%;
 	align-items: center;
+	flex-shrink: 0;
+	margin-right: 5px;
 }
 .toolbox-function {
 	display: inline-flex;
@@ -800,7 +802,71 @@ body.vscode-light #logout {
 	padding: 2px 4px;
 	margin-left: auto !important;
 	text-transform: uppercase;
-	margin-right: 10px;
+	margin-right: 3px;
 	margin-top: 1px;
 	font-weight: bold;
+	opacity: 0.5;
+}
+.toolbox-header-box {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	overflow: hidden;
+	flex-shrink: 0;
+}
+.toolbox-header-tags {
+	flex: 1 0 auto;
+	flex-wrap: nowrap;
+	margin-top: -1px;
+	overflow: hidden;
+}
+.toolbox-header-commands {
+	width: auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-wrap: nowrap;
+	flex-shrink: 0;
+	/* flex: 1 0 30px;
+	background-color: red;
+	flex-wrap: nowrap; */
+}
+
+.toolbox-content-back {
+	margin-bottom: 5px;
+}
+.toolbox-dropdown-wrapper {
+	border: 1px solid var(--secondary) !important;
+	padding: 4px;
+	color: var(--secondary) !important;
+	min-width: 80px;
+	position: relative;
+}
+
+.toolbox-dropdown-wrapper::after {
+	right: 10px;
+	top: 8px;
+	content: "";
+    position: absolute;
+    z-index: 2;
+    transform: rotate(-135deg);
+    display: block;
+    width: 5px;
+    height: 5px;
+    border-top: 1px solid var(--secondary) !important;
+    border-left: 1px solid var(--secondary) !important;
+	z-index: -1;
+}
+
+.toolbox-dropdown-wrapper select {
+	background: transparent !important;
+	border: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	color: var(--secondary) !important;
+	outline: none !important;
+	-webkit-appearance: none !important;
+	text-transform: uppercase;
+	width: 100% !important;
+	font-size: 11px;
 }
