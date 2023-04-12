@@ -73,6 +73,9 @@ export class ChatTab {
                     fireup_message["chat_models"].push(function_dict.model);
                 }
             }
+            if (fireup_message["chat_models"].length === 0) {
+                fireup_message["chat_models"] = ["gpt3.5"];
+            }
         }
         if (editor) {
             let selection = editor.selection;
@@ -340,6 +343,7 @@ export class ChatTab {
 
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);
         request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
+        let third_party = true;
 
         request.supply_stream(...fetchAPI.fetch_chat_promise(
             cancelToken,
@@ -348,6 +352,7 @@ export class ChatTab {
             "freechat",
             model,
             [],
+            third_party,
         ));
     }
 
