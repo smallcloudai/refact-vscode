@@ -59,6 +59,12 @@ export async function query_diff(
     if (!state) {
         return;
     }
+    state.showing_diff_for_function = undefined;
+    state.showing_diff_for_model = undefined;
+    state.showing_diff_thirdparty = third_party;
+    state.showing_diff_edit_chain = undefined;
+    state.showing_diff_modif_doc = undefined;
+
     let doc = editor.document;
     let access_level = await privacy.get_file_access(doc.fileName);
     if (third_party && access_level < 2) {
