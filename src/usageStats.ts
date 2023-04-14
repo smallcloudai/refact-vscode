@@ -136,7 +136,7 @@ export async function report_usage_stats()
     }
     let usage = "";
     for (let key in count_msg) {
-        usage += `${key} ${count_msg[key]}\n`;
+        usage += `${key}\t${count_msg[key]}\n`;
     }
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {

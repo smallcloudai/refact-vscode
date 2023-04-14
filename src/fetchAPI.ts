@@ -122,6 +122,11 @@ export class PendingRequest {
                             // likely a error, because it's not a stream, no "data: " prefix
                             console.log(["looks like a error", this.streaming_buf]);
                             this.streaming_error = true;
+                            usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, this.streaming_buf, "");
+                        } else if (this.streaming_error) {
+                            usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, "streaming_error", "");
+                        } else {
+                            usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", "");
                         }
                         if (this.streaming_end_callback) {
                             await this.streaming_end_callback(this.streaming_error);

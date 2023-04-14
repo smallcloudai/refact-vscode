@@ -268,7 +268,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 max_tokens = 200;
                 [promise, api_fields] = fetch.fetch_api_promise(
                     cancelToken,
-                    "completion", // scope
+                    "completion:" + func, // scope
                     sources,
                     "Infill", // intent
                     func,

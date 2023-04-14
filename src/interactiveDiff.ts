@@ -194,7 +194,7 @@ export async function query_diff(
 
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
-        "query_diff",  // scope
+        "query_diff" + ":" + model_function,  // scope
         sources,
         estate.global_intent,
         model_function,
