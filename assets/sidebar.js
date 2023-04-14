@@ -567,7 +567,13 @@
                         item.style.display = 'none'
                     });
                     const filteredDivs = itemsArray.filter(div => {
-                        return div.dataset.function_name.toLowerCase().endsWith(tag.toLowerCase());
+                        const tags = div.dataset.tags_filter;
+                        if(tags) {
+                            const all_tags = JSON.parse(div.dataset.tags_filter);
+                            if(all_tags.includes(tag)) {
+                                return div;
+                            }
+                        }
                     });
                     filteredDivs.forEach(div => {
                         div.style.display = 'block';
@@ -691,16 +697,20 @@
                     const item_title = item.dataset.title;
 
                     const current_item = document.querySelector(`.item-active`);
-                    const all_ids = JSON.parse(current_item.dataset.ids);
-                    const all_tags = JSON.parse(current_item.dataset.tags_filter);
-                    const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
-                    for (let index = 0; index < all_ids.length; index++) {
-                        const element = all_ids[index];
-                        const tag = all_tags[index];
-                        const option = document.createElement('option');
-                        option.text = tag;
-                        option.id = element;
-                        select.add(option);
+                    const ids = current_item.dataset.ids;
+                    if(ids) {
+                        current_item.querySelector('.toolbox-dropdown-wrapper').style.display = 'block';
+                        const all_ids = JSON.parse(ids);
+                        const all_tags = JSON.parse(current_item.dataset.tags_filter);
+                        const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
+                        for (let index = 0; index < all_ids.length; index++) {
+                            const element = all_ids[index];
+                            const tag = all_tags[index];
+                            const option = document.createElement('option');
+                            option.text = tag;
+                            option.id = element;
+                            select.add(option);
+                        }
                     }
 
                     if (item_functions.supports_highlight === 1) {

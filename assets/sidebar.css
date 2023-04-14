@@ -464,6 +464,7 @@ body.vscode-light #logout {
 	justify-content: center;
 	font-weight: bold;
 	outline: none !important;
+	margin-left: auto !important;
 }
 .toolbox-run span {
 	font-size: 14px;
@@ -788,10 +789,10 @@ body.vscode-light #logout {
 	opacity: 0.5;
 }
 .toolbox-title {
-	display: flex;
 	justify-content: flex-start;
 	align-items: center;
-	flex-shrink: 0;
+	flex: 1;
+	flex-basis: 0;
 	margin-right: 5px;
 }
 .toolbox-function {
@@ -808,28 +809,28 @@ body.vscode-light #logout {
 	opacity: 0.5;
 }
 .toolbox-header-box {
-	display: flex;
-	justify-content: flex-end;
-	align-items: center;
+	display: block;
 	overflow: hidden;
-	flex-shrink: 0;
+	/* display: flex;
+	justify-content: flex-end;
+	align-items: center; */
 }
 .toolbox-header-tags {
-	flex: 1 0 auto;
-	flex-wrap: nowrap;
 	margin-top: -1px;
 	overflow: hidden;
+	float: left !important;
+	display: flex;
+	flex-wrap: nowrap;
 }
 .toolbox-header-commands {
-	width: auto;
-	display: inline-flex;
 	align-items: center;
 	justify-content: flex-end;
-	flex-wrap: nowrap;
-	flex-shrink: 0;
-	/* flex: 1 0 30px;
-	background-color: red;
-	flex-wrap: nowrap; */
+	display: flex;
+	/* flex: 1;
+	flex-basis: 0;
+	flex-shrink: 0; */
+	width: auto;
+	float: right !important;
 }
 
 .toolbox-content-back {
@@ -841,6 +842,7 @@ body.vscode-light #logout {
 	color: var(--secondary) !important;
 	min-width: 80px;
 	position: relative;
+	display: none;
 }
 
 .toolbox-dropdown-wrapper::after {
