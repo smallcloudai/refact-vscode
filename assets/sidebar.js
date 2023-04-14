@@ -708,9 +708,17 @@
                             const tag = all_tags[index];
                             const option = document.createElement('option');
                             option.text = tag;
-                            option.id = element;
+                            option.value = element;
                             select.add(option);
                         }
+                        let selected = select.value;
+                        select.addEventListener('change', function () {
+                            selected = select.value;
+                            const selected_function = longthink_functions_today[selected];
+                            if (selected_function) {
+                                // HERE I NEED TO SELECT FUNCTION TO SEND TO sidebar.ts
+                            }
+                        });
                     }
 
                     if (item_functions.supports_highlight === 1) {
