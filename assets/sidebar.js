@@ -15,6 +15,7 @@
     let editor_inform_how_many_lines_selected = 0;
     let editor_inform_file_access_level = 0;
     let function_bookmarks = [];
+    let last_model_used = [];
 
     let history = [];
     let history_backup = "";
@@ -170,10 +171,11 @@
     toolboxList.addEventListener("click", (event) => {
         if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
             let intent = toolboxSearch.value;
-            let target = event.target.parentElement.parentElement;
+            let target = event.target.parentElement.parentElement.parentElement;
             if (!target) {
                 return;
             }
+            // TODO: add check last model used, add check if have multiple models
             if(target.classList.contains('toolbox-body')) {
                 target = target.parentElement;
             }
@@ -716,7 +718,7 @@
                             selected = select.value;
                             const selected_function = longthink_functions_today[selected];
                             if (selected_function) {
-                                // HERE I NEED TO SELECT FUNCTION TO SEND TO sidebar.ts
+                                // TODO: HERE I NEED TO SELECT FUNCTION TO SEND TO sidebar.ts
                             }
                         });
                     }
