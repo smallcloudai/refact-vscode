@@ -399,6 +399,20 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 }
 
 
+function _extract_extension(feed: estate.ApiFields)
+{
+    let filename_ext = feed.cursor_file.split(".");
+    let ext = "None";
+    if (filename_ext.length > 1) {
+        let try_this = filename_ext[filename_ext.length - 1];
+        if (try_this.length <= 4) {
+            ext = try_this;
+        }
+    }
+    return ext;
+}
+
+
 export function inline_accepted(serial_number: number)
 {
     let feed: estate.ApiFields = _completion_data_feedback_candidate;
@@ -415,12 +429,16 @@ export function inline_accepted(serial_number: number)
     let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
     let req_to_react_ms = feed.ts_reacted - feed.ts_req;
     console.log(["inline_accepted", serial_number, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
+    let ext = _extract_extension(feed);
     usageStats.report_increase_a_counter("completion", "metric0ms_tab");
+    usageStats.report_increase_a_counter("completion", "metric0ms_tab:" + ext);
     if (ponder_time_ms > 600) {
         usageStats.report_increase_a_counter("completion", "metric600ms_tab");
+        usageStats.report_increase_a_counter("completion", "metric600ms_tab:" + ext);
     }
     if (ponder_time_ms > 1200) {
         usageStats.report_increase_a_counter("completion", "metric1200ms_tab");
+        usageStats.report_increase_a_counter("completion", "metric1200ms_tab:" + ext);
     }
 }
 
@@ -438,12 +456,16 @@ export function inline_rejected(reason: string)
     let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
     let req_to_react_ms = feed.ts_reacted - feed.ts_req;
     console.log(["inline_rejected", reason, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
+    let ext = _extract_extension(feed);
     usageStats.report_increase_a_counter("completion", "metric0ms_" + reason);
+    usageStats.report_increase_a_counter("completion", "metric0ms_" + reason + ":" + ext);
     if (ponder_time_ms > 600) {
         usageStats.report_increase_a_counter("completion", "metric600ms_" + reason);
+        usageStats.report_increase_a_counter("completion", "metric600ms_" + reason + ":" + ext);
     }
     if (ponder_time_ms > 1200) {
         usageStats.report_increase_a_counter("completion", "metric1200ms_" + reason);
+        usageStats.report_increase_a_counter("completion", "metric1200ms_" + reason + ":" + ext);
     }
 }
 
