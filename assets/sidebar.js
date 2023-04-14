@@ -342,7 +342,7 @@
             const header_commands = document.createElement("div");
             const header_box = document.createElement("div");
             header.classList.add("toolbox-header");
-            header_box.classList.add("toolbox-header-box");
+            // header_box.classList.add("toolbox-header-box");
             header_tags.classList.add("toolbox-header-tags");
             header_commands.classList.add("toolbox-header-commands");
 
@@ -519,8 +519,8 @@
             header_commands.appendChild(bookmark);
             header_commands.appendChild(likes);
             header_commands.appendChild(run);
-            header_box.appendChild(header_tags);
-            header_box.appendChild(header_commands);
+            header.appendChild(header_tags);
+            header.appendChild(header_commands);
             header.appendChild(header_box);
 
             content_back.appendChild(backButton);
