@@ -565,6 +565,7 @@ body.vscode-light #logout {
 	font-family: "Courier New", Courier, monospace;
 	line-height: 13px;
 	height: 16px;
+	margin-right: 3px;
 }
 .toolbox-likes span {
 	display: block;
@@ -827,7 +828,7 @@ body.vscode-light #logout {
 	flex-wrap: nowrap !important;
 }
 .toolbox-header-commands {
-	width: 40px;
+	width: auto;
 	display: flex !important;
 	align-items: center;
 	text-align: right;

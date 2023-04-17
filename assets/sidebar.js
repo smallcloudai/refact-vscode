@@ -191,17 +191,14 @@
                 let parent_function = event.target.parentElement.parentElement.parentElement;
                 const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
                 const hasOptions = select && select.options && select.options.length > 0;
-                console.log('select',select);
                 if(hasOptions) {
                     selected_function = select.value;
                     last_model_used[parent_function.dataset.funciton_name] = selected_function;
                 }
                 else {
-                    console.log('xxxx',parent_function);
                     selected_function = parent_function.dataset.function_name;
                 }
             }
-            console.log('selected_function', selected_function);
             history.splice(0, 0, intent);
             vscode.postMessage({
                 type: "function_activated",
@@ -736,14 +733,6 @@
                             option.value = element;
                             select.add(option);
                         }
-                        // let selected = select.value;
-                        // select.addEventListener('change', function () {
-                        //     selected = select.value;
-                        //     const selected_function = longthink_functions_today[selected];
-                        //     if (selected_function) {
-                        //         // TODO: HERE I NEED TO SELECT FUNCTION TO SEND TO sidebar.ts
-                        //     }
-                        // });
                     }
 
                     if (item_functions.supports_highlight === 1) {
@@ -771,9 +760,6 @@
                 longthink_functions_today = message.value;
                 // toolbox_update_likes(); -- updates anyway, not needed
                 break;
-            // case "update_likes":
-            //     longthink_functions_today = message.response;
-            //     break;
             case "update_bookmarks_list":
                 function_bookmarks = message.value;
                 break;
