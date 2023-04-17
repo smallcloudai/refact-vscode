@@ -172,18 +172,41 @@
         if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement.parentElement;
+            let selected_function = last_model_used[target.dataset.funciton_name];
+            if(!selected_function) {
+                if(target.dataset.function) {
+                    if(target.dataset.ids) {
+                        const current_ids = JSON.parse(target.dataset.ids);
+                        selected_function = current_ids[0];
+                    }
+                    else {
+                        selected_function = target.dataset.function_name;
+                    }
+                }
+            }
             if (!target) {
                 return;
             }
-            // TODO: add check last model used, add check if have multiple models
-            if(target.classList.contains('toolbox-body')) {
-                target = target.parentElement;
+            if(event.target.parentElement.classList.contains('toolbox-content-actions')) {
+                let parent_function = event.target.parentElement.parentElement.parentElement;
+                const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
+                const hasOptions = select && select.options && select.options.length > 0;
+                console.log('select',select);
+                if(hasOptions) {
+                    selected_function = select.value;
+                    last_model_used[parent_function.dataset.funciton_name] = selected_function;
+                }
+                else {
+                    console.log('xxxx',parent_function);
+                    selected_function = parent_function.dataset.function_name;
+                }
             }
+            console.log('selected_function', selected_function);
             history.splice(0, 0, intent);
             vscode.postMessage({
                 type: "function_activated",
                 intent: intent,
-                data_function: target.dataset.function
+                data_function: JSON.stringify(longthink_functions_today[selected_function])
             });
             vscode.postMessage({
                 type: "focus_back_to_editor",
@@ -713,14 +736,14 @@
                             option.value = element;
                             select.add(option);
                         }
-                        let selected = select.value;
-                        select.addEventListener('change', function () {
-                            selected = select.value;
-                            const selected_function = longthink_functions_today[selected];
-                            if (selected_function) {
-                                // TODO: HERE I NEED TO SELECT FUNCTION TO SEND TO sidebar.ts
-                            }
-                        });
+                        // let selected = select.value;
+                        // select.addEventListener('change', function () {
+                        //     selected = select.value;
+                        //     const selected_function = longthink_functions_today[selected];
+                        //     if (selected_function) {
+                        //         // TODO: HERE I NEED TO SELECT FUNCTION TO SEND TO sidebar.ts
+                        //     }
+                        // });
                     }
 
                     if (item_functions.supports_highlight === 1) {
