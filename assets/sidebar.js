@@ -793,6 +793,11 @@
                 privacy.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                if(message.ts2web_enable_chat && message.ts2web_enable_chat !== '') {
+                    chat.style.display = 'none';
+                } else {
+                    chat.style.display = 'flex';
+                }
 
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
