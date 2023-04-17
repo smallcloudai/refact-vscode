@@ -84,9 +84,14 @@ export async function get_access_overrides(): Promise<{[key: string]: number}>
 
 export async function get_file_access(uri: string)
 {
+    let inference_url = vscode.workspace.getConfiguration().get("refactai.infurl");
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context === undefined) {
         return 0;
+    }
+    // inference_url is never undefined (because of package.json)
+    if (inference_url !== "") {;
+        return 1;
     }
     let storage: {[key: string]: number}|undefined = global_context.globalState.get('codifyAccessOverrides');
     if(storage === undefined) {
