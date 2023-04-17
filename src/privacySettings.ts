@@ -20,15 +20,15 @@ export class PrivacySettings {
           name: "Level 0",
           short_description: "Turn off",
           long_description:
-            "Paranoid mode, Codify has no access to your files.",
+            "Paranoid mode, Refact has no access to your files.",
         },
         {
           value: 1,
           name: "Level 1",
           short_description:
-            "Refact can read your files, but only uses AI models hosted at Codify",
+            "Refact can read your files, but only uses AI models hosted at Refact",
           long_description:
-            "Data will be sent to Codify servers only. We don't collect datasets on the server side. If you use a self-hosting server, your data will be sent only to your server.",
+            "Data will be sent to Refact servers only. We don't collect datasets on the server side. If you use a self-hosting server, your data will be sent only to your server.",
         },
         {
           value: 2,
@@ -86,7 +86,9 @@ export class PrivacySettings {
 				}
 			}
 		});
+        let inference_url = vscode.workspace.getConfiguration().get("refactai.infurl");
         panel.webview.postMessage({ command: "rules", value: this.rules });
+        panel.webview.postMessage({ command: "inference_url", value: inference_url });
         this.update_webview(panel);
     }
 
@@ -159,6 +161,7 @@ export class PrivacySettings {
             </head>
             <body>
                 <h1 class="refactcss-privacy__title">Your Privacy Rules</h1>
+                <div class="refactcss-privacy__notice"></div>
                 <div class="refactcss-privacy__global">
                     <h2 class="refactcss-privacy__subtitle">Global Defaults</h2>
                     <div class="refactcss-privacy__defaults">

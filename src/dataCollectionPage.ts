@@ -27,7 +27,7 @@ export class DataReviewPage {
     {
         const panel = vscode.window.createWebviewPanel(
             "refactai-review-data",
-            "Codify Review Data",
+            "Refact Review Data",
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
