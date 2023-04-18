@@ -6,7 +6,7 @@
     let popup;
     let rules;
     let infurl = '';
-    let infurl_notice = `Self-hosted URL is not empty. Your data can go only to your server, all third party functions are disabled.<br> If you want both private self-hosted server and 3rd party functions (such as GPT chat) at the same time, request this on Refact.ai Discord!`;
+    let infurl_notice = `The self-hosted URL is not empty. Your data can go only to your server, all third party functions are disabled.<br> If you want both private self-hosted server and 3rd party functions (such as GPT chat) at the same time, request this on Refact.ai Discord!`;
 
     globalLabels.forEach((label) => {
         label.addEventListener("click", (event) => {
@@ -29,7 +29,7 @@
             case "rules":
                 rules = message.value;
                 break;
-            case "inference_url": 
+            case "inference_url":
                 infurl = message.value;
                 if(infurl && infurl !== "") {
                     document.querySelector('.refactcss-privacy__global').classList.add("refactcss-privacy__global--infurl");

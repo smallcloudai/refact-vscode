@@ -205,8 +205,13 @@ export function inference_login_force_retry()
 
 export async function inference_login(): Promise<boolean>
 {
+    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+    if (manual_infurl) {
+        return true;
+    }
     let third_party = true;
-    let url = fetchAPI.inference_url("/v1/secret-key-activate", third_party);  // not third_party doesn't need activation, it's a self-hosted server
+    let url = fetchAPI.inference_url("/v1/secret-key-activate", third_party);  // not third_party doesn't need activation
+    // Activation is really a "kill the cache" operation, such that the user can change plan/settings and see the effect immediately.
     if (global.last_positive_result + 600*1000 < Date.now()) {
         console.log("inference_login: last_positive_result too old, force disconnect");
         await fetchH2.disconnectAll();
