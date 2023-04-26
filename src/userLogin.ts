@@ -112,8 +112,11 @@ export async function login()
         // wait until user clicks the login button
         return;
     }
-    // const login_url = "https://www.smallcloud.ai/v1/login?want_staging_version=1";
-    const login_url = "https://www.smallcloud.ai/v1/login";
+    let staging = vscode.workspace.getConfiguration().get('refactai.staging');
+    let login_url = "https://www.smallcloud.ai/v1/login";
+    if (staging) {
+        login_url = "https://www.smallcloud.ai/v1/login?want_staging_version=1";
+    }
     headers.Authorization = `Bearer ${apiKey}`;
     try {
         statusBar.set_website_message("");
