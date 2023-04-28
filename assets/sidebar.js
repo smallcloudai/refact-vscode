@@ -406,7 +406,7 @@
             // actions
             const contentActions = document.createElement("div");
             contentActions.classList.add('toolbox-content-actions');
-            
+
             const dropdown_wrapper = document.createElement("div");
             dropdown_wrapper.classList.add('toolbox-dropdown-wrapper');
 
@@ -418,7 +418,7 @@
             //     dropdown.add(option);
             // });
             dropdown_wrapper.appendChild(dropdown);
-            
+
 
 
             // content
@@ -509,7 +509,7 @@
                 // } else {
                     // }
             label_wrapper.innerHTML = item.label;
-            
+
             let tag = function_tag(item.function_name);
             if(tag) {
                 const label_model = document.createElement("span");
@@ -518,6 +518,10 @@
                 header_tags.appendChild(label_model);
                 toolbox_item.dataset.tags_filter = JSON.stringify([tag]);
                 toolbox_item.dataset.ids = JSON.stringify([toolbox_item.id]);
+            } else {
+                console.log("no tag", item.function_name);
+                toolbox_item.dataset.tags_filter = JSON.stringify([]);
+                toolbox_item.dataset.ids = JSON.stringify([]);
             }
 
             // selection notice
@@ -537,7 +541,7 @@
             //         header.appendChild(third_party_icon);
             //     }
             // }
-            
+
             header_commands.appendChild(bookmark);
             header_commands.appendChild(likes);
             header_commands.appendChild(run);
