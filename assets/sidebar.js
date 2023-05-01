@@ -17,6 +17,7 @@
     let function_bookmarks = [];
     let last_model_used = [];
 
+    let staging = false;
     let history = [];
     let history_backup = "";
     let current_history = 0;
@@ -172,15 +173,28 @@
         if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement.parentElement;
+            console.log('tatatatarget',target);
             let selected_function = last_model_used[target.dataset.funciton_name];
             if(!selected_function) {
                 if(target.dataset.function) {
+                    console.log('target.dataset.function',target.dataset.function);
                     if(target.dataset.ids) {
                         const current_ids = JSON.parse(target.dataset.ids);
-                        selected_function = current_ids[0];
+                        if(current_ids.length > 0) {
+                            selected_function = current_ids[0];
+                        }
+                        else {
+                            selected_function = target.dataset.function_name;    
+                            if(staging) {
+                                selected_function = 'staging-' + selected_function;
+                            }
+                        }
                     }
                     else {
                         selected_function = target.dataset.function_name;
+                        if(staging) {
+                            selected_function = 'staging-' + selected_function;
+                        }
                     }
                 }
             }
@@ -717,20 +731,20 @@
                         active.classList.remove("item-active");
                     }
                     item.classList.add("item-active");
-
                     const item_name = item.id;
                     const item_functions = longthink_functions_today[item_name];
-                    const item_title = item.dataset.title;
-
+                    // const item_title = item.dataset.title;
                     const current_item = document.querySelector(`.item-active`);
-                    const ids = current_item.dataset.ids;
+                    let ids = null;
+                    if(current_item.dataset.ids) {
+                        ids = JSON.parse(current_item.dataset.ids);
+                    }
                     if(typeof ids === 'object' && ids.length > 0) {
                         current_item.querySelector('.toolbox-dropdown-wrapper').style.display = 'block';
-                        const all_ids = JSON.parse(ids);
                         const all_tags = JSON.parse(current_item.dataset.tags_filter);
                         const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
-                        for (let index = 0; index < all_ids.length; index++) {
-                            const element = all_ids[index];
+                        for (let index = 0; index < ids.length; index++) {
+                            const element = ids[index];
                             const tag = all_tags[index];
                             const option = document.createElement('option');
                             option.text = tag;
@@ -814,6 +828,9 @@
                         longthink_filters = message.ts2web_longthink_filters;
                         toolbox_update_likes();
                     }
+                }
+                if(message.ts2web_staging) {
+                    staging = message.ts2web_staging;
                 }
                 break;
         }

@@ -283,6 +283,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2web_longthink_functions: global.longthink_functions_today,
             ts2web_longthink_filters: global.longthink_filters,
             ts2web_enable_chat: manual_infurl,
+            ts2web_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
         });
     }
 
@@ -445,7 +446,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </div>
                         <div class="sidebar-inline">
                             <div class="sidebar-logged"><b><span></span></b></div>
-                            <div class="sidebar-coins"><div class="sidebar-coin"></div><span>0</span></div>
+                            <div class="sidebar-coins">
+                            <div class="sidebar-coin"></div><span>0</span></div>
                         </div>
                         <div class="sidebar-inline">
                             <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
