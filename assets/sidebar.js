@@ -724,7 +724,7 @@
 
                     const current_item = document.querySelector(`.item-active`);
                     const ids = current_item.dataset.ids;
-                    if(ids) {
+                    if(typeof ids === 'object' && ids.length > 0) {
                         current_item.querySelector('.toolbox-dropdown-wrapper').style.display = 'block';
                         const all_ids = JSON.parse(ids);
                         const all_tags = JSON.parse(current_item.dataset.tags_filter);
