@@ -322,6 +322,7 @@
     }
     // renderToolbox(data);
     function renderToolbox(data) {
+        console.log('=======================',data);
         const bookmarked = check_bookmarked_functions(data);
         const sortedData = Object.entries(bookmarked)
             .sort(([, a], [, b]) => {
@@ -378,7 +379,7 @@
             const header_commands = document.createElement("div");
             const header_box = document.createElement("div");
             header.classList.add("toolbox-header");
-            // header_box.classList.add("toolbox-header-box");
+            header_box.classList.add("toolbox-header-box");
             header_tags.classList.add("toolbox-header-tags");
             header_commands.classList.add("toolbox-header-commands");
 
@@ -547,7 +548,7 @@
             likes.appendChild(likes_span);
             bookmark.appendChild(bookmark_icon);
 
-            header.appendChild(label_wrapper);
+            // header.appendChild(label_wrapper);
             // if(item.third_party === 1) {
             //     for(let i = 1; i <= item.metering; i++) {
             //         const third_party_icon = document.createElement("i");
@@ -559,9 +560,11 @@
             header_commands.appendChild(bookmark);
             header_commands.appendChild(likes);
             header_commands.appendChild(run);
-            header.appendChild(header_tags);
-            header.appendChild(header_commands);
+            header_box.appendChild(label_wrapper);
+            header_box.appendChild(header_commands);
             header.appendChild(header_box);
+            header.appendChild(header_tags);
+            // header.appendChild(header_tags);
 
             content_back.appendChild(backButton);
             contentActions.appendChild(dropdown_wrapper);
@@ -826,6 +829,7 @@
                         longthink_functions_today = message.ts2web_longthink_functions;
                         longthink_functions_json = json2;
                         longthink_filters = message.ts2web_longthink_filters;
+                        longthink_filters.push('starcoder');
                         toolbox_update_likes();
                     }
                 }
