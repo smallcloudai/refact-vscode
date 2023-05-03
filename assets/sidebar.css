@@ -529,7 +529,7 @@ body.vscode-light #logout {
     color: var(--color) !important;
 }
 .toolbox-item {
-	margin: 5px 0;
+	margin: 3px 0;
 }
 .toolbox-item:focus {
 	font-weight: bold !important;
@@ -537,11 +537,11 @@ body.vscode-light #logout {
 
 .toolbox-header {
 	display: flex;
-	flex-direction: column;
-	width: 100%;
-	/* padding: 3px 0px; */
+	justify-content: space-between;
+	align-items: flex-start;
+	padding: 3px 0px;
 	cursor: pointer;
-	/* flex-wrap: wrap; */
+	flex-wrap: nowrap;
 }
 /* .toolbox-header > span {
 	margin-right: auto;
@@ -798,18 +798,18 @@ body.vscode-light #logout {
 }
 .toolbox-function {
 	display: flex !important;
-	font-size: 6px;
+	font-size: 7px;
 	border: 1px solid var(--secondary);
 	color: var(--secondary);
-	padding: 1px 2px;
+	padding: 2px 4px;
 	text-transform: uppercase;
 	margin-right: 3px;
 	margin-top: 1px;
+	font-weight: bold;
 	opacity: 0.5;
 }
 .toolbox-header-box {
-	display: flex;
-	justify-content: space-between;
+	display: block;
 	overflow: hidden;
 	/* display: flex;
 	justify-content: flex-end;
@@ -822,7 +822,7 @@ body.vscode-light #logout {
 	width: calc(100% - 40% - 40px);
 }
 .toolbox-header-tags {
-	width: 100%;
+	width: 35%;
 	overflow: hidden !important;
 	display: flex !important;
 	flex-wrap: nowrap !important;
