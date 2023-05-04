@@ -124,16 +124,21 @@ export async function query_diff(
             if (json && json["choices"]) {
                 // let modif_doc = json["choices"][0]["files"][file_name];
                 // let files = files_from_head_mid_tail(sources, json["choices"][0]["files_head_mid_tail"]);
-                let files_head_mid_tail = json["choices"][0]["files_head_mid_tail"];
                 let files: { [key: string]: string } = {};
-                for (let key in files_head_mid_tail) {
-                    let hmt = files_head_mid_tail[key];
-                    let original_doc = sources[key];
-                    files[key] = original_doc.substring(0, hmt["head"]) + hmt["mid"] + original_doc.substring(original_doc.length-hmt["tail"]);
-                    if (key === file_name) {
-                        state.diff_load_animation_head = hmt["head"];
-                        state.diff_load_animation_mid = hmt["mid"];
+                let choice0 = json["choices"][0];
+                if ("files_head_mid_tail" in choice0) {
+                    let files_head_mid_tail = json["choices"][0]["files_head_mid_tail"];
+                    for (let key in files_head_mid_tail) {
+                        let hmt = files_head_mid_tail[key];
+                        let original_doc = sources[key];
+                        files[key] = original_doc.substring(0, hmt["head"]) + hmt["mid"] + original_doc.substring(original_doc.length-hmt["tail"]);
+                        if (key === file_name) {
+                            state.diff_load_animation_head = hmt["head"];
+                            state.diff_load_animation_mid = hmt["mid"];
+                        }
                     }
+                } else {
+                    files = choice0["files"];
                 }
                 let modif_doc = files[file_name];
                 if (feedback) {

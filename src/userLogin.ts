@@ -113,8 +113,13 @@ export async function login()
         return;
     }
     let staging = vscode.workspace.getConfiguration().get('refactai.staging');
+    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
     let login_url = "https://www.smallcloud.ai/v1/login";
-    if (staging) {
+    let third_party = false;
+    let ctx = fetchAPI.inference_context(third_party);  // checks certificate if infurl is not set
+    if (typeof manual_infurl === "string" && manual_infurl.length > 0) {
+        login_url = fetchAPI.inference_url("/v1/login", third_party);
+    } else if (staging) {
         login_url = "https://www.smallcloud.ai/v1/login?want_staging_version=1";
     }
     headers.Authorization = `Bearer ${apiKey}`;
@@ -123,7 +128,7 @@ export async function login()
         let req = new fetchH2.Request(login_url, init);
         let result_promise: Promise<fetchH2.Response>;
         try {
-            result_promise = fetchH2.fetch(req);
+            result_promise = ctx.fetch(req);
         } catch (error) {
             await usageStats.report_success_or_failure(false, "login(1)", login_url, error, "");
             return;
@@ -132,7 +137,7 @@ export async function login()
         let json: any = await result.json();
         if (json.retcode === "OK") {
             global.user_logged_in = json.account;
-            global.user_metering_balance = json.metering_balance;
+            global.user_metering_balance = json.metering_balance || 0;
             global.streamlined_login_ticket = "";
             if (json['longthink-functions-today']){
                 global.longthink_functions_today = json['longthink-functions-today-v2'];
@@ -149,7 +154,11 @@ export async function login()
             if (json.login_message) {
                 await usabilityHints.show_message_from_server("LoginServer", json.login_message);
             }
-            global.user_active_plan = json.inference;
+            if (json.inference) {
+                global.user_active_plan = json.inference;
+            } else {
+                global.user_active_plan = "CUSTOM_URL";
+            }
             if (global.side_panel) {
                 global.side_panel.update_webview();
             }

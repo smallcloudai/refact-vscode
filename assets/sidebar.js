@@ -184,7 +184,7 @@
                             selected_function = current_ids[0];
                         }
                         else {
-                            selected_function = target.dataset.function_name;    
+                            selected_function = target.dataset.function_name;
                             if(staging) {
                                 selected_function = 'staging-' + selected_function;
                             }
@@ -829,7 +829,7 @@
                         longthink_functions_today = message.ts2web_longthink_functions;
                         longthink_functions_json = json2;
                         longthink_filters = message.ts2web_longthink_filters;
-                        longthink_filters.push('starcoder');
+                        // longthink_filters.push('starcoder');
                         toolbox_update_likes();
                     }
                 }
