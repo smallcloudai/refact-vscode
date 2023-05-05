@@ -116,7 +116,7 @@ export async function login()
     let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
     let login_url = "https://www.smallcloud.ai/v1/login";
     let third_party = false;
-    let ctx = fetchAPI.inference_context(third_party);  // checks certificate if infurl is not set
+    let ctx = fetchAPI.inference_context(third_party);  // turns off certificate check if custom infurl
     if (typeof manual_infurl === "string" && manual_infurl.length > 0) {
         login_url = fetchAPI.inference_url("/v1/login", third_party);
     } else if (staging) {

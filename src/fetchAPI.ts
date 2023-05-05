@@ -393,6 +393,7 @@ export function fetch_chat_promise(
     if (!apiKey) {
         return [Promise.reject("No API key"), new estate.ApiFields()];
     }
+    let ctx = inference_context(third_party);
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     let api_fields = new estate.ApiFields();
     api_fields.scope = scope;
@@ -440,7 +441,7 @@ export function fetch_chat_promise(
         });
         init.signal = abort.signal;
     }
-    let promise = fetchH2.fetch(req, init);
+    let promise = ctx.fetch(req, init);
     return [promise, api_fields];
 }
 

@@ -18,6 +18,7 @@ export class ChatTab {
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
+    public model_to_thirdparty: {[key: string]: boolean};
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
     {
@@ -27,6 +28,7 @@ export class ChatTab {
             extensionUri,
         );
         this.messages = [];
+        this.model_to_thirdparty = {};
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
@@ -68,9 +70,10 @@ export class ChatTab {
             const keys = Object.keys(global.longthink_functions_today);
             for (let i = 0; i < keys.length; i++) {
                 let key = keys[i];
-                if (key.includes("chat-")) {
+                if (key.includes("chat-") || key.includes("-chat")) {
                     let function_dict = global.longthink_functions_today[key];
                     fireup_message["chat_models"].push(function_dict.model);
+                    free_floating_tab.model_to_thirdparty[function_dict.model] = !!(function_dict.thirdparty);
                 }
             }
             if (fireup_message["chat_models"].length === 0) {
@@ -344,6 +347,7 @@ export class ChatTab {
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);
         request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
         let third_party = true;
+        third_party = this.model_to_thirdparty[model];
 
         request.supply_stream(...fetchAPI.fetch_chat_promise(
             cancelToken,
