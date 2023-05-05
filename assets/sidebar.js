@@ -347,8 +347,10 @@
                 if(tag) {
                     const label_model = document.createElement("span");
                     label_model.classList.add('toolbox-function');
-                    label_model.innerHTML = tag;
+                    label_model.innerHTML = 'Multiple';
                     let current_item = document.querySelector(`.toolbox-item[data-title="${item.label}"]`);
+                    // current_item.querySelector('.toolbox-header-tags').appendChild(label_model);
+                    current_item.querySelector('.toolbox-header-tags').innerHTML = '';
                     current_item.querySelector('.toolbox-header-tags').appendChild(label_model);
                     let current_ids = JSON.parse(current_item.dataset.ids);
                     let current_tags = JSON.parse(current_item.dataset.tags_filter);
@@ -526,6 +528,9 @@
 
             let tag = function_tag(item.function_name);
             if(tag) {
+                console.log('tag', tag);
+                console.log('item', tag);
+
                 const label_model = document.createElement("span");
                 label_model.classList.add('toolbox-function');
                 label_model.innerHTML = tag;

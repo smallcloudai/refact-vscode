@@ -537,7 +537,7 @@ body.vscode-light #logout {
 
 .toolbox-header {
 	display: flex;
-	justify-content: space-between;
+	justify-content: flex-start;
 	align-items: flex-start;
 	padding: 3px 0px;
 	cursor: pointer;
@@ -790,10 +790,6 @@ body.vscode-light #logout {
 	opacity: 0.5;
 }
 .toolbox-title {
-	justify-content: flex-start;
-	align-items: center;
-	flex: 1;
-	flex-basis: 0;
 	margin-right: 5px;
 }
 .toolbox-function {
@@ -819,13 +815,15 @@ body.vscode-light #logout {
 	display: flex !important;
 }
 .toolbox-title {
-	width: calc(100% - 40% - 40px);
+	width: auto;
+	/* width: calc(100% - 40% - 40px); */
 }
 .toolbox-header-tags {
-	width: 35%;
+	/* width: 35%; */
 	overflow: hidden !important;
 	display: flex !important;
 	flex-wrap: nowrap !important;
+	margin-right: auto;
 }
 .toolbox-header-commands {
 	width: auto;
