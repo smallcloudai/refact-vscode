@@ -278,6 +278,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view!.webview.postMessage({
             command: "ts2web",
             ts2web_user: global.user_logged_in,
+            ts2web_custom_infurl: global.custom_infurl,
             ts2web_plan: plan_msg,
             ts2web_metering_balance: global.user_metering_balance,
             ts2web_longthink_functions: global.longthink_functions_today,

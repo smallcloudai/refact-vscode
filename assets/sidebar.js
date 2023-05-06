@@ -813,14 +813,10 @@
                 chat.style.display = message.ts2web_user ? 'flex' : 'none';
                 data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
-                privacy.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                privacy.style.display = (message.ts2web_user && !message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
+                // TODO: always show settings, a place to put custom infurl
                 settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                if(message.ts2web_enable_chat && message.ts2web_enable_chat !== '') {
-                    chat.style.display = 'none';
-                } else {
-                    chat.style.display = 'flex';
-                }
 
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);

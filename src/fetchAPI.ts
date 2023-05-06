@@ -36,47 +36,32 @@ export class PendingRequest {
 
     private async look_for_completed_data_in_streaming_buf()
     {
-        let split_slash_n_slash_n = this.streaming_buf.split("\n\n");
-        if (split_slash_n_slash_n.length <= 1) {
-            return;
-        }
-        // for (let i = 0; i < split_slash_n_slash_n.length; i++) {
-        //     console.log(["split_slash_n_slash_n[" + i + "] = " + split_slash_n_slash_n[i]]);
-        // }
-        let last = split_slash_n_slash_n[split_slash_n_slash_n.length - 1];
-        if (last.length > 0) {
-            return; // incomplete, the last one must be empty, means trailing \n\n
-        }
-        let removed_prefix: string = "";
-        let cursor = split_slash_n_slash_n.length - 2;
-        while (cursor >= 0) {
-            let before_last = split_slash_n_slash_n[cursor];
-            if (before_last.substring(0, 6) !== "data: ") {
-                console.log("Unexpected data in streaming buf: " + before_last);
+        let to_eat = "";
+        while (1) {
+            let split_slash_n_slash_n = this.streaming_buf.split("\n\n");
+            if (split_slash_n_slash_n.length <= 1) {
                 return;
             }
-            removed_prefix = before_last.substring(6);
-            if (removed_prefix === "[DONE]") { // means nothing (stream will end anyway)
-                cursor--;
+            let first = split_slash_n_slash_n[0];
+            this.streaming_buf = split_slash_n_slash_n.slice(1).join("\n\n");
+            if (first.substring(0, 6) !== "data: ") {
+                console.log("Unexpected data in streaming buf: " + first);
                 continue;
             }
-            if (removed_prefix === "[ERROR]") { // same as done
-                cursor--;
+            to_eat = first.substring(6);
+            if (to_eat === "[DONE]") {
+                break;
+            }
+            if (to_eat === "[ERROR]") {
                 console.log("Streaming error");
                 this.streaming_error = true;
-                removed_prefix = "";
-                continue;
+                break;
             }
-            break;
-        }
-        // console.log(["feed = " + removed_prefix]);
-        if (removed_prefix) {
-            let json = JSON.parse(removed_prefix);
+            let json = JSON.parse(to_eat);
             if (this.streaming_callback) {
                 await this.streaming_callback(json);
             }
         }
-        this.streaming_buf = "";
     }
 
     supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: estate.ApiFields)
@@ -388,7 +373,12 @@ export function fetch_chat_promise(
     third_party: boolean = false,
 ): [Promise<fetchH2.Response>, estate.ApiFields]
 {
-    let url = inference_url("/chat-v1/completions", third_party);
+    let url = "";
+    if (global.chat_v1_style) {
+        url = inference_url("/v1/chat", third_party);
+    } else {
+        url = inference_url("/chat-v1/completions", third_party);
+    }
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return [Promise.reject("No API key"), new estate.ApiFields()];

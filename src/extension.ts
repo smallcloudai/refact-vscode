@@ -31,6 +31,8 @@ declare global {
     var longthink_filters: string[];
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
+    var custom_infurl: boolean;
+    var chat_v1_style: boolean;
 }
 
 
@@ -273,6 +275,7 @@ export function activate(context: vscode.ExtensionContext)
         global.user_active_plan = "";
         global.user_metering_balance = 0;
         global.status_bar.choose_color();
+        global.longthink_functions_today = {};
         if(global.side_panel) {
             global.side_panel.update_webview();
         }

@@ -72,8 +72,12 @@ export class ChatTab {
                 let key = keys[i];
                 if (key.includes("chat-") || key.includes("-chat")) {
                     let function_dict = global.longthink_functions_today[key];
-                    fireup_message["chat_models"].push(function_dict.model);
-                    free_floating_tab.model_to_thirdparty[function_dict.model] = !!(function_dict.thirdparty);
+                    let model = function_dict.model;
+                    if (model === "open-chat") { // TODO: for backward compatibility, remove this later
+                        model = "gpt3.5";
+                    }
+                    fireup_message["chat_models"].push(model);
+                    free_floating_tab.model_to_thirdparty[model] = !!(function_dict.thirdparty);
                 }
             }
             if (fireup_message["chat_models"].length === 0) {
@@ -292,8 +296,16 @@ export class ChatTab {
                 console.log(["chat request is cancelled, new data is coming", json]);
                 return;
             } else {
+                let delta = "";
+                if (json && json["choices"]) {
+                    let choice0 = json["choices"][0];
+                    delta = choice0["delta"];
+                }
                 if (json && json["delta"]) {
-                    answer += json["delta"];
+                    delta = json["delta"];
+                }
+                if (delta) {
+                    answer += delta;
                     let valid_html = false;
                     let html = "";
                     try {

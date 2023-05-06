@@ -50,9 +50,14 @@ export function check_if_login_worked()
 export function secret_api_key(): string
 {
     let key = vscode.workspace.getConfiguration().get('refactai.apiKey');
+    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+    global.custom_infurl = !!manual_infurl;
     if (!key) {
         // Backward compatibility: codify is the old name
         key = vscode.workspace.getConfiguration().get('codify.apiKey');
+    }
+    if (!key && manual_infurl) {
+        key = "self-hosting";
     }
     if (!key) { return ""; }
     if (typeof key !== 'string') { return ""; }
@@ -63,6 +68,8 @@ export function secret_api_key(): string
 export async function login()
 {
     let apiKey = secret_api_key();
+    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+
     if (global.user_logged_in && secret_api_key()) {
         return "OK";
     }
@@ -77,7 +84,7 @@ export async function login()
         cache: "no-cache",
         referrer: "no-referrer",
     };
-    if (global.streamlined_login_ticket && !global.user_logged_in) {
+    if (global.streamlined_login_ticket && !global.user_logged_in && !manual_infurl) {
         const recall_url = "https://www.smallcloud.ai/v1/streamlined-login-recall-ticket";
         headers.Authorization = `codify-${global.streamlined_login_ticket}`;
         try {
@@ -108,12 +115,11 @@ export async function login()
             return;
         }
     }
-    if (!apiKey) {
+    if (!apiKey && !manual_infurl) {
         // wait until user clicks the login button
         return;
     }
     let staging = vscode.workspace.getConfiguration().get('refactai.staging');
-    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
     let login_url = "https://www.smallcloud.ai/v1/login";
     let third_party = false;
     let ctx = fetchAPI.inference_context(third_party);  // turns off certificate check if custom infurl
@@ -153,6 +159,11 @@ export async function login()
             }
             if (json.login_message) {
                 await usabilityHints.show_message_from_server("LoginServer", json.login_message);
+            }
+            if (json['chat-v1-style']) {
+                global.chat_v1_style = json['chat-v1-style'];
+            } else {
+                global.chat_v1_style = false;
             }
             if (json.inference) {
                 global.user_active_plan = json.inference;
