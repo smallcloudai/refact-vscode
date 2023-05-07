@@ -156,7 +156,7 @@ body.vscode-light #profile {
 	justify-content: center;
 	text-align: center;
 	margin: 5px 0;
-    display: none;
+	display: flex;
 }
 #settings span::before {
 	color: var(--secondary);

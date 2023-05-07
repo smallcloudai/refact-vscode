@@ -173,11 +173,9 @@
         if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement.parentElement;
-            console.log('tatatatarget',target);
             let selected_function = last_model_used[target.dataset.funciton_name];
             if(!selected_function) {
                 if(target.dataset.function) {
-                    console.log('target.dataset.function',target.dataset.function);
                     if(target.dataset.ids) {
                         const current_ids = JSON.parse(target.dataset.ids);
                         if(current_ids.length > 0) {
@@ -815,7 +813,7 @@
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
                 privacy.style.display = (message.ts2web_user && !message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
                 // TODO: always show settings, a place to put custom infurl
-                settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
 
                 if (message.ts2web_metering_balance) {
