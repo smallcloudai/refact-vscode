@@ -58,7 +58,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
-        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r(){},."'\]]*$/));
+        let right_of_cursor_has_only_special_chars = Boolean(right_of_cursor.match(/^[:\s\t\n\r(){},."'\];]*$/));
         if (!right_of_cursor_has_only_special_chars) {
             return [];
         }

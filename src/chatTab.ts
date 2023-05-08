@@ -80,7 +80,7 @@ export class ChatTab {
                     free_floating_tab.model_to_thirdparty[model] = !!(function_dict.thirdparty);
                 }
             }
-            if (fireup_message["chat_models"].length === 0) {
+            if (fireup_message["chat_models"].length === 0 && !global.chat_v1_style) {
                 fireup_message["chat_models"] = ["gpt3.5"];
             }
         }
