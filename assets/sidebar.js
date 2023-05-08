@@ -832,6 +832,16 @@
                 if(message.ts2web_staging) {
                     staging = message.ts2web_staging;
                 }
+                if(message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
+                    login.style.display = 'none';
+                    settings.querySelector('span').style.display = 'block';
+                    settings.style.width = '100%';
+                } else {
+                    settings.querySelector('span').style.display = 'none';
+                    settings.style.width = '32px';
+                }
+                break;
+            default:
                 break;
         }
     });

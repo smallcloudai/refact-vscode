@@ -168,7 +168,11 @@ body.vscode-light #profile {
 	flex-grow: 0;
 	flex-shrink: 0;
 }
-#settings span::before {
+#settings span {
+	display: none;
+	margin-left: 5px;
+}
+#settings i::before {
 	color: var(--secondary);
 	content: "\e805";
 	font-family: "codify";

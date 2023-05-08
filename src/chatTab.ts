@@ -64,6 +64,7 @@ export class ChatTab {
             chat_use_model: use_model,
             chat_attach_file: "",
             chat_attach_default: false,
+            manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl")
         };
         if (global.longthink_functions_today) {
             fireup_message["chat_models"] = [];
@@ -408,7 +409,7 @@ export class ChatTab {
                         <div class="refactcss-chat__panel">
                             <div class="refactcss-chat__controls">
                                 <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                                <div>Use model:<select id="chat-model"></select></div>
+                                <div class="refactcss-chat__model">Use model:<select id="chat-model"></select></div>
                             </div>
                             <div class="refactcss-chat__commands">
                                 <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>

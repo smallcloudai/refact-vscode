@@ -294,6 +294,9 @@ export function activate(context: vscode.ExtensionContext)
         if (e.affectsConfiguration('refactai.infurl')) {
             setTimeout(() => {
                 userLogin.login();
+                // if (global.side_panel) {
+                //     global.side_panel.update_webview();
+                // }
             }, 300);
         }
     });

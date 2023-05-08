@@ -226,6 +226,9 @@
                 chat_model_combo.appendChild(option);
             }
             input_should_be_visible = true;
+            if(manual_infurl !== '') {
+                let model_selector = document.querySelector('refactcss-chat__model').style.display = 'none';
+            }
             break;
         case "chat-end-streaming":
             input_should_be_visible = true;
