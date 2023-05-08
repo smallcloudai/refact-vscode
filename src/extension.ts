@@ -290,6 +290,14 @@ export function activate(context: vscode.ExtensionContext)
         userLogin.login();
     }, 100);
 
+    vscode.workspace.onDidChangeConfiguration(e => {
+        if (e.affectsConfiguration('refactai.infurl')) {
+            setTimeout(() => {
+                userLogin.login();
+            }, 300);
+        }
+    });
+
     first_run_message(context);
 }
 
