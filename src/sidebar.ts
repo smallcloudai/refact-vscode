@@ -435,15 +435,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     </div>
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
-
-                        <button tabindex="-1" id="login">Login / Register</button>
-                        <div class="sidebar-inline">
+                        <div class="sidebar-buttons">
+                            <button tabindex="-1" id="login">Login / Register</button>
                             <button tabindex="-1" id="chat"><span></span>New Chat</button>
-                            <div class="sidebar-group">
-                                <button tabindex="-1" id="privacy"><span></span>Privacy</button>
-                                <button tabindex="-1" id="settings"><span></span></button>
-                                <button tabindex="-1" id="keys"><span></span></button>
-                            </div>
+                            <button tabindex="-1" id="privacy"><span></span>Privacy</button>
+                            <button tabindex="-1" id="settings"><span></span></button>
+                            <button tabindex="-1" id="keys"><span></span></button>
                         </div>
                         <div class="sidebar-inline">
                             <div class="sidebar-logged"><b><span></span></b></div>
