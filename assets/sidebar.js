@@ -587,13 +587,15 @@
     function renderTags(data) {
         const filters_bar = document.querySelector('.toolbox-tags');
         filters_bar.innerHTML = "";
-        data.forEach((item) => {
-            const filter = document.createElement("div");
-            filter.classList.add("toolbox-tag");
-            filter.dataset.title = item;
-            filter.innerHTML = item;
-            filters_bar.appendChild(filter);
-        });
+        if(data.length > 0) {
+            data.forEach((item) => {
+                const filter = document.createElement("div");
+                filter.classList.add("toolbox-tag");
+                filter.dataset.title = item;
+                filter.innerHTML = item;
+                filters_bar.appendChild(filter);
+            });
+        }
         const tags = document.querySelectorAll('.toolbox-tag');
         tags.forEach((item) => {
             item.addEventListener('click', function (event) {
@@ -815,6 +817,10 @@
                 // TODO: always show settings, a place to put custom infurl
                 // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                if(message.ts2web_user === 'self-hosted') {
+                    document.querySelector('.sidebar-account').style.display = 'none';
+                    profile.style.display = 'none';
+                }
 
                 if (message.ts2web_metering_balance) {
                     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
@@ -832,13 +838,10 @@
                 if(message.ts2web_staging) {
                     staging = message.ts2web_staging;
                 }
+                console.log('memememe',message.ts2web_custom_infurl);
                 if(message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
                     login.style.display = 'none';
-                    settings.querySelector('span').style.display = 'block';
-                    settings.style.width = '100%';
-                } else {
-                    settings.querySelector('span').style.display = 'none';
-                    settings.style.width = '32px';
+                    // settings.classList.toggle('settings-full');
                 }
                 break;
             default:

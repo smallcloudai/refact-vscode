@@ -135,15 +135,15 @@ async function login_clicked()
         clearInterval(global_autologin_timer);
     }
     global_autologin_timer = setInterval(() => {
-        global.streamlined_login_countdown = 30 - (i % 30);
-        if (global.user_logged_in || i % 30 === 0) {
+        global.streamlined_login_countdown = 10 - (i % 10);
+        if (global.user_logged_in || i % 10 === 0) {
             userLogin.login();
         } else {
             if (global.side_panel) {
                 global.side_panel.update_webview();
             }
         }
-        if (global.user_logged_in || i === 300) {
+        if (global.user_logged_in || i === 200) {
             global.streamlined_login_countdown = -1;
             clearInterval(global_autologin_timer);
             return;

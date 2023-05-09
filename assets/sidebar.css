@@ -186,6 +186,12 @@ body.vscode-light #profile {
 	line-height: 1em;
 	font-size: 13px;
 }
+.settings-full span {
+	display: block;
+}
+.settings-full {
+	width: 100% !important;
+}
 #keys {
     font-size: 13px;
 	border: 1px solid var(--secondary);

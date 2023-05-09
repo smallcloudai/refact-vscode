@@ -442,7 +442,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <button tabindex="-1" id="settings"><i></i><span>Settings</span></button>
                             <button tabindex="-1" id="keys"><span></span></button>
                         </div>
-                        <div class="sidebar-inline">
+                        <div class="sidebar-inline sidebar-account">
                             <div class="sidebar-logged"><b><span></span></b></div>
                             <div class="sidebar-coins">
                             <div class="sidebar-coin"></div><span>0</span></div>
