@@ -271,15 +271,7 @@ export function activate(context: vscode.ExtensionContext)
         context.globalState.update('codifyFirstRun', false);
         await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
-        global.user_logged_in = "";
-        global.user_active_plan = "";
-        global.user_metering_balance = 0;
-        global.status_bar.choose_color();
-        global.longthink_functions_today = {};
-        if(global.side_panel) {
-            global.side_panel.update_webview();
-        }
-        vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
+        fill_no_user();
     });
 
     context.subscriptions.push(logout);
@@ -293,10 +285,8 @@ export function activate(context: vscode.ExtensionContext)
     vscode.workspace.onDidChangeConfiguration(e => {
         if (e.affectsConfiguration('refactai.infurl')) {
             setTimeout(() => {
+                fill_no_user();
                 userLogin.login();
-                // if (global.side_panel) {
-                //     global.side_panel.update_webview();
-                // }
             }, 300);
         }
     });
@@ -311,6 +301,21 @@ export function first_run_message(context: vscode.ExtensionContext)
     if (firstRun) { return; };
     context.globalState.update('codifyFirstRun', true);
     userLogin.welcome_message();
+}
+
+
+function fill_no_user()
+{
+    // AKA low level logout
+    global.user_logged_in = "";
+    global.user_active_plan = "";
+    global.user_metering_balance = 0;
+    global.status_bar.choose_color();
+    global.longthink_functions_today = {};
+    if(global.side_panel) {
+        global.side_panel.update_webview();
+    }
+    vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
 }
 
 
