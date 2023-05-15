@@ -29,9 +29,12 @@ let _global_serial_number = 5000;
 
 let _completion_data_feedback_candidate = new estate.ApiFields();
 
+let _global_stopped_because_maxtokens = false;
+
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
 {
+
     async provideInlineCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -313,6 +316,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let ms_int = Math.round(t1 - t0);
             console.log([`API request ${ms_int}ms`]);
             modif_doc = json["choices"][0]["files"][file_name];
+            let finish_reason = json["choices"][0]["finish_reason"];
+            _global_stopped_because_maxtokens = (finish_reason === "maxlen" || finish_reason === "length");
             let before_cursor1 = whole_doc.substring(0, cursor_cr);
             let before_cursor2 = modif_doc.substring(0, cursor_cr);
             backward_cache = json["backward_cache"] || "";
@@ -439,6 +444,12 @@ export function inline_accepted(serial_number: number)
     if (ponder_time_ms > 1200) {
         usageStats.report_increase_a_counter("completion", "metric1200ms_tab");
         usageStats.report_increase_a_counter("completion", "metric1200ms_tab:" + ext);
+    }
+    if (_global_stopped_because_maxtokens) {
+        // run again to continue completion
+        setTimeout(() => {
+            vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
+        }, 20);
     }
 }
 
