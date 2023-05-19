@@ -302,7 +302,7 @@ export class ChatTab {
                     let choice0 = json["choices"][0];
                     delta = choice0["delta"];
                 }
-                if (json && json["delta"]) {
+                if (json && json["delta"]) { // TODO: remove this after inference server is updated
                     delta = json["delta"];
                 }
                 if (delta) {
@@ -328,6 +328,12 @@ export class ChatTab {
                             have_editor: Boolean(stack_this.working_on_snippet_editor)
                         });
                         // console.log(["assistant", answer]);
+                    }
+                }
+                if (json && json["metering_balance"]) {
+                    global.user_metering_balance = json["metering_balance"];
+                    if (global.side_panel) {
+                        global.side_panel.update_webview();
                     }
                 }
             }

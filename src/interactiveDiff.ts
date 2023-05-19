@@ -152,6 +152,12 @@ export async function query_diff(
                 state.showing_diff_modif_doc = modif_doc;
                 await estate.switch_mode(state, estate.Mode.DiffWait);
             }
+            if (json && json["metering_balance"]) {
+                global.user_metering_balance = json["metering_balance"];
+                if (global.side_panel) {
+                    global.side_panel.update_webview();
+                }
+            }
         }
     }
 
