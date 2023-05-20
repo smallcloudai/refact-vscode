@@ -10,9 +10,9 @@ import * as privacy from "./privacy";
 import { ChatTab } from './chatTab';
 
 
-async function open_chat_tab(question: string, editor: vscode.TextEditor | undefined, attach_default: boolean, model: string)
+async function open_chat_tab(question: string, editor: vscode.TextEditor | undefined, attach_default: boolean, model: string, model_function: string = "")
 {
-    await ChatTab.activate_from_outside(question, editor, attach_default, model);
+    await ChatTab.activate_from_outside(question, editor, attach_default, model, model_function);
 }
 
 
@@ -83,12 +83,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         let selection = editor.selection;
                         let attach_default = !selection.isEmpty || !chat_empty;
                         if(selection.isEmpty) {
-                            await open_chat_tab(question, editor, attach_default, data.chat_model);
+                            await open_chat_tab(question, editor, attach_default, data.chat_model, data.chat_model_function);
                         } else {
-                            await open_chat_tab(question, editor, attach_default, data.chat_model);
+                            await open_chat_tab(question, editor, attach_default, data.chat_model, data.chat_model_function);
                         }
                     } else {
-                        await open_chat_tab("", undefined, false, "");
+                        await open_chat_tab("", undefined, false, "", "");
                     }
                     break;
                 }

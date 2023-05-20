@@ -24,10 +24,17 @@
     chat_send_button.addEventListener('click', () => {
         const message = chat_input.value;
         let chat_model_combo = document.getElementById("chat-model");
-        let chat_model = chat_model_combo.options[chat_model_combo.selectedIndex].value;
+        console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
+        [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
         let chat_attach_file = document.getElementById("chat-attach");
         chat_input.value = '';
-        vscode.postMessage({ type: "question-posted-within-tab", chat_question: message, chat_model: chat_model, chat_attach_file: chat_attach_file.checked });
+        vscode.postMessage({
+            type: "question-posted-within-tab",
+            chat_question: message,
+            chat_model: chat_model,
+            chat_model_function: chat_model_function,
+            chat_attach_file: chat_attach_file.checked
+        });
         if(!chat_controls_moved) {
             const chat_controls = document.querySelector('.refactcss-chat__controls');
             const chat_content = document.querySelector('.refactcss-chat__content');
@@ -215,9 +222,9 @@
             let chat_model_combo = document.getElementById("chat-model");
             for (let i = 0; i < message.chat_models.length; i++) {
                 let option = document.createElement("option");
-                option.value = message.chat_models[i];
-                option.text = message.chat_models[i];
-                if (message.chat_use_model === message.chat_models[i]) {
+                option.value = JSON.stringify(message.chat_models[i]);
+                option.text = message.chat_models[i][0];
+                if (message.chat_use_model === message.chat_models[i][0] && message.chat_use_model_function === message.chat_models[i][1]) {
                     option.selected = true;
                 }
                 if (message.chat_use_model==="" && i===0) {
@@ -226,9 +233,6 @@
                 chat_model_combo.appendChild(option);
             }
             input_should_be_visible = true;
-            if(manual_infurl !== '') {
-                let model_selector = document.querySelector('refactcss-chat__model').style.display = 'none';
-            }
             break;
         case "chat-end-streaming":
             input_should_be_visible = true;

@@ -32,7 +32,13 @@ export class ChatTab {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
-    public static async activate_from_outside(question: string, editor: vscode.TextEditor | undefined, attach_default: boolean, use_model: string)
+    public static async activate_from_outside(
+        question: string,
+        editor: vscode.TextEditor | undefined,
+        attach_default: boolean,
+        use_model: string,
+        use_model_function: string,
+        )
     {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -56,18 +62,18 @@ export class ChatTab {
         free_floating_tab.working_on_snippet_editor = undefined;
         free_floating_tab.working_on_snippet_column = undefined;
         if (!use_model) {
-            use_model =  await chat_model_get();
+            [use_model, use_model_function] = await chat_model_get();
         }
         let fireup_message = {
             command: "chat-set-fireup-options",
-            chat_models: [""],
+            chat_models: [] as [string, string][],
             chat_use_model: use_model,
+            chat_use_model_function: use_model_function,
             chat_attach_file: "",
             chat_attach_default: false,
             manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl")
         };
         if (global.longthink_functions_today) {
-            fireup_message["chat_models"] = [];
             const keys = Object.keys(global.longthink_functions_today);
             for (let i = 0; i < keys.length; i++) {
                 let key = keys[i];
@@ -77,12 +83,12 @@ export class ChatTab {
                     if (model === "open-chat") { // TODO: for backward compatibility, remove this later
                         model = "gpt3.5";
                     }
-                    fireup_message["chat_models"].push(model);
+                    fireup_message["chat_models"].push([model, function_dict.function_name]);
                     free_floating_tab.model_to_thirdparty[model] = !!(function_dict.thirdparty);
                 }
             }
             if (fireup_message["chat_models"].length === 0 && !global.chat_v1_style) {
-                fireup_message["chat_models"] = ["gpt3.5"];
+                fireup_message["chat_models"] = [["gpt3.5", "chat"]];
             }
         }
         if (editor) {
@@ -129,7 +135,7 @@ export class ChatTab {
             if (code_snippet) {
                 question = "```\n" + code_snippet + "\n```\n" + question;
             }
-            free_floating_tab.chat_post_question(question, use_model, !!code_snippet);
+            free_floating_tab.chat_post_question(question, use_model, use_model_function, !!code_snippet);
         } else {
             let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
             if (code_snippet) {
@@ -181,7 +187,12 @@ export class ChatTab {
                     break;
                 }
 				case "question-posted-within-tab": {
-                    await free_floating_tab.chat_post_question(data.chat_question, data.chat_model, data.chat_attach_file);
+                    await free_floating_tab.chat_post_question(
+                        data.chat_question,
+                        data.chat_model,
+                        data.chat_model_function,
+                        data.chat_attach_file
+                    );
                     break;
 				}
                 case "stop-clicked": {
@@ -231,8 +242,12 @@ export class ChatTab {
         });
     }
 
-    async chat_post_question(question: string, model: string, attach_file: boolean)
-    {
+    async chat_post_question(
+        question: string,
+        model: string,
+        model_function: string,
+        attach_file: boolean
+    ) {
         if(!this.web_panel) {
             return false;
         }
@@ -246,6 +261,8 @@ export class ChatTab {
             });
             return;
         }
+
+        chat_model_set(model, model_function);  // successfully used model, save it
 
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         let cancelToken = this.cancellationTokenSource.token;
@@ -359,7 +376,6 @@ export class ChatTab {
             } else {
                 stack_this.messages.push(["assistant", answer]);
                 stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
-                chat_model_set(model);  // successfully used model, save it
             }
         }
 
@@ -372,7 +388,7 @@ export class ChatTab {
             cancelToken,
             "chat-tab",
             this.messages,
-            "freechat",
+            model_function,
             model,
             [],
             third_party,
@@ -444,23 +460,30 @@ export class ChatTab {
 }
 
 
-export async function chat_model_get(): Promise<string>
+export async function chat_model_get(): Promise<[string, string]>
 {
     let context: vscode.ExtensionContext | undefined = global.global_context;
     if (!context) {
-        return "";
+        return ["", ""];
     }
     let chat_model_ = await context.globalState.get("chat_model");
+    let chat_model_function_ = await context.globalState.get("chat_model_function");
     let chat_model: string = "";
     if (typeof chat_model_ !== "string") {
         chat_model = "";
     } else {
         chat_model = chat_model_;
     }
-    return chat_model;
+    let chat_model_function: string = "";
+    if (typeof chat_model_function_ !== "string") {
+        chat_model_function = "";
+    } else {
+        chat_model_function = chat_model_function_;
+    }
+    return [chat_model, chat_model_function];
 }
 
-export async function chat_model_set(chat_model: string)
+export async function chat_model_set(chat_model: string, model_function: string)
 {
     let context: vscode.ExtensionContext | undefined = global.global_context;
     if (!context) {
@@ -470,6 +493,7 @@ export async function chat_model_set(chat_model: string)
         return;
     }
     await context.globalState.update("chat_model", chat_model);
+    await context.globalState.update("chat_model_function", model_function);
 }
 
 export default ChatTab;

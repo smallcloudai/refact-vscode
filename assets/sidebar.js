@@ -609,7 +609,7 @@
                     const filterItems = document.querySelectorAll(".toolbox-item");
                     const itemsArray = Array.from(filterItems);
                     filterItems.forEach(item => {
-                        item.style.display = 'none'
+                        item.style.display = 'none';
                     });
                     const filteredDivs = itemsArray.filter(div => {
                         const tags = div.dataset.tags_filter;
@@ -838,7 +838,6 @@
                 if(message.ts2web_staging) {
                     staging = message.ts2web_staging;
                 }
-                console.log('memememe',message.ts2web_custom_infurl);
                 if(message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
                     login.style.display = 'none';
                     // settings.classList.toggle('settings-full');
