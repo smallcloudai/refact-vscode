@@ -119,14 +119,15 @@ export async function login()
         // wait until user clicks the login button
         return;
     }
+    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     let staging = vscode.workspace.getConfiguration().get('refactai.staging');
-    let login_url = "https://www.smallcloud.ai/v1/login";
+    let login_url = `https://www.smallcloud.ai/v1/login?plugin_version=vscode-${client_version}`;
     let third_party = false;
     let ctx = fetchAPI.inference_context(third_party);  // turns off certificate check if custom infurl
     if (typeof manual_infurl === "string" && manual_infurl.length > 0) {
         login_url = fetchAPI.inference_url("/v1/login", third_party);
     } else if (staging) {
-        login_url = "https://www.smallcloud.ai/v1/login?want_staging_version=1";
+        login_url = "https://www.smallcloud.ai/v1/login?plugin_version=vscode-${client_version}&want_staging_version=1";
     }
     headers.Authorization = `Bearer ${apiKey}`;
     try {
