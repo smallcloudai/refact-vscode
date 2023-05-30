@@ -127,7 +127,7 @@ export async function login()
     if (typeof manual_infurl === "string" && manual_infurl.length > 0) {
         login_url = fetchAPI.inference_url("/v1/login", third_party);
     } else if (staging) {
-        login_url = "https://www.smallcloud.ai/v1/login?plugin_version=vscode-${client_version}&want_staging_version=1";
+        login_url = `https://www.smallcloud.ai/v1/login?plugin_version=vscode-${client_version}&want_staging_version=1`;
     }
     headers.Authorization = `Bearer ${apiKey}`;
     try {
