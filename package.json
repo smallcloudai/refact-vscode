@@ -218,6 +218,10 @@
 				"command": "refactaicmd.tab",
 				"key": "tab",
 				"when": "refactcx.runTab"
+			},
+			{
+				"command": "refactaicmd.callChat",
+				"key": "alt+c"
 			}
 		],
 		"viewsContainers": {
