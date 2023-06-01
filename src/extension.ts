@@ -16,7 +16,7 @@ import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
-
+import {open_chat_tab} from "./sidebar";
 
 declare global {
     var status_bar: statusBar.StatusBarMenu;
@@ -33,6 +33,12 @@ declare global {
     var last_positive_result: number;
     var custom_infurl: boolean;
     var chat_v1_style: boolean;
+}
+
+async function pressed_call_chat() {
+    console.log(["pressed_call_chat"]);
+    let editor = vscode.window.activeTextEditor;
+    await open_chat_tab("", editor, true, "", "");
 }
 
 
@@ -213,6 +219,7 @@ export function activate(context: vscode.ExtensionContext)
         privacy.set_access_override(uri.fsPath, 1);
         PrivacySettings.render(context);
     });
+    // let disposable10 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride1', pressed_call_chat);
     let disposable11 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride2', (uri:vscode.Uri) => {
         if (!uri || !uri.fsPath) {
             return;
@@ -226,6 +233,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable13 = vscode.commands.registerCommand('refactaicmd.completionManual', async () => {
         await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
     });
+    let disposable6 = vscode.commands.registerCommand('refactaicmd.callChat', pressed_call_chat);
 
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
@@ -237,6 +245,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable11);
     context.subscriptions.push(disposable12);
     context.subscriptions.push(disposable13);
+    context.subscriptions.push(disposable6);
 
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
