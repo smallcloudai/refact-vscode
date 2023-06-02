@@ -384,6 +384,7 @@
 
             const body = document.createElement("div");
             body.classList.add("toolbox-body");
+            // body.classList.add('toolbox-run');
             // likes
             const likes = document.createElement("div");
             likes.classList.add("toolbox-likes");
@@ -612,6 +613,7 @@
                         item.style.display = 'none';
                     });
                     const filteredDivs = itemsArray.filter(div => {
+                    div.querySelector('.toolbox-function').innerHTML = tag;
                         const tags = div.dataset.tags_filter;
                         if(tags) {
                             const all_tags = JSON.parse(div.dataset.tags_filter);
@@ -624,6 +626,7 @@
                         div.style.display = 'block';
                     });
                     current_filter = this.dataset.title;
+                    console.log('current filter --> ', current_filter);
                 }
                 else {
                     tags.forEach((item) => {
@@ -730,6 +733,7 @@
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
             item.addEventListener("click", (event) => {
+                console.log('clicked item', item);
                 if (event.target.tagName === 'SPAN') {
                     let active = document.querySelector(".item-active");
                     if (active) {
@@ -748,13 +752,21 @@
                         current_item.querySelector('.toolbox-dropdown-wrapper').style.display = 'block';
                         const all_tags = JSON.parse(current_item.dataset.tags_filter);
                         const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
+                        const current_tag = item.querySelector('.toolbox-function').innerHTML;
                         for (let index = 0; index < ids.length; index++) {
                             const element = ids[index];
                             const tag = all_tags[index];
                             const option = document.createElement('option');
                             option.text = tag;
                             option.value = element;
-                            select.add(option);
+                            if (current_tag !== 'Multiple') {
+                                if (tag === current_tag) {
+                                    select.add(option);
+                                }
+                            }
+                            else {
+                                select.add(option);
+                            }
                         }
                     }
 

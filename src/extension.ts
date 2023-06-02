@@ -219,7 +219,6 @@ export function activate(context: vscode.ExtensionContext)
         privacy.set_access_override(uri.fsPath, 1);
         PrivacySettings.render(context);
     });
-    // let disposable10 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride1', pressed_call_chat);
     let disposable11 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride2', (uri:vscode.Uri) => {
         if (!uri || !uri.fsPath) {
             return;
