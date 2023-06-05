@@ -132,6 +132,12 @@
 				"category": "Refact.ai"
 			},
 			{
+				"command": "refactaicmd.callChat",
+				"title": "Call Chat",
+				"key": "alt+c",
+				"category": "Refact.ai"
+			},
+			{
 				"command": "refactaicmd.logout",
 				"title": "Logout",
 				"category": "Refact.ai"
@@ -221,7 +227,7 @@
 			},
 			{
 				"command": "refactaicmd.callChat",
-				"key": "alt+c"
+				"key": "alt+v"
 			}
 		],
 		"viewsContainers": {
