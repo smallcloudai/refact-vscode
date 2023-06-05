@@ -16,6 +16,7 @@
     let editor_inform_file_access_level = 0;
     let function_bookmarks = [];
     let last_model_used = [];
+    var pref_model_func = {};
 
     let staging = false;
     let history = [];
@@ -174,6 +175,8 @@
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement.parentElement;
             let selected_function = last_model_used[target.dataset.funciton_name];
+            console.log('target -->', target);
+            console.log('selected_function -->', selected_function);
             if(!selected_function) {
                 if(target.dataset.function) {
                     if(target.dataset.ids) {
@@ -205,6 +208,8 @@
                 const hasOptions = select && select.options && select.options.length > 0;
                 if(hasOptions) {
                     selected_function = select.value;
+                    selected_model = select.querySelector('option[value="' + selected_function + '"]').innerHTML;
+                    pref_model_func[target.id] = selected_model;
                     last_model_used[parent_function.dataset.funciton_name] = selected_function;
                 }
                 else {
@@ -627,7 +632,6 @@
                         div.style.display = 'block';
                     });
                     current_filter = this.dataset.title;
-                    console.log('current filter --> ', current_filter);
                 }
                 else {
                     current_filter = "";
@@ -638,10 +642,8 @@
                     const itemsArray = Array.from(filterItems);
 
                     const filteredDivs = itemsArray.filter(div => {
-                        console.log('div --> ', div);
                         const tags = JSON.parse(div.dataset.tags_filter);
                         if(tags) {
-                            console.log('tags --> ', tags, tags.length);
                             if (tags.length > 1) {
                                 div.querySelector('.toolbox-function').innerHTML = 'Multiple';
                             } 
@@ -761,6 +763,10 @@
                     item.classList.add("item-active");
                     const item_name = item.id;
                     const item_functions = longthink_functions_today[item_name];
+                    let pref_model = undefined;
+                    if (item_name in pref_model_func) {
+                        pref_model = pref_model_func[item_name];
+                    }
                     // const item_title = item.dataset.title;
                     const current_item = document.querySelector(`.item-active`);
                     let ids = null;
@@ -772,22 +778,34 @@
                         const all_tags = JSON.parse(current_item.dataset.tags_filter);
                         const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
                         const current_tag = item.querySelector('.toolbox-function').innerHTML;
-                        for (let index = 0; index < ids.length; index++) {
-                            const element = ids[index];
+                        
+                        const pairs = [];
+                        ids.forEach((element, index) => {
                             const tag = all_tags[index];
+                            pairs.push({ element, tag });
+                        });
+    
+                        if (typeof pref_model !== 'undefined') {
+                            const index = pairs.findIndex(pair => pair.tag === pref_model);
+                            if (index !== -1) {
+                                const [pair] = pairs.splice(index, 1);
+                                pairs.unshift(pair);
+                            }
+                        }
+    
+                        pairs.forEach(pair => {
+                            const { element, tag } = pair;
                             const option = document.createElement('option');
                             option.text = tag;
                             option.value = element;
-                            if (current_tag !== 'Multiple') {
-                                if (tag === current_tag) {
-                                    select.add(option);
-                                }
-                            }
-                            else {
+                            if (current_tag !== 'Multiple' && tag === current_tag) {
                                 select.add(option);
                             }
+                            if (current_tag === 'Multiple') {
+                                select.add(option);
+                            }
+                        });
                         }
-                    }
 
                     if (item_functions.supports_highlight === 1) {
                         document.querySelector(".item-active .toolbox-notice").classList.add('toolbox-notice-hidden');
