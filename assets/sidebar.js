@@ -175,8 +175,6 @@
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement.parentElement;
             let selected_function = last_model_used[target.dataset.funciton_name];
-            console.log('target -->', target);
-            console.log('selected_function -->', selected_function);
             if(!selected_function) {
                 if(target.dataset.function) {
                     if(target.dataset.ids) {
@@ -532,9 +530,6 @@
 
             let tag = function_tag(item.function_name);
             if(tag) {
-                console.log('tag', tag);
-                console.log('item', tag);
-
                 const label_model = document.createElement("span");
                 label_model.classList.add('toolbox-function');
                 label_model.innerHTML = tag;
@@ -542,7 +537,6 @@
                 toolbox_item.dataset.tags_filter = JSON.stringify([tag]);
                 toolbox_item.dataset.ids = JSON.stringify([toolbox_item.id]);
             } else {
-                console.log("no tag", item.function_name);
                 toolbox_item.dataset.tags_filter = JSON.stringify([]);
                 toolbox_item.dataset.ids = JSON.stringify([]);
             }
@@ -619,7 +613,6 @@
                     });
                     const filteredDivs = itemsArray.filter(div => {
                         div.querySelector('.toolbox-function').innerHTML = tag;
-                        // console.log('div --> ', div);
                         const tags = div.dataset.tags_filter;
                         if(tags) {
                             const all_tags = JSON.parse(div.dataset.tags_filter);
@@ -646,7 +639,7 @@
                         if(tags) {
                             if (tags.length > 1) {
                                 div.querySelector('.toolbox-function').innerHTML = 'Multiple';
-                            } 
+                            }
                             if (tags.length === 1) {
                                 div.querySelector('.toolbox-function').innerHTML = tags[0];
                             }
@@ -754,7 +747,6 @@
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
             item.addEventListener("click", (event) => {
-                console.log('clicked item', item);
                 if (event.target.tagName === 'SPAN') {
                     let active = document.querySelector(".item-active");
                     if (active) {
@@ -778,13 +770,13 @@
                         const all_tags = JSON.parse(current_item.dataset.tags_filter);
                         const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
                         const current_tag = item.querySelector('.toolbox-function').innerHTML;
-                        
+
                         const pairs = [];
                         ids.forEach((element, index) => {
                             const tag = all_tags[index];
                             pairs.push({ element, tag });
                         });
-    
+
                         if (typeof pref_model !== 'undefined') {
                             const index = pairs.findIndex(pair => pair.tag === pref_model);
                             if (index !== -1) {
@@ -792,7 +784,7 @@
                                 pairs.unshift(pair);
                             }
                         }
-    
+
                         pairs.forEach(pair => {
                             const { element, tag } = pair;
                             const option = document.createElement('option');
