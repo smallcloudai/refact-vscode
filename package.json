@@ -227,7 +227,7 @@
 			},
 			{
 				"command": "refactaicmd.callChat",
-				"key": "alt+v"
+				"key": "alt+c"
 			}
 		],
 		"viewsContainers": {
