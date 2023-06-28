@@ -169,7 +169,7 @@ export async function login()
             if (json.inference) {
                 global.user_active_plan = json.inference;
             } else {
-                global.user_active_plan = "CUSTOM_URL";
+                global.user_active_plan = "CUSTOM_SERVER";
             }
             if (global.side_panel) {
                 global.side_panel.update_webview();

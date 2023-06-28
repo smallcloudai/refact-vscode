@@ -91,6 +91,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         whole_doc = text_left + whole_doc.substring(cursor_cr);
 
         let delay_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
+        let called_manually = context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
 
         let completion = "";
         let this_completion_serial_number = -1;
@@ -106,7 +107,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                 cursor_cr,
                 cursor_transmit,
                 multiline,
-                third_party
+                third_party,
+                called_manually
             );
             if (third_party) {
                 state.completion_reset_on_cursor_movement = true;
@@ -218,11 +220,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cursor_transmit: number,
         multiline: boolean,
         third_party: boolean,
+        called_manually: boolean
     ): Promise<[string, number]>
     {
         let left = whole_doc.substring(0, cursor_cr);
         let cached = this.cache.get(left);
-        if (cached !== undefined && !third_party) {
+        if (cached !== undefined && !third_party && !called_manually) {
             return [cached.completion, cached.serial_number];
         }
         let login: any = await userLogin.inference_login();
