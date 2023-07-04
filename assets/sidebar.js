@@ -139,16 +139,7 @@
                 });
             } else {
                 let intent = toolboxSearch.value;
-                history.splice(0, 0, intent);
-                let function_to_run = JSON.stringify(longthink_functions_today['hl-and-fix'] || longthink_functions_today['staging-hl-and-fix']);
-                if(editor_inform_how_many_lines_selected > 0) {
-                    function_to_run = JSON.stringify(longthink_functions_today['select-and-refactor'] || longthink_functions_today['staging-select-and-refactor']);
-                }
-                vscode.postMessage({
-                    type: "function_activated",
-                    intent: intent,
-                    data_function: function_to_run, // this
-                });
+                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: active.dataset.model });
             }
             reset_everything_about_commands();
             toolboxSearch.value = '';
@@ -731,11 +722,6 @@
                         const refactor = document.querySelector('[data-function_name="select-and-refactor"]');
                         const parent = refactor.parentNode;
                         parent.insertBefore(refactor, parent.firstChild);
-                    }
-                    else {
-                        const hl = document.querySelector('[data-function_name="hl-and-fix"]');
-                        const parent = hl.parentNode;
-                        parent.insertBefore(hl, parent.firstChild);
                     }
                 }
             }
