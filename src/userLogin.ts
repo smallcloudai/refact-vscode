@@ -126,7 +126,7 @@ export async function login()
     let ctx = fetchAPI.inference_context(third_party);  // turns off certificate check if custom infurl
     if (typeof manual_infurl === "string" && manual_infurl.length > 0) {
         login_url = fetchAPI.inference_url("/v1/login", third_party);
-    } else if (staging) {
+    } else if (staging !== undefined) {
         login_url = `https://www.smallcloud.ai/v1/login?plugin_version=vscode-${client_version}&want_staging_version=${staging}`;
     }
     headers.Authorization = `Bearer ${apiKey}`;
