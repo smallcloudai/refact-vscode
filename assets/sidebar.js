@@ -119,7 +119,7 @@
             let single_page = document.querySelector(".item-active");  // single page
             if(toolboxSearch.value.endsWith("?")) {
                 let intent = toolboxSearch.value;
-                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: active.dataset.model });
+                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
             }
             else if (single_page) {
                 let intent = toolboxSearch.value;
@@ -139,7 +139,7 @@
                 });
             } else {
                 let intent = toolboxSearch.value;
-                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: active.dataset.model });
+                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
             }
             reset_everything_about_commands();
             toolboxSearch.value = '';
