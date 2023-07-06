@@ -40,3 +40,11 @@ export function add_back_cr_lf(
     }
     return cursors;
 }
+
+
+export function simple_cleanup_cr_lf(
+    text: string
+): string {
+    let text_cleaned: string = text.replace(/\r\n/g, "\n");
+    return text_cleaned;
+}
