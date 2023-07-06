@@ -828,6 +828,9 @@
                 let settings = document.querySelector('#settings');
                 let keys = document.querySelector('#keys');
 
+                let cm_filename = document.querySelector('#cm_filename');
+                let cm_file_score = document.querySelector('#cm_file_score');
+
                 discord.style.display = 'inline-flex';
                 bug.style.display = 'inline-flex';
                 info.style.display = message.ts2web_user ? 'flex' : '';
