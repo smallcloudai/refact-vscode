@@ -50,6 +50,11 @@ export class PendingRequest {
             }
             to_eat = first.substring(6);
             if (to_eat === "[DONE]") {
+                if (this.streaming_end_callback) {
+                    // The normal way to end the streaming
+                    await this.streaming_end_callback(this.streaming_error);
+                    this.streaming_end_callback = undefined;
+                }
                 break;
             }
             if (to_eat === "[ERROR]") {
@@ -113,6 +118,9 @@ export class PendingRequest {
                         } else {
                             usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", "");
                         }
+                        // Normally [DONE] produces a callback, but it's possible there's no [DONE] sent by the server.
+                        // Wait 500ms because inside VS Code "readable" and "end"/"close" are sometimes called in the wrong order.
+                        await new Promise(resolve => setTimeout(resolve, 500));
                         if (this.streaming_end_callback) {
                             await this.streaming_end_callback(this.streaming_error);
                             this.streaming_end_callback = undefined;
