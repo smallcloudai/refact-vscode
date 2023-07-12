@@ -37,11 +37,10 @@ declare global {
     // completion metric
     var cm_completion: string;
     var cm_document_text: string;
-    var cm_file_states: {
-        [key: string]: Array<{ [key: string]: string }>;
-    } | undefined;
+    var cm_file_states: {[key: string]: Array<{[key: string]: string}>} | undefined;
     var cm_file_scores: {[key: string]: Array<{[key: string]: number}>} | undefined;
     var cm_current_file: string | undefined;
+    var cm_last_model_name: string | undefined;
 }
 
 async function pressed_call_chat() {
