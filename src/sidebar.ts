@@ -282,11 +282,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
         }
 
-        function get_avg(arr: Array<number>): number {
-            const total = arr.reduce((acc, c) => acc + c, 0);
-            return total / arr.length;
-          }
-
         function get_score(arr: Array<{[key: string]: number}>) {
             const robot_arr = arr.map((a) => a["robot"]);
             const human_arr = arr.map((a) => a["human"]);

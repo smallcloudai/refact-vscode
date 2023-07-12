@@ -9,7 +9,6 @@ import * as crlf from "./crlf";
 import * as usageStats from "./usageStats";
 import * as privacy from "./privacy";
 
-import { completionMetricPipeline } from "./metricCompletion";
 
 class CacheEntry {
     public completion;
@@ -412,7 +411,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 }
 
 
-function _extract_extension(feed: estate.ApiFields)
+export function _extract_extension(feed: estate.ApiFields)
 {
     let filename_ext = feed.cursor_file.split(".");
     let ext = "None";
@@ -438,42 +437,11 @@ export function inline_accepted(serial_number: number)
     if (feed.ts_reacted) {
         return;
     }
-    let filename = feed.cursor_file;
-    global.cm_current_file = filename;
-
-    if (!global.cm_file_states) {
-        global.cm_file_states = {};
-    }
-    if (global.cm_file_states[filename]) {
-        global.cm_file_states[filename].push({'text': global.cm_document_text, 'completion': global.cm_completion});
-    } else {
-        global.cm_file_states[filename] = [{'text': global.cm_document_text, 'completion': global.cm_completion}];
-    }
-    // console.log('lengt: global.cm_file_states --> ', global.cm_file_states[filename].length);
-
-    if (global.cm_file_states[filename].length >= 2) {
-        let state0 = global.cm_file_states[filename][0];
-        let state1 = global.cm_file_states[filename][1];
-
-        let score = completionMetricPipeline(
-            state0['text'],
-            state1['text'], 
-            state0['completion']
-        );
-        console.log('SCORE --> ', score);
-
-        if (!global.cm_file_scores) {
-            global.cm_file_scores = {};
-        }
-        if (!global.cm_file_scores[filename]) {
-            global.cm_file_scores[filename] = [];
-        }
-        global.cm_file_scores[filename].push({
-            "robot": score[1][0], 
-            "human": score[1][1]
-        });
-        global.cm_file_states[filename] = [state1]; 
-    }
+    usageStats.report_increase_tab_stats(
+        feed, 
+        _extract_extension(feed), 
+        vscode.extensions.getExtension('vscode.git')
+    );
 
     feed.ts_reacted = Date.now();
     let ponder_time_ms = feed.ts_reacted - feed.ts_presented;

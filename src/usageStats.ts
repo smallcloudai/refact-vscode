@@ -4,6 +4,8 @@ import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 
+import { completionMetricPipeline } from "./metricCompletion";
+
 
 export async function report_success_or_failure(
     positive: boolean,
@@ -124,8 +126,160 @@ export async function report_increase_a_counter(
 }
 
 
+export async function report_increase_tab_stats(feed: any, extension: string, gitExtension: any) {
+    function generateSHA256Hash(input: string): string {
+        const crypto = require('crypto');
+        const hash = crypto.createHash('sha256');
+        hash.update(input);
+        return hash.digest('hex');
+    }
+
+    function get_project_name() {
+        let projectName = 'undefined';
+        let username = 'undefined';
+    
+        if (gitExtension) {
+            const git = gitExtension.isActive ? gitExtension.exports.getAPI(1) : null;
+            if (git) {
+                const repositories = git.repositories;
+                if (repositories.length > 0) {
+                    const projectPath = repositories[0].rootUri.path;
+                    projectName = projectPath.substring(projectPath.lastIndexOf('/') + 1);
+    
+                    const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
+                    const username = authorEmail ? authorEmail.split('@')[0] : '';
+                }
+            }
+        }
+        return projectName;
+    }
+    
+    let filename = feed.cursor_file;
+    global.cm_current_file = filename;
+
+    if (!global.cm_file_states) {
+        global.cm_file_states = {};
+    }
+    if (global.cm_file_states[filename]) {
+        global.cm_file_states[filename].push({'text': global.cm_document_text, 'completion': global.cm_completion});
+    } else {
+        global.cm_file_states[filename] = [{'text': global.cm_document_text, 'completion': global.cm_completion}];
+    }
+
+    if (global.cm_file_states[filename].length >= 2) {
+        let state0 = global.cm_file_states[filename][0];
+        let state1 = global.cm_file_states[filename][1];
+
+        let score = completionMetricPipeline(
+            state0['text'],
+            state1['text'], 
+            state0['completion']
+        );
+
+        if (!global.cm_file_scores) {
+            global.cm_file_scores = {};
+        }
+        if (!global.cm_file_scores[filename]) {
+            global.cm_file_scores[filename] = [];
+        }
+
+        let project_name = get_project_name();
+        let project_hash = project_name;
+        if (project_name !== 'undefined') {
+            project_hash = generateSHA256Hash(project_name);
+        }
+
+        global.cm_file_scores[filename].push({
+            "robot": score[1][0], 
+            "human": score[1][1],
+        });
+
+        let global_context: vscode.ExtensionContext|undefined = global.global_context;
+        if (!global_context) {
+            return;
+        }
+        let scores_stats: Array <{[key: string]: any}> | undefined = await global_context.globalState.get("scores_stats");
+        if (!scores_stats) {
+            scores_stats = [];
+        }
+
+        scores_stats.push({
+            "project_hash": project_hash,
+            "file_ext": extension,
+            "model_name": global.cm_last_model_name,
+            "edit_score": score[0],
+            "type_scores": [score[1][0], score[1][1]],
+        });
+
+        await global_context.globalState.update("scores_stats", scores_stats);
+    
+        global.cm_file_states[filename] = [state1]; 
+
+        console.log('LENGTH', scores_stats.length);
+
+        // only for test; DELETEME!
+        if (scores_stats.length >= 5) {
+            await report_tab_stats();
+        }
+        // END OF DELETEME
+    }
+
+}
+
+async function report_tab_stats() {
+
+    function merge_tab_stats(scores_stats: Array <{[key: string]: any}>): Array <{[key: string]: any}> {
+
+        function get_avg(arr: Array<number>): number {
+            const total = arr.reduce((acc, c) => acc + c, 0);
+            return total / arr.length;
+        }
+
+        let tab_stats_merged = new Map();
+        for (const stat of scores_stats) {
+            let key = stat['project_hash'] + '/' + stat['file_ext'] + '/' + stat['model_name'];
+            if (tab_stats_merged.has(key)) {
+                let val = tab_stats_merged.get(key);
+                val['edit_score'].push(stat['edit_score']);
+                val['type_scores'][0] += stat['type_scores'][0];
+                val['type_scores'][1] += stat['type_scores'][1];
+                tab_stats_merged.set(key, val);
+            } else {
+                tab_stats_merged.set(key, {
+                    "project_hash": stat['project_hash'],
+                    "file_ext": stat['file_ext'],
+                    "model_name": stat['model_name'],
+                    "edit_score": [stat['edit_score']],
+                    "type_scores": stat['type_scores'],
+                });
+            }
+        }
+        let tab_stats_final: Array <{[key: string]: any}> = [];
+        for (const [_, val] of tab_stats_merged) {
+            val['edit_score'] = get_avg(val['edit_score']);
+            tab_stats_final.push(val);
+        }
+        return tab_stats_final;
+    }
+    let global_context: vscode.ExtensionContext|undefined = global.global_context;
+    if (global_context === undefined) {
+        return;
+    }
+    let scores_stats: Array <{[key: string]: any}> | undefined = await global_context.globalState.get("scores_stats");
+    if (!scores_stats || scores_stats.length === 0) {
+        return;
+    }
+    console.log('DEFAULT tab stats', scores_stats);
+    scores_stats = merge_tab_stats(scores_stats);
+    console.log('READY TO SEND BATCH', scores_stats);
+
+    await global_context.globalState.update("scores_stats", undefined);
+}
+
+
 export async function report_usage_stats()
 {
+    // await report_tab_stats(); // UNCOMMENT ME WHENEVER HANDLER IS READY
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context === undefined) {
         return;

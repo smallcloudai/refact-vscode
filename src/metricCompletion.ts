@@ -40,8 +40,6 @@ export function getDiffAdditionsBlocks(state0: string, state1: string): [string,
 
     const diffText: string[] = diffBlocks.flatMap((b: string[]) => b);
 
-    // console.log('diffText: ', diffText);
-
     const additions: string = diffText.filter(l => l.startsWith('+')).map(l => l.slice(2)).join("\n");
     const deletions: string = diffText.filter(l => l.startsWith('-')).map(l => l.slice(2)).join("\n");
 
@@ -97,14 +95,11 @@ export function completionMetrics(text: string, completion: string): [number, [n
     return [usefulCompletion / completion.length, [usefulCompletion, userTyped]];
   }
   
-  export function completionMetricPipeline(
+export function completionMetricPipeline(
     state0: string,
     state1: string, 
     completion0: string
     ) : [number, [number, number]] {
-    // console.log('state0: ', state0);
-    // console.log('state1: ', state1);
-    // console.log('completion0: ', completion0);
     const [additions, _] = getDiffAdditionsBlocks(state0, state1);
     let score = completionMetrics(additions, completion0);
     return score;
