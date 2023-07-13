@@ -279,8 +279,8 @@ export function activate(context: vscode.ExtensionContext)
         // please look inside: there is not much being sent.
         stats_timer = setInterval(() => {
             usageStats.report_usage_stats();
-        }, 86400000);
-    }, 60000); // Start with 1 minute, change to 24 hours
+        }, 3600000); // 1 hour
+    }, 60000); // Start with 1 minute, change to 1 hour
 
     context.subscriptions.push(login);
     let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {

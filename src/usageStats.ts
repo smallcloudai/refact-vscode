@@ -146,8 +146,8 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
                     const projectPath = repositories[0].rootUri.path;
                     projectName = projectPath.substring(projectPath.lastIndexOf('/') + 1);
     
-                    const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
-                    const username = authorEmail ? authorEmail.split('@')[0] : '';
+                    // const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
+                    // const username = authorEmail ? authorEmail.split('@')[0] : '';
                 }
             }
         }
@@ -186,7 +186,7 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         let project_name = get_project_name();
         let project_hash = project_name;
         if (project_name !== 'undefined') {
-            project_hash = generateSHA256Hash(project_name);
+            project_hash = generateSHA256Hash(project_name).slice(0, 16);
         }
 
         global.cm_file_scores[filename].push({
@@ -217,11 +217,11 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
 
         console.log('LENGTH', scores_stats.length);
 
-        // only for test; DELETEME!
-        if (scores_stats.length >= 5) {
-            await report_tab_stats();
-        }
-        // END OF DELETEME
+        // // only for test; DELETEME!
+        // if (scores_stats.length >= 5) {
+        //     await report_tab_stats();
+        // }
+        // // END OF DELETEME
     }
 
 }
@@ -273,13 +273,39 @@ async function report_tab_stats() {
     scores_stats = merge_tab_stats(scores_stats);
     console.log('READY TO SEND BATCH', scores_stats);
 
+    const apiKey = userLogin.secret_api_key();
+    if (!apiKey) {
+        return;
+    }
+    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+    };
+    let url = "https://www.smallcloud.ai/v1/tab-stats";
+    let response = await fetchH2.fetch(url, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+            "client_version": `vscode-${client_version}`,
+            "usage": JSON.stringify(scores_stats),
+        }),
+    });
+
+    if (response.status !== 200) {
+        console.log([response.status, url]);
+        return;
+    }
+    console.log([response.status, url]);
+
     await global_context.globalState.update("scores_stats", undefined);
 }
 
 
 export async function report_usage_stats()
 {
-    // await report_tab_stats(); // UNCOMMENT ME WHENEVER HANDLER IS READY
+    console.log('report_usage_stats');
+    await report_tab_stats();
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context === undefined) {
         return;

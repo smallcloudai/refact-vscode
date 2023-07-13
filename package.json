@@ -288,49 +288,49 @@
 					"fontCharacter": "\\e802"
 				}
 			},
-            "codify-chat": {
+			"codify-chat": {
 				"description": "codify chat",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e804"
 				}
 			},
-            "codify-reload": {
+			"codify-reload": {
 				"description": "codify reload",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e809"
 				}
 			},
-            "codify-settings": {
+			"codify-settings": {
 				"description": "codify settings",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e806"
 				}
 			},
-            "codify-link": {
+			"codify-link": {
 				"description": "codify link",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e80A"
 				}
 			},
-            "codify-send": {
+			"codify-send": {
 				"description": "codify send",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e803"
 				}
 			},
-            "codify-logout": {
+			"codify-logout": {
 				"description": "codify logout",
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e812"
 				}
 			},
-            "refact-icon-privacy": {
+			"refact-icon-privacy": {
 				"description": "refacticon privacy",
 				"default": {
 					"fontPath": "./assets/codify.woff",
@@ -353,9 +353,9 @@
 	"dependencies": {
 		"@types/marked": "^4.0.8",
 		"diff": "^5.1.0",
+		"difflib": "^0.2.4",
 		"fetch-h2": "^3.0.2",
-		"marked": "^4.0.8",
-		"difflib": "~0.2.4"
+		"marked": "^4.0.8"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.2.0",
