@@ -127,6 +127,36 @@
         }
     }
 
+    function renderMessageOverview(data) {
+        if (!data) {
+          return; // If no overview is provided, exit the function
+        }
+      
+        const overviewDiv = document.createElement('div');
+        overviewDiv.classList.add('message-overview');
+        overviewDiv.innerText = 'Overview: ' + data;
+      
+        // Append the overview div to the container element
+        const container = document.getElementById('message-container');
+        container.appendChild(overviewDiv);
+      }
+
+      function renderMessageSources(data) {
+        if (!sources || sources.length === 0) {
+          return; // If no sources are provided or the sources array is empty, exit the function
+        }
+      
+        const sourcesDiv = document.createElement('div');
+        sourcesDiv.classList.add('message-sources');
+        sourcesDiv.innerText = 'Sources: ' + data.join(', ');
+      
+        // Append the sources div to the container element
+        const container = document.getElementById('message-container');
+        container.appendChild(sourcesDiv);
+      }
+      
+      
+
     function backquote_backquote_backquote_remove_syntax_highlighting(code) {
         // this removes ```python or ```json or similar, assuming ``` itself is already not there
         while (1) {
@@ -248,6 +278,13 @@
         case "chat-post-answer":  // streaming also goes there, with partial answers
             chat_render(message);
             break;
+        case "chat-post-answer-header-desc":
+            renderMessageOverview(message);
+            break;
+        case "chat-post-answer-header-sources":
+            renderMessageSources(message);
+            break;
+        
         case "chat-set-question-text":
             input_should_be_visible = true;
             chat_input.value = message.value.question;

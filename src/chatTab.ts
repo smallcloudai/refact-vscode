@@ -304,6 +304,8 @@ export class ChatTab {
         let answer = "";
         let stack_web_panel = this.web_panel;
         let stack_this = this;
+        let role: string | undefined = undefined;
+        let gui_role: string | undefined = undefined;
 
         async function _streaming_callback(json: any)
         {
@@ -313,45 +315,77 @@ export class ChatTab {
             if (cancelToken.isCancellationRequested) {
                 console.log(["chat request is cancelled, new data is coming", json]);
                 return;
-            } else {
-                let delta = "";
-                if (json && json["choices"]) {
-                    let choice0 = json["choices"][0];
-                    delta = choice0["delta"];
-                }
-                if (json && json["delta"]) { // TODO: remove this after inference server is updated
-                    delta = json["delta"];
-                }
-                if (delta) {
-                    answer += delta;
-                    let valid_html = false;
-                    let html = "";
-                    try {
-                        let raw_html = answer;
-                        let backtick_backtick_backtick_count = (answer.match(/```/g) || []).length;
-                        if (backtick_backtick_backtick_count % 2 === 1) {
-                            raw_html = answer + "\n```";
-                        }
-                        html = marked.parse(raw_html);
-                        valid_html = true;
-                    } catch (e) {
-                        valid_html = false;
+            } 
+
+            let delta = "";
+            console.log('json: ', json);
+
+
+            if (json && json["choices"]) {
+                let choice0 = json["choices"][0];
+                choice0['messages'] = choice0['messages'].at(-1);
+
+                if (role && role !== choice0['messages']['role']) {
+                    delta = '';
+                    answer = '';
+                }    
+                console.log('role_before:', role);
+                role = choice0['messages']['role'];
+                console.log('role', role);
+                gui_role = choice0['messages']['gui_role'];
+                console.log('gui role', gui_role);
+
+                delta = choice0["messages"]['delta'];
+                console.log('delta', delta);
+            }
+            if (delta) {
+                answer += delta;
+                let valid_html = false;
+                let html = "";
+                try {
+                    let raw_html = answer;
+                    let backtick_backtick_backtick_count = (answer.match(/```/g) || []).length;
+                    if (backtick_backtick_backtick_count % 2 === 1) {
+                        raw_html = answer + "\n```";
                     }
-                    if (valid_html) {
+                    html = marked.parse(raw_html);
+                    valid_html = true;
+                } catch (e) {
+                    valid_html = false;
+                }
+                if (valid_html) {
+                    if (role) {
+                        if (role==='user') {
+                            stack_web_panel.webview.postMessage({
+                                command: "chat-post-answer",
+                                question_html: html,
+                                question_raw: answer,
+                                have_editor: Boolean(stack_this.working_on_snippet_editor)
+                            });      
+                        } else {
+                            stack_web_panel.webview.postMessage({
+                                command: "chat-post-answer",
+                                answer_html: html,
+                                answer_raw: answer,
+                                have_editor: Boolean(stack_this.working_on_snippet_editor)
+                            });
+                        }
+                    } else {
                         stack_web_panel.webview.postMessage({
                             command: "chat-post-answer",
                             answer_html: html,
                             answer_raw: answer,
                             have_editor: Boolean(stack_this.working_on_snippet_editor)
-                        });
-                        // console.log(["assistant", answer]);
+                        });    
                     }
                 }
-                if (json && json["metering_balance"]) {
-                    global.user_metering_balance = json["metering_balance"];
-                    if (global.side_panel) {
-                        global.side_panel.update_webview();
-                    }
+
+            }
+
+            if (json && json["metering_balance"]) {
+                global.user_metering_balance = json["metering_balance"];
+                if (global.side_panel) {
+                    global.side_panel.update_webview();
                 }
             }
         }
