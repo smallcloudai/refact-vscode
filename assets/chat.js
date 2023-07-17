@@ -74,13 +74,39 @@
         // answer_raw: answer
         if (Object.keys(data).length === 0) { return; };
         const message_pair_div = document.createElement('div');
-        message_pair_div.classList.add('refactcss-chat__item');
+
+        if (data.gui_role === 'documents') {
+            message_pair_div.classList.add('refactcss-chat__doc_item');
+        } else {
+            message_pair_div.classList.add('refactcss-chat__item');
+        }
+
         message_pair_div.dataset.answer_counter = answer_counter;
 
         if (data.question_html) {
             answer_counter += 1;
             const question_div = document.createElement('div');
-            question_div.classList.add('refactcss-chat__question');
+            if (!data.gui_role){
+                question_div.classList.add('refactcss-chat__question');
+            }
+
+            if (data.gui_role === 'documents' && data.gui_content) {
+                const sources = JSON.parse(data.gui_content);
+
+                let htmlContent = '';
+                sources.forEach(el => {
+                    htmlContent += `
+                    <li>
+                    <div class="tooltip">
+                    <a href="${el['link']}">${el['domain_name']}</a>
+                    <span class="tooltiptext">${el['snippet']}</span>
+                    </div>
+                    </li>`;
+                });
+                const htmlList = `Sources:<br><div id="linkContainer"><ul>${htmlContent}</ul></div>`;
+                data.question_html = htmlList;
+            }
+
             question_div.innerHTML = data.question_html;
             question_div.dataset.raw = data.question_raw;
             question_div.dataset.messages_backup = JSON.stringify(data.messages_backup);
@@ -112,7 +138,11 @@
 
         if (!last_answer_div && data.answer_html) {
             const answer_div = document.createElement('div');
-            answer_div.classList.add('refactcss-chat__answer');
+            if (data.gui_role) {
+                answer_div.classList.add('refactcss-chat__tool_use');
+            } else {
+                answer_div.classList.add('refactcss-chat__answer');
+            }
             message_pair_div.appendChild(answer_div);
             last_answer_div = answer_div;
         }

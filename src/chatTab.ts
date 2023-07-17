@@ -306,6 +306,7 @@ export class ChatTab {
         let stack_this = this;
         let role: string | undefined = undefined;
         let gui_role: string | undefined = undefined;
+        let gui_content: string | undefined = undefined;
 
         async function _streaming_callback(json: any)
         {
@@ -328,15 +329,20 @@ export class ChatTab {
                 if (role && role !== choice0['messages']['role']) {
                     delta = '';
                     answer = '';
-                }    
-                console.log('role_before:', role);
+                    gui_content = undefined;
+                }
                 role = choice0['messages']['role'];
-                console.log('role', role);
                 gui_role = choice0['messages']['gui_role'];
-                console.log('gui role', gui_role);
+                gui_content = choice0['messages']['gui_content'];
 
                 delta = choice0["messages"]['delta'];
+                console.log('------');
+                console.log('gui content ', gui_content);
+                console.log('gui role', gui_role);
+                console.log('role_before:', role);
+                console.log('role', role);
                 console.log('delta', delta);
+                console.log('------');
             }
             if (delta) {
                 answer += delta;
@@ -360,6 +366,8 @@ export class ChatTab {
                                 command: "chat-post-answer",
                                 question_html: html,
                                 question_raw: answer,
+                                gui_role: gui_role,
+                                gui_content: gui_content,
                                 have_editor: Boolean(stack_this.working_on_snippet_editor)
                             });      
                         } else {
@@ -367,6 +375,8 @@ export class ChatTab {
                                 command: "chat-post-answer",
                                 answer_html: html,
                                 answer_raw: answer,
+                                gui_role: gui_role,
+                                gui_content: gui_content,
                                 have_editor: Boolean(stack_this.working_on_snippet_editor)
                             });
                         }
@@ -375,6 +385,8 @@ export class ChatTab {
                             command: "chat-post-answer",
                             answer_html: html,
                             answer_raw: answer,
+                            gui_role: gui_role,
+                            gui_content: gui_content,
                             have_editor: Boolean(stack_this.working_on_snippet_editor)
                         });    
                     }

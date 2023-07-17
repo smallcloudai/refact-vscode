@@ -277,3 +277,58 @@ body.vscode-dark {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
+
+.tooltip {
+	position: relative;
+	display: inline-block;
+	cursor: pointer;
+  }
+  
+  .tooltip .tooltiptext {
+	visibility: hidden;
+	width: 400px;
+	background-color: #333;
+	color: #f1f1f1;
+	text-align: center;
+	border-radius: 4px;
+	padding: 5px;
+	position: absolute;
+	z-index: 1;
+	top: 50%;
+	left: 100%;
+	transform: translateY(-50%);
+	opacity: 0;
+	transition: opacity 0.3s ease-in-out;
+  }
+  
+  .tooltip:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+  }
+	  
+
+  .refactcss-chat__doc_item pre code {
+    display: block;
+    position: relative;
+    background: none;
+    white-space: pre;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: scroll;
+    max-width: 100%;
+    min-width: 100px;
+    padding: 0px 15px 15px;
+    background-color: var(--light);
+    font-family: monospace;
+    line-height: 1.1;
+}
+
+
+.refactcss-chat__tool_use {
+	margin-top: 10px;
+    width: 90%;
+    max-width: 600px;
+    margin-right: auto;
+    padding: 5px 10px;
+    overflow: hidden;
+	box-sizing: border-box;
+}
