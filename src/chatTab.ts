@@ -479,6 +479,10 @@ export class ChatTab {
                                 <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
                                 <div class="refactcss-chat__model">Use model:<select id="chat-model"></select></div>
                             </div>
+                            <div id="chat-functions-btn-block"> 
+                                <button class="chat-function-btn" data-cmd="/websearch"><span>WebSearch</span></button>
+                                <button class="chat-function-btn" data-cmd="/vecdb"><span>VecDB</span></button>
+                            </div>
                             <div class="refactcss-chat__commands">
                                 <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
                                 <textarea id="chat-input" class="refactcss-chat__input"></textarea>

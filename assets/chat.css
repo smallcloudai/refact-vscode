@@ -331,14 +331,3 @@ body.vscode-dark {
     font-family: monospace;
     line-height: 1.1;
 }
-
-
-.refactcss-chat__tool_use {
-	margin-top: 10px;
-    width: 90%;
-    max-width: 600px;
-    margin-right: auto;
-    padding: 5px 10px;
-    overflow: hidden;
-	box-sizing: border-box;
-}

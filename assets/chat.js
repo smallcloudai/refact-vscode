@@ -17,6 +17,34 @@
         chat_send_button.style.opacity = bad ? 0.5 : 1;
     }
 
+    function chat_functions_supported () {
+        let fun_list = [];
+        chat_function.forEach(el => {
+            fun_list.push(el.getAttribute('data-cmd'));
+        });
+        return fun_list;
+    }
+
+    const chat_function = document.querySelectorAll('.chat-function-btn');
+    chat_function.forEach(el => {
+        el.addEventListener('click', (event) => {
+            let input_text = chat_input.value;
+            const data_cmd = el.getAttribute('data-cmd');
+            const fun_supported = chat_functions_supported();
+
+            const fun_ex = fun_supported.find(fun => input_text.startsWith(fun));
+            
+            if (!input_text.startsWith(data_cmd) && !fun_ex) {
+                chat_input.value = data_cmd + ' ' + chat_input.value;
+            } else if (!input_text.startsWith(data_cmd) && fun_ex) {
+                chat_input.value = chat_input.value?.replace(fun_ex, data_cmd);
+            } else {
+                chat_input.value = chat_input.value?.replace(data_cmd + ' ', '');
+                chat_input.value = chat_input.value?.replace(data_cmd, '');
+            }
+        });    
+    });
+
     chat_input.addEventListener('input', function () {
         input_care();
     });
