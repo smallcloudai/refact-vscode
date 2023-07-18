@@ -103,7 +103,7 @@
                     </div>
                     </li>`;
                 });
-                const htmlList = `Sources:<br><div id="linkContainer"><ul>${htmlContent}</ul></div>`;
+                const htmlList = `<h4>Sources:</h4><div id="linkContainer"><ul>${htmlContent}</ul></div>`;
                 data.question_html = htmlList;
             }
 

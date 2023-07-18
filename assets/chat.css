@@ -306,6 +306,16 @@ body.vscode-dark {
 	opacity: 1;
   }
 	  
+.refactcss-chat__doc_item {
+	border-top: 1px solid var(--light);
+	border-bottom: 1px solid var(--light);
+	padding: 10px;
+	margin-top: -20px;
+}
+
+.refactcss-chat__doc_item h4 {
+	margin-bottom: 4px;
+}
 
   .refactcss-chat__doc_item pre code {
     display: block;
