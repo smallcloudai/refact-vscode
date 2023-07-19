@@ -7,7 +7,7 @@ import { simple_cleanup_cr_lf } from "./crlf";
 export function getDiffAdditionsBlocks(state0: string, state1: string): [string, string] {
     state0 = simple_cleanup_cr_lf(state0);
     state1 = simple_cleanup_cr_lf(state1);
-  
+
     let file1Lines: string[] = state0.split('\n');
     let file2Lines: string[] = state1.split('\n');
 
@@ -31,9 +31,9 @@ export function getDiffAdditionsBlocks(state0: string, state1: string): [string,
           diffBlocks.push(currentBlock);
           currentBlock = [];
         }
-        }
       }
-      
+    }
+
     if (currentBlock.length > 0) {
       diffBlocks.push(currentBlock);
     }
@@ -72,6 +72,7 @@ export function completionMetrics(text: string, completion: string): [number, [n
     completion = simple_cleanup_cr_lf(completion);
 
     if (!completion.includes('\n')) {
+      // single line completion
       const [best_s, [add_c, del_c]] = find_most_similar_string(text, completion);
       if (!best_s) {
           return [0, [0, text.replace(/\s+/g, '').length]];
@@ -81,26 +82,26 @@ export function completionMetrics(text: string, completion: string): [number, [n
       const completion_c: number = (completion.replace(/\s+/g, '')).length;
       const human_c = (text.replace(/\s+/g, '')).length - matched_c;
       return [matched_c / completion_c, [matched_c, human_c]];
-  }
-    
-    let [addText, delText] = getDiffAdditionsBlocks(text, completion);
-    addText = addText.replace(/\s+/g, '');
-    delText = delText.replace(/\s+/g, '');
+    }
+
+    let [human_deleted, human_fixed_or_typed] = getDiffAdditionsBlocks(text, completion);
+    human_deleted = human_deleted.replace(/\s+/g, '');
+    human_fixed_or_typed = human_fixed_or_typed.replace(/\s+/g, '');
 
     completion = completion.replace(/\s+/g, '');
-    
-    const usefulCompletion = completion.length - addText.length;
-    const userTyped = delText.length;
-  
-    return [usefulCompletion / completion.length, [usefulCompletion, userTyped]];
+
+    const useful_completion_chars = completion.length - human_deleted.length;
+    const human_chars = human_fixed_or_typed.length;
+
+    return [useful_completion_chars / completion.length, [useful_completion_chars, human_chars]];
   }
-  
+
 export function completionMetricPipeline(
-    state0: string,
-    state1: string, 
-    completion0: string
-    ) : [number, [number, number]] {
-    const [additions, _] = getDiffAdditionsBlocks(state0, state1);
-    let score = completionMetrics(additions, completion0);
-    return score;
-  }
+  state0: string,
+  state1: string,
+  completion0: string
+) : [number, [number, number]] {
+  const [additions, _] = getDiffAdditionsBlocks(state0, state1);
+  let score = completionMetrics(additions, completion0);
+  return score;
+}

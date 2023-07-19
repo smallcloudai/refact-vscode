@@ -290,19 +290,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             const human_sum = human_arr.reduce((acc, c) => acc + c, 0);
             if (robot_sum === 0 || (robot_sum + human_sum) === 0) {
                 return 0;
-            } 
+            }
             console.log(["get_score", robot_sum, human_sum]);
             return robot_sum / (robot_sum + human_sum);
         }
-          
+
         let cm_file_score = 0;
         if (
-            global.cm_current_file && 
-            global.cm_file_scores && 
+            global.cm_current_file &&
+            global.cm_file_scores &&
             global.cm_file_scores[global.cm_current_file]
-            ){
-            cm_file_score = global.cm_file_scores ? 
-            get_score(global.cm_file_scores[global.cm_current_file]) : 0;
+        ) {
+            cm_file_score = global.cm_file_scores ?
+                get_score(global.cm_file_scores[global.cm_current_file]) : 0;
         }
 
         this._view!.webview.postMessage({
