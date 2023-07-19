@@ -1,6 +1,6 @@
 {
 	"name": "codify",
-	"displayName": "Refact.ai Assistant",
+	"displayName": "Refact Assistant",
 	"description": "The AI Assistant for Code Writing and Refactoring",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
@@ -21,7 +21,7 @@
         "url": "https://github.com/smallcloudai/refact-vscode/issues",
         "email": "support@smallcloud.tech"
     },
-	"version": "1.0.45",
+	"version": "1.0.46",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -85,7 +85,7 @@
 	"contributes": {
 		"configuration": {
 			"type": "object",
-			"title": "Refact.ai Assistant",
+			"title": "Refact Assistant",
 			"properties": {
 				"refactai.apiKey": {
 					"type": "string",
