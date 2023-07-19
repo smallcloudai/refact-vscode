@@ -840,7 +840,7 @@
                 chat.style.display = message.ts2web_user ? 'flex' : 'none';
                 data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
-                privacy.style.display = (message.ts2web_user && !message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
+                privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
                 // TODO: always show settings, a place to put custom infurl
                 // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
