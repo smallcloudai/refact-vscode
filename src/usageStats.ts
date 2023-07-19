@@ -257,6 +257,7 @@ async function report_tab_stats() {
         let tab_stats_final: Array <{[key: string]: any}> = [];
         for (const [_, val] of tab_stats_merged) {
             val['edit_score'] = get_avg(val['edit_score']);
+            val['count'] = val['edit_score'].length;
             tab_stats_final.push(val);
         }
         return tab_stats_final;
@@ -269,9 +270,7 @@ async function report_tab_stats() {
     if (!scores_stats || scores_stats.length === 0) {
         return;
     }
-    console.log('DEFAULT tab stats', scores_stats);
     scores_stats = merge_tab_stats(scores_stats);
-    console.log('READY TO SEND BATCH', scores_stats);
 
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
@@ -296,7 +295,6 @@ async function report_tab_stats() {
         console.log([response.status, url]);
         return;
     }
-    console.log([response.status, url]);
 
     await global_context.globalState.update("scores_stats", undefined);
 }
@@ -304,7 +302,6 @@ async function report_tab_stats() {
 
 export async function report_usage_stats()
 {
-    console.log('report_usage_stats');
     await report_tab_stats();
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context === undefined) {
