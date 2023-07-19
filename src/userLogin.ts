@@ -229,6 +229,16 @@ export function inference_login_force_retry()
 
 export async function inference_login(): Promise<boolean>
 {
+    if (_inference_login_in_progress) {
+        while (_inference_login_in_progress) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        return _last_inference_login_cached_result;
+    }
+    if (global.last_positive_result + 600*1000 < Date.now()) {  // session (socket) dies by itself after some time
+        console.log("inference_login: last_positive_result too old, force disconnect");
+        await fetchH2.disconnectAll();
+    }
     let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
     if (manual_infurl) {
         return true;
@@ -236,16 +246,6 @@ export async function inference_login(): Promise<boolean>
     let third_party = true;
     let url = fetchAPI.inference_url("/v1/secret-key-activate", third_party);  // not third_party doesn't need activation
     // Activation is really a "kill the cache" operation, such that the user can change plan/settings and see the effect immediately.
-    if (global.last_positive_result + 600*1000 < Date.now()) {
-        console.log("inference_login: last_positive_result too old, force disconnect");
-        await fetchH2.disconnectAll();
-    }
-    if (_inference_login_in_progress) {
-        while (_inference_login_in_progress) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-        }
-        return _last_inference_login_cached_result;
-    }
     if (global.streamlined_login_countdown >= 0 || url === "") {
         await login();
         url = fetchAPI.inference_url("/v1/secret-key-activate", third_party);
@@ -321,6 +321,7 @@ export async function inference_login(): Promise<boolean>
             _last_inference_login_infurl = conf_url;
             await usageStats.report_success_or_failure(false, "inference_login(2)", report_this_url, json.detail, "");
         } else if (json.retcode === "OK") {
+            // Success here
             if (json.inference_message) {
                 await usabilityHints.show_message_from_server("InferenceServer", json.inference_message);
             }

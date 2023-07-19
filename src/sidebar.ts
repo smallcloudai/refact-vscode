@@ -11,10 +11,10 @@ import { ChatTab } from './chatTab';
 
 
 export async function open_chat_tab(
-    question: string, 
-    editor: vscode.TextEditor | undefined, 
-    attach_default: boolean, 
-    model: string, 
+    question: string,
+    editor: vscode.TextEditor | undefined,
+    attach_default: boolean,
+    model: string,
     model_function: string = "",
 ){
     await ChatTab.activate_from_outside(
@@ -275,7 +275,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
-        let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
         let plan_msg = global.user_active_plan;
         if (!plan_msg && global.streamlined_login_countdown > -1) {
             plan_msg = `Waiting for website login... ${global.streamlined_login_countdown}`;
@@ -290,7 +289,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2web_metering_balance: global.user_metering_balance,
             ts2web_longthink_functions: global.longthink_functions_today,
             ts2web_longthink_filters: global.longthink_filters,
-            ts2web_enable_chat: manual_infurl,
             ts2web_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
         });
     }

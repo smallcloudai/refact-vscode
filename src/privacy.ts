@@ -84,15 +84,18 @@ export async function get_access_overrides(): Promise<{[key: string]: number}>
 
 export async function get_file_access(uri: string)
 {
-    let inference_url = vscode.workspace.getConfiguration().get("refactai.infurl");
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (global_context === undefined) {
         return 0;
     }
+    // This code implements this logic: if inference_url is set (private server), then all disable all third party,
+    // because the user cares about privacy to bother setting up a private server.
+    // Later we found it's better to give users third party APIs on their own server.
+    // let inference_url = vscode.workspace.getConfiguration().get("refactai.infurl");
     // inference_url is never undefined (because of package.json)
-    if (inference_url !== "") {;
-        return 1;
-    }
+    // if (inference_url !== "") {
+    //     return 1;
+    // }
     let storage: {[key: string]: number}|undefined = global_context.globalState.get('codifyAccessOverrides');
     if(storage === undefined) {
         return await get_global_access();
