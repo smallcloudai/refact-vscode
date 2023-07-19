@@ -29,18 +29,6 @@
             case "rules":
                 rules = message.value;
                 break;
-            case "inference_url":
-                infurl = message.value;
-                if(infurl && infurl !== "") {
-                    document.querySelector('.refactcss-privacy__global').classList.add("refactcss-privacy__global--infurl");
-                    document.querySelector('.refactcss-privacy__info').classList.add("refactcss-privacy__global--infurl");
-                    document.querySelector('.refactcss-privacy__notice').innerHTML = infurl_notice;
-                }
-                else {
-                    document.querySelector('.refactcss-privacy__info').classList.remove("refactcss-privacy__global--infurl");
-                    document.querySelector('.refactcss-privacy__global').classList.remove("refactcss-privacy__global--infurl");
-                }
-                break;
 			case "overrides":
                 const table = document.querySelector('.overrides__body');
                 table.innerHTML = "";
