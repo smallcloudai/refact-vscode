@@ -137,7 +137,7 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
     function get_project_name() {
         let projectName = 'undefined';
         let username = 'undefined';
-    
+
         if (gitExtension) {
             const git = gitExtension.isActive ? gitExtension.exports.getAPI(1) : null;
             if (git) {
@@ -145,7 +145,7 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
                 if (repositories.length > 0) {
                     const projectPath = repositories[0].rootUri.path;
                     projectName = projectPath.substring(projectPath.lastIndexOf('/') + 1);
-    
+
                     // const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
                     // const username = authorEmail ? authorEmail.split('@')[0] : '';
                 }
@@ -153,7 +153,7 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         }
         return projectName;
     }
-    
+
     let filename = feed.cursor_file;
     global.cm_current_file = filename;
 
@@ -170,9 +170,10 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         let state0 = global.cm_file_states[filename][0];
         let state1 = global.cm_file_states[filename][1];
 
-        let score = completionMetricPipeline(
+        let score: [number, [number, number]];
+        score = completionMetricPipeline(
             state0['text'],
-            state1['text'], 
+            state1['text'],
             state0['completion']
         );
 
@@ -190,7 +191,7 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         }
 
         global.cm_file_scores[filename].push({
-            "robot": score[1][0], 
+            "robot": score[1][0],
             "human": score[1][1],
         });
 
@@ -212,8 +213,8 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         });
 
         await global_context.globalState.update("scores_stats", scores_stats);
-    
-        global.cm_file_states[filename] = [state1]; 
+
+        global.cm_file_states[filename] = [state1];
 
         console.log('LENGTH', scores_stats.length);
 
