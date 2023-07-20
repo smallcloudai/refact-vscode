@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="28px" height="28px" viewBox="0 0 28 28" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:sketch="http://www.bohemiancoding.com/sketch/ns">
+    <!-- Generator: Sketch 3.4.2 (15855) - http://www.bohemiancoding.com/sketch -->
+    <title>103681_plus_icon + Rectangle 2 + Shape</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <g id="103681_plus_icon-+-Rectangle-2-+-Shape" sketch:type="MSLayerGroup" transform="translate(-18.000000, -18.000000)">
+            <rect id="Rectangle-2" sketch:type="MSShapeGroup" x="0" y="0" width="64" height="64"></rect>
+            <path d="M46,28 L36,28 L36,18 L28,18 L28,28 L18,28 L18,36 L28,36 L28,46 L36,46 L36,36 L46,36 L46,28 Z" id="Shape" fill-opacity="0.5" fill="#00FF00" sketch:type="MSShapeGroup"></path>
+        </g>
+    </g>
+</svg>

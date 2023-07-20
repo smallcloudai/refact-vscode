@@ -1,0 +1,9 @@
+dist
+node_modules
+src/test/*
+*.vsix
+out/*
+package-lock.json
+package.json
+images/.DS_Store
+.DS_Store
