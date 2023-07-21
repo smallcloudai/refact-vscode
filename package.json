@@ -8,9 +8,6 @@
 		"color": "#000000",
 		"theme": "dark"
 	},
-	"vsce": {
-		"baseImagesUrl": "https://www.smallcloud.ai/img/"
-	},
 	"homepage": "https://refact.ai",
 	"author": "Small Magellanic Cloud AI <info@smallcloud.tech> (https://refact.ai)",
     "repository": {
