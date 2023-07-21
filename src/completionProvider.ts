@@ -144,8 +144,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                //.translate(0, completion_length))
             command,
         );
-        global.cm_completion = completion;
-        global.cm_document_text = whole_doc;
+        global.cm_last_grey_text = {
+            'completion': completion,
+            'document': whole_doc,
+            'accepted': false
+        };
         return [completionItem];
     }
 
@@ -404,12 +407,14 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             });
         }
         this.cleanup_cache();
-        global.cm_completion = completion;
-        global.cm_document_text = whole_doc;
+        global.cm_last_grey_text = {
+            'completion': completion,
+            'document': whole_doc,
+            'accepted': false
+        };
         return [completion, _completion_data_feedback_candidate.serial_number];
     }
 }
-
 
 export function _extract_extension(feed: estate.ApiFields)
 {
@@ -442,6 +447,10 @@ export function inline_accepted(serial_number: number)
         _extract_extension(feed), 
         vscode.extensions.getExtension('vscode.git')
     );
+
+    if (global.cm_last_grey_text) {
+        global.cm_last_grey_text['accepted'] = true;
+    }
 
     feed.ts_reacted = Date.now();
     let ponder_time_ms = feed.ts_reacted - feed.ts_presented;

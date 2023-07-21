@@ -35,10 +35,7 @@ declare global {
     var chat_v1_style: boolean;
 
     // completion metric
-    var cm_completion: string;
-    var cm_document_text: string;
-    var cm_file_states: {[key: string]: Array<{[key: string]: string}>} | undefined;
-    var cm_current_file: string | undefined;
+    var cm_last_grey_text: {[key: string]: any} | undefined;
     var cm_last_model_name: string | undefined;
 }
 
