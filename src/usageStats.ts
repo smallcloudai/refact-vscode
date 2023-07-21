@@ -135,8 +135,8 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
     }
 
     function get_project_name() {
-        let projectName = 'undefined';
-        let username = 'undefined';
+        let projectName = '';
+        let username = '';
 
         if (gitExtension) {
             const git = gitExtension.isActive ? gitExtension.exports.getAPI(1) : null;
@@ -154,39 +154,53 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         return projectName;
     }
 
+
+    let global_context: vscode.ExtensionContext|undefined = global.global_context;
+    if (!global_context) {
+        return;
+    }
+    let cm_file_states: {[key: string]: Array<{[key: string]: string}>} | undefined = await global_context.globalState.get("cm_file_states");
+    if (!cm_file_states) {
+        cm_file_states = {};
+    }
+
     let filename = feed.cursor_file;
-    global.cm_current_file = filename;
 
-    if (!global.cm_file_states) {
-        global.cm_file_states = {};
+    if (!global.cm_last_grey_text) {
+        return;
     }
-    if (global.cm_file_states[filename]) {
-        global.cm_file_states[filename].push({'text': global.cm_document_text, 'completion': global.cm_completion});
+    if (!global.cm_last_grey_text['accepted']) {
+        return;
+    }
+    const fs_record = {
+        'completion': global.cm_last_grey_text['completion'],
+        'document': global.cm_last_grey_text['document'], 
+        'model_name': global.cm_last_model_name || ''
+    };
+
+    if (cm_file_states[filename]) {
+        cm_file_states[filename].push(fs_record);
     } else {
-        global.cm_file_states[filename] = [{'text': global.cm_document_text, 'completion': global.cm_completion}];
+        cm_file_states[filename] = [fs_record];
     }
 
-    if (global.cm_file_states[filename].length >= 2) {
-        let state0 = global.cm_file_states[filename][0];
-        let state1 = global.cm_file_states[filename][1];
+    if (cm_file_states[filename].length >= 2) {
+        let state0 = cm_file_states[filename][0];
+        let state1 = cm_file_states[filename][1];
 
-        let score: [number, [number, number]];
-        score = completionMetricPipeline(
-            state0['text'],
-            state1['text'],
+        let tab_metric_score: [number, [number, number]];
+        tab_metric_score = completionMetricPipeline(
+            state0['document'],
+            state1['document'],
             state0['completion']
         );
 
         let project_name = get_project_name();
         let project_hash = project_name;
-        if (project_name !== 'undefined') {
+        if (project_name !== '') {
             project_hash = generateSHA256Hash(project_name).slice(0, 16);
         }
 
-        let global_context: vscode.ExtensionContext|undefined = global.global_context;
-        if (!global_context) {
-            return;
-        }
         let scores_stats: Array <{[key: string]: any}> | undefined = await global_context.globalState.get("scores_stats");
         if (!scores_stats) {
             scores_stats = [];
@@ -195,14 +209,16 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         scores_stats.push({
             "project_hash": project_hash,
             "file_ext": extension,
-            "model_name": global.cm_last_model_name,
-            "edit_score": score[0],
-            "type_scores": [score[1][0], score[1][1]],
+            "model_name": state0['model_name'],
+            "edit_score": tab_metric_score[0],
+            "type_scores": tab_metric_score[1],
         });
+
+        console.log("scores:", tab_metric_score[1][0], tab_metric_score[1][1]);
 
         await global_context.globalState.update("scores_stats", scores_stats);
 
-        global.cm_file_states[filename] = [state1];
+        cm_file_states[filename] = [state1];
 
         console.log('LENGTH', scores_stats.length);
 
@@ -212,8 +228,9 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         // }
         // // END OF DELETEME
     }
-
+    await global_context.globalState.update("cm_file_states", cm_file_states);
 }
+
 
 async function report_tab_stats() {
 
