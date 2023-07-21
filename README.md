@@ -14,18 +14,18 @@ Try for free today and make your programming more enjoyable!
 
 Code Completion: As you write code, Refact suggests potential code completions based on the context of your code, looking up and down. It can suggest whole functions, classes, commonly used programming patterns, libraries, and APIs usage.
 
-![Code completion](vs-completion.jpg)
+![Code completion](https://www.smallcloud.ai/img/vs-completion.jpg)
 
 
 Code Transformation: You can automatically make your code shorter, cleaner, and fix bugs — improving your efficiency as an engineer. Whether you're looking to optimize, improve, or explain your code, Refact has you covered.
 
-![AI Toolbox](vs-ai-toolbox.jpg)
+![AI Toolbox](https://www.smallcloud.ai/img/vs-ai-toolbox.jpg)
 
 
 
 Integrated Chat: Use natural language to generate, modify, and refine your code. Chat can automatically pick up the selected code and put back the results. It also provides you with documentation links.
 
-![Chat](vs-chat.gif)
+![Chat](https://www.smallcloud.ai/img/vs-chat.gif)
 
 
 
