@@ -1,29 +1,29 @@
-Dual Licence
-------------
+BSD 3-Clause License
 
-Refact.ai Visual Studio Code Plugin is available under both Open Source - GPLv3 or a commercial license agreement with Small Magellanic Cloud AI Ltd.
+Copyright (c) 2023, Small Magellanic Cloud AI Ltd.
+All rights reserved.
 
-Please contact Small Magellanic Cloud AI Ltd to inquire about a commercial license over email at info@smallcloud.tech.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
 
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
 
-Key concepts
-------------
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
 
-The majority of all Refact.ai Pligin development is done by Small Magellanic Cloud AI Ltd engineers, but contributions from outside are welcome! If you are making a contribution, you agree that your work will be licensed under the same terms, including the commercial use.
-The products provided under our different licenses are not identical.
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
 
-If you use Refact.ai Pligin under GPL, you must use only the GPL version, and you must abide by the source code-sharing requirements of GPL.
-
-If you use Refact.ai Pligin under one of our commercial licenses, you must use our commercial release only, and you must abide by our commercial license terms. Also, if you purchase support for our commercial release you must not request support for the GPL version.
-
-This page does not represent legal advice. We strongly encourage developers and/or companies to review the specific licensing text made available on the GNU web site.
-
-
-Commercial Licensing
---------------------
-
-Small Magellanic Cloud AI Ltd is the exclusive commercial licensing agent for Refact.ai Pligin.
-
-The kind of distribution or use you plan to make of Refact.ai Pligin will determine whether you need a commercial license from Small Magellanic Cloud AI Ltd. If you plan to distribute Refact.ai Pligin in one of your products or make them available to your SaaS or ASP customers, you should understand the differences between these licenses.
-
-Please note that the conditions apply even if you ship or make available a free demonstration version of your own product or application.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
