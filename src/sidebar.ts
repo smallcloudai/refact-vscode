@@ -282,29 +282,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
         }
 
-        function get_score(arr: Array<{[key: string]: number}>) {
-            const robot_arr = arr.map((a) => a["robot"]);
-            const human_arr = arr.map((a) => a["human"]);
-
-            const robot_sum = robot_arr.reduce((acc, c) => acc + c, 0);
-            const human_sum = human_arr.reduce((acc, c) => acc + c, 0);
-            if (robot_sum === 0 || (robot_sum + human_sum) === 0) {
-                return 0;
-            }
-            console.log(["get_score", robot_sum, human_sum]);
-            return robot_sum / (robot_sum + human_sum);
-        }
-
-        let cm_file_score = 0;
-        if (
-            global.cm_current_file &&
-            global.cm_file_scores &&
-            global.cm_file_scores[global.cm_current_file]
-        ) {
-            cm_file_score = global.cm_file_scores ?
-                get_score(global.cm_file_scores[global.cm_current_file]) : 0;
-        }
-
         this._view!.webview.postMessage({
             command: "ts2web",
             ts2web_user: global.user_logged_in,
@@ -314,9 +291,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2web_longthink_functions: global.longthink_functions_today,
             ts2web_longthink_filters: global.longthink_filters,
             ts2web_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
-
-            ts2web_cm_file_score: cm_file_score.toFixed(3),
-            ts2web_cm_filename: global.cm_current_file,
         });
     }
 
@@ -488,12 +462,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
                             <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
                         </div>
-                        <!-- TEST -->
-                        <div class="sidebar-inline">
-                            <div tabindex="-1">CM.Score: <span id="cm_file_score"></span></div>
-                            <div tabindex="-1">CM.File: <span id="cm_filename"></span></div>
-                        </div>
-
                     </div>
                 </div>
                     <script nonce="${nonce}" src="${scriptUri}"></script>
