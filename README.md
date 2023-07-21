@@ -1,5 +1,13 @@
-# refact-vscode
+<p align="center">
+  <img width="300" alt="Refact" src="images/refact-logo.svg"/>
+</p>
 
+---
+
+[![Discord](https://img.shields.io/discord/1037660742440194089?logo=discord&label=Discord&link=https%3A%2F%2Fsmallcloud.ai%2Fdiscord)](https://smallcloud.ai/discord)
+[![Twitter Follow](https://img.shields.io/twitter/follow/refact_ai)](https://twitter.com/intent/follow?screen_name=refact_ai)
+
+# refact-vscode
 
 *Refact for VS Code is a free, open-source AI code assistant* 
 
