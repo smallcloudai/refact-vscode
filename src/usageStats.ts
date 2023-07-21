@@ -177,23 +177,11 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
             state0['completion']
         );
 
-        if (!global.cm_file_scores) {
-            global.cm_file_scores = {};
-        }
-        if (!global.cm_file_scores[filename]) {
-            global.cm_file_scores[filename] = [];
-        }
-
         let project_name = get_project_name();
         let project_hash = project_name;
         if (project_name !== 'undefined') {
             project_hash = generateSHA256Hash(project_name).slice(0, 16);
         }
-
-        global.cm_file_scores[filename].push({
-            "robot": score[1][0],
-            "human": score[1][1],
-        });
 
         let global_context: vscode.ExtensionContext|undefined = global.global_context;
         if (!global_context) {
