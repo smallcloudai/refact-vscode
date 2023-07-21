@@ -6,6 +6,7 @@
 
 [![Discord](https://img.shields.io/discord/1037660742440194089?logo=discord&label=Discord&link=https%3A%2F%2Fsmallcloud.ai%2Fdiscord)](https://smallcloud.ai/discord)
 [![Twitter Follow](https://img.shields.io/twitter/follow/refact_ai)](https://twitter.com/intent/follow?screen_name=refact_ai)
+![License](https://img.shields.io/github/license/smallcloudai/refact-vscode)
 
 # refact-vscode
 
