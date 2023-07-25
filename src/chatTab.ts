@@ -307,6 +307,7 @@ export class ChatTab {
         let role: string | undefined = undefined;
         let gui_role: string | undefined = undefined;
         let gui_content: string | undefined = undefined;
+        let gui_function: string | undefined = undefined;
 
         async function _streaming_callback(json: any)
         {
@@ -324,7 +325,7 @@ export class ChatTab {
 
             if (json && json["choices"]) {
                 let choice0 = json["choices"][0];
-                choice0['messages'] = choice0['messages'].at(-1);
+                // choice0['messages'] = choice0['messages'].at(-1);
 
                 if (role && role !== choice0['messages']['role']) {
                     delta = '';
@@ -334,6 +335,7 @@ export class ChatTab {
                 role = choice0['messages']['role'];
                 gui_role = choice0['messages']['gui_role'];
                 gui_content = choice0['messages']['gui_content'];
+                gui_function = choice0['messages']['gui_function'];
 
                 delta = choice0["messages"]['delta'];
                 console.log('------');
@@ -368,6 +370,7 @@ export class ChatTab {
                                 question_raw: answer,
                                 gui_role: gui_role,
                                 gui_content: gui_content,
+                                gui_function: gui_function,
                                 have_editor: Boolean(stack_this.working_on_snippet_editor)
                             });      
                         } else {
@@ -377,6 +380,7 @@ export class ChatTab {
                                 answer_raw: answer,
                                 gui_role: gui_role,
                                 gui_content: gui_content,
+                                gui_function: gui_function,
                                 have_editor: Boolean(stack_this.working_on_snippet_editor)
                             });
                         }
@@ -387,6 +391,7 @@ export class ChatTab {
                             answer_raw: answer,
                             gui_role: gui_role,
                             gui_content: gui_content,
+                            gui_function: gui_function,
                             have_editor: Boolean(stack_this.working_on_snippet_editor)
                         });    
                     }

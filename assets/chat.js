@@ -119,20 +119,38 @@
             }
 
             if (data.gui_role === 'documents' && data.gui_content) {
-                const sources = JSON.parse(data.gui_content);
+                if (data.gui_function === 'websearch') {
+                    const sources = JSON.parse(data.gui_content);
 
-                let htmlContent = '';
-                sources.forEach(el => {
-                    htmlContent += `
-                    <li>
-                    <div class="tooltip">
-                    <a href="${el['link']}">${el['domain_name']}</a>
-                    <span class="tooltiptext">${el['snippet']}</span>
-                    </div>
-                    </li>`;
-                });
-                const htmlList = `<h4>Sources:</h4><div id="linkContainer"><ul>${htmlContent}</ul></div>`;
-                data.question_html = htmlList;
+                    let htmlContent = '';
+                    sources.forEach(el => {
+                        htmlContent += `
+                        <li>
+                        <div class="tooltip">
+                        <a href="${el['full_name']}">${el['short_name']}</a>
+                        <span class="tooltiptext">${el['snippet']}</span>
+                        </div>
+                        </li>`;
+                    });
+                    const htmlList = `<h4>Sources:</h4><div id="linkContainer"><ul>${htmlContent}</ul></div>`;
+                    data.question_html = htmlList;    
+                }
+                else if (data.gui_function === 'vecdb') {
+                    const sources = JSON.parse(data.gui_content);
+
+                    let htmlContent = '';
+                    sources.forEach(el => {
+                        htmlContent += `
+                        <li>
+                        <div class="tooltip">
+                        <a href="${el['short_name']}">${el['short_name']}</a>
+                        <span class="tooltiptext"><h5>${el['full_name']}</h5><pre class="tooltipcode">${el['snippet']}</pre></span>
+                        </div>
+                        </li>`;
+                    });
+                    const htmlList = `<h4>Sources:</h4><div id="linkContainer"><ul>${htmlContent}</ul></div>`;
+                    data.question_html = htmlList;    
+                }
             }
 
             question_div.innerHTML = data.question_html;

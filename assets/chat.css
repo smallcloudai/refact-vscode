@@ -286,7 +286,7 @@ body.vscode-dark {
   
   .tooltip .tooltiptext {
 	visibility: hidden;
-	width: 400px;
+	width: 600px;
 	background-color: #333;
 	color: #f1f1f1;
 	text-align: center;
@@ -299,6 +299,10 @@ body.vscode-dark {
 	transform: translateY(-50%);
 	opacity: 0;
 	transition: opacity 0.3s ease-in-out;
+  }
+
+  .tooltipcode {
+	text-align: left
   }
   
   .tooltip:hover .tooltiptext {
