@@ -214,7 +214,7 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
             "type_scores": tab_metric_score[1],
         });
 
-        console.log("scores:", tab_metric_score[1][0], tab_metric_score[1][1]);
+        console.log("SCORES_STATS -->", scores_stats.at(-1));
 
         await global_context.globalState.update("scores_stats", scores_stats);
 
