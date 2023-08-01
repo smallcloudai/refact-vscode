@@ -71,6 +71,7 @@ export class ChatTab {
             chat_use_model_function: use_model_function,
             chat_attach_file: "",
             chat_attach_default: false,
+            vecdb_attach_default: true,
             manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl")
         };
         if (global.longthink_functions_today) {
@@ -481,6 +482,7 @@ export class ChatTab {
                         <div class="refactcss-chat__content"></div>
                         <div class="refactcss-chat__panel">
                             <div class="refactcss-chat__controls">
+                                <div><input type="checkbox" id="vecdb-attach" name="vecdb-attach><label id="vecdb-attach-label" for="vecdb-attach">Attach vecdb</label></div>
                                 <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
                                 <div class="refactcss-chat__model">Use model:<select id="chat-model"></select></div>
                             </div>

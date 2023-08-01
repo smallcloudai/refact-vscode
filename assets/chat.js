@@ -294,6 +294,9 @@
         let input_should_be_visible = false;
 		switch (message.command) {
         case "chat-set-fireup-options":
+            let vecdb_attach = document.getElementById("vecdb-attach");
+            vecdb_attach.checked = message.vecdb_attach_default;
+
             let chat_attach_file = document.getElementById("chat-attach");
             chat_attach_file.checked = message.chat_attach_default;
             let label = document.getElementById("chat-attach-label");
