@@ -374,7 +374,7 @@ export function fetch_api_promise(
 export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
-    messages: [string, string][],
+    messages: [string, string, string][],
     function_name: string,
     model: string,
     stop_tokens: string[],
@@ -403,9 +403,11 @@ export function fetch_chat_promise(
     for (let i=0; i<messages.length; i++) {
         let role = messages[i][0];
         let text = messages[i][1];
+        let fun = messages[i][2];
         json_messages.push({
             "role": role,
             "content": text,
+            "function": fun
         });
         console.log([i, "chat", role]);
     }

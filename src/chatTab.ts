@@ -11,7 +11,7 @@ export class ChatTab {
     // public static current_tab: ChatTab | undefined;
     // private _disposables: vscode.Disposable[] = [];
     public web_panel: vscode.WebviewPanel;
-    public messages: [string, string][];
+    public messages: [string, string, string][];
     public cancellationTokenSource: vscode.CancellationTokenSource;
     public working_on_attach_code: string = "";
     public working_on_snippet_code: string = "";
@@ -136,7 +136,7 @@ export class ChatTab {
             if (code_snippet) {
                 question = "```\n" + code_snippet + "\n```\n" + question;
             }
-            free_floating_tab.chat_post_question(question, use_model, use_model_function, !!code_snippet);
+            free_floating_tab.chat_post_question(question, use_model, use_model_function, !!code_snippet, false);
         } else {
             let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
             if (code_snippet) {
@@ -192,7 +192,8 @@ export class ChatTab {
                         data.chat_question,
                         data.chat_model,
                         data.chat_model_function,
-                        data.chat_attach_file
+                        data.chat_attach_file,
+                        data.chat_attach_vecdb,
                     );
                     break;
 				}
@@ -222,7 +223,7 @@ export class ChatTab {
     //     }
     // }
 
-    private _question_to_div(question: string, messages_backup: [string, string][])
+    private _question_to_div(question: string, messages_backup: [string, string, string][])
     {
         let valid_html = false;
         let html = "";
@@ -247,7 +248,8 @@ export class ChatTab {
         question: string,
         model: string,
         model_function: string,
-        attach_file: boolean
+        attach_file: boolean,
+        attach_vecdb: boolean,
     ) {
         if(!this.web_panel) {
             return false;
@@ -278,8 +280,8 @@ export class ChatTab {
             }
             this.web_panel.title = first_15_characters;
             if (attach_file) {
-                this.messages.push(["user", this.working_on_attach_code]);
-                this.messages.push(["assistant", "Thanks for context, what's your question?"]);
+                this.messages.push(["user", this.working_on_attach_code, ""]);
+                this.messages.push(["assistant", "Thanks for context, what's your question?", ""]);
             }
         }
 
@@ -288,11 +290,16 @@ export class ChatTab {
         }
 
         let messages_backup = this.messages.slice();
-        this.messages.push(["user", question]);
+        this.messages.push(["user", question, ""]);
         if (this.messages.length > 10) {
             this.messages.shift();
             this.messages.shift(); // so it always starts with a user
         }
+        if (attach_vecdb && this.messages.length !== 0) {
+            let last_msg = this.messages[this.messages.length-1];
+            this.messages[this.messages.length-1] = [last_msg[0], last_msg[1], "vecdb"];
+        }
+
         this._question_to_div(question, messages_backup);
         this.web_panel.webview.postMessage({
             command: "chat-post-answer",
@@ -326,7 +333,6 @@ export class ChatTab {
 
             if (json && json["choices"]) {
                 let choice0 = json["choices"][0];
-                // choice0['messages'] = choice0['messages'].at(-1);
 
                 if (role && role !== choice0['messages']['role']) {
                     delta = '';
@@ -426,7 +432,7 @@ export class ChatTab {
                 console.log("backup_user_phrase:" + backup_user_phrase);
                 stack_this.web_panel.webview.postMessage({ command: "chat-error-streaming", backup_user_phrase: backup_user_phrase });
             } else {
-                stack_this.messages.push(["assistant", answer]);
+                stack_this.messages.push(["assistant", answer, ""]);
                 stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
             }
         }
@@ -482,7 +488,7 @@ export class ChatTab {
                         <div class="refactcss-chat__content"></div>
                         <div class="refactcss-chat__panel">
                             <div class="refactcss-chat__controls">
-                                <div><input type="checkbox" id="vecdb-attach" name="vecdb-attach><label id="vecdb-attach-label" for="vecdb-attach">Attach vecdb</label></div>
+                                <div><input type="checkbox" id="vecdb-attach" name="vecdb-attach" data-used="false"><label id="vecdb-attach-label" for="vecdb-attach">Attach vecdb</label></div>
                                 <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
                                 <div class="refactcss-chat__model">Use model:<select id="chat-model"></select></div>
                             </div>

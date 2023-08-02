@@ -35,14 +35,18 @@
         console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
         [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
         let chat_attach_file = document.getElementById("chat-attach");
+        let chat_attach_vecdb = document.getElementById("vecdb-attach");
         chat_input.value = '';
+        console.log(chat_attach_vecdb.getAttribute("data-used"));
         vscode.postMessage({
             type: "question-posted-within-tab",
             chat_question: message,
             chat_model: chat_model,
             chat_model_function: chat_model_function,
-            chat_attach_file: chat_attach_file.checked
+            chat_attach_file: chat_attach_file.checked,
+            chat_attach_vecdb: chat_attach_vecdb.checked && chat_attach_vecdb.getAttribute("data-used") === "false"
         });
+        chat_attach_vecdb.setAttribute("data-used", "true");
         if(!chat_controls_moved) {
             const chat_controls = document.querySelector('.refactcss-chat__controls');
             const chat_content = document.querySelector('.refactcss-chat__content');
