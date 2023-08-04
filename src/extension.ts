@@ -33,10 +33,6 @@ declare global {
     var last_positive_result: number;
     var custom_infurl: boolean;
     var chat_v1_style: boolean;
-
-    // completion metric
-    var cm_last_grey_text: {[key: string]: any} | undefined;
-    var cm_last_model_name: string | undefined;
 }
 
 async function pressed_call_chat() {

@@ -144,11 +144,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
                //.translate(0, completion_length))
             command,
         );
-        global.cm_last_grey_text = {
-            'completion': completion,
-            'document': whole_doc,
-            'accepted': false
-        };
         return [completionItem];
     }
 
@@ -255,6 +250,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let stop_at = cursor_cr;
         let modif_doc = whole_doc;
         let backward_cache = "";
+        let de_facto_model = "";
 
         if (!fail) {
             let t0 = Date.now();
@@ -329,6 +325,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             let before_cursor1 = whole_doc.substring(0, cursor_cr);
             let before_cursor2 = modif_doc.substring(0, cursor_cr);
             backward_cache = json["backward_cache"] || "";
+            de_facto_model = json["model"];
             if (before_cursor1 !== before_cursor2) {
                 console.log("completion before_cursor1 != before_cursor2");
                 return ["", -1];
@@ -381,6 +378,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!fail) {
             fail = completion.length === 0;
         }
+        _completion_data_feedback_candidate.grey_text_explicitly = completion;
+        _completion_data_feedback_candidate.de_facto_model = de_facto_model;
         if (third_party) {
             // dont cache third party
             return [completion, _completion_data_feedback_candidate.serial_number];
@@ -407,11 +406,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             });
         }
         this.cleanup_cache();
-        global.cm_last_grey_text = {
-            'completion': completion,
-            'document': whole_doc,
-            'accepted': false
-        };
         return [completion, _completion_data_feedback_candidate.serial_number];
     }
 }
@@ -443,14 +437,10 @@ export function inline_accepted(serial_number: number)
         return;
     }
     usageStats.report_increase_tab_stats(
-        feed, 
-        _extract_extension(feed), 
-        vscode.extensions.getExtension('vscode.git')
+        feed,
+        _extract_extension(feed),
+        vscode.extensions.getExtension('vscode.git'),
     );
-
-    if (global.cm_last_grey_text) {
-        global.cm_last_grey_text['accepted'] = true;
-    }
 
     feed.ts_reacted = Date.now();
     let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
