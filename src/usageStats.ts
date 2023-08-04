@@ -5,6 +5,7 @@ import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 
 import { completionMetricPipeline } from "./metricCompletion";
+import { ApiFields } from './estate';
 
 
 export async function report_success_or_failure(
@@ -126,7 +127,11 @@ export async function report_increase_a_counter(
 }
 
 
-export async function report_increase_tab_stats(feed: any, extension: string, gitExtension: any) {
+export async function report_increase_tab_stats(
+    feed: ApiFields,
+    extension: string,
+    gitExtension: any,
+) {
     function generateSHA256Hash(input: string): string {
         const crypto = require('crypto');
         const hash = crypto.createHash('sha256');
@@ -154,6 +159,9 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         return projectName;
     }
 
+    let whole_file: string = feed.sources[feed.cursor_file];
+    let grey_text: string = feed.grey_text_explicitly;
+    let filename: string = feed.cursor_file;
 
     let global_context: vscode.ExtensionContext|undefined = global.global_context;
     if (!global_context) {
@@ -164,18 +172,13 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
         cm_file_states = {};
     }
 
-    let filename = feed.cursor_file;
-
-    if (!global.cm_last_grey_text) {
-        return;
-    }
-    if (!global.cm_last_grey_text['accepted']) {
+    if (!grey_text) {
         return;
     }
     const fs_record = {
-        'completion': global.cm_last_grey_text['completion'],
-        'document': global.cm_last_grey_text['document'], 
-        'model_name': global.cm_last_model_name || ''
+        'completion': grey_text,
+        'document': whole_file,
+        'model_name': feed.de_facto_model
     };
 
     if (cm_file_states[filename]) {
@@ -210,8 +213,8 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
             "project_hash": project_hash,
             "file_ext": extension,
             "model_name": state0['model_name'],
-            "edit_score": tab_metric_score[0],
-            "type_scores": tab_metric_score[1],
+            "edit_score": tab_metric_score[0],   // model generated characters remaining / completion.length
+            "type_scores": tab_metric_score[1],  // list of two elements [model chars, human chars]
         });
 
         console.log("SCORES_STATS -->", scores_stats.at(-1));
@@ -222,11 +225,10 @@ export async function report_increase_tab_stats(feed: any, extension: string, gi
 
         console.log('LENGTH', scores_stats.length);
 
-        // // only for test; DELETEME!
+        // For debug: sent stats each 5 tabs
         // if (scores_stats.length >= 5) {
         //     await report_tab_stats();
         // }
-        // // END OF DELETEME
     }
     await global_context.globalState.update("cm_file_states", cm_file_states);
 }

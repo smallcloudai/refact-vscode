@@ -26,6 +26,8 @@ export class ApiFields {
     public intent: string = "";
     public sources: { [key: string]: string } = {};
     public results: { [key: string]: string } = {};
+    public grey_text_explicitly: string = "";  // can be calculated from results minus sources, but this is easier to handle
+    public de_facto_model: string = "";
     public messages: [string, string][] = [];
     public cursor_file: string = "";
     public cursor_pos0: number = 0;
