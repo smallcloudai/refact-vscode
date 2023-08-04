@@ -4,7 +4,7 @@ import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 
-import { completionMetricPipeline } from "./metricCompletion";
+import { completion_metric_pipeline } from "./metricCompletion";
 import { ApiFields } from './estate';
 
 
@@ -127,6 +127,33 @@ export async function report_increase_a_counter(
 }
 
 
+async function declutter_cm_file_states() {
+    let files_limit = 5;
+    let global_context: vscode.ExtensionContext|undefined = global.global_context;
+    if (!global_context) {
+        return;
+    }
+    let cm_file_states: {[key: string]: Array<{[key: string]: string}>} | undefined = await global_context.globalState.get("cm_file_states");
+    let cm_last_used_files: Array<string> | undefined = await global_context.globalState.get("cm_last_used_files");
+    if (!cm_file_states || !cm_last_used_files) {
+        return;
+    }
+    let last_n_files = cm_last_used_files.slice(-files_limit);
+    if (last_n_files.length === 0) {
+        return;
+    }
+    for (let [key, _] of Object.entries(cm_file_states)) {
+        if (!last_n_files.includes(key)) {
+            delete cm_file_states[key];
+        }
+    }
+    // if (Object.keys(cm_file_states).length === 0) {
+    //     return;
+    // }
+    await global_context.globalState.update("cm_file_states", cm_file_states);
+    await global_context.globalState.update("cm_last_used_files", last_n_files);
+}
+
 export async function report_increase_tab_stats(
     feed: ApiFields,
     extension: string,
@@ -143,19 +170,19 @@ export async function report_increase_tab_stats(
         let projectName = '';
         let username = '';
 
-        if (gitExtension) {
-            const git = gitExtension.isActive ? gitExtension.exports.getAPI(1) : null;
-            if (git) {
-                const repositories = git.repositories;
-                if (repositories.length > 0) {
-                    const projectPath = repositories[0].rootUri.path;
-                    projectName = projectPath.substring(projectPath.lastIndexOf('/') + 1);
+        // if (gitExtension) {
+        //     const git = gitExtension.isActive ? gitExtension.exports.getAPI(1) : null;
+        //     if (git) {
+        //         const repositories = git.repositories;
+        //         if (repositories.length > 0) {
+        //             const projectPath = repositories[0].rootUri.path;
+        //             projectName = projectPath.substring(projectPath.lastIndexOf('/') + 1);
 
-                    // const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
-                    // const username = authorEmail ? authorEmail.split('@')[0] : '';
-                }
-            }
-        }
+        //             // const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
+        //             // const username = authorEmail ? authorEmail.split('@')[0] : '';
+        //         }
+        //     }
+        // }
         return projectName;
     }
 
@@ -168,8 +195,13 @@ export async function report_increase_tab_stats(
         return;
     }
     let cm_file_states: {[key: string]: Array<{[key: string]: string}>} | undefined = await global_context.globalState.get("cm_file_states");
+    let cm_last_used_files: Array<string> | undefined = await global_context.globalState.get("cm_last_used_files");
+
     if (!cm_file_states) {
         cm_file_states = {};
+    }
+    if (!cm_last_used_files) {
+        cm_last_used_files = [];
     }
 
     if (!grey_text) {
@@ -186,13 +218,19 @@ export async function report_increase_tab_stats(
     } else {
         cm_file_states[filename] = [fs_record];
     }
+    if (cm_last_used_files.includes(filename)) {
+        cm_last_used_files.splice(cm_last_used_files.indexOf(filename), 1);
+        cm_last_used_files.push(filename);
+    } else {
+        cm_last_used_files.push(filename);
+    }
 
     if (cm_file_states[filename].length >= 2) {
         let state0 = cm_file_states[filename][0];
         let state1 = cm_file_states[filename][1];
 
         let tab_metric_score: [number, [number, number]];
-        tab_metric_score = completionMetricPipeline(
+        tab_metric_score = completion_metric_pipeline(
             state0['document'],
             state1['document'],
             state0['completion']
@@ -231,6 +269,7 @@ export async function report_increase_tab_stats(
         // }
     }
     await global_context.globalState.update("cm_file_states", cm_file_states);
+    await global_context.globalState.update("cm_last_used_files", cm_last_used_files);
 }
 
 
@@ -305,6 +344,7 @@ async function report_tab_stats() {
     }
 
     await global_context.globalState.update("scores_stats", undefined);
+    await declutter_cm_file_states();
 }
 
 
