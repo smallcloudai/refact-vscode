@@ -142,10 +142,14 @@ async function declutter_cm_file_states() {
     if (last_n_files.length === 0) {
         return;
     }
+    let keys_delete = [];
     for (let [key, _] of Object.entries(cm_file_states)) {
         if (!last_n_files.includes(key)) {
-            delete cm_file_states[key];
+            keys_delete.push(key);
         }
+    }
+    for (const key of keys_delete) {
+        delete cm_file_states[key];
     }
     // if (Object.keys(cm_file_states).length === 0) {
     //     return;
