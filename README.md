@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="300" alt="Refact" src="images/refact-logo.png"/>
+  <img width="300" alt="Refact" src="images/refact-logo.svg"/>
 </p>
 
 ---
