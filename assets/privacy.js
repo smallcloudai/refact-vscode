@@ -97,6 +97,12 @@
     }
 
     function showPopup(text, actionButtonText) {
+        const old_popups = document.querySelectorAll('.privacy-popup');
+        if(old_popups.length > 0) {
+            for (const popup of old_popups) {
+                document.body.removeChild(popup);
+            }
+        }
         popup = document.createElement("div");
         const popupContent = document.createElement("div");
         const popupActions = document.createElement("div");
