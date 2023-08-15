@@ -148,7 +148,7 @@ async function declutter_cm_file_states() {
             keys_delete.push(key);
         }
     }
-    for (const key of keys_delete) {
+    for (let key of keys_delete) {
         delete cm_file_states[key];
     }
     // if (Object.keys(cm_file_states).length === 0) {
@@ -163,32 +163,23 @@ export async function report_increase_tab_stats(
     extension: string,
     gitExtension: any,
 ) {
-    function generateSHA256Hash(input: string): string {
-        const crypto = require('crypto');
-        const hash = crypto.createHash('sha256');
-        hash.update(input);
-        return hash.digest('hex');
-    }
-
-    function get_project_name() {
-        let projectName = '';
-        let username = '';
-
-        // if (gitExtension) {
-        //     const git = gitExtension.isActive ? gitExtension.exports.getAPI(1) : null;
-        //     if (git) {
-        //         const repositories = git.repositories;
-        //         if (repositories.length > 0) {
-        //             const projectPath = repositories[0].rootUri.path;
-        //             projectName = projectPath.substring(projectPath.lastIndexOf('/') + 1);
-
-        //             // const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
-        //             // const username = authorEmail ? authorEmail.split('@')[0] : '';
-        //         }
-        //     }
-        // }
-        return projectName;
-    }
+    // Project name: ignore for now. Maybe it makes sense to send it in plain text to docker backend (because it's private anyway)
+    // function get_project_name() {
+    //     let projectName = '';
+    //     if (gitExtension) {
+    //         const git = gitExtension.isActive ? gitExtension.exports.getAPI(1) : null;
+    //         if (git) {
+    //             const repositories = git.repositories;
+    //             if (repositories.length > 0) {
+    //                 const projectPath = repositories[0].rootUri.path;
+    //                 projectName = projectPath.substring(projectPath.lastIndexOf('/') + 1);
+    //                 // const authorEmail = repositories[0].state.HEAD?.commit?.author.email;
+    //                 // const username = authorEmail ? authorEmail.split('@')[0] : '';
+    //             }
+    //         }
+    //     }
+    //     return projectName;
+    // }
 
     let whole_file: string = feed.sources[feed.cursor_file];
     let grey_text: string = feed.grey_text_explicitly;
@@ -240,23 +231,17 @@ export async function report_increase_tab_stats(
             state0['completion']
         );
 
-        let project_name = get_project_name();
-        let project_hash = project_name;
-        if (project_name !== '') {
-            project_hash = generateSHA256Hash(project_name).slice(0, 16);
-        }
-
         let scores_stats: Array <{[key: string]: any}> | undefined = await global_context.globalState.get("scores_stats");
         if (!scores_stats) {
             scores_stats = [];
         }
 
         scores_stats.push({
-            "project_hash": project_hash,
+            "project_hash": "project",
             "file_ext": extension,
             "model_name": state0['model_name'],
-            "edit_score": tab_metric_score[0],   // model generated characters remaining / completion.length
-            "type_scores": tab_metric_score[1],  // list of two elements [model chars, human chars]
+            "robot_score": tab_metric_score[0],        // model generated characters remaining / completion.length
+            "robot_human_chars": tab_metric_score[1],  // list of two elements [model chars, human chars]
         });
 
         console.log("SCORES_STATS -->", scores_stats.at(-1));
@@ -264,8 +249,6 @@ export async function report_increase_tab_stats(
         await global_context.globalState.update("scores_stats", scores_stats);
 
         cm_file_states[filename] = [state1];
-
-        console.log('LENGTH', scores_stats.length);
 
         // For debug: sent stats each 5 tabs
         // if (scores_stats.length >= 5) {
@@ -291,24 +274,24 @@ async function report_tab_stats() {
             let key = stat['project_hash'] + '/' + stat['file_ext'] + '/' + stat['model_name'];
             if (tab_stats_merged.has(key)) {
                 let val = tab_stats_merged.get(key);
-                val['edit_score'].push(stat['edit_score']);
-                val['type_scores'][0] += stat['type_scores'][0];
-                val['type_scores'][1] += stat['type_scores'][1];
+                val['robot_score'].push(stat['robot_score']);
+                val['robot_human_chars'][0] += stat['robot_human_chars'][0];
+                val['robot_human_chars'][1] += stat['robot_human_chars'][1];
                 tab_stats_merged.set(key, val);
             } else {
                 tab_stats_merged.set(key, {
                     "project_hash": stat['project_hash'],
                     "file_ext": stat['file_ext'],
                     "model_name": stat['model_name'],
-                    "edit_score": [stat['edit_score']],
-                    "type_scores": stat['type_scores'],
+                    "robot_score": [stat['robot_score']],
+                    "robot_human_chars": stat['robot_human_chars'],
                 });
             }
         }
         let tab_stats_final: Array <{[key: string]: any}> = [];
         for (const [_, val] of tab_stats_merged) {
-            val['edit_score'] = get_avg(val['edit_score']);
-            val['count'] = val['edit_score'].length;
+            val['robot_score'] = get_avg(val['robot_score']);
+            val['count'] = val['robot_score'].length;
             tab_stats_final.push(val);
         }
         return tab_stats_final;
