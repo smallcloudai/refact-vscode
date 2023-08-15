@@ -436,9 +436,10 @@ export function inline_accepted(serial_number: number)
     if (feed.ts_reacted) {
         return;
     }
+    let ext = _extract_extension(feed);
     usageStats.report_increase_tab_stats(
         feed,
-        _extract_extension(feed),
+        ext,
         vscode.extensions.getExtension('vscode.git'),
     );
 
@@ -446,7 +447,6 @@ export function inline_accepted(serial_number: number)
     let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
     let req_to_react_ms = feed.ts_reacted - feed.ts_req;
     console.log(["inline_accepted", serial_number, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
-    let ext = _extract_extension(feed);
     usageStats.report_increase_a_counter("completion", "metric0ms_tab");
     usageStats.report_increase_a_counter("completion", "metric0ms_tab:" + ext);
     if (ponder_time_ms > 600) {
