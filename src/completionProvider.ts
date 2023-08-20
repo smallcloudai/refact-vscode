@@ -4,8 +4,6 @@ import * as fetch from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import * as estate from "./estate";
 import * as storeVersions from "./storeVersions";
-import * as codeLens from "./codeLens";
-import * as crlf from "./crlf";
 import * as usageStats from "./usageStats";
 import * as privacy from "./privacy";
 
@@ -23,18 +21,16 @@ class CacheEntry {
 
 const CACHE_STORE = 160;
 const CACHE_AHEAD = 50;
+const CACHE_KEY_LINES = 50;
 
 
 let _global_serial_number = 5000;
 
 let _completion_data_feedback_candidate = new estate.ApiFields();
 
-let _global_stopped_because_maxtokens = false;
-
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
 {
-
     async provideInlineCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -70,60 +66,38 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (whole_doc.length > 180*1024) { // Too big (180k is ~0.2% of all files on our dataset) everything becomes heavy: network traffic, cache, cpu
             return [];
         }
-        let cursor_dirty = document.offsetAt(position);  // dirty because the \r are counted and emojis are 2 chars
-        let cursors_cleaned_cr: number[], cursors_transmit: number[];
-        [whole_doc, cursors_cleaned_cr, cursors_transmit] = crlf.cleanup_cr_lf(whole_doc, [cursor_dirty]);
-        let cursor_cr = cursors_cleaned_cr[0];
-        let cursor_transmit = cursors_transmit[0];
-        let text_left = whole_doc.substring(0, cursor_cr);
 
-        if (whole_doc.length > 0 && whole_doc[whole_doc.length - 1] !== "\n") {
-            whole_doc += "\n";
-        }
-        let deleted_spaces_left = 0;
-        while (multiline && text_left.length > 0 && (text_left[text_left.length - 1] === " " || text_left[text_left.length - 1] === "\t")) {
-            text_left = text_left.substring(0, text_left.length - 1);
-            cursor_cr -= 1;
-            cursor_transmit -= 1;
-            deleted_spaces_left += 1;
-        }
-        let eol_pos = new vscode.Position(position.line, current_line.text.length);
-        whole_doc = text_left + whole_doc.substring(cursor_cr);
-
-        let delay_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
+        let debounce_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
         let called_manually = context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
 
         let completion = "";
         let this_completion_serial_number = -1;
-        if (state) {
-            let third_party = Boolean(state.completion_longthink && multiline);
-            // let third_party = false;
-            [completion, this_completion_serial_number] = await this.cached_request(
-                state,
-                cancelToken,
-                delay_if_not_cached,
-                file_name,
-                whole_doc,
-                cursor_cr,
-                cursor_transmit,
-                multiline,
-                third_party,
-                called_manually
-            );
-            if (third_party) {
-                state.completion_reset_on_cursor_movement = true;
+        let cursor_character = multiline ? 0 : position.character;
+
+        let cache_key = "";
+        for (let i = -CACHE_KEY_LINES; i <= 0 ; i++) {
+            if (position.line + i < 0) {
+                continue;
+            }
+            let line = document.lineAt(position.line + i);
+            if (i < 0) {
+                cache_key += line.text + "\n";
+            } else {
+                cache_key += line.text.substring(0, cursor_character);
             }
         }
 
-        if (state) {
-            if (state && completion && multiline) {
-                state.completion_lens_pos = position.line;
-            } else {
-                state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
-            }
-            vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
-            codeLens.quick_refresh();
-        }
+        [completion, this_completion_serial_number] = await this.cached_request(
+            cancelToken,
+            cache_key,
+            file_name,
+            whole_doc,
+            position.line,
+            cursor_character,
+            debounce_if_not_cached,
+            multiline,
+            called_manually,
+        );
 
         if (completion && _completion_data_feedback_candidate.serial_number === this_completion_serial_number && _completion_data_feedback_candidate.ts_presented === 0) {
             _completion_data_feedback_candidate.ts_presented = Date.now();
@@ -135,13 +109,16 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             arguments: [this_completion_serial_number],
         };
 
-        // Undocumented brittle functionality, it's hard to describe what InlineCompletionItem exactly does, trial and error...
+        let replace_range0 = new vscode.Position(position.line, position.character);
+        let replace_range1 = new vscode.Position(position.line, current_line.text.length);
+        if (multiline) {
+            replace_range0 = new vscode.Position(position.line, 0);
+        }
+        console.log(["completion", completion, "replace_range0", replace_range0, "replace_range1", replace_range1]);
         let completionItem = new vscode.InlineCompletionItem(
             completion,
-            // new vscode.Range(position, position.translate(0, completion_length))
-            new vscode.Range(position.translate(0, -deleted_spaces_left), eol_pos),
-            // new vscode.Range(position, eol_pos.translate(0, 1))
-               //.translate(0, completion_length))
+            // new vscode.Range(position.translate(0, -deleted_spaces_left), eol_pos),
+            new vscode.Range(replace_range0, replace_range1),
             command,
         );
         return [completionItem];
@@ -202,6 +179,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             this.slowdown_rapidfire_count = 0;
         }
         if (now - this.slowdown_sustained_ts > 20000) {
+            // reset every 20 seconds
             this.slowdown_sustained_ts = now;
             this.slowdown_sustained_count = 0;
         }
@@ -211,199 +189,72 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
     }
 
     async cached_request(
-        state: estate.StateOfEditor,
         cancelToken: vscode.CancellationToken,
-        delay_if_not_cached: boolean,
+        cache_key: string,
         file_name: string,
         whole_doc: string,
-        cursor_cr: number,
-        cursor_transmit: number,
+        cursor_line: number,
+        cursor_character: number,
+        debounce_if_not_cached: boolean,
         multiline: boolean,
-        third_party: boolean,
         called_manually: boolean
     ): Promise<[string, number]>
     {
-        let left = whole_doc.substring(0, cursor_cr);
-        let cached = this.cache.get(left);
-        if (cached !== undefined && !third_party && !called_manually) {
+        let cached = this.cache.get(cache_key);
+        if (cached !== undefined && !called_manually) {
             return [cached.completion, cached.serial_number];
         }
         let login: any = await userLogin.inference_login();
         if (!login) { return ["", -1]; }
-        if (delay_if_not_cached) {
+        if (debounce_if_not_cached) {
             let drop = await this.slowdown(cancelToken);
             if (drop) { return ["", -1]; }
         }
 
         let request = new fetch.PendingRequest(undefined, cancelToken);
         let max_tokens = 50;
-        let max_edits = 1;
         let sources: { [key: string]: string } = {};
         sources[file_name] = whole_doc;
-        let stop_tokens: string[];
-        if (multiline) {
-            stop_tokens = ["\n\n"];
-        } else {
-            stop_tokens = ["\n", "\n\n"];
-        }
-        let fail = false;
-        let stop_at = cursor_cr;
-        let modif_doc = whole_doc;
-        let backward_cache = "";
         let de_facto_model = "";
 
-        if (!fail) {
-            let t0 = Date.now();
-            let promise: any;
-            let stream = false;
-            let api_fields: estate.ApiFields;
-            if (third_party) {
-                let use_model = "longthink/stable";
-                let func = "completion-gpt3.5";
-                // TODO: let the user choose
-                if (global.longthink_functions_today) {
-                    const keys = Object.keys(global.longthink_functions_today);
-                    for (let i = 0; i < keys.length; i++) {
-                        let key = keys[i];
-                        if (key.includes("completion-")) {
-                            let function_dict = global.longthink_functions_today[key];
-                            use_model = function_dict.model;
-                            func = function_dict.function_name;
-                        }
-                    }
-                }
-                max_tokens = 200;
-                [promise, api_fields] = fetch.fetch_api_promise(
-                    cancelToken,
-                    "completion:" + func, // scope
-                    sources,
-                    "Infill", // intent
-                    func,
-                    file_name,
-                    cursor_transmit,
-                    cursor_transmit,
-                    max_tokens,
-                    max_edits,
-                    stop_tokens,
-                    stream,
-                    use_model,
-                    third_party,
-                );
-            } else {
-                [promise, api_fields] = fetch.fetch_api_promise(
-                    cancelToken,
-                    "completion", // scope
-                    sources,
-                    "Infill", // intent
-                    "infill", // scratchpad function
-                    file_name,
-                    cursor_transmit,
-                    cursor_transmit,
-                    max_tokens,
-                    max_edits,
-                    stop_tokens,
-                    stream,
-                    "",
-                    third_party,
-                );
-            }
-            _completion_data_feedback_candidate = api_fields;
-            _completion_data_feedback_candidate.serial_number = _global_serial_number;
-            _global_serial_number += 1;
-            request.supply_stream(promise, api_fields);
-            let json: any;
-            json = await request.apiPromise;
-            if (json === undefined) {
-                return ["", -1];
-            }
-            let t1 = Date.now();
-            let ms_int = Math.round(t1 - t0);
-            console.log([`API request ${ms_int}ms`]);
-            modif_doc = json["choices"][0]["files"][file_name];
-            let finish_reason = json["choices"][0]["finish_reason"];
-            _global_stopped_because_maxtokens = (finish_reason === "maxlen" || finish_reason === "length");
-            let before_cursor1 = whole_doc.substring(0, cursor_cr);
-            let before_cursor2 = modif_doc.substring(0, cursor_cr);
-            backward_cache = json["backward_cache"] || "";
-            de_facto_model = json["model"];
-            if (before_cursor1 !== before_cursor2) {
-                console.log("completion before_cursor1 != before_cursor2");
-                return ["", -1];
-            }
-            stop_at = 0;
-            let any_different = false;
-            for (let i = -1; i > -whole_doc.length; i--) {
-                let char1 = whole_doc.slice(i, i + 1);
-                let char2 = modif_doc.slice(i, i + 1);
-                if (char1 === "\n") {
-                    stop_at = i + 1;
-                }
-                if (char1 !== char2) {
-                    //stop_at = i + 1;
-                    any_different = true;
-                    break;
-                }
-            }
-            fail = !any_different;
+        let t0 = Date.now();
+        let promise: any;
+        let api_fields: estate.ApiFields;
+        [promise, api_fields] = fetch.fetch_code_completion(
+            cancelToken,
+            sources,
+            multiline,
+            file_name,
+            cursor_line,
+            cursor_character,
+            max_tokens,
+        );
+        _completion_data_feedback_candidate = api_fields;
+        _completion_data_feedback_candidate.serial_number = _global_serial_number;
+        _global_serial_number += 1;
+        request.supply_stream(promise, api_fields);
+        let json: any;
+        json = await request.apiPromise;
+        if (json === undefined) {
+            return ["", -1];
         }
-        let completion = "";
-        if (!fail) {
-            fail = cursor_cr >= modif_doc.length + stop_at;
-            if (fail) {
-                console.log([`completion modified before cursor ${cursor_cr} < ${modif_doc.length + stop_at}`]);
-                let whole_doc2 = whole_doc.substring(0, cursor_cr);
-                let modif_doc2 = modif_doc.substring(0, cursor_cr);
-                if (whole_doc2 !== modif_doc2) {
-                    console.log(["whole_doc2", whole_doc2]);
-                    console.log(["modif_doc2", modif_doc2]);
-                }
-                let after_cursor_real = whole_doc.substring(cursor_cr);
-                let after_cursor_alternative = modif_doc.substring(modif_doc.length + stop_at);
-                if (after_cursor_real !== after_cursor_alternative) {
-                    console.log(["after_cursor_real", after_cursor_real]);
-                    console.log(["after_cursor_alternative", after_cursor_alternative]);
-                }
-            }
-        }
-        if (!fail) {
-            completion = modif_doc.substring(cursor_cr, modif_doc.length + stop_at);
-            // console.log(["completion success", request.seq, completion]);
-        }
-        if (!fail && !multiline) {
-            completion = completion.replace(/\s+$/, "");
-            fail = completion.match(/\n/g) !== null;
-        } else if (!fail && multiline) {
-            completion = completion.replace(/[ \t\n]+$/, "");
-        }
-        if (!fail) {
-            fail = completion.length === 0;
-        }
+        let t1 = Date.now();
+        let ms_int = Math.round(t1 - t0);
+        console.log([`API request ${ms_int}ms`]);
+
+        let completion = json[0]["code_completion"];
         _completion_data_feedback_candidate.grey_text_explicitly = completion;
         _completion_data_feedback_candidate.de_facto_model = de_facto_model;
-        if (third_party) {
-            // dont cache third party
-            return [completion, _completion_data_feedback_candidate.serial_number];
-        }
         for (let i = 0; i < Math.min(completion.length + 1, CACHE_AHEAD); i++) {
-            let more_left = left + completion.substring(0, i);
-            this.cache.set(more_left, {
+            let longer_key = cache_key + completion.substring(0, i);
+            this.cache.set(longer_key, {
                 completion: completion.substring(i),
                 created_ts: Date.now(),
                 serial_number: _completion_data_feedback_candidate.serial_number,
             });
-        }
-        for (let i = 1; i < Math.min(backward_cache.length, CACHE_AHEAD); i++) {
-            let less_left = left.substring(0, left.length - i);
-            let cut = left.substring(left.length - i);
-            if (cut !== backward_cache.substring(backward_cache.length - i)) {
-                console.log(["backward cache problem, cut", cut, "backward_cache", backward_cache.substring(backward_cache.length - i)]);
-                continue;
+            if (completion.substring(i) === "\n") {
+                break;
             }
-            this.cache.set(less_left, {
-                completion: cut + completion,
-                created_ts: Date.now(),
-                serial_number: _completion_data_feedback_candidate.serial_number,
-            });
         }
         this.cleanup_cache();
         return [completion, _completion_data_feedback_candidate.serial_number];
@@ -456,12 +307,6 @@ export function inline_accepted(serial_number: number)
     if (ponder_time_ms > 1200) {
         usageStats.report_increase_a_counter("completion", "metric1200ms_tab");
         usageStats.report_increase_a_counter("completion", "metric1200ms_tab:" + ext);
-    }
-    if (_global_stopped_because_maxtokens) {
-        // run again to continue completion
-        setTimeout(() => {
-            vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
-        }, 20);
     }
 }
 

@@ -371,6 +371,82 @@ export function fetch_api_promise(
 }
 
 
+export function fetch_code_completion(
+    cancelToken: vscode.CancellationToken,
+    sources: { [key: string]: string },
+    multiline: boolean,
+    cursor_file: string,
+    cursor_line: number,
+    cursor_character: number,
+    max_new_tokens: number,
+): [Promise<fetchH2.Response>, estate.ApiFields]
+{
+    let third_party = false;
+    let url = inference_url("/code-completion", third_party);
+    let ctx = inference_context(third_party);
+    let model: string = vscode.workspace.getConfiguration().get('refactai.model') || "";
+    const apiKey = userLogin.secret_api_key();
+    if (!apiKey) {
+        return [Promise.reject("No API key"), new estate.ApiFields()];
+    }
+    let temp = 0.2;
+    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let api_fields = new estate.ApiFields();
+    api_fields.scope = "code-completion";
+    api_fields.url = url;
+    api_fields.model = model;
+    api_fields.sources = sources;
+    api_fields.intent = "";
+    api_fields.function = "completion";
+    api_fields.cursor_file = cursor_file;
+    api_fields.cursor_pos0 = -1;
+    api_fields.cursor_pos1 = -1;
+    api_fields.ts_req = Date.now();
+    const post = JSON.stringify({
+        "model": "bigcode/starcoder",
+        "inputs": {
+            "sources": sources,
+            "cursor": {
+                "file": cursor_file,
+                "line": cursor_line,
+                "character": cursor_character,
+            },
+            "multiline": multiline,
+        },
+        "parameters": {
+            "temperature": temp,
+            "max_new_tokens": max_new_tokens,
+        },
+        "client": `vscode-${client_version}`,
+    });
+    const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+    };
+    let req = new fetchH2.Request(url, {
+        method: "POST",
+        headers: headers,
+        body: post,
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer"
+    });
+    let init: any = {
+        timeout: 20*1000,
+    };
+    if (cancelToken) {
+        let abort = new fetchH2.AbortController();
+        cancelToken.onCancellationRequested(() => {
+            console.log(["API fetch cancelled"]);
+            abort.abort();
+        });
+        init.signal = abort.signal;
+    }
+    let promise = ctx.fetch(req, init);
+    return [promise, api_fields];
+}
+
+
 export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
