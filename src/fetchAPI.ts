@@ -139,7 +139,11 @@ export class PendingRequest {
                         reject();
                         return;
                     }
-                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
+                    let model_name = json_arrived["model"];
+                    if (typeof json_arrived === "object" && json_arrived.length !== undefined) {
+                        model_name = json_arrived[0]["model"];
+                    }
+                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", model_name);
                     resolve(json_arrived);
                 }
             }).catch(async (error) => {
