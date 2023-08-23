@@ -96,7 +96,7 @@
 				},
 				"refactai.infurl": {
 					"type": "string",
-					"description": "For self-hosted inference, set the URL to your inference server, for example https://127.0.0.1:8008/\nLeave blank otherwise.",
+					"description": "For self-hosted inference, set the URL to your inference server, for example http://127.0.0.1:8008/\nLeave blank otherwise.",
 					"default": ""
 				},
 				"refactai.pauseCompletion": {
@@ -104,10 +104,10 @@
 					"description": "Pause automatic code suggestions. Manual activation still works.",
 					"default": false
 				},
-				"refactai.autoHideSidebar": {
-					"type": "boolean",
-					"description": "Auto hide sidebar after function activation.",
-					"default": false
+				"refactai.model": {
+					"type": "string",
+					"description": "Which model to use, for example \"bigcode/starcoder\". Leave blank if not sure.",
+					"default": ""
 				}
 			}
 		},
