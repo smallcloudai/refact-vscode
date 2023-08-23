@@ -382,7 +382,7 @@ export function fetch_code_completion(
 ): [Promise<fetchH2.Response>, estate.ApiFields]
 {
     let third_party = false;
-    let url = inference_url("/code-completion", third_party);
+    let url = inference_url("/v1/code-completion", third_party);
     let ctx = inference_context(third_party);
     let model: string = vscode.workspace.getConfiguration().get('refactai.model') || "";
     const apiKey = userLogin.secret_api_key();
@@ -403,7 +403,7 @@ export function fetch_code_completion(
     api_fields.cursor_pos1 = -1;
     api_fields.ts_req = Date.now();
     const post = JSON.stringify({
-        "model": "bigcode/starcoder",
+        "model": model,
         "inputs": {
             "sources": sources,
             "cursor": {
@@ -541,8 +541,11 @@ export function look_for_common_errors(json: any, api_fields: estate.ApiFields |
         return true;
     }
     if (json.error) {
-        usageStats.report_success_or_failure(false, scope, url, json.error.message, "");
-        return true;
+        if (typeof json.error === "string") {
+            usageStats.report_success_or_failure(false, scope, url, json.error, "");
+        } else {
+            usageStats.report_success_or_failure(false, scope, url, json.error.message, "");
+        }
     }
     return false;
 }
