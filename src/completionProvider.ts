@@ -215,7 +215,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let max_tokens = 50;
         let sources: { [key: string]: string } = {};
         sources[file_name] = whole_doc;
-        let de_facto_model = "";
 
         let t0 = Date.now();
         let promise: any;
@@ -243,6 +242,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         console.log([`API request ${ms_int}ms`]);
 
         let completion = json[0]["code_completion"];
+        let de_facto_model = json[0]["model"];
         _completion_data_feedback_candidate.grey_text_explicitly = completion;
         _completion_data_feedback_candidate.de_facto_model = de_facto_model;
         for (let i = 0; i < Math.min(completion.length + 1, CACHE_AHEAD); i++) {
