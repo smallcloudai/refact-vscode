@@ -260,8 +260,8 @@ export async function report_increase_tab_stats(
 }
 
 
-async function report_tab_stats() {
-
+async function report_tab_stats()
+{
     function merge_tab_stats(scores_stats: Array <{[key: string]: any}>): Array <{[key: string]: any}> {
 
         function get_avg(arr: Array<number>): number {
@@ -296,42 +296,42 @@ async function report_tab_stats() {
         }
         return tab_stats_final;
     }
-    let global_context: vscode.ExtensionContext|undefined = global.global_context;
-    if (global_context === undefined) {
-        return;
-    }
-    let scores_stats: Array <{[key: string]: any}> | undefined = await global_context.globalState.get("scores_stats");
-    if (!scores_stats || scores_stats.length === 0) {
-        return;
-    }
-    scores_stats = merge_tab_stats(scores_stats);
+    // let global_context: vscode.ExtensionContext|undefined = global.global_context;
+    // if (global_context === undefined) {
+    //     return;
+    // }
+    // let scores_stats: Array <{[key: string]: any}> | undefined = await global_context.globalState.get("scores_stats");
+    // if (!scores_stats || scores_stats.length === 0) {
+    //     return;
+    // }
+    // scores_stats = merge_tab_stats(scores_stats);
 
-    const apiKey = userLogin.secret_api_key();
-    if (!apiKey) {
-        return;
-    }
-    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-    };
-    let url = "https://www.smallcloud.ai/v1/tab-stats";
-    let response = await fetchH2.fetch(url, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({
-            "client_version": `vscode-${client_version}`,
-            "usage": JSON.stringify(scores_stats),
-        }),
-    });
+    // const apiKey = userLogin.secret_api_key();
+    // if (!apiKey) {
+    //     return;
+    // }
+    // let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    // const headers = {
+    //     "Content-Type": "application/json",
+    //     "Authorization": `Bearer ${apiKey}`,
+    // };
+    // let url = "https://www.smallcloud.ai/v1/tab-stats";
+    // let response = await fetchH2.fetch(url, {
+    //     method: "POST",
+    //     headers: headers,
+    //     body: JSON.stringify({
+    //         "client_version": `vscode-${client_version}`,
+    //         "usage": JSON.stringify(scores_stats),
+    //     }),
+    // });
 
-    if (response.status !== 200) {
-        console.log([response.status, url]);
-        return;
-    }
+    // if (response.status !== 200) {
+    //     console.log([response.status, url]);
+    //     return;
+    // }
 
-    await global_context.globalState.update("scores_stats", undefined);
-    await declutter_cm_file_states();
+    // await global_context.globalState.update("scores_stats", undefined);
+    // await declutter_cm_file_states();
 }
 
 

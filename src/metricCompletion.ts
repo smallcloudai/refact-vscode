@@ -5,7 +5,10 @@ const Diff = require('difflib');
 import { simple_cleanup_cr_lf } from "./crlf";
 
 
-export function get_diff_addition_blocks(state0: string, state1: string): [string, string] {
+export function get_diff_addition_blocks(
+	state0: string,
+	state1: string
+): [string, string] {
 	state0 = simple_cleanup_cr_lf(state0);
 	state1 = simple_cleanup_cr_lf(state1);
 
@@ -20,9 +23,10 @@ export function get_diff_addition_blocks(state0: string, state1: string): [strin
 	for (const part of diff) {
 		if (part.startsWith('?')) {
 			if (currentBlock.length > 0) {
-			diff_blocks.push(currentBlock);
-		  	currentBlock = [];
-		}}
+				diff_blocks.push(currentBlock);
+				currentBlock = [];
+			}
+		}
 		else if (part.startsWith('+') || part.startsWith('-')) {
 			currentBlock.push(part);
 	  	}
@@ -44,17 +48,21 @@ export function get_diff_addition_blocks(state0: string, state1: string): [strin
 	return [additions, deletions];
 }
 
-export function find_most_similar_string(text: string, completion: string): [string | undefined, [number, number]] {
+export function find_most_similar_string(
+	text: string,
+	completion: string
+): [string | undefined, [number, number]]
+{
 	text = simple_cleanup_cr_lf(text);
 	let bestRatio: number = 0;
 	let bestString: string | undefined = undefined;
 	for (const line of text.split('\n')) {
-	const s = new Diff.SequenceMatcher(null, line, completion);
-	const ratio = s.ratio();
-	if (ratio > bestRatio) {
-		bestRatio = ratio;
-		bestString = line;
-	}
+		const s = new Diff.SequenceMatcher(null, line, completion);
+		const ratio = s.ratio();
+		if (ratio > bestRatio) {
+			bestRatio = ratio;
+			bestString = line;
+		}
 	}
 	if (bestString) {
 		let l_diff: string[] = Diff.ndiff(bestString, completion);

@@ -176,7 +176,11 @@ async function f1_pressed()
 
 export async function inline_accepted(this_completion_serial_number: number)
 {
-    completionProvider.inline_accepted(this_completion_serial_number);
+    if (typeof this_completion_serial_number === "number") {
+        completionProvider.inline_accepted(this_completion_serial_number);
+    } else {
+        console.log(["WARNING: inline_accepted no serial number!", this_completion_serial_number]);
+    }
     let fired = await usabilityHints.hint_after_successful_completion();
 }
 

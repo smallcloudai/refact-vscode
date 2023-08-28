@@ -383,7 +383,8 @@ export function fetch_code_completion(
     cursor_line: number,
     cursor_character: number,
     max_new_tokens: number,
-): [Promise<fetchH2.Response>, estate.ApiFields]
+    api_fields: estate.ApiFields,
+): Promise<fetchH2.Response>
 {
     let third_party = false;
     let url = inference_url("/v1/code-completion", third_party);
@@ -391,11 +392,10 @@ export function fetch_code_completion(
     let model: string = vscode.workspace.getConfiguration().get('refactai.model') || "";
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
-        return [Promise.reject("No API key"), new estate.ApiFields()];
+        return Promise.reject("No API key");
     }
     let temp = 0.2;
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
-    let api_fields = new estate.ApiFields();
     api_fields.scope = "code-completion";
     api_fields.url = url;
     api_fields.model = model;
@@ -447,7 +447,7 @@ export function fetch_code_completion(
         init.signal = abort.signal;
     }
     let promise = ctx.fetch(req, init);
-    return [promise, api_fields];
+    return promise;
 }
 
 
