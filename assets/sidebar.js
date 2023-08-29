@@ -37,78 +37,161 @@
         }
     }
 
-    toolboxSearch.addEventListener("focus", (event) => {
-        on_how_many_lines_selected();
+    // toolboxSearch.addEventListener("focus", (event) => {
+    //     on_how_many_lines_selected();
+    // });
+
+    // toolboxSearch.addEventListener("keyup", (event) => {
+    //     event.preventDefault();
+    //     if (event.target.value !== '') {
+    //         if (document.querySelector('.item-active')) {
+    //             document.querySelector('.item-active').classList.remove('item-active');
+    //         }
+    //     }
+    //     if (event.key === "ArrowUp") {
+    //         if (!command_mode && history_mode && current_history >= 0 && current_history < (history.length - 1)) {
+    //             current_history++;
+    //             toolboxSearch.value = history[current_history];
+    //         }
+    //         if (!command_mode && !history_mode && history.length > 0) {
+    //             history_backup = toolboxSearch.value;
+    //             toolboxSearch.value = history[current_history];
+    //             history_mode = true;
+    //             current_history = 0;
+    //         }
+    //         if (command_mode && !history_mode && current_command === 0) {
+    //             let active = document.querySelector(".item-selected");
+    //             if (active) {
+    //                 active.classList.remove("item-selected");
+    //             }
+    //             command_mode = false;
+    //         }
+    //         if (command_mode && !history_mode && current_command !== 0) {
+    //             const toolboxItems = document.querySelectorAll(".toolbox-item");
+    //             const all_visible = Array.from(toolboxItems).filter(child => {
+    //                 return child.style.display !== 'none';
+    //             });
+    //             if (current_command > 0) {
+    //                 all_visible[current_command].classList.remove('item-selected');
+    //                 current_command -= 1;
+    //                 all_visible[current_command].classList.add('item-selected');
+    //             }
+    //         }
+    //     }
+    //     if (event.key === "ArrowDown") {
+    //         if (!command_mode && history_mode && current_history === 0) {
+    //             current_history = 0;
+    //             toolboxSearch.value = history_backup;
+    //             history_mode = false;
+
+    //         } else if (!command_mode && history_mode && current_history > 0) {
+    //             current_history--;
+    //             toolboxSearch.value = history[current_history];
+
+    //         } else if (command_mode && !history_mode && current_command >= 0) {
+    //             const toolbox_items = document.querySelectorAll(".toolbox-item");
+    //             const all_visible = Array.from(toolbox_items).filter(child => {
+    //                 return child.style.display !== 'none';
+    //             });
+    //             all_visible[current_command].classList.remove('item-selected');
+    //             if (current_command < all_visible.length - 1) {
+    //                 current_command += 1;
+    //             }
+    //             all_visible[current_command].classList.add('item-selected');
+
+    //         } else if (!command_mode && !history_mode) {
+    //             command_mode = true;
+    //             const toolbox_items = document.querySelectorAll(".toolbox-item");
+    //             const all_visible = Array.from(toolbox_items).filter(child => {
+    //                 return child.style.display !== 'none';
+    //             });
+    //             current_command = 0;
+    //             all_visible[current_command].classList.add('item-selected');
+    //         }
+    //     }
+    // });
+
+    const welcome_selects = document.querySelectorAll(".refact-welcome__select");
+    welcome_selects.forEach((select) => {
+        select.addEventListener("click", () => {
+            const selection_type = select.dataset.type;
+            change_welcome_subscreen(selection_type);
+        });
+        select.addEventListener("mouseover", () => {
+            welcome_selects.forEach((other_select) => {
+                other_select.classList.remove('refact-welcome__select--selected');
+            });
+            select.classList.add('refact-welcome__select--selected');
+        });
+        select.addEventListener("mouseout", () => {
+            welcome_selects.forEach((other_select) => {
+                other_select.classList.remove('refact-welcome__select--selected');
+            });
+        });
     });
 
-    toolboxSearch.addEventListener("keyup", (event) => {
-        event.preventDefault();
-        if (event.target.value !== '') {
-            if (document.querySelector('.item-active')) {
-                document.querySelector('.item-active').classList.remove('item-active');
-            }
+    function change_welcome_subscreen(selection_type) {
+        const screens = document.querySelectorAll(".refact-welcome__subscreen");
+        screens.forEach((screen) => {
+            screen.classList.remove('refact-welcome__subscreen--selected');
+        });
+        document.querySelector('.refact-welcome__back').style.display = "block";
+        document.querySelector('.refact-welcome__menu').style.display = "none";
+        switch (selection_type) {
+            case "enterprise":
+                document.querySelector('.refact-welcome__enterprise').classList.toggle('refact-welcome__subscreen--selected');     
+                break;
+            case "personal":
+                document.querySelector('.refact-welcome__personal').classList.toggle('refact-welcome__subscreen--selected');
+                break;
+            case "self-hosting":
+                document.querySelector('.refact-welcome__selfhosted').classList.toggle('refact-welcome__subscreen--selected');
+                break;
         }
-        if (event.key === "ArrowUp") {
-            if (!command_mode && history_mode && current_history >= 0 && current_history < (history.length - 1)) {
-                current_history++;
-                toolboxSearch.value = history[current_history];
-            }
-            if (!command_mode && !history_mode && history.length > 0) {
-                history_backup = toolboxSearch.value;
-                toolboxSearch.value = history[current_history];
-                history_mode = true;
-                current_history = 0;
-            }
-            if (command_mode && !history_mode && current_command === 0) {
-                let active = document.querySelector(".item-selected");
-                if (active) {
-                    active.classList.remove("item-selected");
-                }
-                command_mode = false;
-            }
-            if (command_mode && !history_mode && current_command !== 0) {
-                const toolboxItems = document.querySelectorAll(".toolbox-item");
-                const all_visible = Array.from(toolboxItems).filter(child => {
-                    return child.style.display !== 'none';
-                });
-                if (current_command > 0) {
-                    all_visible[current_command].classList.remove('item-selected');
-                    current_command -= 1;
-                    all_visible[current_command].classList.add('item-selected');
-                }
-            }
-        }
-        if (event.key === "ArrowDown") {
-            if (!command_mode && history_mode && current_history === 0) {
-                current_history = 0;
-                toolboxSearch.value = history_backup;
-                history_mode = false;
+    }
 
-            } else if (!command_mode && history_mode && current_history > 0) {
-                current_history--;
-                toolboxSearch.value = history[current_history];
+    const save_selfhosted = document.querySelector('.refact-welcome__savebutton--selfhosted');
+    save_selfhosted.addEventListener("click", () => {
+        const endpoint = document.querySelector('.refact-welcome__endpoint');
+        vscode.postMessage({
+            type: "save_selfhosted",
+            endpoint: endpoint.value,
+        });
+    });
 
-            } else if (command_mode && !history_mode && current_command >= 0) {
-                const toolbox_items = document.querySelectorAll(".toolbox-item");
-                const all_visible = Array.from(toolbox_items).filter(child => {
-                    return child.style.display !== 'none';
-                });
-                all_visible[current_command].classList.remove('item-selected');
-                if (current_command < all_visible.length - 1) {
-                    current_command += 1;
-                }
-                all_visible[current_command].classList.add('item-selected');
+    const save_enterprise = document.querySelector('.refact-welcome__savebutton--enterprise');
+    save_enterprise.addEventListener("click", () => {
+        const enter_endpoint = document.querySelector('.refact-welcome__enterendpoint');
+        const enter_apikey = document.querySelector('.refact-welcome__apikey');
+        vscode.postMessage({
+            type: "save_enterprise",
+            endpoint: enter_endpoint.value,
+            apikey: enter_apikey.value,
+        });
+    });
 
-            } else if (!command_mode && !history_mode) {
-                command_mode = true;
-                const toolbox_items = document.querySelectorAll(".toolbox-item");
-                const all_visible = Array.from(toolbox_items).filter(child => {
-                    return child.style.display !== 'none';
-                });
-                current_command = 0;
-                all_visible[current_command].classList.add('item-selected');
-            }
-        }
+    const button_hf = document.querySelector('.refact-welcome__hf');
+    button_hf.addEventListener("click", () => {
+        vscode.postMessage({
+            type: "button_hf",
+        });
+    });
+
+    const button_refact = document.querySelector('.refact-welcome__refact');
+    button_refact.addEventListener("click", () => {
+        vscode.postMessage({
+            type: "button_refact",
+        });
+    });
+
+    const back_to_welcome = document.querySelector('.refact-welcome__back');
+    back_to_welcome.addEventListener("click", () => {
+        document.querySelector('.refact-welcome__back').style.display = "none";
+        document.querySelector('.refact-welcome__menu').style.display = "block";
+        const screens = document.querySelectorAll(".refact-welcome__subscreen");
+        screens.forEach((screen) => {
+            screen.classList.remove('refact-welcome__subscreen--selected');
+        });
     });
 
 
@@ -161,70 +244,70 @@
         }
     });
 
-    toolboxList.addEventListener("click", (event) => {
-        if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
-            let intent = toolboxSearch.value;
-            let target = event.target.parentElement.parentElement.parentElement;
-            let selected_function = last_model_used[target.dataset.funciton_name];
-            if(!selected_function) {
-                if(target.dataset.function) {
-                    if(target.dataset.ids) {
-                        const current_ids = JSON.parse(target.dataset.ids);
-                        if(current_ids.length > 0) {
-                            selected_function = current_ids[0];
-                        }
-                        else {
-                            selected_function = target.dataset.function_name;
-                            if(staging) {
-                                selected_function = 'staging-' + selected_function;
-                            }
-                        }
-                    }
-                    else {
-                        selected_function = target.dataset.function_name;
-                        if(staging) {
-                            selected_function = 'staging-' + selected_function;
-                        }
-                    }
-                }
-            }
-            if (!target) {
-                return;
-            }
-            if(event.target.parentElement.classList.contains('toolbox-content-actions')) {
-                let parent_function = event.target.parentElement.parentElement.parentElement;
-                const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
-                const hasOptions = select && select.options && select.options.length > 0;
-                if(hasOptions) {
-                    selected_function = select.value;
-                    selected_model = select.querySelector('option[value="' + selected_function + '"]').innerHTML;
-                    pref_model_func[target.id] = selected_model;
-                    last_model_used[parent_function.dataset.funciton_name] = selected_function;
-                }
-                else {
-                    selected_function = parent_function.dataset.function_name;
-                }
-            }
-            history.splice(0, 0, intent);
-            vscode.postMessage({
-                type: "function_activated",
-                intent: intent,
-                data_function: JSON.stringify(longthink_functions_today[selected_function])
-            });
-            vscode.postMessage({
-                type: "focus_back_to_editor",
-            });
-        }
-        if (event.target.classList.contains("toolbox-back")) {
-            let active = document.querySelector(".item-active");
-            document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
-            if (active) {
-                // toolboxSearch.value = '';
-                active.classList.remove("item-active");
-                toolbox_update_likes();
-            }
-        }
-    });
+    // toolboxList.addEventListener("click", (event) => {
+    //     if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
+    //         let intent = toolboxSearch.value;
+    //         let target = event.target.parentElement.parentElement.parentElement;
+    //         let selected_function = last_model_used[target.dataset.funciton_name];
+    //         if(!selected_function) {
+    //             if(target.dataset.function) {
+    //                 if(target.dataset.ids) {
+    //                     const current_ids = JSON.parse(target.dataset.ids);
+    //                     if(current_ids.length > 0) {
+    //                         selected_function = current_ids[0];
+    //                     }
+    //                     else {
+    //                         selected_function = target.dataset.function_name;
+    //                         if(staging) {
+    //                             selected_function = 'staging-' + selected_function;
+    //                         }
+    //                     }
+    //                 }
+    //                 else {
+    //                     selected_function = target.dataset.function_name;
+    //                     if(staging) {
+    //                         selected_function = 'staging-' + selected_function;
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //         if (!target) {
+    //             return;
+    //         }
+    //         if(event.target.parentElement.classList.contains('toolbox-content-actions')) {
+    //             let parent_function = event.target.parentElement.parentElement.parentElement;
+    //             const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
+    //             const hasOptions = select && select.options && select.options.length > 0;
+    //             if(hasOptions) {
+    //                 selected_function = select.value;
+    //                 selected_model = select.querySelector('option[value="' + selected_function + '"]').innerHTML;
+    //                 pref_model_func[target.id] = selected_model;
+    //                 last_model_used[parent_function.dataset.funciton_name] = selected_function;
+    //             }
+    //             else {
+    //                 selected_function = parent_function.dataset.function_name;
+    //             }
+    //         }
+    //         history.splice(0, 0, intent);
+    //         vscode.postMessage({
+    //             type: "function_activated",
+    //             intent: intent,
+    //             data_function: JSON.stringify(longthink_functions_today[selected_function])
+    //         });
+    //         vscode.postMessage({
+    //             type: "focus_back_to_editor",
+    //         });
+    //     }
+    //     if (event.target.classList.contains("toolbox-back")) {
+    //         let active = document.querySelector(".item-active");
+    //         document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
+    //         if (active) {
+    //             // toolboxSearch.value = '';
+    //             active.classList.remove("item-active");
+    //             toolbox_update_likes();
+    //         }
+    //     }
+    // });
 
     const chatButton = document.querySelector("#chat");
     chatButton.addEventListener("click", () => {
@@ -804,7 +887,7 @@
                 on_how_many_lines_selected();
                 break;
             case "focus":
-                toolboxSearch.focus();
+                // toolboxSearch.focus();
                 break;
             case "update_longthink_functions":
                 longthink_functions_today = message.value;

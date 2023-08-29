@@ -87,7 +87,6 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
             this.unchanged_percentage = completionMetrics.unchanged_percentage(gray_suggested, gray_edited);
             console.log(["unchanged_percentage", this.unchanged_percentage]);
             this.grey_text_edited = gray_edited;
-            this.stop_verifying_countdown -= 1;
         } else {
             this.now_invalid_so_accept_last_saved_feedback();
         }

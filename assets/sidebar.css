@@ -907,3 +907,122 @@ body.vscode-light #logout {
 	width: 100% !important;
 	font-size: 11px;
 }
+
+.refact-welcome {
+	height: 100%;
+}
+.refact-welcome__menu { }
+.refact-welcome__lead { 
+	margin-bottom: 10px;
+}
+.refact-welcome__select { 
+	display: block;
+	padding: 10px;
+	border: 1px solid var(--secondary);
+	margin-bottom: 10px;
+	cursor: pointer;
+}
+.refact-welcome__select input {
+	display: none;
+}
+.refact-welcome__select ul {
+	padding-left: 20px;
+}
+.refact-welcome__select span {
+	margin-left: 5px;
+}
+.refact-welcome__select--selected {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	color: var(--vscode-editor-selectionForeground) !important;
+}
+
+.refact-welcome__input {
+	width: 100%;
+	border: 0;
+	border: 1px solid var(--secondary);
+	padding: 10px;
+	background-color: transparent;
+	color: var(--secondary);
+	box-sizing: border-box;
+}
+
+.refact-welcome__select:hover .refact-welcome__desc {
+    display: block;
+}
+.refact-welcome__radio {
+
+}
+.refact-welcome__desc {
+	display: none;
+}
+.refact-welcome__savebutton { }
+.refact-welcome__enterprise {
+	display: none;
+}
+.refact-welcome__personal {
+	display: none;
+}
+.refact-welcome__selfhosted {
+	display: none;
+}
+.refact-welcome__back {
+	display: none;
+	border: 0;
+	border-top: 1px solid var(--secondary);
+	border-bottom: 1px solid var(--secondary);
+	padding: 10px;
+	background-color: transparent;
+	color: var(--secondary);
+	width: 100%;
+	text-align: left;
+	margin-bottom: 15px;
+	box-sizing: border-box;
+}
+.refact-welcome__back:hover {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	color: var(--vscode-editor-selectionForeground) !important;
+}
+.refact-welcome__subscreen--selected {
+	display: block;
+}
+.refact-welcome__subscreen {
+	position: relative;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+.refact-welcome__subscreen div {
+	margin-bottom: 15px;
+	box-sizing: border-box;
+}
+.refact-welcome__label {
+	display: block;
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+.refact-welcome__savebutton {
+	display: inline-block;
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	border: 0;
+	padding: 10px 20px;
+	text-align: center;
+	text-transform: uppercase;
+	font-size: 12px;
+	font-weight: bold;
+	color: var(--vscode-editor-selectionForeground) !important;
+	cursor: pointer;
+	margin-top: -5px;
+}
+
+.refact-welcome__hf,
+.refact-welcome__refact {
+	display: block;
+	width: 100%;
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	border: 0;
+	padding: 10px 20px;
+	text-align: left;
+	font-weight: bold;
+	color: var(--vscode-editor-selectionForeground) !important;
+	cursor: pointer;
+	margin-bottom: 10px;
+}

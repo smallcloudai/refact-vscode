@@ -184,6 +184,23 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand('refactaicmd.login');
                     break;
                 }
+                case "button_refact": {
+                    vscode.commands.executeCommand('refactaicmd.login');
+                    break;
+                }
+                case "button_hf": {
+                    vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
+                    break;
+                }
+                case "save_enterprise": {
+                    await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
+                    await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
+                    break;
+                }
+                case "save_selfhosted": {
+                    await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
+                    break;
+                }
                 case "privacy": {
                     vscode.commands.executeCommand("refactaicmd.privacySettings");
                     break;
@@ -412,6 +429,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
                 );
                 const nonce = this.getNonce();
+                const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
+                const manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
 
                 return `<!DOCTYPE html>
                 <html lang="en">
@@ -430,15 +449,76 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div id="sidebar" class="sidebar">
                     <div class="toolbox">
-                        <div class="toolbox-inline">
-                            <input class="toolbox-search" id="toolbox-search" placeholder="press F1; ↓ commands; ↑ history">
+                    <div class="refact-welcome">
+                        <div class="refact-welcome__menu">
+                            <div class="refact-welcome__container">
+                                <div class="refact-welcome__lead">Refact works for:</div>
+                                <label class="refact-welcome__select" data-type="enterprise">
+                                    <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type">
+                                    <span>Enterprise</span>
+                                    <div class="refact-welcome__desc">
+                                        <ul>
+                                            <li>Doesn't connect to public cloud ever</li>
+                                            <li>Uses your private endpoint only</li>
+                                            <li>Sends telemetry to your private server</li>
+                                        </ul>
+                                    </div>
+                                </label>
+
+                                <label class="refact-welcome__select" data-type="personal">
+                                    <input type="radio" class="refact-welcome__radio" value="personal" name="account-type">
+                                    <span>Personal</span>
+                                    <div class="refact-welcome__desc">
+                                        <ul>
+                                            <li>Easy to start</li>
+                                            <li>Opt-in telemetry to help this open source project</li>
+                                        </ul>
+                                    </div>
+                                </label>
+
+                                <label class="refact-welcome__select" data-type="self-hosting">
+                                    <input type="radio" class="refact-welcome__radio" value="self-hosting" name="account-type">
+                                    <span>Self-hosting</span>
+                                    <div class="refact-welcome__desc">
+                                        <ul>
+                                            <li>Uses your own server</li>
+                                            <li>Opt-in telemetry to help this open source project</li>
+                                        </ul>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
-                        <div class="toolbox-tags">
+                        <button class="refact-welcome__back">← Back</button>
+                        <div class="refact-welcome__enterprise refact-welcome__subscreen">
+                            <div>
+                                <label class="refact-welcome__label">Endpoint Address</label>
+                                <input class="refact-welcome__enterendpoint refact-welcome__input" type="text" name="endpoint_address" value="${manual_infurl}">
+                            </div> 
+                            <div>
+                                <label class="refact-welcome__label">API Key</label>
+                                <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                            </div> 
+                            <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
                         </div>
-                        <div class="toolbox-container">
-                            <div class="toolbox-list"></div>
-                        </div>
+                        <div class="refact-welcome__personal refact-welcome__subscreen">
+                            <button class="refact-welcome__hf">
+                                Huggingface Cloud
+                            </button>
+
+                            <button class="refact-welcome__refact">
+                                Refact Cloud
+                            </button>
+                        </div> 
+
+                        <div class="refact-welcome__selfhosted refact-welcome__subscreen">
+                            <div>
+                                <label class="refact-welcome__label">Endpoint Address</label>
+                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" name="endpoint_address" value="${manual_infurl}">
+                            </div> 
+                            <button class="refact-welcome__savebutton refact-welcome__savebutton--selfhosted">Save</button>
+                        </div> 
                     </div>
+
                     <div class="sidebar-controls">
                         <button tabindex="-1" id="datacollection">Review Data...</button>
                         <div class="sidebar-buttons">
