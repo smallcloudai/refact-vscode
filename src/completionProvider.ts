@@ -20,9 +20,9 @@ class CacheEntry {
     }
 };
 
-const CACHE_STORE = 160;
-const CACHE_AHEAD = 50;
-const CACHE_KEY_LINES = 50;
+const CACHE_STORE = 400;
+const CACHE_AHEAD = 200;
+const CACHE_KEY_SIZE = 1000;  // characters, separated by \n, not \r\n
 
 
 let _global_serial_number = 5000;
@@ -31,9 +31,13 @@ let _global_serial_number = 5000;
 export class CompletionApiFieldsWithTimer extends estate.ApiFields
 {
     public document: vscode.TextDocument | undefined = undefined;
+    public on_text_edited_disposable: vscode.Disposable | undefined = undefined;
+    public on_interval: NodeJS.Timer | undefined = undefined;   // same as disposable, but with clearInterval
+
     public accepted: boolean = false;
     public rejected_reason: string = "";
-    public stop_verifying_countdown: number = 10;
+    public unchanged_percentage: number = 0;
+
     public done_with: boolean = false;
 
     public async verify_completion_still_present_in_text()
@@ -56,36 +60,49 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
         // Goal: diff orig vs compl, orig vs uedit. If head and tail are the same, then user edit is valid and useful.
         // Memorize the last valid user edit. At the point it becomes invalid, save feedback and forget.
         let t1 = Date.now();
-        let [valid1, added1] = completionMetrics.if_head_tail_equal_return_added_text(text_orig, text_compl);
-        let [valid2, added2] = completionMetrics.if_head_tail_equal_return_added_text(text_orig, test_uedit);
+        let [valid1, gray_suggested] = completionMetrics.if_head_tail_equal_return_added_text(text_orig, text_compl);
+        let [valid2, gray_edited] = completionMetrics.if_head_tail_equal_return_added_text(text_orig, test_uedit);
         // let [human_deleted, human_fixed_or_typed] = metricCompletion.get_diff_addition_blocks(old_text, new_text);
         let t2 = Date.now();
         console.log([this.serial_number, "verify_completion_still_present_in_text getText", t1-t0, "ms, diff", t2-t1, "ms"]);
         console.log(["valid1", valid1, "valid2", valid2]);
-        if (valid1 && valid2 && this.stop_verifying_countdown > 0) {
-            let gray_split = this.grey_text_explicitly.split(/\r?\n/);
-            for (let i = 0; i < gray_split.length; i++) {
-                console.log(["gray", gray_split[i]]);
+        let taking_too_long = (Date.now() - this.ts_presented) > 1000 * 60 * 2;  // 2 minutes
+        if (valid1 && valid2 && !taking_too_long) {
+            let gray_suggested_split = gray_suggested.split(/\r?\n/);
+            for (let i = 0; i < gray_suggested_split.length; i++) {
+                console.log(["suggested", gray_suggested_split[i]]);
             }
-            let added1_split = added1.split(/\r?\n/);
-            for (let i = 0; i < added1_split.length; i++) {
-                console.log(["added1", added1_split[i]]);
+            let gray_edited_split = gray_edited.split(/\r?\n/);
+            for (let i = 0; i < gray_edited_split.length; i++) {
+                console.log(["edited", gray_edited_split[i]]);
             }
-            let added2_split = added2.split(/\r?\n/);
-            for (let i = 0; i < added2_split.length; i++) {
-                console.log(["added2", added2_split[i]]);
-            }
-            if (added1 !== this.grey_text_explicitly) {
-                console.log(["WARNING: grey_text_explicitly doesn't match actual edit, will do nothing"]);
+            if (gray_suggested !== this.grey_text_explicitly) {
+                    let gray_split = this.grey_text_explicitly.split(/\r?\n/);
+                    for (let i = 0; i < gray_split.length; i++) {
+                        console.log(["grey_text_explicitly", gray_split[i]]);
+                    }
+                    console.log(["WARNING: grey_text_explicitly doesn't match actual edit, will do nothing"]);
                 return;
             }
-            this.grey_text_edited = added2;
+            this.unchanged_percentage = completionMetrics.unchanged_percentage(gray_suggested, gray_edited);
+            console.log(["unchanged_percentage", this.unchanged_percentage]);
+            this.grey_text_edited = gray_edited;
             this.stop_verifying_countdown -= 1;
-            setTimeout(() => {
-                this.verify_completion_still_present_in_text();
-            }, 5000);
         } else {
             this.now_invalid_so_accept_last_saved_feedback();
+        }
+    }
+
+    public verify_no_more()
+    {
+        this.done_with = true;
+        if (this.on_interval) {
+            clearInterval(this.on_interval);
+            this.on_interval = undefined;
+        }
+        if (this.on_text_edited_disposable) {
+            this.on_text_edited_disposable.dispose();
+            this.on_text_edited_disposable = undefined;
         }
     }
 
@@ -94,7 +111,7 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
         if (this.done_with) {
             return;
         }
-        this.done_with = true;
+        this.verify_no_more();
         let ext = _extract_extension(this);
         usageStats.report_increase_tab_stats(
             this,
@@ -124,7 +141,7 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
         if (this.done_with) {
             return;
         }
-        this.done_with = true;
+        this.verify_no_more();
         let ext = _extract_extension(this);
         let ponder_time_ms = this.ts_reacted - this.ts_presented;
         let req_to_react_ms = this.ts_reacted - this.ts_req;
@@ -191,17 +208,18 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let this_completion_serial_number = -1;
         let cursor_character = multiline ? 0 : position.character;
 
-        let cache_key = "";
-        for (let i = -CACHE_KEY_LINES; i <= 0 ; i++) {
-            if (position.line + i < 0) {
-                continue;
+        let cache_key = document.lineAt(position.line).text.substring(0, cursor_character);
+        let i = position.line - 1;
+        while (i >= 0) {
+            let line = document.lineAt(i);
+            cache_key = line.text + "\n" + cache_key;
+            if (cache_key.length >= CACHE_KEY_SIZE) {
+                while (cache_key.length > CACHE_KEY_SIZE) {
+                    cache_key = cache_key.substring(1);
+                }
+                break;
             }
-            let line = document.lineAt(position.line + i);
-            if (i < 0) {
-                cache_key += line.text + "\n";
-            } else {
-                cache_key += line.text.substring(0, cursor_character);
-            }
+            i -= 1;
         }
 
         [completion, this_completion_serial_number] = await this.cached_request(
@@ -325,7 +343,14 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let cached = this.cache.get(cache_key);
         if (cached !== undefined && !called_manually) {
             console.log(["use cache", cached.serial_number]);
-            return [cached.completion, cached.serial_number];
+            let cached_completion = cached.completion;
+            if (!multiline) {
+                let slash_n = cached_completion.indexOf("\n");
+                if (slash_n !== -1) {
+                    cached_completion = cached_completion.slice(0, slash_n);
+                }
+            }
+            return [cached_completion, cached.serial_number];
         }
         let login: any = await userLogin.inference_login();
         if (!login) { return ["", -1]; }
@@ -373,16 +398,22 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let de_facto_model = json[0]["model"];
         _completion_data_feedback_candidate.grey_text_explicitly = completion;
         _completion_data_feedback_candidate.de_facto_model = de_facto_model;
+        let forward_key = cache_key;
         for (let i = 0; i < Math.min(completion.length + 1, CACHE_AHEAD); i++) {
-            let longer_key = cache_key + completion.substring(0, i);
-            this.cache.set(longer_key, {
+            this.cache.set(forward_key, {
                 completion: completion.substring(i),
                 created_ts: Date.now(),
                 serial_number: _completion_data_feedback_candidate.serial_number,
             });
-            // if (completion.substring(i) === "\n") {
-            //     break;
-            // }
+            // console.log(["cache", forward_key, completion.substring(i)]);
+            let char = completion.substring(i, i+1);
+            if (char === "\r") {
+                continue;
+            }
+            forward_key = forward_key + char;
+            while (forward_key.length > CACHE_KEY_SIZE) {
+                forward_key = forward_key.substring(1);
+            }
         }
         this.cleanup_cache();
         console.log(["new result", _completion_data_feedback_candidate.serial_number]);
@@ -414,11 +445,6 @@ export function inline_accepted(serial_number: number)
     if (feed.ts_presented === 0) {
         return;
     }
-    // User might have pressed Tab on spaces ahead, that just moves the cursor right and reuses the same completion from cache.
-    // if (feed.ts_reacted) {
-    //     return;
-    // }
-    feed.ts_reacted = Date.now();
     let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
     let req_to_react_ms = feed.ts_reacted - feed.ts_req;
     console.log(["inline_accepted", serial_number, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
@@ -426,6 +452,17 @@ export function inline_accepted(serial_number: number)
         console.log(["WARNING: inline_accepted no document"]);
         return;
     }
+    feed.on_text_edited_disposable = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
+        if (ev.document === feed.document) {
+            feed.verify_completion_still_present_in_text();
+        }
+    });
+    feed.on_interval = setInterval(() => {
+        feed.verify_completion_still_present_in_text();
+    }, 5000);
+    // User might have pressed Tab on spaces ahead, that just moves the cursor right and reuses the same completion from cache.
+    // So don't return on ts_reacted.
+    feed.ts_reacted = Date.now();
     feed.results[feed.cursor_file] = feed.document.getText();
     feed.accepted = true;
     feed.verify_completion_still_present_in_text();

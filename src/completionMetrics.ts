@@ -47,3 +47,21 @@ export function if_head_tail_equal_return_added_text(
     }
     return [true, added_text];
 }
+
+
+export function unchanged_percentage(
+    text_a: string,
+    text_b: string,
+): number
+{
+    const diff = Diff.diffChars(text_a, text_b);
+    let common = 0;
+    let largest_of_two = Math.max(text_a.length, text_b.length);
+    diff.forEach((part: any) => {
+        let txt = part.value;
+        if (!part.added && !part.removed) {
+            common += txt.length;
+        }
+    });
+    return 100 * common / largest_of_two;
+}
