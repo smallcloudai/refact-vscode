@@ -62,11 +62,9 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
         let t1 = Date.now();
         let [valid1, gray_suggested] = completionMetrics.if_head_tail_equal_return_added_text(text_orig, text_compl);
         let [valid2, gray_edited] = completionMetrics.if_head_tail_equal_return_added_text(text_orig, test_uedit);
-        // let [human_deleted, human_fixed_or_typed] = metricCompletion.get_diff_addition_blocks(old_text, new_text);
         let t2 = Date.now();
-        console.log([this.serial_number, "verify_completion_still_present_in_text getText", t1-t0, "ms, diff", t2-t1, "ms"]);
-        console.log(["valid1", valid1, "valid2", valid2]);
         let taking_too_long = (Date.now() - this.ts_presented) > 1000 * 60 * 2;  // 2 minutes
+        console.log([this.serial_number, "valid1", valid1, "valid2", valid2, "taking_too_long", taking_too_long]);
         if (valid1 && valid2 && !taking_too_long) {
             let gray_suggested_split = gray_suggested.split(/\r?\n/);
             for (let i = 0; i < gray_suggested_split.length; i++) {
@@ -87,39 +85,40 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
             this.unchanged_percentage = completionMetrics.unchanged_percentage(gray_suggested, gray_edited);
             console.log(["unchanged_percentage", this.unchanged_percentage]);
             this.grey_text_edited = gray_edited;
+            let t3 = Date.now();
+            // Diffs take 2-4ms on a 2000 lines file
+            // unchanged_percentage() takes 10ms for a few lines
+            // (on Macbook M1)
+            //console.log([this.serial_number, "verify_completion_still_present_in_text getText", t1-t0, "ms, diff", t2-t1, "ms", "unchanged_percentage", t3-t2, "ms"]);
         } else {
-            this.now_invalid_so_accept_last_saved_feedback();
+            // now becomes invalid, so
+            this.transmit_as_accepted();
         }
     }
 
     public verify_no_more()
     {
         this.done_with = true;
-        if (this.on_interval) {
+        if (this.on_interval !== undefined) {
             clearInterval(this.on_interval);
             this.on_interval = undefined;
         }
-        if (this.on_text_edited_disposable) {
+        if (this.on_text_edited_disposable !== undefined) {
             this.on_text_edited_disposable.dispose();
             this.on_text_edited_disposable = undefined;
         }
     }
 
-    public now_invalid_so_accept_last_saved_feedback()
+    public transmit_as_accepted()
     {
         if (this.done_with) {
             return;
         }
         this.verify_no_more();
-        let ext = _extract_extension(this);
-        usageStats.report_increase_tab_stats(
-            this,
-            ext,
-            vscode.extensions.getExtension('vscode.git'),
-        );
         let ponder_time_ms = this.ts_reacted - this.ts_presented;
         let req_to_react_ms = this.ts_reacted - this.ts_req;
-        console.log(["inline_accepted, ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
+        console.log(["transmit_as_accepted, ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
+        let ext = _extract_extension(this);
         usageStats.report_increase_a_counter("completion", "metric0ms_tab");
         usageStats.report_increase_a_counter("completion", "metric0ms_tab:" + ext);
         if (ponder_time_ms > 600) {
@@ -130,9 +129,14 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
             usageStats.report_increase_a_counter("completion", "metric1200ms_tab");
             usageStats.report_increase_a_counter("completion", "metric1200ms_tab:" + ext);
         }
+        usageStats.report_increase_tab_stats(
+            this,
+            ext,
+            vscode.extensions.getExtension('vscode.git'),
+        );
     }
 
-    public rejected_unless_accepted_from_cache_later()
+    public transmit_as_rejected()
     {
         if (this.accepted) {
             return;
@@ -144,7 +148,7 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
         let ext = _extract_extension(this);
         let ponder_time_ms = this.ts_reacted - this.ts_presented;
         let req_to_react_ms = this.ts_reacted - this.ts_req;
-        console.log(["inline_rejected", this.rejected_reason, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
+        console.log(["transmit_as_rejected", this.rejected_reason, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
         usageStats.report_increase_a_counter("completion", "metric0ms_" + this.rejected_reason);
         usageStats.report_increase_a_counter("completion", "metric0ms_" + this.rejected_reason + ":" + ext);
         if (ponder_time_ms > 600) {
@@ -451,6 +455,13 @@ export function inline_accepted(serial_number: number)
         console.log(["WARNING: inline_accepted no document"]);
         return;
     }
+    // User might have pressed Tab on spaces ahead, that just moves the cursor right and reuses the same completion from cache.
+    // So don't return on ts_reacted.
+    feed.ts_reacted = Date.now();
+    feed.results[feed.cursor_file] = feed.document.getText();
+    feed.accepted = true;
+    feed.rejected_reason = "";
+    feed.verify_completion_still_present_in_text();
     feed.on_text_edited_disposable = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
         if (ev.document === feed.document) {
             feed.verify_completion_still_present_in_text();
@@ -459,12 +470,6 @@ export function inline_accepted(serial_number: number)
     feed.on_interval = setInterval(() => {
         feed.verify_completion_still_present_in_text();
     }, 5000);
-    // User might have pressed Tab on spaces ahead, that just moves the cursor right and reuses the same completion from cache.
-    // So don't return on ts_reacted.
-    feed.ts_reacted = Date.now();
-    feed.results[feed.cursor_file] = feed.document.getText();
-    feed.accepted = true;
-    feed.verify_completion_still_present_in_text();
 }
 
 
@@ -477,10 +482,13 @@ export function inline_rejected(reason: string)
     if (feed.ts_reacted) {
         return;
     }
+    if (feed.accepted) {
+        return;
+    }
     feed.ts_reacted = Date.now();
     feed.rejected_reason = reason;
     setTimeout(() => {
-        feed.rejected_unless_accepted_from_cache_later();
+        feed.transmit_as_rejected();
     }, 25000);
 }
 
