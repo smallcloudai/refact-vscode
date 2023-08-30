@@ -37,6 +37,9 @@ export class ApiFields {
     public ts_presented: number = 0;
     public ts_reacted: number = 0;
     public serial_number: number = 0;
+    public accepted: boolean = false;
+    public rejected_reason: string = "";
+    public unchanged_percentage: number = 0;
 };
 
 
@@ -49,8 +52,6 @@ export class StateOfEditor {
     }
     public last_used_ts: number = 0;
     public fn: string = "";
-
-    public inline_prefer_edit_chaining: boolean = false; // Delete?
 
     public highlight_json_backup: any = undefined;
     public highlight_function: string = "";
@@ -75,16 +76,13 @@ export class StateOfEditor {
     public showing_diff_for_function: string | undefined = undefined;
     public showing_diff_for_model: string | undefined = undefined;
     public showing_diff_thirdparty: boolean = true;
-    public showing_diff_edit_chain: vscode.Range | undefined = undefined;
     public diff_load_animation_head: number = 0;
     public diff_load_animation_mid: string = "";
-
-    public edit_chain_modif_doc: string | undefined = undefined;
 
     public cursor_move_event: vscode.Disposable|undefined = undefined;
     public text_edited_event: vscode.Disposable|undefined = undefined;
 
-    public data_feedback_candidate: ApiFields|undefined = undefined;
+    // public data_feedback_candidate: ApiFields|undefined = undefined;
 
     constructor(editor: vscode.TextEditor)
     {

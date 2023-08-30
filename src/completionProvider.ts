@@ -7,6 +7,7 @@ import * as storeVersions from "./storeVersions";
 import * as usageStats from "./usageStats";
 import * as privacy from "./privacy";
 import * as completionMetrics from "./completionMetrics";
+import * as dataCollection from "./dataCollection";
 
 
 class CacheEntry {
@@ -33,10 +34,6 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
     public document: vscode.TextDocument | undefined = undefined;
     public on_text_edited_disposable: vscode.Disposable | undefined = undefined;
     public on_interval: NodeJS.Timer | undefined = undefined;   // same as disposable, but with clearInterval
-
-    public accepted: boolean = false;
-    public rejected_reason: string = "";
-    public unchanged_percentage: number = 0;
 
     public done_with: boolean = false;
 
@@ -119,6 +116,12 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
         let req_to_react_ms = this.ts_reacted - this.ts_req;
         console.log(["transmit_as_accepted, ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
         let ext = _extract_extension(this);
+        // We need counters:
+        // 1. Exact acceptance rate,
+        // 2. 70% acceptance rate,
+        // 3. Rejection rate
+        // Additionally,
+        // Latency, generated tokens, language
         usageStats.report_increase_a_counter("completion", "metric0ms_tab");
         usageStats.report_increase_a_counter("completion", "metric0ms_tab:" + ext);
         if (ponder_time_ms > 600) {
@@ -129,11 +132,9 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
             usageStats.report_increase_a_counter("completion", "metric1200ms_tab");
             usageStats.report_increase_a_counter("completion", "metric1200ms_tab:" + ext);
         }
-        usageStats.report_increase_tab_stats(
-            this,
-            ext,
-            vscode.extensions.getExtension('vscode.git'),
-        );
+        if (this.grey_text_edited !== this.grey_text_explicitly) {
+            dataCollection.data_collection_save_record(this);
+        }
     }
 
     public transmit_as_rejected()
@@ -455,13 +456,16 @@ export function inline_accepted(serial_number: number)
         console.log(["WARNING: inline_accepted no document"]);
         return;
     }
+    if (feed.on_interval !== undefined) {
+        console.log(["WARNING: on_interval already set"]);
+        return;
+    }
     // User might have pressed Tab on spaces ahead, that just moves the cursor right and reuses the same completion from cache.
     // So don't return on ts_reacted.
     feed.ts_reacted = Date.now();
     feed.results[feed.cursor_file] = feed.document.getText();
     feed.accepted = true;
     feed.rejected_reason = "";
-    feed.verify_completion_still_present_in_text();
     feed.on_text_edited_disposable = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
         if (ev.document === feed.document) {
             feed.verify_completion_still_present_in_text();
@@ -470,6 +474,7 @@ export function inline_accepted(serial_number: number)
     feed.on_interval = setInterval(() => {
         feed.verify_completion_still_present_in_text();
     }, 5000);
+    feed.verify_completion_still_present_in_text();
 }
 
 

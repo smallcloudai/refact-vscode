@@ -2,7 +2,6 @@
 import * as vscode from "vscode";
 import * as estate from "./estate";
 import * as userLogin from "./userLogin";
-import * as dataCollectionPage from "./dataCollectionPage";
 import * as dataCollection from "./dataCollection";
 import * as extension from "./extension";
 import * as fetchH2 from 'fetch-h2';
@@ -219,13 +218,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 }
                 case "js2ts_goto_profile": {
                     vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
-                    break;
-                }
-                case "js2ts_goto_datacollection": {
-                    if (global.global_context !== undefined) {
-                        dataCollectionPage.DataReviewPage.render(global.global_context);
-                        dataCollection.data_collection_prepare_package_for_sidebar();
-                    }
                     break;
                 }
                 case "js2ts_refresh_login": {
@@ -493,11 +485,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
                                 <input class="refact-welcome__enterendpoint refact-welcome__input" type="text" name="endpoint_address" value="${manual_infurl}">
-                            </div> 
+                            </div>
                             <div>
                                 <label class="refact-welcome__label">API Key</label>
                                 <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
-                            </div> 
+                            </div>
                             <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
                         </div>
                         <div class="refact-welcome__personal refact-welcome__subscreen">
@@ -508,19 +500,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <button class="refact-welcome__refact">
                                 Refact Cloud
                             </button>
-                        </div> 
+                        </div>
 
                         <div class="refact-welcome__selfhosted refact-welcome__subscreen">
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
                                 <input class="refact-welcome__endpoint refact-welcome__input" type="text" name="endpoint_address" value="${manual_infurl}">
-                            </div> 
+                            </div>
                             <button class="refact-welcome__savebutton refact-welcome__savebutton--selfhosted">Save</button>
-                        </div> 
+                        </div>
                     </div>
 
                     <div class="sidebar-controls">
-                        <button tabindex="-1" id="datacollection">Review Data...</button>
                         <div class="sidebar-buttons">
                             <button tabindex="-1" id="login">Login / Register</button>
                             <button tabindex="-1" id="chat"><span></span>New Chat</button>

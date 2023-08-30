@@ -139,7 +139,7 @@
         document.querySelector('.refact-welcome__menu').style.display = "none";
         switch (selection_type) {
             case "enterprise":
-                document.querySelector('.refact-welcome__enterprise').classList.toggle('refact-welcome__subscreen--selected');     
+                document.querySelector('.refact-welcome__enterprise').classList.toggle('refact-welcome__subscreen--selected');
                 break;
             case "personal":
                 document.querySelector('.refact-welcome__personal').classList.toggle('refact-welcome__subscreen--selected');
@@ -332,11 +332,6 @@
     const profileButton = document.querySelector("#profile");
     profileButton.addEventListener("click", () => {
         vscode.postMessage({ type: "js2ts_goto_profile" });
-    });
-
-    const dataButton = document.querySelector("#datacollection");
-    dataButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "js2ts_goto_datacollection" });
     });
 
     const logoutButton = document.querySelector("#logout");
@@ -902,7 +897,6 @@
                 let coins = document.querySelector('.sidebar-coins');
                 let login = document.querySelector('#login');
                 let profile = document.querySelector('#profile');
-                let data = document.querySelector('#datacollection');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
                 let bug = document.querySelector('#report_bugs');

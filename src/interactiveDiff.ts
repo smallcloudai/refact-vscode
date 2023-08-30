@@ -7,7 +7,6 @@ import * as storeVersions from './storeVersions';
 import * as estate from './estate';
 import * as highlight from "./highlight";
 import * as codeLens from "./codeLens";
-import * as dataCollection from "./dataCollection";
 import * as crlf from "./crlf";
 import * as privacy from "./privacy";
 
@@ -62,7 +61,6 @@ export async function query_diff(
     state.showing_diff_for_function = undefined;
     state.showing_diff_for_model = undefined;
     state.showing_diff_thirdparty = third_party;
-    state.showing_diff_edit_chain = undefined;
     state.showing_diff_modif_doc = undefined;
 
     let doc = editor.document;
@@ -141,14 +139,13 @@ export async function query_diff(
                     files = choice0["files"];
                 }
                 let modif_doc = files[file_name];
-                if (feedback) {
-                    feedback.results = files;
-                    feedback.ts_presented = Date.now();
-                }
+                // if (feedback) {
+                //     feedback.results = files;
+                //     feedback.ts_presented = Date.now();
+                // }
                 state.showing_diff_for_function = model_function;
                 state.showing_diff_for_model = model_force;
                 state.showing_diff_thirdparty = third_party;
-                state.showing_diff_edit_chain = undefined;
                 state.showing_diff_modif_doc = modif_doc;
                 await estate.switch_mode(state, estate.Mode.DiffWait);
             }
@@ -192,16 +189,16 @@ export async function query_diff(
     let stream = true;
 
     request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
-    let feedback = state.data_feedback_candidate;
-    if (feedback) {
-        feedback.sources = sources;
-        feedback.intent = estate.global_intent;
-        feedback.function = model_function;
-        feedback.cursor_file = file_name;
-        feedback.cursor_pos0 = cursor0;
-        feedback.cursor_pos1 = cursor1;
-        feedback.ts_req = Date.now();
-    }
+    // let feedback = state.data_feedback_candidate;
+    // if (feedback) {
+    //     feedback.sources = sources;
+    //     feedback.intent = estate.global_intent;
+    //     feedback.function = model_function;
+    //     feedback.cursor_file = file_name;
+    //     feedback.cursor_pos0 = cursor0;
+    //     feedback.cursor_pos1 = cursor1;
+    //     feedback.ts_req = Date.now();
+    // }
 
     request.supply_stream(...fetchAPI.fetch_api_promise(
         cancelToken,
@@ -517,12 +514,12 @@ export async function dislike_and_rollback(editor: vscode.TextEditor)
         }
         state.diff_changing_doc = false;
         _remove_decoration(editor);
-        let feedback = state.data_feedback_candidate;
-        if (feedback && feedback.cursor_file) {
-            feedback.positive = false;
-            await dataCollection.data_collection_save_record(feedback);
-        }
-        dataCollection.data_feedback_candidate_reset(state);
+        // let feedback = state.data_feedback_candidate;
+        // if (feedback && feedback.cursor_file) {
+        //     feedback.positive = false;
+        //     await dataCollection.data_collection_save_record(feedback);
+        // }
+        // dataCollection.data_feedback_candidate_reset(state);
     });
 }
 
@@ -567,12 +564,12 @@ export async function like_and_accept(editor: vscode.TextEditor)
             await estate.back_to_normal(state);
         }
         codeLens.quick_refresh();
-        let feedback = state.data_feedback_candidate;
-        if (feedback && feedback.cursor_file) {
-            feedback.positive = true;
-            await dataCollection.data_collection_save_record(feedback);
-        }
-        dataCollection.data_feedback_candidate_reset(state);
+        // let feedback = state.data_feedback_candidate;
+        // if (feedback && feedback.cursor_file) {
+        //     feedback.positive = true;
+        //     await dataCollection.data_collection_save_record(feedback);
+        // }
+        // dataCollection.data_feedback_candidate_reset(state);
     });
     await thenable;
 }
@@ -598,7 +595,6 @@ export function hands_off_dont_remove_anything(editor: vscode.TextEditor)
     if (!state) {
         return;
     }
-    state.edit_chain_modif_doc = undefined;
     state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
     state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
     codeLens.quick_refresh();
