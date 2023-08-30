@@ -198,9 +198,16 @@
     }
 
     let currentHeight = document.querySelector('.refactcss-chat__content');
+    let autoScrollTimeout;
     function auto_scroll() {
-        input_care();
-        currentHeight.scrollTop = currentHeight.scrollHeight;
+        if (autoScrollTimeout) {
+            return;
+        }
+        autoScrollTimeout = setTimeout(() => {
+            input_care();
+            currentHeight.scrollTop = currentHeight.scrollHeight;
+            autoScrollTimeout = null;
+        }, 100);
     }
 
     window.addEventListener("message", (event) => {
