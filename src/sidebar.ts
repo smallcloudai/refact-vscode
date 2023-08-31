@@ -445,42 +445,52 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <div class="refact-welcome__menu">
                             <div class="refact-welcome__container">
                                 <div class="refact-welcome__lead">Refact works for:</div>
+                                
                                 <label class="refact-welcome__select" data-type="enterprise">
-                                    <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type">
-                                    <span>Enterprise</span>
-                                    <div class="refact-welcome__desc">
-                                        <ul>
-                                            <li>Doesn't connect to public cloud ever</li>
-                                            <li>Uses your private endpoint only</li>
-                                            <li>Sends telemetry to your private server</li>
-                                        </ul>
+                                    <div class="refact-welcome__content">
+                                        <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />
+                                        <span>Enterprise</span>
+                                        <div class="refact-welcome__desc">
+                                            <ul>
+                                                <li>Doesn't connect to public cloud ever</li>
+                                                <li>Uses your private endpoint only</li>
+                                                <li>Sends telemetry to your private server</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </label>
 
                                 <label class="refact-welcome__select" data-type="personal">
-                                    <input type="radio" class="refact-welcome__radio" value="personal" name="account-type">
-                                    <span>Personal</span>
-                                    <div class="refact-welcome__desc">
-                                        <ul>
-                                            <li>Easy to start</li>
-                                            <li>Opt-in telemetry to help this open source project</li>
-                                        </ul>
+                                    <div class="refact-welcome__content">
+                                        <input type="radio" class="refact-welcome__radio" value="personal" name="account-type" />
+                                        <span>Personal</span>
+                                        <div class="refact-welcome__desc">
+                                            <ul>
+                                                <li>Easy to start</li>
+                                                <li>Opt-in telemetry to help this open source project</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </label>
 
                                 <label class="refact-welcome__select" data-type="self-hosting">
-                                    <input type="radio" class="refact-welcome__radio" value="self-hosting" name="account-type">
-                                    <span>Self-hosting</span>
-                                    <div class="refact-welcome__desc">
-                                        <ul>
-                                            <li>Uses your own server</li>
-                                            <li>Opt-in telemetry to help this open source project</li>
-                                        </ul>
+                                    <div class="refact-welcome__content">
+                                        <input type="radio" class="refact-welcome__radio" value="self-hosting" name="account-type" />
+                                        <span>Self-hosting</span>
+                                        <div class="refact-welcome__desc">
+                                            <ul>
+                                                <li>Uses your own server</li>
+                                                <li>Opt-in telemetry to help this open source project</li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </label>
+                                <div class="refact-welcome__actions">
+                                    <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
+                                </div>
                             </div>
                         </div>
-                        <button class="refact-welcome__back">← Back</button>
+                        <button class="refact-welcome__back">&lsaquo;&nbsp; Back</button>
                         <div class="refact-welcome__enterprise refact-welcome__subscreen">
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>

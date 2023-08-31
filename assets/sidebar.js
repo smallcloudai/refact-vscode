@@ -114,27 +114,23 @@
     const welcome_selects = document.querySelectorAll(".refact-welcome__select");
     welcome_selects.forEach((select) => {
         select.addEventListener("click", () => {
-            const selection_type = select.dataset.type;
-            change_welcome_subscreen(selection_type);
-        });
-        select.addEventListener("mouseover", () => {
             welcome_selects.forEach((other_select) => {
                 other_select.classList.remove('refact-welcome__select--selected');
+                other_select.querySelector('.refact-welcome__radio').checked = false;
             });
             select.classList.add('refact-welcome__select--selected');
+            select.querySelector('.refact-welcome__radio').checked = true;
         });
-        select.addEventListener("mouseout", () => {
-            welcome_selects.forEach((other_select) => {
-                other_select.classList.remove('refact-welcome__select--selected');
-            });
-        });
+    });
+
+    const welcome_next_button = document.querySelector('.refact-welcome__next');
+    welcome_next_button.addEventListener("click", () => {
+        const selection_type = document.querySelector('.refact-welcome__select--selected').querySelector('.refact-welcome__radio').value;
+        change_welcome_subscreen(selection_type);
     });
 
     function change_welcome_subscreen(selection_type) {
         const screens = document.querySelectorAll(".refact-welcome__subscreen");
-        screens.forEach((screen) => {
-            screen.classList.remove('refact-welcome__subscreen--selected');
-        });
         document.querySelector('.refact-welcome__back').style.display = "block";
         document.querySelector('.refact-welcome__menu').style.display = "none";
         switch (selection_type) {
@@ -915,7 +911,7 @@
                 profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 chat.style.display = message.ts2web_user ? 'flex' : 'none';
-                data.style.display = message.ts2web_user ? 'block' : 'none';
+                // data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
                 privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
                 // TODO: always show settings, a place to put custom infurl
