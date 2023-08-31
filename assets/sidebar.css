@@ -925,6 +925,15 @@ body.vscode-light #logout {
 	padding-left: 12px;
 	box-sizing: border-box;
 }
+.refact-welcome__select:hover {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+}
+body.vscode-light .refact-welcome__select {
+	background-color: rgba(0, 0, 0, 0.05);
+}
+body.vscode-light .refact-welcome__select:hover {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+}
 .refact-welcome__select input {
 	/* display: none; */
 }
