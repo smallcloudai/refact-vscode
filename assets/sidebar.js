@@ -157,6 +157,7 @@
 
     const save_enterprise = document.querySelector('.refact-welcome__savebutton--enterprise');
     save_enterprise.addEventListener("click", () => {
+        console.log('mmmm');
         const enter_endpoint = document.querySelector('.refact-welcome__enterendpoint');
         const enter_apikey = document.querySelector('.refact-welcome__apikey');
         vscode.postMessage({

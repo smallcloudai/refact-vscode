@@ -503,13 +503,23 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
                         </div>
                         <div class="refact-welcome__personal refact-welcome__subscreen">
-                            <button class="refact-welcome__hf">
-                                Huggingface Cloud
-                            </button>
-
-                            <button class="refact-welcome__refact">
-                                Refact Cloud
-                            </button>
+                            <div class="refact-welcome__subpanel">
+                                <h3>Huggingface Cloud</h3>
+                                <div>
+                                    <label class="refact-welcome__label">API Key</label>
+                                    <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                                </div>
+                                <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
+                                <button class="refact-welcome__hf">
+                                    Get your Huggingface Cloud API Key
+                                </button>
+                            </div>
+                            <div class="refact-welcome__subpanel">
+                                <h3>Refact Cloud</h3>
+                                <button class="refact-welcome__refact">
+                                    Login / Create Account
+                                </button>
+                            </div>
                         </div>
 
                         <div class="refact-welcome__selfhosted refact-welcome__subscreen">

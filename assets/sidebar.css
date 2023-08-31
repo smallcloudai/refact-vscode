@@ -1029,15 +1029,24 @@ body.vscode-light .refact-welcome__select:hover {
 	cursor: pointer;
 	margin-top: -5px;
 }
-
-.refact-welcome__hf,
+.refact-welcome__hf {
+	border: 0;
+	display: block;
+	text-align: left;
+	padding: 0;
+	margin: 0;
+	background: transparent;
+	margin-bottom: 30px;
+	margin-top: 15px;
+	text-decoration: underline;
+}
 .refact-welcome__refact {
 	display: block;
 	width: 100%;
 	background-color: var(--vscode-editor-selectionBackground) !important;
 	border: 0;
 	padding: 10px 20px;
-	text-align: left;
+	text-align: center;
 	font-weight: bold;
 	color: var(--vscode-editor-selectionForeground) !important;
 	cursor: pointer;
@@ -1064,4 +1073,13 @@ body.vscode-light .refact-welcome__select:hover {
 }
 .refact-welcome__content  {
 	box-sizing: border-box;
+}
+.refact-welcome__subpanel {
+	padding: 10px;
+	background-color: rgba(255, 255, 255, 0.05);
+	margin-bottom: 20px;
+}
+body.vscode-light .refact-welcome__subpanel {
+	padding: 10px;
+	background-color: rgba(0, 0, 0, 0.05);
 }
