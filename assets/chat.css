@@ -277,3 +277,72 @@ body.vscode-dark {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
+
+/* CHAT OVERRIDES */
+.refactcss-chat__title {
+	display: none !important;
+}
+#chat-input {
+	margin: 20px 0 !important;
+	border: 1px solid #fff ;
+	padding: 20px !important;
+	border-radius: 10px !important;
+	font-size: 18px;
+}
+.refactcss-chat__button {
+	bottom: 25px;
+	right: 5px;
+}
+.refactcss-chat__controls {
+	margin-bottom: 20px;
+}
+.refactcss-chat__stop {
+	padding-left: 20px;
+	padding-right: 20px;
+	border: 0 !important;
+	border-radius: 10px;
+	background: var(--vscode-editor-foreground) !important;
+	color: #000 !important;
+}
+.refactcss-chat__question {
+	padding: 10px 20px !important;
+	border-radius: 10px !important;
+	font-size: 15px !important; 
+}
+.refactcss-chat__answer {
+	padding: 10px 20px !important;
+	border-radius: 10px !important;
+	font-size: 15px !important; 
+}
+.refactcss-chat__copybutton {
+	padding: 3px 12px !important;
+	border-radius: 7px !important;
+	height: 22px;
+	width: 70px;
+	text-align: center;
+	font-size: 10px !important; 
+	top: 10px !important;
+	right: 8px !important;
+	background-color: var(--vscode-editor-foreground) !important;
+}
+.refactcss-chat__newbutton {
+	padding: 3px 12px !important;
+	border-radius: 7px !important;
+	height: 22px;
+	width: 80px;
+	text-align: center;
+	font-size: 10px !important; 
+	top: 10px !important;
+	right: 80px !important;
+	background-color: var(--vscode-editor-foreground) !important;
+}
+.refactcss-chat__question {
+	padding: 10px 20px !important;
+	border-radius: 10px !important;
+	font-size: 15px !important; 
+}
+.refactcss-chat__item pre code {
+	padding: 10px 20px !important;
+	border-radius: 10px !important;
+	font-size: 15px !important; 
+}
