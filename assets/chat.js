@@ -7,8 +7,7 @@
     const stop_button = document.querySelector('#chat-stop');
     let chat_controls_moved = false;
 
-    function input_care()
-    {
+    function input_care() {
         chat_input.style.height = 'auto';
         chat_input.style.height = chat_input.scrollHeight + 'px';
         const message = chat_input.value;
@@ -35,14 +34,14 @@
             chat_model_function: chat_model_function,
             chat_attach_file: chat_attach_file.checked
         });
-        if(!chat_controls_moved) {
+        if (!chat_controls_moved) {
             const chat_controls = document.querySelector('.refactcss-chat__controls');
             const chat_content = document.querySelector('.refactcss-chat__content');
             chat_content.appendChild(chat_controls);
             chat_controls_moved = true;
             const chat_label = document.getElementById("chat-attach-label");
             const chat_input = document.getElementById("chat-attach");
-            if(chat_input.checked) {
+            if (chat_input.checked) {
                 chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
             }
             document.querySelector('.refactcss-chat__panel').style.maxHeight = '180px';
@@ -66,8 +65,7 @@
     let last_answer_div = null;  // unfinished answers go the same div
     let answer_counter = 0;
 
-    function chat_render(data)
-    {
+    function chat_render(data) {
         // question_html: html,
         // question_raw: question
         // answer_html: html,
@@ -122,7 +120,7 @@
             last_answer_div.dataset.raw = data.answer_raw;
             last_answer_div.dataset.have_editor = data.have_editor;
         }
-        if(message_pair_div.children.length > 0) {
+        if (message_pair_div.children.length > 0) {
             chat_content.appendChild(message_pair_div);
         }
     }
@@ -150,13 +148,13 @@
         const snippets = answer_div.querySelectorAll('pre code');
         const raw = answer_div.dataset.raw;
         const raw_snippets = raw.split('```');
-        for (let i = 0; i<snippets.length; i++) {
+        for (let i = 0; i < snippets.length; i++) {
             let pre = snippets[i];
             // const code = pre.innerHTML;
-            if (raw_snippets.length <= 2*i + 1) {
+            if (raw_snippets.length <= 2 * i + 1) {
                 continue;
             }
-            const code = backquote_backquote_backquote_remove_syntax_highlighting(raw_snippets[2*i + 1]);
+            const code = backquote_backquote_backquote_remove_syntax_highlighting(raw_snippets[2 * i + 1]);
             const copy_button = document.createElement('button');
             const new_button = document.createElement('button');
             copy_button.innerText = 'Copy';
@@ -197,67 +195,73 @@
         document.body.removeChild(textarea);
     }
 
-    let currentHeight = document.querySelector('.refactcss-chat__content');
+    let chatContent = document.querySelector('.refactcss-chat__content');
+    let do_auto_scroll = false;
+    chatContent.addEventListener('click', function () {
+        do_auto_scroll = !do_auto_scroll
+    });
     function auto_scroll() {
         input_care();
-        currentHeight.scrollTop = currentHeight.scrollHeight;
+        if (do_auto_scroll) {
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
     }
 
     window.addEventListener("message", (event) => {
-		const message = event.data;
+        const message = event.data;
         let input_should_be_visible = false;
-		switch (message.command) {
-        case "chat-set-fireup-options":
-            let chat_attach_file = document.getElementById("chat-attach");
-            chat_attach_file.checked = message.chat_attach_default;
-            let label = document.getElementById("chat-attach-label");
-            if (message.chat_attach_file) {
-                label.innerText = `Attach ${message.chat_attach_file}`;
-            } else {
-                label.innerText = `Attach file`;
-                label.style.opacity = 0.5;
-                label.parentElement.style.opacity = 0.35;
-                label.parentElement.style.pointerEvents = 'none';
-            }
-            let chat_model_combo = document.getElementById("chat-model");
-            for (let i = 0; i < message.chat_models.length; i++) {
-                let option = document.createElement("option");
-                option.value = JSON.stringify(message.chat_models[i]);
-                option.text = message.chat_models[i][0];
-                if (message.chat_use_model === message.chat_models[i][0] && message.chat_use_model_function === message.chat_models[i][1]) {
-                    option.selected = true;
+        switch (message.command) {
+            case "chat-set-fireup-options":
+                let chat_attach_file = document.getElementById("chat-attach");
+                chat_attach_file.checked = message.chat_attach_default;
+                let label = document.getElementById("chat-attach-label");
+                if (message.chat_attach_file) {
+                    label.innerText = `Attach ${message.chat_attach_file}`;
+                } else {
+                    label.innerText = `Attach file`;
+                    label.style.opacity = 0.5;
+                    label.parentElement.style.opacity = 0.35;
+                    label.parentElement.style.pointerEvents = 'none';
                 }
-                if (message.chat_use_model==="" && i===0) {
-                    option.selected = true;
+                let chat_model_combo = document.getElementById("chat-model");
+                for (let i = 0; i < message.chat_models.length; i++) {
+                    let option = document.createElement("option");
+                    option.value = JSON.stringify(message.chat_models[i]);
+                    option.text = message.chat_models[i][0];
+                    if (message.chat_use_model === message.chat_models[i][0] && message.chat_use_model_function === message.chat_models[i][1]) {
+                        option.selected = true;
+                    }
+                    if (message.chat_use_model === "" && i === 0) {
+                        option.selected = true;
+                    }
+                    chat_model_combo.appendChild(option);
                 }
-                chat_model_combo.appendChild(option);
-            }
-            input_should_be_visible = true;
-            break;
-        case "chat-end-streaming":
-            input_should_be_visible = true;
-            chat_add_code_buttons();
-            break;
-        case "chat-error-streaming":
-            input_should_be_visible = true;
-            chat_input.value = message.backup_user_phrase;
-            break;
-        case "chat-post-question":
-            chat_render(message);
-            break;
-        case "chat-post-answer":  // streaming also goes there, with partial answers
-            chat_render(message);
-            break;
-        case "chat-set-question-text":
-            input_should_be_visible = true;
-            chat_input.value = message.value.question;
-            setTimeout(() => {
+                input_should_be_visible = true;
+                break;
+            case "chat-end-streaming":
+                input_should_be_visible = true;
+                chat_add_code_buttons();
+                break;
+            case "chat-error-streaming":
+                input_should_be_visible = true;
+                chat_input.value = message.backup_user_phrase;
+                break;
+            case "chat-post-question":
+                chat_render(message);
+                break;
+            case "chat-post-answer":  // streaming also goes there, with partial answers
+                chat_render(message);
+                break;
+            case "chat-set-question-text":
+                input_should_be_visible = true;
+                chat_input.value = message.value.question;
+                setTimeout(() => {
+                    input_care();
+                }, 100);
                 input_care();
-            }, 100);
-            input_care();
-            break;
-        case "nop":
-            break;
+                break;
+            case "nop":
+                break;
         }
         visibility_control(input_should_be_visible);
         if (message.command.includes("streaming")) {
