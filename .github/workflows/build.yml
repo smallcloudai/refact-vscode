@@ -63,7 +63,7 @@ jobs:
           name: dist-${{ matrix.target }}
 
       - name: Install toolchain dependencies
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.container == 'ubuntu:18.04'
         shell: bash
         run: |
           apt-get update && apt-get install -y Node.js npm
