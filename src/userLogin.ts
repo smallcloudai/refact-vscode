@@ -5,21 +5,7 @@ import * as fetchAPI from "./fetchAPI";
 import * as usageStats from "./usageStats";
 import * as usabilityHints from "./usabilityHints";
 import * as statusBar from "./statusBar";
-import { ProcessManager as PM } from "./processManager";
 
-
-var child = PM.startProcess("ls", ["-la"]);
-child.stdout.on('data', (data: Buffer) => {
-    console.log(`stdout: ${data}`);
-});
-
-child.stderr.on('data', (data: Buffer) => {
-    console.error(`stderr: ${data}`);
-});
-
-child.on('close', (code: Number) => {
-    console.log(`child process exited with code ${code}`);
-}); 
 
 export async function login_message()
 {

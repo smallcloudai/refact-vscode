@@ -14,9 +14,12 @@ import * as userLogin from "./userLogin";
 import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
+import * as launchRust from "./launchRust";
+
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
-import {open_chat_tab} from "./sidebar";
+import { open_chat_tab } from "./sidebar";
+
 
 declare global {
     var status_bar: statusBar.StatusBarMenu;
@@ -187,6 +190,7 @@ export async function inline_accepted(this_completion_serial_number: number)
 
 export function activate(context: vscode.ExtensionContext)
 {
+    launchRust.rust_launch(vscode.Uri.joinPath(context.extensionUri, "assets"));
     global.global_context = context;
     global.enable_longthink_completion = false;
     global.streamlined_login_countdown = -1;
@@ -406,6 +410,7 @@ export function deactivate(context: vscode.ExtensionContext)
 {
     usageStats.report_usage_stats();
     global.global_context = undefined;
+    launchRust.rust_kill();
 }
 
 
