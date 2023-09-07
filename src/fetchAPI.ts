@@ -320,7 +320,7 @@ export function fetch_api_promise(
         return [Promise.reject("No API key"), new estate.ApiFields()];
     }
     let temp = 0.2;  // vscode.workspace.getConfiguration().get('codify.temperature');
-    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
     let api_fields = new estate.ApiFields();
     api_fields.scope = scope;
     api_fields.url = url;
@@ -395,7 +395,7 @@ export function fetch_code_completion(
         return Promise.reject("No API key");
     }
     let temp = 0.2;
-    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
     api_fields.scope = "code-completion";
     api_fields.url = url;
     api_fields.model = model;
@@ -472,7 +472,7 @@ export function fetch_chat_promise(
         return [Promise.reject("No API key"), new estate.ApiFields()];
     }
     let ctx = inference_context(third_party);
-    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
     let api_fields = new estate.ApiFields();
     api_fields.scope = scope;
     api_fields.url = url;

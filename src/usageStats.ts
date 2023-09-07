@@ -310,7 +310,7 @@ async function report_tab_stats()
     // if (!apiKey) {
     //     return;
     // }
-    // let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    // let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
     // const headers = {
     //     "Content-Type": "application/json",
     //     "Authorization": `Bearer ${apiKey}`,
@@ -354,7 +354,7 @@ export async function report_usage_stats()
     if (!apiKey) {
         return;
     }
-    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,

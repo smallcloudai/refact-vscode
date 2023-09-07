@@ -124,7 +124,7 @@ export async function login()
         manual_infurl = "https://code-scratchpads.smallcloud.ai/";
     }
     // ---- /TEMPORARY ----
-    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
+    let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
     let staging = vscode.workspace.getConfiguration().get('refactai.staging');
     let login_url = `https://www.smallcloud.ai/v1/login?plugin_version=vscode-${client_version}`;
     let third_party = false;

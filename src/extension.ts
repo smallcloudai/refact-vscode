@@ -263,7 +263,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(view);
 
     let settingsCommand = vscode.commands.registerCommand('refactaicmd.openSettings', () => {
-        vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.codify' );
+        vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.refact' );
         // vscode.commands.executeCommand( 'workbench.action.openGlobalKeybindings', 'Refact.ai' );
     });
     context.subscriptions.push(settingsCommand);

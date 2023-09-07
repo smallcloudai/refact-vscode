@@ -1,5 +1,5 @@
 {
-	"name": "codify",
+	"name": "refact",
 	"displayName": "Refact Assistant",
 	"description": "The AI Assistant for Code Writing and Refactoring",
 	"publisher": "smallcloud",
@@ -18,7 +18,7 @@
         "url": "https://github.com/smallcloudai/refact-vscode/issues",
         "email": "support@smallcloud.tech"
     },
-	"version": "1.0.51",
+	"version": "1.0.2",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
