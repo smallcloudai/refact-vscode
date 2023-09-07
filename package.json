@@ -1,7 +1,7 @@
 {
 	"name": "refact",
-	"displayName": "Refact Assistant",
-	"description": "The AI Assistant for Code Writing and Refactoring",
+	"displayName": "Refact Experimental HF ",
+	"description": "Refact Experimental HF AI Assistant for Code Writing and Refactoring",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
 	"galleryBanner": {
