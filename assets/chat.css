@@ -1,279 +1,383 @@
 @font-face {
-	font-family: "codify";
-	src: url("codify.woff");
-	font-weight: normal;
-	font-style: normal;
+  font-family: "codify";
+  src: url("codify.woff");
+  font-weight: normal;
+  font-style: normal;
 }
+
 body.vscode-light {
-	--color: #000;
-	--secondary: rgba(0, 0, 0, 0.5);
-	--dark: rgba(0, 0, 0, 0.7);
-	--light: rgba(0, 0, 0, 0.1);
+  --color: #000;
+  --secondary: rgba(0, 0, 0, 0.5);
+  --dark: rgba(0, 0, 0, 0.7);
+  --light: rgba(0, 0, 0, 0.1);
 }
+
 body {
-	box-sizing: border-box;
+  box-sizing: border-box;
 }
+
 body.vscode-dark {
-	--color: #fff;
-	--secondary: rgba(255, 255, 255, 0.5);
-	--dark: rgba(255, 255, 255, 0.7);
-	--light: rgba(255, 255, 255, 0.1);
+  --color: #fff;
+  --secondary: rgba(255, 255, 255, 0.5);
+  --dark: rgba(255, 255, 255, 0.7);
+  --light: rgba(255, 255, 255, 0.1);
 }
+
 .refactcss-chat {
-	max-width: 900px;
-	box-sizing: border-box;
+  max-width: 900px;
+  box-sizing: border-box;
 }
+
 .refactcss-chat__title {
-	margin-bottom: 10px;
-	height: 32px;
-	box-sizing: border-box;
+  margin-bottom: 10px;
+  height: 32px;
+  box-sizing: border-box;
 }
 
 .refactcss-chat__wrapper {
-	height: calc(100vh - 60px);
-	display: flex;
-	flex-direction: column;
-	box-sizing: border-box;
+  height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
+
 .refactcss-chat__content {
-	height: 100%;
-	overflow-y: auto;
-	box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
+
 .refactcss-chat__panel {
-	height: 100%;
-	max-height: 220px;
-	margin-top: auto;
-	display: flex;
-	flex-direction: column;
-	box-sizing: border-box;
-	overflow: hidden;
-	align-items: flex-end;
+  height: 100%;
+  max-height: 220px;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  align-items: flex-end;
 }
+
 .refactcss-chat__controls {
-	width: 100%;
-	box-sizing: border-box;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 .refactcss-chat__controls > div {
-	display: flex;
-	align-items: center;
-	margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
 }
+
 .refactcss-chat__controls label {
-	color: var(--color) !important;
+  color: var(--color) !important;
 }
+
 .refactcss-chat__controls select {
-	margin-left: 5px;
+  margin-left: 5px;
 }
+
 .refactcss-chat__controls input {
-	margin-left: 0;
-	padding-left: 0;
-	display: block;
+  margin-left: 0;
+  padding-left: 0;
+  display: block;
 }
+
 .refactcss-chat__content .refactcss-chat__controls {
-	opacity: 0.35 !important;
-	pointer-events: none !important;
+  opacity: 0.35 !important;
+  pointer-events: none !important;
 }
+
 .refactcss-chat__item {
-	margin-bottom: 30px;
-	box-sizing: border-box;
+  margin-bottom: 30px;
+  box-sizing: border-box;
 }
+
 .refactcss-chat__question {
-	padding: 5px 10px;
-    width: 90%;
-    max-width: 600px;
-    background-color: var(--light);
-    margin-left: auto;
-    overflow: hidden;
-	box-sizing: border-box;
-	position: relative;
+  padding: 5px 5px;
+  width: 90%;
+  max-width: 600px;
+  background-color: var(--light);
+  margin-left: auto;
+  overflow: hidden;
+  box-sizing: border-box;
+  position: relative;
 }
+
 .refactcss-chat__answer {
-	margin-top: 10px;
-    width: 90%;
-    max-width: 600px;
-    margin-right: auto;
-    padding: 5px 10px;
-    overflow: hidden;
-	box-sizing: border-box;
+  margin-top: 10px;
+  width: 90%;
+  max-width: 600px;
+  margin-right: auto;
+  padding: 5px 10px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
+
 .refactcss-chat__commands {
-	margin-top: auto;
-	position: relative;
-	box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-	height: 170px;
+  margin-top: auto;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 170px;
 }
 
 .refactcss-chat__input {
-	width: 100%;
-	box-sizing: border-box;
-	border: 1px solid var(--secondary);
-	padding: 10px;
-	background: transparent !important;
-	color: var(--secodary) !important;
-	font-family: sans-serif !important;
-	font-size: 14px;
-	overflow-x: auto;
-	height: 160px !important;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--secondary);
+  padding: 10px;
+  background: transparent !important;
+  color: var(--secodary) !important;
+  font-family: sans-serif !important;
+  font-size: 14px;
+  overflow-x: auto;
+  height: 160px !important;
 }
 
 .refactcss-chat__button {
-	position: absolute;
-	bottom: 10px;
-	right: 0px;
-	width: 30px;
-	height: 30px;
-	border: none !important;
-	cursor: pointer;
-	box-sizing: border-box;
-	color: var(--secodary) !important;
-	background: transparent !important;
-	z-index: 999 !important;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+  position: absolute;
+  bottom: 10px;
+  right: 0px;
+  width: 30px;
+  height: 30px;
+  border: none !important;
+  cursor: pointer;
+  box-sizing: border-box;
+  color: var(--secodary) !important;
+  background: transparent !important;
+  z-index: 999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .refactcss-chat__button span::before {
-	content: "\e803";
-	font-family: "codify";
-	font-style: normal;
-	font-weight: normal;
-	text-decoration: inherit;
-	font-variant: normal;
-	text-transform: none;
-	height: 16px;
-	width: 16px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+  content: "\e803";
+  font-family: "codify";
+  font-style: normal;
+  font-weight: normal;
+  text-decoration: inherit;
+  font-variant: normal;
+  text-transform: none;
+  height: 16px;
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .refactcss-chat__item table {
-	border-collapse: collapse;
+  border-collapse: collapse;
 }
 
 .refactcss-chat__item td,
 .refactcss-chat__item th {
-	border: 1px solid var(--secondary);
-    padding: 5px;
+  border: 1px solid var(--secondary);
+  padding: 5px;
 }
 
 .refactcss-chat__item pre code {
-    display: block;
-    position: relative;
-    background: none;
-    white-space: pre;
-    -webkit-overflow-scrolling: touch;
-    overflow-x: scroll;
-    max-width: 100%;
-    min-width: 100px;
-    padding: 30px 15px 15px;
-    background-color: var(--light);
-    font-family: monospace;
-    line-height: 1.1;
+  display: block;
+  position: relative;
+  background: none;
+  white-space: pre;
+  -webkit-overflow-scrolling: touch;
+  overflow-x: scroll;
+  max-width: 100%;
+  min-width: 100px;
+  padding: 30px 15px 15px;
+  background-color: var(--light);
+  font-family: monospace;
+  line-height: 1.1;
 }
 
 .refactcss-chat__item ul {
-	list-style: none;
-	padding: 0;
+  list-style: none;
+  padding: 0;
 }
+
 .refactcss-chat__copybutton {
-	position: absolute;
-	top: 3px;
-	right: 3px;
-	width: 40px;
-	height: 20px;
-	border: none !important;
-	cursor: pointer;
-	box-sizing: border-box;
-    text-transform: uppercase;
-    font-size: 8px;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 40px;
+  height: 20px;
+  border: none !important;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-transform: uppercase;
+  font-size: 8px;
 }
+
 .refactcss-chat__newbutton {
-    position: absolute;
-	top: 3px;
-	right: 46px;
-	width: 70px;
-	height: 20px;
-	border: none !important;
-	cursor: pointer;
-	box-sizing: border-box;
-    text-transform: uppercase;
-    font-size: 8px;
+  position: absolute;
+  top: 3px;
+  right: 46px;
+  width: 70px;
+  height: 20px;
+  border: none !important;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-transform: uppercase;
+  font-size: 8px;
 }
+
 .refactcss-chat__diffbutton {
-    position: absolute;
-	top: 3px;
-	/* right = 46 + 70 + 3 */
-	right: 119px;
-	width: 60px;
-	height: 20px;
-	border: none !important;
-	cursor: pointer;
-	box-sizing: border-box;
-    text-transform: uppercase;
-    font-size: 8px;
+  position: absolute;
+  top: 3px;
+  /* right = 46 + 70 + 3 */
+  right: 119px;
+  width: 60px;
+  height: 20px;
+  border: none !important;
+  cursor: pointer;
+  box-sizing: border-box;
+  text-transform: uppercase;
+  font-size: 8px;
 }
 
 .refactcss-chat__item ul li {
-	margin: 5px 0;
+  margin: 5px 0;
 }
+
 .refactcss-chat__item ol {
-	padding: 0;
-    counter-reset: mycounter;
+  padding: 0;
+  counter-reset: mycounter;
 }
 
 .refactcss-chat__item ol li {
-	/* margin: 5px 0; */
-    margin-left: 16px;
-    /* padding-left: 0.5em; */
-    margin-top: 5px;
-    margin-bottom: 5px;
+  /* margin: 5px 0; */
+  margin-left: 16px;
+  /* padding-left: 0.5em; */
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
-.refactcss-chat__item ol li:before {
-    content: counter(mycounter) ".";
-    counter-increment: mycounter;
-    position: absolute;
-    left: -2em;
-    width: 1.5em;
-    text-align: right;
-  }
 
-  .refactcss-chat__stop {
-    margin-left: auto;
-    background: transparent !important;
-    border: 1px solid var(--secondary) !important;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    height: 34px;
-    color: var(--secondary) !important;
-    margin-bottom: 15px;
-    font-size: 12px;
-    cursor: pointer;
-    display: none;
-  }
-  .refactcss-chat__stop span {
-    margin-right: 4px;
-  }
-  .refactcss-chat__stop span::before {
-	content: "\e80E";
-	font-family: "codify";
-	font-style: normal;
-	font-weight: normal;
-	text-decoration: inherit;
-	font-variant: normal;
-	text-transform: none;
-	height: 16px;
-	width: 16px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+.refactcss-chat__item ol li:before {
+  content: counter(mycounter) ".";
+  counter-increment: mycounter;
+  position: absolute;
+  left: -2em;
+  width: 1.5em;
+  text-align: right;
+}
+
+.refactcss-chat__stop {
+  margin-left: auto;
+  background: transparent !important;
+  border: 1px solid var(--secondary) !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 34px;
+  color: var(--secondary) !important;
+  margin-bottom: 15px;
+  font-size: 12px;
+  cursor: pointer;
+  display: none;
+}
+
+.refactcss-chat__stop span {
+  margin-right: 4px;
+}
+
+.refactcss-chat__stop span::before {
+  content: "\e80E";
+  font-family: "codify";
+  font-style: normal;
+  font-weight: normal;
+  text-decoration: inherit;
+  font-variant: normal;
+  text-transform: none;
+  height: 16px;
+  width: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.refactcss-chat__cancel-button {
+  background-color: #ff6666; /* Red background color */
+  color: #fff; /* White text color */
+  border: none;
+  padding: 5px 10px;
+  margin-right: 10px;
+  margin-left: auto;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.refactcss-chat__submit-button {
+  background-color: #66cc66; /* Green background color */
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-left: 10px;
+  margin-top: 5px;
+}
+
+.refactcss-chat__question_div {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent !important;
+  font-family: sans-serif !important;
+  font-size: 14px;
+  overflow-x: auto;
+  text-align: left;
+}
+
+.refactcss-chat__input-field {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--secondary);
+  padding: 10px;
+  background: transparent !important;
+  color: var(--secondary) !important;
+  font-family: sans-serif !important;
+  font-size: 14px;
+  overflow-x: auto;
+}
+
+/* Center the cancel and submit buttons while switching their places */
+.refactcss-chat__cancel-button,
+.refactcss-chat__submit-button {
+  display: inline-block;
+  background-color: #ff6666; /* Red background color for cancel button */
+  color: #fff; /* White text color */
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin: 5px 5px; /* Adjust margins as needed */
+}
+
+.refactcss-chat__submit-button {
+  background-color: #66cc66; /* Green background color for submit button */
+}
+
+/* Make the height of the input field variable based on content */
+.refactcss-chat__question-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--secondary);
+  padding: 10px;
+  background: transparent !important;
+  color: var(--secodary) !important;
+  font-family: sans-serif !important;
+  font-size: 14px;
+  overflow-x: auto;
+  min-height: 40px; /* Adjust the min-height as needed */
+  resize: vertical; /* Allow vertical resizing */
+}
+
+/* Center the input field within its container */
+.refactcss-chat__question {
+  text-align: center;
 }
