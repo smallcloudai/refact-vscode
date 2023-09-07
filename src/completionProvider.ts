@@ -33,7 +33,7 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
 {
     public document: vscode.TextDocument | undefined = undefined;
     public on_text_edited_disposable: vscode.Disposable | undefined = undefined;
-    public on_interval: NodeJS.Timer | undefined = undefined;   // same as disposable, but with clearInterval
+    public on_interval: NodeJS.Timeout | undefined = undefined;   // same as disposable, but with clearInterval
 
     public done_with: boolean = false;
 
