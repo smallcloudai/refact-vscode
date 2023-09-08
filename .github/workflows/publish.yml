@@ -1,0 +1,46 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch name to publish"
+        default: "experimental_hf1"
+
+jobs:
+  publish:
+    name: Publish in marketplace (VSCE)
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          workflow: build.yml
+          branch: ${{ inputs.branch }}
+          path: ./downloads
+
+      - name: COPY to dist
+        run: |
+          mkdir dist
+          find ./downloads -name "*.vsix" -exec cp '{}' dist \;
+          ls -la ./dist
+
+      - name: Install VSCE
+        run: |
+          npm install -g @vscode/vsce
+      
+      - name: Publish VSCE extension
+        run: |
+          vsce publish --pat ${{secrets.VSCE_PAT}} --packagePath ./dist/*
+
+      # # - name: Pakckage VSCE extension
+      #   run: |
+      #     chmod +x ./assets/code-scratchpads*
+      #     vsce package --target ${{ matrix.code-target }}
+
+      # # - name: Upload artifacts
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: vscode-plugin-${{ matrix.target }}
+      #     path: ./*.vsix
