@@ -122,10 +122,10 @@
 					"description": "Pause automatic code suggestions. Manual activation still works.",
 					"default": false
 				},
-				"refactai.xDebugBinary": {
-					"type": "boolean",
-					"description": "Set this to run Rust binary in console. This plugin will not attempt to start its own.",
-					"default": false
+				"refactai.xDebugPort": {
+					"type": "number|undefined",
+					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own.",
+					"default": null
 				}
 			}
 		},

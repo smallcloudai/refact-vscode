@@ -19,9 +19,11 @@ import * as launchRust from "./launchRust";
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
+import { fileURLToPath } from 'url';
 
 
 declare global {
+    var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
     var status_bar: statusBar.StatusBarMenu;
     var side_panel: sidebar.PanelWebview|undefined;
     var streamlined_login_ticket: string;
@@ -190,7 +192,6 @@ export async function inline_accepted(this_completion_serial_number: number)
 
 export function activate(context: vscode.ExtensionContext)
 {
-    launchRust.rust_launch(vscode.Uri.joinPath(context.extensionUri, "assets"));
     global.global_context = context;
     global.enable_longthink_completion = false;
     global.streamlined_login_countdown = -1;
@@ -298,12 +299,23 @@ export function activate(context: vscode.ExtensionContext)
         userLogin.login();
     }, 100);
 
+    global.rust_binary_blob = new launchRust.RustBinaryBlob(
+        fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
+    );
+    global.rust_binary_blob.settings_changed();  // async function will finish later
+    let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration('refactai.infurl')) {
-            setTimeout(() => {
+        if (e.affectsConfiguration('refactai.infurl') || e.affectsConfiguration('refactai.addressURL')) {
+            if (config_debounce) {
+                clearTimeout(config_debounce);
+            }
+            config_debounce = setTimeout(() => {
                 fill_no_user();
                 userLogin.login();
-            }, 300);
+                if (global.rust_binary_blob) {
+                    global.rust_binary_blob.settings_changed();
+                }
+            }, 1000);
         }
     });
 
@@ -410,7 +422,10 @@ export function deactivate(context: vscode.ExtensionContext)
 {
     usageStats.report_usage_stats();
     global.global_context = undefined;
-    launchRust.rust_kill();
+    if (global.rust_binary_blob) {
+        global.rust_binary_blob.terminate();
+        global.rust_binary_blob = undefined;
+    }
 }
 
 
