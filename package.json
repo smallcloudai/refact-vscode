@@ -84,19 +84,37 @@
 			"type": "object",
 			"title": "Refact Assistant",
 			"properties": {
-				"refactai.apiKey": {
+				"refactai.addressURL": {
 					"type": "string",
-					"default": null,
-					"description": "Secret API Key. It's used to authenticate your requests. It's filled automatically on first login, you don't have to change it."
-				},
-				"codify.apiKey": {
-					"type": "string",
-					"default": null,
-					"deprecationMessage": "Use refactai.apiKey instead."
+					"description": "For Enterprise, put there your company's server address. Your admin should have emailed that to you.\nFor self-hosted, use something like http://127.0.0.1:8008/\nFor inference in public cloud, use \"Refact\" or \"HF\".",
+					"default": ""
 				},
 				"refactai.infurl": {
 					"type": "string",
-					"description": "For self-hosted inference, set the URL to your inference server, for example http://127.0.0.1:8008/\nLeave blank otherwise.",
+					"deprecationMessage": "The new field is called addressURL. It's about the same, but it has special values like \"HF\" and if it's empty, makes the plugin do nothing, which is better for Enterprise use case to prevent leaks."
+				},
+				"refactai.apiKey": {
+					"type": "string",
+					"default": "",
+					"description": "Secret API Key. It's used to authenticate your requests."
+				},
+				"codify.apiKey": {
+					"type": "string",
+					"deprecationMessage": "Use refactai.apiKey instead."
+				},
+				"refactai.codeCompletionModel": {
+					"type": "string",
+					"description": "Which model to use, for example \"bigcode/starcoder\". Leave blank if not sure.",
+					"default": ""
+				},
+				"refactai.codeCompletionModelWorksLikeModel": {
+					"type": "string",
+					"description": "If a model you want is not supported, and you feel adventurous, you can try to use it in the same way as another known model.",
+					"default": ""
+				},
+				"refactai.codeCompletionScratchpad": {
+					"type": "string",
+					"description": "Which scratchpad to use, for example \"FIM-PSM\". Leave blank if not sure.",
 					"default": ""
 				},
 				"refactai.pauseCompletion": {
@@ -104,10 +122,10 @@
 					"description": "Pause automatic code suggestions. Manual activation still works.",
 					"default": false
 				},
-				"refactai.model": {
-					"type": "string",
-					"description": "Which model to use, for example \"bigcode/starcoder\". Leave blank if not sure.",
-					"default": ""
+				"refactai.xDebugBinary": {
+					"type": "boolean",
+					"description": "Set this to run Rust binary in console. This plugin will not attempt to start its own.",
+					"default": false
 				}
 			}
 		},
