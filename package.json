@@ -18,7 +18,7 @@
         "url": "https://github.com/smallcloudai/refact-vscode/issues",
         "email": "support@smallcloud.tech"
     },
-	"version": "1.0.1007",
+	"version": "1.0.1008",
 	"engines": {
 		"vscode": "^1.69.0"
 	},

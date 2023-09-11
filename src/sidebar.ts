@@ -15,7 +15,7 @@ export async function open_chat_tab(
     attach_default: boolean,
     model: string,
     model_function: string = "",
-){
+) {
     await ChatTab.activate_from_outside(
         question, editor, attach_default, model, model_function
     );
