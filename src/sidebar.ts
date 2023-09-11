@@ -81,13 +81,22 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     }
                     break;
                 }
-
-                case "button_refact": {
+                case "button_hf_open_tokens": {
+                    vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
+                    break;
+                }
+                case "button_hf_save": {
+                    await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
+                    await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
+                    break;
+                }
+                case "button_refact_open_streamlined": {
                     vscode.commands.executeCommand('refactaicmd.login');
                     break;
                 }
-                case "button_hf": {
-                    vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
+                case "button_refact_save": {
+                    await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
+                    await vscode.workspace.getConfiguration().update('refactai.addressURL', "SMC", vscode.ConfigurationTarget.Global);
                     break;
                 }
                 case "save_enterprise": {
@@ -276,7 +285,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             </div>
                             <div>
                                 <label class="refact-welcome__label">API Key</label>
-                                <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                                <input class="refact-welcome__apikey_enterprise refact-welcome__input" type="text" name="api_key" value="${api_key}">
                             </div>
                             <div class="refact-welcome__actions">
                                 <button data-target="enterprise" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
@@ -315,21 +324,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </div>
 
                         <div data-provider="huggingface" class="refact-welcome__subpanel">
-                            <h3>Huggingface Cloud</h3>
+                            <h2>Huggingface Cloud</h2>
                             <div>
                                 <label class="refact-welcome__label">API Key</label>
-                                <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                                <input class="refact-welcome__apikey_hf refact-welcome__input" type="text" name="api_key" value="${api_key}">
                             </div>
-                            <button class="refact-welcome__hf">
-                            Get your Huggingface Cloud API Key
-                            </button>
+                            <div>You can view your API key at <a href="x" class="refact-welcome__hf_open_tokens">https://huggingface.co/settings/tokens</a></div>
                             <div class="refact-welcome__actions">
                                 <button data-target="huggingface" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
+                                <button class="refact-welcome__next refact-welcome__next_hf">Next&nbsp;&nbsp;&rsaquo;</button>
                             </div>
                         </div>
+
                         <div data-provider="refact" class="refact-welcome__subpanel">
-                            <h3>Refact Cloud</h3>
+                            <h2>Refact Cloud</h2>
                             <button class="refact-welcome__refact">
                                 Login / Create Account
                             </button>

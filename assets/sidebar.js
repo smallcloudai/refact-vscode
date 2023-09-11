@@ -40,6 +40,15 @@
         change_provider_subscreen(selection_type);
     });
 
+    const next_button_hf = document.querySelector('.refact-welcome__next_hf');
+    next_button_hf.addEventListener("click", () => {
+        const enter_apikey = document.querySelector('.refact-welcome__apikey_hf');
+        vscode.postMessage({
+            type: "button_hf_save",
+            hf_api_key: enter_apikey.value,
+        });
+    });
+
     function change_provider_subscreen(selection_type) {
         const screens = document.querySelectorAll(".refact-welcome__subscreen");
         screens.forEach((screen) => {
@@ -82,7 +91,7 @@
     const save_enterprise = document.querySelector('.refact-welcome__savebutton--enterprise');
     save_enterprise.addEventListener("click", () => {
         const enter_endpoint = document.querySelector('.refact-welcome__enterendpoint');
-        const enter_apikey = document.querySelector('.refact-welcome__apikey');
+        const enter_apikey = document.querySelector('.refact-welcome__apikey_enterprise');
         vscode.postMessage({
             type: "save_enterprise",
             endpoint: enter_endpoint.value,
@@ -90,17 +99,17 @@
         });
     });
 
-    const button_hf = document.querySelector('.refact-welcome__hf');
-    button_hf.addEventListener("click", () => {
+    const button_hf_open_tokens = document.querySelector('.refact-welcome__hf_open_tokens');
+    button_hf_open_tokens.addEventListener("click", () => {
         vscode.postMessage({
-            type: "button_hf",
+            type: "button_hf_open_tokens",
         });
     });
 
     const button_refact = document.querySelector('.refact-welcome__refact');
     button_refact.addEventListener("click", () => {
         vscode.postMessage({
-            type: "button_refact",
+            type: "button_refact_open_streamlined",
         });
     });
 

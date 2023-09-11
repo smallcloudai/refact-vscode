@@ -787,7 +787,7 @@ body.vscode-light #logout {
 		margin-left: 0 !important;
 	}
     #privacy {
-		width: calc(100% - 36px - 32px - 10px);	
+		width: calc(100% - 36px - 32px - 10px);
     }
 	#key {
 		width: 32px !important;
@@ -913,11 +913,11 @@ body.vscode-light #logout {
 	box-sizing: border-box;
 }
 .refact-welcome__menu { }
-.refact-welcome__lead { 
+.refact-welcome__lead {
 	margin-bottom: 10px;
 }
 .refact-welcome__select,
-.refact-welcome__provider { 
+.refact-welcome__provider {
 	display: flex;
 	padding: 10px;
 	background-color: rgba(255, 255, 255, 0.05);
@@ -1038,7 +1038,7 @@ body.vscode-light .refact-welcome__provider:hover {
 	background-color: var(--vscode-editor-selectionBackground) !important;
 }
 .refact-welcome__hf {
-	border: 0;
+	/* border: 0;
 	display: block;
 	text-align: left;
 	padding: 0;
@@ -1046,19 +1046,19 @@ body.vscode-light .refact-welcome__provider:hover {
 	background: transparent;
 	margin-bottom: 30px;
 	margin-top: 15px;
+	color: var(--secondary); */
 	text-decoration: underline;
-	color: var(--secondary);
 	cursor: pointer;
 }
 body.vscode-light .refact-welcome__hf {
-	border: 0;
-	display: block;
+	/* border: 0;
+	display: inline;
 	text-align: left;
 	padding: 0;
 	margin: 0;
 	background: transparent;
 	margin-bottom: 30px;
-	margin-top: 15px;
+	margin-top: 15px; */
 	text-decoration: underline;
 }
 .refact-welcome__refact {
