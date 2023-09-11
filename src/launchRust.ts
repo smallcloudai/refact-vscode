@@ -94,12 +94,12 @@ export class RustBinaryBlob
                     if (str === "") {
                         continue;
                     }
-                    if (str.startsWith("PORT_BUSY")) {
+                    if (str.startsWith("PORT_BUSY ")) {
                         this.port = 0;
                         this.settings_changed();  // async function will run "later"
-                    } else if (str.startsWith("URL_NOT_WORKING")) {
+                    } else if (str.startsWith("URL_NOT_WORKING ")) {
                         this.bad_url_not_working(str.slice("URL_NOT_WOKRING ".length));
-                    } else if (str.startsWith("STARTED")) {
+                    } else if (str.startsWith("STARTED ")) {
                         this.started_fine();
                     } else {
                         console.error(`RUST unhandled ${str}`);
