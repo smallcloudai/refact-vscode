@@ -272,7 +272,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 </div>
                             </div>
                         </div>
-                        <button class="refact-welcome__back">&lsaquo;&nbsp; Back</button>
                         <div class="refact-welcome__enterprise refact-welcome__subscreen">
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
@@ -282,25 +281,63 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <label class="refact-welcome__label">API Key</label>
                                 <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
                             </div>
-                            <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
+                            <div class="refact-welcome__actions">
+                                <button data-target="enterprise" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
+                                <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
+                            </div>
                         </div>
                         <div class="refact-welcome__personal refact-welcome__subscreen">
-                            <div class="refact-welcome__subpanel">
-                                <h3>Huggingface Cloud</h3>
-                                <div>
-                                    <label class="refact-welcome__label">API Key</label>
-                                    <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                            <div class="refact-welcome__providers">
+                                <label class="refact-welcome__provider" data-type="huggingface">
+                                    <div class="refact-welcome__content">
+                                        <input type="radio" class="refact-welcome__proradio" value="huggingface" name="provider-type" />
+                                        <span>Huggingface Cloud</span>
+                                        <div class="refact-welcome__desc">
+                                            <ul>
+                                                <li>Features</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </label>
+                                <label class="refact-welcome__provider" data-type="refact">
+                                    <div class="refact-welcome__content">
+                                        <input type="radio" class="refact-welcome__proradio" value="refact" name="provider-type" />
+                                        <span>Refact Cloud</span>
+                                        <div class="refact-welcome__desc">
+                                            <ul>
+                                                <li>Features</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </label>
+                                <div class="refact-welcome__actions">
+                                    <button data-target="personal" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
+                                    <button class="refact-welcome__next refact-welcome__nextprov">Next&nbsp;&nbsp;&rsaquo;</button>
                                 </div>
-                                <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
-                                <button class="refact-welcome__hf">
-                                    Get your Huggingface Cloud API Key
-                                </button>
                             </div>
-                            <div class="refact-welcome__subpanel">
-                                <h3>Refact Cloud</h3>
-                                <button class="refact-welcome__refact">
-                                    Login / Create Account
-                                </button>
+                        </div>
+
+                        <div data-provider="huggingface" class="refact-welcome__subpanel">
+                            <h3>Huggingface Cloud</h3>
+                            <div>
+                                <label class="refact-welcome__label">API Key</label>
+                                <input class="refact-welcome__apikey refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                            </div>
+                            <button class="refact-welcome__hf">
+                            Get your Huggingface Cloud API Key
+                            </button>
+                            <div class="refact-welcome__actions">
+                                <button data-target="huggingface" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
+                                <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
+                            </div>
+                        </div>
+                        <div data-provider="refact" class="refact-welcome__subpanel">
+                            <h3>Refact Cloud</h3>
+                            <button class="refact-welcome__refact">
+                                Login / Create Account
+                            </button>
+                            <div class="refact-welcome__actions">
+                                <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
                             </div>
                         </div>
 
@@ -309,7 +346,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <label class="refact-welcome__label">Endpoint Address</label>
                                 <input class="refact-welcome__endpoint refact-welcome__input" type="text" name="endpoint_address" value="${manual_infurl}">
                             </div>
-                            <button class="refact-welcome__savebutton refact-welcome__savebutton--selfhosted">Save</button>
+                            <div class="refact-welcome__actions">
+                                <button data-target="selfhosted" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
+                                <button class="refact-welcome__savebutton refact-welcome__savebutton--selfhosted">Save</button>
+                            </div>
                         </div>
                     </div>
 

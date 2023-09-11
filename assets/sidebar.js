@@ -34,9 +34,28 @@
         change_welcome_subscreen(selection_type);
     });
 
-    function change_welcome_subscreen(selection_type) {
+    const next_provider_button = document.querySelector('.refact-welcome__nextprov');
+    next_provider_button.addEventListener("click", () => {
+        const selection_type = document.querySelector('.refact-welcome__proradio:checked').value;
+        change_provider_subscreen(selection_type);
+    });
+
+    function change_provider_subscreen(selection_type) {
         const screens = document.querySelectorAll(".refact-welcome__subscreen");
-        document.querySelector('.refact-welcome__back').style.display = "block";
+        screens.forEach((screen) => {
+            screen.classList.remove('refact-welcome__subscreen--selected');
+        });
+        switch (selection_type) {
+            case "refact":
+                document.querySelector('[data-provider="refact"]').classList.toggle('refact-welcome__subpanel--selected');
+                break;
+            case "huggingface":
+                document.querySelector('[data-provider="huggingface"]').classList.toggle('refact-welcome__subpanel--selected');
+                break;
+        }
+    }
+
+    function change_welcome_subscreen(selection_type) {
         document.querySelector('.refact-welcome__menu').style.display = "none";
         switch (selection_type) {
             case "enterprise":
@@ -62,7 +81,6 @@
 
     const save_enterprise = document.querySelector('.refact-welcome__savebutton--enterprise');
     save_enterprise.addEventListener("click", () => {
-        console.log('mmmm');
         const enter_endpoint = document.querySelector('.refact-welcome__enterendpoint');
         const enter_apikey = document.querySelector('.refact-welcome__apikey');
         vscode.postMessage({
@@ -79,22 +97,46 @@
         });
     });
 
-    const button_refact = document.querySelector('.refact-welcome__refact');
+    const button_refact = document.querySelector('.refact-welcome');
     button_refact.addEventListener("click", () => {
         vscode.postMessage({
             type: "button_refact",
         });
     });
 
-    const back_to_welcome = document.querySelector('.refact-welcome__back');
-    back_to_welcome.addEventListener("click", () => {
-        document.querySelector('.refact-welcome__back').style.display = "none";
-        document.querySelector('.refact-welcome__menu').style.display = "block";
-        const screens = document.querySelectorAll(".refact-welcome__subscreen");
-        screens.forEach((screen) => {
-            screen.classList.remove('refact-welcome__subscreen--selected');
+    const back_buttons = document.querySelectorAll('.refact-welcome__back');
+    back_buttons.forEach(button => {
+        button.addEventListener('click', function(event) {
+            const button_target = event.target.dataset.target;
+            let panels = document.querySelectorAll(".refact-welcome__subpanel");
+            switch (button_target) {
+                case "huggingface":
+                case "refact":
+                    panels.forEach((panel) => {
+                        panel.classList.remove('refact-welcome__subpanel--selected');
+                    });
+                    document.querySelector('.refact-welcome__personal').classList.toggle('refact-welcome__subscreen--selected');
+                    break;
+                default:
+                    const screens = document.querySelectorAll(".refact-welcome__subscreen");
+                    screens.forEach((screen) => {
+                        screen.classList.remove('refact-welcome__subscreen--selected');
+                    });
+                    document.querySelector('.refact-welcome__menu').style.display = "block";
+                    break;
+            }
         });
     });
+
+    // back_to_welcome.addEventListener("click", (event) => {
+    //     const back_target = 
+    //     document.querySelector('.refact-welcome__back').style.display = "none";
+    //     document.querySelector('.refact-welcome__menu').style.display = "block";
+    //     const screens = document.querySelectorAll(".refact-welcome__subscreen");
+    //     screens.forEach((screen) => {
+    //         screen.classList.remove('refact-welcome__subscreen--selected');
+    //     });
+    // });
 
     const chatButton = document.querySelector("#chat");
     chatButton.addEventListener("click", () => {
