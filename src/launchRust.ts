@@ -41,11 +41,13 @@ export class RustBinaryBlob
             }
         } else {
             console.log("RUST debug port is set, assuming debugging session, don't start rust binary");
+            this.cmdline = [];
             this.terminate();
             return;
         }
         let url: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
         if (url === undefined || url === null || url === "") {
+            this.cmdline = [];
             this.terminate();
             return;
         }
@@ -71,7 +73,6 @@ export class RustBinaryBlob
             console.log("RUST TERMINATE");
             this.process.kill();
             this.process = undefined;
-            this.cmdline = [];
         }
     }
 
