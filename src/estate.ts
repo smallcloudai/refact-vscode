@@ -241,9 +241,9 @@ export async function back_to_normal(state: StateOfEditor)
 
 function info2sidebar(ev_editor: vscode.TextEditor|undefined)
 {
-    if(global.side_panel !== undefined) {
-        global.side_panel.editor_inform_how_many_lines_selected(ev_editor);
-    }
+    // if(global.side_panel !== undefined) {
+    //     global.side_panel.editor_inform_how_many_lines_selected(ev_editor);
+    // }
 }
 
 

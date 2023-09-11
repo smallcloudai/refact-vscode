@@ -85,14 +85,14 @@ export class StatusBarMenu {
                 msg += _website_message || _inference_message;
             }
             this.menu.tooltip = msg;
-        } else if (!userLogin.check_if_login_worked()) { // condition here must be the same as in status_bar_clicked()
+        } else if (!userLogin.secret_api_key()) {
             this.menu.text = `$(account) Refact.ai`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
             this.menu.tooltip = _website_message || `Click to login`;
         } else {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
-            this.menu.tooltip = _website_message || _inference_message || "Welcome to Refact.ai";
+            this.menu.tooltip = _website_message || _inference_message || "Refact Plugin\nReady to work";
         }
     }
 

@@ -37,14 +37,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     ) {
         this._view = webviewView;
 
-        setTimeout(() => {
-            webviewView.webview.postMessage({
-                command: "editor_inform",
-                selected_lines_count: this.selected_lines_count,
-                access_level: this.access_level,
-            });
-        }, 1000);
-
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [this._context.extensionUri],
@@ -61,17 +53,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.type) {
-                // case "toolboxSelected": {
-                //     vscode.window.onDidChangeTextEditorSelection((e) => {
-                //         this.check_selection();
-                //     });
-                // }
                 case "focus_back_to_editor": {
                     vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
-                    break;
-                }
-                case "submit_like": {
-                    this.submit_like(data.function_name, data.like);
                     break;
                 }
                 case "submit_bookmark": {
@@ -95,86 +78,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         }
                     } else {
                         await open_chat_tab("", undefined, false, "", "");
-                    }
-                    break;
-                }
-                case "function_activated": {
-                    // if(vscode.workspace.getConfiguration().get('refactai.autoHideSidebar')) {
-                    //     vscode.commands.executeCommand('workbench.action.toggleSidebarVisibility');
-                    // }
-                    console.log('*** function_activated ***', data);
-                    if (!data.data_function) {
-                        console.log(["function_dict is not defined", data.data_function]);
-                        return;
-                    }
-                    let function_dict: any = JSON.parse(data.data_function);
-                    let editor = vscode.window.activeTextEditor;
-                    let function_name: string = "";
-                    let model_suggest: string = function_dict.model;
-                    let selected_text = "";
-                    if (editor) {
-                        let state = estate.state_of_editor(editor, "function_activated");
-                        let selection = editor.selection;
-                        let selection_empty = selection.isEmpty;
-                        // let selected_lines_count = selection.end.line - selection.start.line + 1;
-                        // let access_level = await privacy.get_file_access(editor.document.fileName);
-                        // should be, min < selected_lines_count < max, but we don't care because UI was disabled so wrong function is not likely to
-                        // happen, and we have the access level check closer to the socket in query_diff()
-                        if (selection_empty) {
-                            function_name = function_dict.function_highlight;
-                            if (!function_name) {
-                                function_name = function_dict.function_name;
-                            }
-                            if (selection_empty && function_dict.supports_highlight === false) {
-                                console.log(["no selection, but function", function_name, "doesn't support highlight"]);
-                                return;
-                            }
-                        } else {
-                            function_name = function_dict.function_selection;
-                            if (!function_name) {
-                                function_name = function_dict.function_name;
-                            }
-                            if (function_dict.supports_selection === false) {
-                                console.log(["selection present, but", function_name, "doesn't support selection"]);
-                                return;
-                            }
-                        }
-                        if (state) {
-                            let current_mode = state.get_mode();
-                            if (current_mode !== estate.Mode.Normal && current_mode !== estate.Mode.Highlight) {
-                                console.log([`don't run "${function_name}" because mode is ${current_mode}`]);
-                                return;
-                            }
-                            state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
-                            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
-                            await estate.switch_mode(state, estate.Mode.Normal);
-                        }
-                        selected_text = editor.document.getText(selection);
-                    }
-                    if (typeof function_name !== "string") {
-                        console.log(["function_name is not a string", function_name]);
-                        return;
-                    }
-                    let intent: string;
-                    if (function_dict.model_fixed_intent) {
-                        intent = function_dict.model_fixed_intent;
-                    } else {
-                        if (typeof data.intent !== "string") {
-                            console.log(["data.value is not a string", data.value]);
-                            return;
-                        }
-                        intent = data.intent;
-                    }
-                    if (function_name.includes("free-chat")) {
-                        await open_chat_tab(intent, editor, true, model_suggest);
-                    } else if (function_dict.supports_highlight && selected_text === "") {
-                        await extension.follow_intent_highlight(intent, function_name, model_suggest, !!function_dict.third_party);
-                    } else if (function_dict.supports_selection && selected_text !== "") {
-                        await extension.follow_intent_diff(intent, function_name, model_suggest, !!function_dict.third_party);
-                    } else if (!function_dict.supports_selection && selected_text === "") {
-                        await extension.follow_intent_diff(intent, function_name, model_suggest, !!function_dict.third_party);
-                    } else {
-                        console.log(["don't know how to run function", function_name]);
                     }
                     break;
                 }
@@ -224,7 +127,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     global.user_logged_in = "";
                     global.user_active_plan = "";
                     this.update_webview();
-                    await userLogin.login();
+                    await userLogin.inference_login();
                     break;
                 }
                 case "openSettings": {
@@ -235,49 +138,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.refact');
                     break;
                 }
-                // case "checkSelection": {
-                //     this.check_selection();
-                //     break;
-                // }
-                // case "checkSelectionDefault": {
-                //     this.check_selection_default(data.intent);
-                //     break;
-                // }
             }
         }); // onDidReceiveMessage
 
         webviewView.webview.postMessage({ command: "focus" });
     } // resolveWebView
-
-    public async editor_inform_how_many_lines_selected(ev_editor: vscode.TextEditor|undefined)
-    {
-        let selected_lines: number = 0;
-        let access_level: number = -1;
-        if (ev_editor) {
-            if (!ev_editor.selection.isEmpty) {
-                selected_lines = 1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
-            }
-            access_level = await privacy.get_file_access(ev_editor.document.fileName);
-        }
-        let state = estate.state_of_editor(ev_editor, "how_many_lines_selected");
-        if (state) {
-            let current_mode = state.get_mode();
-            if (current_mode !== estate.Mode.Normal && current_mode !== estate.Mode.Highlight) {
-                access_level = -1;
-            }
-        }
-        this.selected_lines_count = selected_lines;
-        this.access_level = access_level;
-        if (this._view) {
-            if (this._view.webview) {
-                this._view.webview.postMessage({
-                    command: "editor_inform",
-                    selected_lines_count: this.selected_lines_count,
-                    access_level: access_level,   // this doesn't decide to proceed or not, this is just for the UI
-                });
-            }
-        }
-    }
 
     public update_webview()
     {
@@ -297,8 +162,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2web_custom_infurl: global.custom_infurl,
             ts2web_plan: plan_msg,
             ts2web_metering_balance: global.user_metering_balance,
-            ts2web_longthink_functions: global.longthink_functions_today,
-            ts2web_longthink_filters: global.longthink_filters,
             ts2web_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
         });
     }
@@ -332,87 +195,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return this._view!.webview.postMessage({ command: "update_bookmarks_list", value: bookmarks });
     }
 
-    public async submit_like(function_name: string, like: number) {
-        const apiKey = userLogin.secret_api_key();
-        if (!apiKey) {
-            return;
-        }
-        const headers = {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-        };
-        let url = `https://www.smallcloud.ai/v1/longthink-like?function_name=${function_name}&like=${like}`;
-        let response = await fetchH2.fetch(url, {
-            method: "GET",
-            headers: headers,
-        });
-        if (response.status !== 200) {
-            console.log([response.status, url]);
-            return;
-        }
-        if (response.status === 200) {
-            let json = await response.json();
-            if(json.retcode === 'OK') {
-                let longthink_functions_today: {[key: string]: {[key: string]: any}} | undefined = global.longthink_functions_today; // any or number
-                if(longthink_functions_today !== undefined) {
-                    for (const key of Object.keys(longthink_functions_today)) {
-                        if(key === function_name) {
-                            if(json.inserted === 1) {
-                                longthink_functions_today[key].likes += 1;
-                                longthink_functions_today[key].is_liked = 1;
-                            }
-                            if(json.deleted === 1) {
-                                longthink_functions_today[key].likes -= 1;
-                                longthink_functions_today[key].is_liked = 0;
-                            }
-                            this._view!.webview.postMessage({ command: "update_longthink_functions", value: longthink_functions_today});
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
-    // public async presetIntent(intent: string) {
-    //     let editor = vscode.window.activeTextEditor;
-    //     if (!editor) {
-    //         return;
-    //     }
-    //     let selection = editor.selection;
-    //     let selectionEmpty = selection.isEmpty;
-
-    //     if (selectionEmpty) {
-    //         if (intent) {
-    //             highlight.query_highlight(editor, intent);
-    //         }
-    //     } else {
-    //         if (intent) {
-    //             estate.saveIntent(intent);
-    //             editor.selection = new vscode.Selection(selection.start, selection.start);
-    //             interactiveDiff.query_diff(editor, selection, "diff-selection");
-    //         }
-    //     }
-    // }
-
-    // public updateQuery(intent: string) {
-    //     if (!this._view) {
-    //         return;
-    //     }
-    //     this._view!.webview.postMessage({ command: "updateQuery", value: intent });
-    // }
-
-    // public addHistory(intent: string) {
-    //     if (!this._view) {
-    //         return;
-    //     }
-    //     this._history.push(intent);
-    //     this._view!.webview.postMessage({
-    //         command: "updateHistory",
-    //         value: this._history,
-    //     });
-    // }
-
     private _getHtmlForWebview(webview: vscode.Webview) {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
@@ -444,8 +226,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="refact-welcome">
                         <div class="refact-welcome__menu">
                             <div class="refact-welcome__container">
-                                <div class="refact-welcome__lead">Refact works for:</div>
-                                
+                                <div class="refact-welcome__lead">Refact plugin initial setup:</div>
+
                                 <label class="refact-welcome__select" data-type="enterprise">
                                     <div class="refact-welcome__content">
                                         <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />

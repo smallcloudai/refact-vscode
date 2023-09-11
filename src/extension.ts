@@ -32,8 +32,6 @@ declare global {
     var user_metering_balance: number;
     var global_context: vscode.ExtensionContext|undefined;
     var streamlined_login_countdown: number;
-    var longthink_functions_today: {[key: string]: {[key: string]: string}} | undefined;
-    var longthink_filters: string[];
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
     var custom_infurl: boolean;
@@ -132,8 +130,7 @@ let global_autologin_timer: NodeJS.Timeout|undefined = undefined;
 
 async function login_clicked()
 {
-    let got_it = await userLogin.login();
-    if (got_it === "OK") {
+    if (userLogin.secret_api_key()) {
         global.streamlined_login_countdown = -1;
         return;
     }
@@ -148,7 +145,7 @@ async function login_clicked()
     global_autologin_timer = setInterval(() => {
         global.streamlined_login_countdown = 10 - (i % 10);
         if (global.user_logged_in || i % 10 === 0) {
-            userLogin.login();
+            userLogin.streamlined_login();
         } else {
             if (global.side_panel) {
                 global.side_panel.update_webview();
@@ -295,10 +292,6 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...statusBar.status_bar_init());
     context.subscriptions.push(...estate.estate_init());
 
-    setTimeout(() => {
-        userLogin.login();
-    }, 100);
-
     global.rust_binary_blob = new launchRust.RustBinaryBlob(
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
     );
@@ -311,7 +304,6 @@ export function activate(context: vscode.ExtensionContext)
             }
             config_debounce = setTimeout(() => {
                 fill_no_user();
-                userLogin.login();
                 if (global.rust_binary_blob) {
                     global.rust_binary_blob.settings_changed();
                 }
@@ -339,7 +331,6 @@ function fill_no_user()
     global.user_active_plan = "";
     global.user_metering_balance = 0;
     global.status_bar.choose_color();
-    global.longthink_functions_today = {};
     if(global.side_panel) {
         global.side_panel.update_webview();
     }
@@ -432,7 +423,7 @@ export function deactivate(context: vscode.ExtensionContext)
 export async function status_bar_clicked()
 {
     let editor = vscode.window.activeTextEditor;
-    if (!userLogin.check_if_login_worked()) {
+    if (!userLogin.secret_api_key()) {
         userLogin.login_message();
         return;
     }

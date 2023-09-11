@@ -66,16 +66,10 @@ export async function report_success_or_failure(
         global.status_bar.url_and_model_worked(related_url, model_name);
     }
     global.status_bar.set_socket_error(!positive, error_message);
-    if (userLogin.check_if_login_worked()) {
-        if (global.side_panel) {
-            global.side_panel.update_webview();
-        }
-    } else {
-        if (global.side_panel) {
-            global.side_panel.update_webview();
-        }
-        global.status_bar.url_and_model_worked("", "");
+    if (global.side_panel) {
+        global.side_panel.update_webview();
     }
+    global.status_bar.url_and_model_worked("", "");
     let error_message_json = JSON.stringify(error_message);
     let msg = `${positive ? "1" : "0"}\t${scope}\t${related_url}\t${error_message_json}`;  // tabs for field separation, still human readable
     // Typical msg:

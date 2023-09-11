@@ -73,24 +73,25 @@ export class ChatTab {
             chat_attach_default: false,
             manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl")
         };
-        if (global.longthink_functions_today) {
-            const keys = Object.keys(global.longthink_functions_today);
-            for (let i = 0; i < keys.length; i++) {
-                let key = keys[i];
-                if (key.includes("chat-") || key.includes("-chat")) {
-                    let function_dict = global.longthink_functions_today[key];
-                    let model = function_dict.model;
-                    if (model === "open-chat") { // TODO: for backward compatibility, remove this later
-                        model = "gpt3.5";
-                    }
-                    fireup_message["chat_models"].push([model, function_dict.function_name]);
-                    free_floating_tab.model_to_thirdparty[model] = !!(function_dict.thirdparty);
-                }
-            }
-            if (fireup_message["chat_models"].length === 0 && !global.chat_v1_style) {
-                fireup_message["chat_models"] = [["gpt3.5", "chat"]];
-            }
-        }
+        // TODO: use caps instead
+        // if (global.longthink_functions_today) {
+        //     const keys = Object.keys(global.longthink_functions_today);
+        //     for (let i = 0; i < keys.length; i++) {
+        //         let key = keys[i];
+        //         if (key.includes("chat-") || key.includes("-chat")) {
+        //             let function_dict = global.longthink_functions_today[key];
+        //             let model = function_dict.model;
+        //             if (model === "open-chat") { // TODO: for backward compatibility, remove this later
+        //                 model = "gpt3.5";
+        //             }
+        //             fireup_message["chat_models"].push([model, function_dict.function_name]);
+        //             free_floating_tab.model_to_thirdparty[model] = !!(function_dict.thirdparty);
+        //         }
+        //     }
+        //     if (fireup_message["chat_models"].length === 0 && !global.chat_v1_style) {
+        //         fireup_message["chat_models"] = [["gpt3.5", "chat"]];
+        //     }
+        // }
         if (editor) {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
