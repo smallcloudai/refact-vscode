@@ -74,7 +74,7 @@ export class PendingRequest {
         this.streaming_error = false;
         this.api_fields = api_fields;
         h2stream.catch((error) => {
-            if (!error.message.includes("aborted")) {
+            if (error.message && !error.message.includes("aborted")) {
                 usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, error, "");
             } else {
                 // Totally normal, user cancelled the request.
@@ -188,8 +188,9 @@ export async function wait_until_all_requests_finished()
     for (let i=0; i<_global_reqs.length; i++) {
         let r = _global_reqs[i];
         if (r.apiPromise !== undefined) {
+            console.log([r.seq, "wwwwwwwwwwwwwwwww"]);
             let tmp = await r.apiPromise;
-            console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
+            r.apiPromise = undefined;
         }
     }
 }
@@ -402,6 +403,7 @@ export function fetch_code_completion(
 {
     let url = rust_url("/v1/code-completion");
     if (!url) {
+        console.log(["fetch_code_completion: No rust binary working"]);
         return Promise.reject("No rust binary working");
     }
     let third_party = false;
