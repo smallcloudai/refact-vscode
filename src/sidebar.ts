@@ -82,10 +82,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
 
-                case "login": {
-                    vscode.commands.executeCommand('refactaicmd.login');
-                    break;
-                }
                 case "button_refact": {
                     vscode.commands.executeCommand('refactaicmd.login');
                     break;
@@ -155,14 +151,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         } else if (plan_msg) {
             plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
         }
+        console.log("!!userLogin.secret_api_key(), ", !!userLogin.secret_api_key());
 
         this._view!.webview.postMessage({
-            command: "ts2web",
-            ts2web_user: global.user_logged_in,
-            ts2web_custom_infurl: global.custom_infurl,
-            ts2web_plan: plan_msg,
-            ts2web_metering_balance: global.user_metering_balance,
-            ts2web_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
+            command: "ts2js",
+            ts2js_user: global.user_logged_in,
+            ts2js_havekey: !!userLogin.secret_api_key(),
+            ts2js_plan: plan_msg,
+            ts2js_metering_balance: global.user_metering_balance,
+            ts2js_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
         });
     }
 
@@ -355,7 +352,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                     <div class="sidebar-controls">
                         <div class="sidebar-buttons">
-                            <button tabindex="-1" id="login">Login / Register</button>
+                            <div></div>
                             <button tabindex="-1" id="chat"><span></span>New Chat</button>
                             <button tabindex="-1" id="privacy"><span></span>Privacy</button>
                             <button tabindex="-1" id="settings"><i></i><span>Settings</span></button>

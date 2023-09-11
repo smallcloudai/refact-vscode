@@ -34,7 +34,6 @@ declare global {
     var streamlined_login_countdown: number;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
-    var custom_infurl: boolean;
     var chat_v1_style: boolean;
 }
 
@@ -262,7 +261,6 @@ export function activate(context: vscode.ExtensionContext)
 
     let settingsCommand = vscode.commands.registerCommand('refactaicmd.openSettings', () => {
         vscode.commands.executeCommand( 'workbench.action.openSettings', '@ext:smallcloud.refact' );
-        // vscode.commands.executeCommand( 'workbench.action.openGlobalKeybindings', 'Refact.ai' );
     });
     context.subscriptions.push(settingsCommand);
 
@@ -274,7 +272,7 @@ export function activate(context: vscode.ExtensionContext)
         usageStats.report_usage_stats();
         clearInterval(stats_timer);
         // We at SMC need to know quickly if there is any widespread problems,
-        // please look inside: there is not much being sent.
+        // look inside: there is not much being sent.
         stats_timer = setInterval(() => {
             usageStats.report_usage_stats();
         }, 3600000); // 1 hour
@@ -298,7 +296,7 @@ export function activate(context: vscode.ExtensionContext)
     global.rust_binary_blob.settings_changed();  // async function will finish later
     let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration('refactai.infurl') || e.affectsConfiguration('refactai.addressURL') || e.affectsConfiguration('refactai.xDebugPort')) {
+        if (e.affectsConfiguration("refactai.infurl") || e.affectsConfiguration("refactai.addressURL") || e.affectsConfiguration("refactai.xDebugPort")) {
             if (config_debounce) {
                 clearTimeout(config_debounce);
             }
@@ -308,6 +306,11 @@ export function activate(context: vscode.ExtensionContext)
                     global.rust_binary_blob.settings_changed();
                 }
             }, 1000);
+        }
+        if (e.affectsConfiguration("refactai.apiKey")) {
+            if (global.side_panel) {
+                global.side_panel.update_webview();
+            }
         }
     });
 

@@ -42,14 +42,9 @@ export async function account_message(info: string, action: string, url: string)
 export function secret_api_key(): string
 {
     let key = vscode.workspace.getConfiguration().get('refactai.apiKey');
-    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
-    global.custom_infurl = !!manual_infurl;
     if (!key) {
         // Backward compatibility: codify is the old name
         key = vscode.workspace.getConfiguration().get('codify.apiKey');
-    }
-    if (!key && manual_infurl) {
-        key = "self-hosting";
     }
     if (!key) { return ""; }
     if (typeof key !== 'string') { return ""; }

@@ -97,7 +97,7 @@
         });
     });
 
-    const button_refact = document.querySelector('.refact-welcome');
+    const button_refact = document.querySelector('.refact-welcome__refact');
     button_refact.addEventListener("click", () => {
         vscode.postMessage({
             type: "button_refact",
@@ -129,7 +129,7 @@
     });
 
     // back_to_welcome.addEventListener("click", (event) => {
-    //     const back_target = 
+    //     const back_target =
     //     document.querySelector('.refact-welcome__back').style.display = "none";
     //     document.querySelector('.refact-welcome__menu').style.display = "block";
     //     const screens = document.querySelectorAll(".refact-welcome__subscreen");
@@ -171,12 +171,6 @@
     const discordButton = document.querySelector("#discord");
     discordButton.addEventListener("click", () => {
         vscode.postMessage({ type: "js2ts_discord" });
-    });
-
-
-    const loginButton = document.querySelector("#login");
-    loginButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "login" });
     });
 
     const privacyButton = document.querySelector("#privacy");
@@ -355,53 +349,46 @@
                 break;
             case "update_longthink_functions":
                 longthink_functions_today = message.value;
-                // toolbox_update_likes(); -- updates anyway, not needed
+                // toolbox_update_likes();
                 break;
             case "update_bookmarks_list":
                 function_bookmarks = message.value;
                 break;
-            case "ts2web":
+            case "ts2js":
+                let welcome = document.querySelector('.refact-welcome');
                 let info = document.querySelector('.sidebar-logged');
                 let plan = document.querySelector('.sidebar-plan');
                 let coins = document.querySelector('.sidebar-coins');
-                let login = document.querySelector('#login');
                 let profile = document.querySelector('#profile');
+                let sidebar_account = document.querySelector('.sidebar-account');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
-                let bug = document.querySelector('#report_bugs');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
-                let settings = document.querySelector('#settings');
-                let keys = document.querySelector('#keys');
+                let hotkeys = document.querySelector('#keys');
+                welcome.style.display = message.ts2js_havekey ? 'none' : 'block';
+                info.style.display = message.ts2js_user ? 'flex' : '';
+                plan.style.display = message.ts2js_user ? 'flex' : '';
+                document.querySelector('.sidebar-logged span').innerHTML = message.ts2js_user;
+                document.querySelector('.sidebar-plan span').innerHTML = message.ts2js_plan;
+                sidebar_account.style.display = message.ts2js_user ? 'flex' : 'none'; // common box for name and coins
 
-                discord.style.display = 'inline-flex';
-                bug.style.display = 'inline-flex';
-                info.style.display = message.ts2web_user ? 'flex' : '';
-                plan.style.display = message.ts2web_plan ? 'flex' : '';
-                document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
-                document.querySelector('.sidebar-plan span').innerHTML = message.ts2web_plan;
-                login.style.display = message.ts2web_user ? 'none' : 'block';
-                profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                chat.style.display = message.ts2web_user ? 'flex' : 'none';
-                // data.style.display = message.ts2web_user ? 'block' : 'none';
-                coins.style.display = message.ts2web_user ? 'flex' : 'none';
-                privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
+                profile.style.display = message.ts2js_user ? 'inline-flex' : 'none';
+                logout.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                // data.style.display = message.ts2js_user ? 'block' : 'none';
+                coins.style.display = message.ts2js_user ? 'flex' : 'none';
+                privacy.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 // TODO: always show settings, a place to put custom infurl
-                // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                if(message.ts2web_user === 'self-hosted') {
-                    document.querySelector('.sidebar-account').style.display = 'none';
-                    profile.style.display = 'none';
+                // settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                if (message.ts2js_metering_balance) {
+                    document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
                 }
-
-                if (message.ts2web_metering_balance) {
-                    document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2web_metering_balance / 100);
+                if (message.ts2js_staging) {
+                    staging = message.ts2js_staging;
                 }
-                if(message.ts2web_staging) {
-                    staging = message.ts2web_staging;
-                }
-                if(message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
+                if (message.ts2js_havekey) {
                     login.style.display = 'none';
                     // settings.classList.toggle('settings-full');
                 }
