@@ -45,7 +45,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
         this.update_webview();
-        this.get_bookmarks();
+        // this.get_bookmarks();
 
         vscode.commands.registerCommand('workbench.action.focusSideBar', () => {
             webviewView.webview.postMessage({ command: "focus" });
@@ -57,10 +57,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
                     break;
                 }
-                case "submit_bookmark": {
-                    this.set_bookmark(data.function_name, data.state);
-                    break;
-                }
+                // case "submit_bookmark": {
+                //     this.set_bookmark(data.function_name, data.state);
+                //     break;
+                // }
                 case "open_new_chat": {
                     let question = data.question;
                     let chat_empty = data.chat_empty;
@@ -160,59 +160,63 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         } else if (plan_msg) {
             plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
         }
-        console.log("!!userLogin.secret_api_key(), ", !!userLogin.secret_api_key());
+
+        let have_key = !!userLogin.secret_api_key();
+        console.log(`have_key: ${have_key}`);
 
         this._view!.webview.postMessage({
             command: "ts2js",
             ts2js_user: global.user_logged_in,
-            ts2js_havekey: !!userLogin.secret_api_key(),
+            ts2js_havekey: have_key,
             ts2js_plan: plan_msg,
             ts2js_metering_balance: global.user_metering_balance,
             ts2js_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
         });
     }
 
-    public async set_bookmark(function_name: string, state: boolean) {
-        let global_context: vscode.ExtensionContext|undefined = global.global_context;
-        if (global_context === undefined) {
-            return;
-        }
-        let data: {[key: string]: boolean} = {};
-        let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('refactBookmarks');
-        if (bookmarks !== undefined) {
-            data = bookmarks;
-        }
-        data[function_name] = state;
-        console.log(['Setting bookmark:', function_name, state]);
-        await global_context.globalState.update('refactBookmarks', data);
-        this.get_bookmarks();
-    }
+    // public async set_bookmark(function_name: string, state: boolean) {
+    //     let global_context: vscode.ExtensionContext|undefined = global.global_context;
+    //     if (global_context === undefined) {
+    //         return;
+    //     }
+    //     let data: {[key: string]: boolean} = {};
+    //     let bookmarks: {[key: string]: boolean}|undefined = await global_context.globalState.get('refactBookmarks');
+    //     if (bookmarks !== undefined) {
+    //         data = bookmarks;
+    //     }
+    //     data[function_name] = state;
+    //     console.log(['Setting bookmark:', function_name, state]);
+    //     await global_context.globalState.update('refactBookmarks', data);
+    //     this.get_bookmarks();
+    // }
 
-    public async get_bookmarks() {
-        let global_context: vscode.ExtensionContext|undefined = global.global_context;
-        if (global_context === undefined) {
-            return 0;
-        }
-        let bookmarks_: {[key: string]: boolean}|undefined = await global_context.globalState.get('refactBookmarks');
-        let bookmarks: {[key: string]: boolean} = {};
-        if (bookmarks_ !== undefined) {
-            bookmarks = bookmarks_;
-        }
-        return this._view!.webview.postMessage({ command: "update_bookmarks_list", value: bookmarks });
-    }
+    // public async get_bookmarks()
+    // {
+    //     let global_context: vscode.ExtensionContext|undefined = global.global_context;
+    //     if (global_context === undefined) {
+    //         return 0;
+    //     }
+    //     let bookmarks_: {[key: string]: boolean}|undefined = await global_context.globalState.get('refactBookmarks');
+    //     let bookmarks: {[key: string]: boolean} = {};
+    //     if (bookmarks_ !== undefined) {
+    //         bookmarks = bookmarks_;
+    //     }
+    //     return this._view!.webview.postMessage({ command: "update_bookmarks_list", value: bookmarks });
+    // }
 
-    private _getHtmlForWebview(webview: vscode.Webview) {
+    private _getHtmlForWebview(webview: vscode.Webview)
+    {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
             );
-            const styleMainUri = webview.asWebviewUri(
-                vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
-                );
-                const nonce = this.getNonce();
-                const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
-                const manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+        const styleMainUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
+            );
+            const nonce = this.getNonce();
+            const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
+            const manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
 
-                return `<!DOCTYPE html>
+            return `<!DOCTYPE html>
                 <html lang="en">
                 <head>
                 <meta charset="UTF-8">
@@ -229,7 +233,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div id="sidebar" class="sidebar">
                     <div class="toolbox">
-                    <div class="refact-welcome">
+                    <div class="refact-welcome" style="display: none">
                         <div class="refact-welcome__menu">
                             <div class="refact-welcome__container">
                                 <div class="refact-welcome__lead">Refact plugin initial setup:</div>
@@ -386,6 +390,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 </body>
                 </html>`;
     }
+
     getNonce() {
         let text = "";
         const possible =
@@ -394,9 +399,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
         return text;
-    }
-    save_like(function_name: string) {
-
     }
 }
 
