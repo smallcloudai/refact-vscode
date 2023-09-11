@@ -5,6 +5,7 @@ import * as userLogin from "./userLogin";
 import { marked } from "marked"; // Markdown parser documentation: https://marked.js.org/
 import * as estate from "./estate";
 import * as crlf from "./crlf";
+import ChatHistoryProvider from "./chatHistory";
 
 export class ChatTab {
   // public static current_tab: ChatTab | undefined;
@@ -18,10 +19,14 @@ export class ChatTab {
   public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
   public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
   public model_to_thirdparty: { [key: string]: boolean };
+  private chatHistoryProvider: ChatHistoryProvider;
+  private chatId: string = "";
 
   private constructor(
     panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
+    chatHistoryProvider: ChatHistoryProvider,
+    chatId: string,
     context: any
   ) {
     this.web_panel = panel;
@@ -32,6 +37,10 @@ export class ChatTab {
     this.messages = [];
     this.model_to_thirdparty = {};
     this.cancellationTokenSource = new vscode.CancellationTokenSource();
+    this.chatHistoryProvider = chatHistoryProvider;
+    if (chatId === "" || chatId === undefined) {
+      this.chatId = this.chatHistoryProvider.generateChatId();
+    }
   }
 
   public static async activate_from_outside(
@@ -39,7 +48,12 @@ export class ChatTab {
     editor: vscode.TextEditor | undefined,
     attach_default: boolean,
     use_model: string,
-    use_model_function: string
+    use_model_function: string,
+    old_chat: boolean,
+    questions: string[] | undefined,
+    answers: string[] | undefined,
+    chatId: string,
+    chatHistoryProvider: ChatHistoryProvider
   ) {
     let context: vscode.ExtensionContext | undefined = global.global_context;
     if (!context) {
@@ -59,7 +73,13 @@ export class ChatTab {
       context.asAbsolutePath("images/discussion-bubble.svg")
     );
 
-    let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
+    let free_floating_tab = new ChatTab(
+      panel,
+      context.extensionUri,
+      chatHistoryProvider,
+      chatId,
+      context
+    );
     let code_snippet = "";
     free_floating_tab.working_on_snippet_range = undefined;
     free_floating_tab.working_on_snippet_editor = undefined;
@@ -76,6 +96,7 @@ export class ChatTab {
       chat_attach_default: false,
       manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl"),
     };
+
     if (global.longthink_functions_today) {
       const keys = Object.keys(global.longthink_functions_today);
       for (let i = 0; i < keys.length; i++) {
@@ -146,6 +167,27 @@ export class ChatTab {
       free_floating_tab.working_on_attach_code = attach;
     }
     free_floating_tab.working_on_snippet_code = code_snippet;
+
+    if (old_chat && questions) {
+      let messages_backup: [string, string][] = [];
+      //console.log("adding old chat");
+
+      for (let i = 0; i < questions.length; i++) {
+        const question = questions[i];
+        const answer = answers && answers.length > i ? answers[i] : null;
+
+        free_floating_tab.messages.push(["user", question]);
+        free_floating_tab._question_to_div(question, messages_backup);
+        messages_backup.push(["user", question]);
+
+        if (answer) {
+          free_floating_tab.messages.push(["assistant", answer]);
+          free_floating_tab._answer_to_div(answer, messages_backup);
+          messages_backup.push(["assistant", answer]);
+        }
+      }
+    }
+
     if (question) {
       if (code_snippet) {
         question = "```\n" + code_snippet + "\n```\n" + question;
@@ -232,6 +274,7 @@ export class ChatTab {
             data.chat_model_function,
             data.chat_attach_file
           );
+          free_floating_tab.messages.forEach((i) => console.log(i));
           break;
         }
         case "stop-clicked": {
@@ -240,6 +283,11 @@ export class ChatTab {
         }
         case "reset-messages": {
           free_floating_tab.messages = data.messages_backup;
+          free_floating_tab.chatHistoryProvider.popLastMessageFromChat(
+            free_floating_tab.chatId,
+            true,
+            true
+          );
           break;
         }
       }
@@ -280,6 +328,26 @@ export class ChatTab {
       command: "chat-post-question",
       question_html: html,
       question_raw: question,
+      messages_backup: messages_backup,
+    });
+  }
+
+  private _answer_to_div(answer: string, messages_backup: [string, string][]) {
+    let valid_html = false;
+    let html = "";
+    try {
+      html = marked.parse(answer);
+      valid_html = true;
+    } catch (e) {
+      valid_html = false;
+    }
+    if (!valid_html) {
+      html = answer;
+    }
+    this.web_panel.webview.postMessage({
+      command: "chat-post-answer",
+      answer_html: html,
+      answer_raw: answer,
       messages_backup: messages_backup,
     });
   }
@@ -327,6 +395,7 @@ export class ChatTab {
       this.web_panel.title = first_15_characters;
       if (attach_file) {
         this.messages.push(["user", this.working_on_attach_code]);
+
         this.messages.push([
           "assistant",
           "Thanks for context, what's your question?",
@@ -342,12 +411,24 @@ export class ChatTab {
     }
 
     let messages_backup = this.messages.slice();
+
+    //local save + globalStorage save question
     this.messages.push(["user", question]);
+    await this.chatHistoryProvider.addMessageToChat(
+      this.chatId,
+      question,
+      "",
+      model,
+      model_function,
+      this.web_panel.title
+    );
+
     if (this.messages.length > 10) {
       this.messages.shift();
       this.messages.shift(); // so it always starts with a user
     }
     this._question_to_div(question, messages_backup);
+    //add question to history
     this.web_panel.webview.postMessage({
       command: "chat-post-answer",
       answer_html: "⏳",
@@ -355,6 +436,8 @@ export class ChatTab {
       have_editor: false,
     });
     await fetchAPI.wait_until_all_requests_finished();
+
+    //add to history once all requests are finished
 
     let answer = "";
     let stack_web_panel = this.web_panel;
@@ -393,7 +476,8 @@ export class ChatTab {
           } catch (e) {
             valid_html = false;
           }
-          //console.log("answer html: " + html);
+          console.log("answer html: " + html);
+
           if (valid_html) {
             stack_web_panel.webview.postMessage({
               command: "chat-post-answer",
@@ -438,6 +522,15 @@ export class ChatTab {
         });
       } else {
         stack_this.messages.push(["assistant", answer]);
+        await stack_this.chatHistoryProvider.addMessageToChat(
+          stack_this.chatId,
+          "",
+          answer,
+          model,
+          model_function,
+          stack_this.web_panel.title
+        );
+
         stack_this.web_panel.webview.postMessage({
           command: "chat-end-streaming",
         });
@@ -475,6 +568,9 @@ export class ChatTab {
     const styleMainUri = webview.asWebviewUri(
       vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
     );
+    const highlight = webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, "assets", "highlight.js")
+    );
 
     const nonce = ChatTab.getNonce();
 
@@ -491,8 +587,7 @@ export class ChatTab {
 
                 <title>Refact.ai Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/default.min.css">
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script> 
+                 
             </head>
             <body>
                 <div class="refactcss-chat">
@@ -512,16 +607,17 @@ export class ChatTab {
                         </div>
                     </div>
                 </div>                
+                <script nonce="${nonce}" src="${scriptUri}"></script>
+                <script nonce="${nonce}" src="${highlight}"></script>
                 <script>
-                  const observer = new MutationObserver( list => {
-                    const evt = new CustomEvent('dom-changed', {detail: list});
-                    document.body.dispatchEvent(evt)
-                  });
-                  observer.observe(document.body, {attributes: true, childList: true, subtree: true});
+                  const observer = new MutationObserver(list => {
+                  const evt = new CustomEvent('dom-changed', { detail: list });
+                  document.body.dispatchEvent(evt);
+                });
+                  observer.observe(document.body, { attributes: true, childList: true, subtree: true });
 
                   document.body.addEventListener('dom-changed', e => hljs.highlightAll());
-                </script>
-                <script nonce="${nonce}" src="${scriptUri}"></script>
+    </script>
             </body>
             </html>`;
   }

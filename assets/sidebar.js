@@ -26,8 +26,7 @@
     let history_mode = false;
     let command_mode = false;
 
-    function reset_everything_about_commands()
-    {
+    function reset_everything_about_commands() {
         current_history = 0;
         command_mode = false;
         history_mode = false;
@@ -117,7 +116,7 @@
         if (event.key === "Enter") {
             let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
             let single_page = document.querySelector(".item-active");  // single page
-            if(toolboxSearch.value.endsWith("?")) {
+            if (toolboxSearch.value.endsWith("?")) {
                 let intent = toolboxSearch.value;
                 vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
             }
@@ -166,23 +165,23 @@
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement.parentElement;
             let selected_function = last_model_used[target.dataset.funciton_name];
-            if(!selected_function) {
-                if(target.dataset.function) {
-                    if(target.dataset.ids) {
+            if (!selected_function) {
+                if (target.dataset.function) {
+                    if (target.dataset.ids) {
                         const current_ids = JSON.parse(target.dataset.ids);
-                        if(current_ids.length > 0) {
+                        if (current_ids.length > 0) {
                             selected_function = current_ids[0];
                         }
                         else {
                             selected_function = target.dataset.function_name;
-                            if(staging) {
+                            if (staging) {
                                 selected_function = 'staging-' + selected_function;
                             }
                         }
                     }
                     else {
                         selected_function = target.dataset.function_name;
-                        if(staging) {
+                        if (staging) {
                             selected_function = 'staging-' + selected_function;
                         }
                     }
@@ -191,11 +190,11 @@
             if (!target) {
                 return;
             }
-            if(event.target.parentElement.classList.contains('toolbox-content-actions')) {
+            if (event.target.parentElement.classList.contains('toolbox-content-actions')) {
                 let parent_function = event.target.parentElement.parentElement.parentElement;
                 const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
                 const hasOptions = select && select.options && select.options.length > 0;
-                if(hasOptions) {
+                if (hasOptions) {
                     selected_function = select.value;
                     selected_model = select.querySelector('option[value="' + selected_function + '"]').innerHTML;
                     pref_model_func[target.id] = selected_model;
@@ -229,6 +228,11 @@
     const chatButton = document.querySelector("#chat");
     chatButton.addEventListener("click", () => {
         vscode.postMessage({ type: "open_new_chat", question: '', chat_empty: true, chat_model: "" });
+    });
+
+    const chatHistoryButton = document.querySelector("#history");
+    chatHistoryButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "open_chat_history" });
     });
 
     const settingsButton = document.querySelector("#settings");
@@ -306,7 +310,7 @@
     function function_tag(function_name) {
         let result = false;
         longthink_filters.forEach((item) => {
-            if(function_name.toLowerCase().endsWith(item.toLowerCase())) {
+            if (function_name.toLowerCase().endsWith(item.toLowerCase())) {
                 result = item;
             }
         });
@@ -334,9 +338,9 @@
             let item = data[key];
             // render_function(data[key]);
 
-            if(document.querySelector(`.toolbox-item[data-title="${item.label}"]`)) {
+            if (document.querySelector(`.toolbox-item[data-title="${item.label}"]`)) {
                 let tag = function_tag(item.function_name);
-                if(tag) {
+                if (tag) {
                     const label_model = document.createElement("span");
                     label_model.classList.add('toolbox-function');
                     label_model.innerHTML = 'Multiple';
@@ -462,7 +466,7 @@
             bookmark_button.addEventListener('click', function () {
                 const current_icon = this.querySelector('i');
                 let current_bookmark_state;
-                if(current_icon.classList.contains("toolbox-mark-empty")) {
+                if (current_icon.classList.contains("toolbox-mark-empty")) {
                     current_icon.classList.remove("toolbox-mark-empty");
                     current_icon.classList.add("toolbox-mark");
                     current_bookmark_state = true;
@@ -479,7 +483,7 @@
             likes_button.addEventListener('click', function () {
                 const current_icon = this.querySelector('i');
                 let current_like_state;
-                if(current_icon.classList.contains("toolbox-like-empty")) {
+                if (current_icon.classList.contains("toolbox-like-empty")) {
                     current_icon.classList.remove("toolbox-like-empty");
                     current_icon.classList.add("toolbox-like");
                     current_like_state = 1;
@@ -514,13 +518,13 @@
             const label_wrapper = document.createElement("span");
             label_wrapper.classList.add('toolbox-title');
             // if (item.third_party) {
-                //     label_wrapper.innerHTML = key;
-                // } else {
-                    // }
+            //     label_wrapper.innerHTML = key;
+            // } else {
+            // }
             label_wrapper.innerHTML = item.label;
 
             let tag = function_tag(item.function_name);
-            if(tag) {
+            if (tag) {
                 const label_model = document.createElement("span");
                 label_model.classList.add('toolbox-function');
                 label_model.innerHTML = tag;
@@ -578,7 +582,7 @@
     function renderTags(data) {
         const filters_bar = document.querySelector('.toolbox-tags');
         filters_bar.innerHTML = "";
-        if(data.length > 0) {
+        if (data.length > 0) {
             data.forEach((item) => {
                 const filter = document.createElement("div");
                 filter.classList.add("toolbox-tag");
@@ -590,7 +594,7 @@
         const tags = document.querySelectorAll('.toolbox-tag');
         tags.forEach((item) => {
             item.addEventListener('click', function (event) {
-                if(current_filter !== this.dataset.title) {
+                if (current_filter !== this.dataset.title) {
                     tags.forEach((item) => {
                         item.classList.remove("toolbox-tag-inactive");
                         item.classList.add("toolbox-tag-inactive");
@@ -605,9 +609,9 @@
                     const filteredDivs = itemsArray.filter(div => {
                         div.querySelector('.toolbox-function').innerHTML = tag;
                         const tags = div.dataset.tags_filter;
-                        if(tags) {
+                        if (tags) {
                             const all_tags = JSON.parse(div.dataset.tags_filter);
-                            if(all_tags.includes(tag)) {
+                            if (all_tags.includes(tag)) {
                                 return div;
                             }
                         }
@@ -627,7 +631,7 @@
 
                     const filteredDivs = itemsArray.filter(div => {
                         const tags = JSON.parse(div.dataset.tags_filter);
-                        if(tags) {
+                        if (tags) {
                             if (tags.length > 1) {
                                 div.querySelector('.toolbox-function').innerHTML = 'Multiple';
                             }
@@ -704,7 +708,7 @@
             reset_everything_about_commands();
             const searchTerm = this.value.toLowerCase();
             const itemsArray = Array.from(filterItems);
-            if(searchTerm.endsWith("?")) {
+            if (searchTerm.endsWith("?")) {
                 const chat = document.querySelector('[data-function_name="free-chat"]');
                 chat.style.display = 'block';
                 // chat.classList.add('item-selected');
@@ -713,12 +717,12 @@
             }
             else {
                 const filteredDivs = itemsArray.filter(div => {
-                    return div.dataset.title.toLowerCase().includes(searchTerm) || searchTerm==='';
+                    return div.dataset.title.toLowerCase().includes(searchTerm) || searchTerm === '';
                 });
                 filterItems.forEach(div => div.style.display = 'none');
                 filteredDivs.forEach(div => div.style.display = 'block');
-                if(filteredDivs.length === 0) {
-                    if(editor_inform_how_many_lines_selected > 0 && searchTerm.length > 0) {
+                if (filteredDivs.length === 0) {
+                    if (editor_inform_how_many_lines_selected > 0 && searchTerm.length > 0) {
                         const refactor = document.querySelector('[data-function_name="select-and-refactor"]');
                         const parent = refactor.parentNode;
                         parent.insertBefore(refactor, parent.firstChild);
@@ -748,10 +752,10 @@
                     // const item_title = item.dataset.title;
                     const current_item = document.querySelector(`.item-active`);
                     let ids = null;
-                    if(current_item.dataset.ids) {
+                    if (current_item.dataset.ids) {
                         ids = JSON.parse(current_item.dataset.ids);
                     }
-                    if(typeof ids === 'object' && ids.length > 0) {
+                    if (typeof ids === 'object' && ids.length > 0) {
                         current_item.querySelector('.toolbox-dropdown-wrapper').style.display = 'block';
                         const all_tags = JSON.parse(current_item.dataset.tags_filter);
                         const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
@@ -783,7 +787,7 @@
                                 select.add(option);
                             }
                         });
-                        }
+                    }
 
                     if (item_functions.supports_highlight === 1) {
                         document.querySelector(".item-active .toolbox-notice").classList.add('toolbox-notice-hidden');
@@ -822,6 +826,7 @@
                 let data = document.querySelector('#datacollection');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
+                let chatHistory = document.querySelector('#history');
                 let bug = document.querySelector('#report_bugs');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
@@ -838,13 +843,14 @@
                 profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 chat.style.display = message.ts2web_user ? 'flex' : 'none';
+                chatHistory.style.display = message.ts2web_user ? 'flex' : 'none';
                 data.style.display = message.ts2web_user ? 'block' : 'none';
                 coins.style.display = message.ts2web_user ? 'flex' : 'none';
                 privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
                 // TODO: always show settings, a place to put custom infurl
                 // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                if(message.ts2web_user === 'self-hosted') {
+                if (message.ts2web_user === 'self-hosted') {
                     document.querySelector('.sidebar-account').style.display = 'none';
                     profile.style.display = 'none';
                 }
@@ -862,10 +868,10 @@
                         toolbox_update_likes();
                     }
                 }
-                if(message.ts2web_staging) {
+                if (message.ts2web_staging) {
                     staging = message.ts2web_staging;
                 }
-                if(message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
+                if (message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
                     login.style.display = 'none';
                     // settings.classList.toggle('settings-full');
                 }
@@ -875,4 +881,3 @@
         }
     });
 })();
-ḍ

@@ -305,6 +305,24 @@ body.vscode-light #login {
     margin-right: 5px;
     display: none;
 }
+#history {
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 6px;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	text-align: center;
+	margin: 5px 0;
+    margin-right: 5px;
+    display: none;
+}
 body.vscode-light #chat {
 	color: var(--secondary);
 	border-color: var(--secondary);

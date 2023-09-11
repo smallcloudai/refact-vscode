@@ -118,6 +118,7 @@
             message_pair_div.appendChild(question_container);
 
             retry_button.addEventListener('click', () => {
+                console.log(question_div.dataset.messages_backup)
                 vscode.postMessage({
                     type: "reset-messages",
                     messages_backup: JSON.parse(question_div.dataset.messages_backup)
@@ -267,14 +268,6 @@
             pre.appendChild(new_button);
         }
         const codeButtons = document.querySelectorAll('.refactcss-chat__copybutton, .refactcss-chat__newbutton, .refactcss-chat__diffbutton');
-
-        codeButtons.forEach((button) => {
-            if (isStreaming) {
-                button.setAttribute('disabled', 'true');
-            } else {
-                button.removeAttribute('disabled');
-            }
-        });
     }
 
     function copy_to_clipboard(text) {
