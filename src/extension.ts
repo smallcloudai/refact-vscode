@@ -282,8 +282,10 @@ export function activate(context: vscode.ExtensionContext)
     let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
         context.globalState.update('codifyFirstRun', false);
         await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
         fill_no_user();
+        vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
     });
 
     context.subscriptions.push(logout);
@@ -337,7 +339,6 @@ function fill_no_user()
     if(global.side_panel) {
         global.side_panel.update_webview();
     }
-    vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
 }
 
 

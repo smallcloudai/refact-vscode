@@ -364,7 +364,8 @@
                 function_bookmarks = message.value;
                 break;
             case "ts2js":
-                let welcome = document.querySelector('.refact-welcome');
+                let welcome = document.querySelector('.refact-welcome__whole');
+                let dragons = document.querySelector('.refact-welcome__here_be_dragons');
                 let info = document.querySelector('.sidebar-logged');
                 let plan = document.querySelector('.sidebar-plan');
                 let coins = document.querySelector('.sidebar-coins');
@@ -376,6 +377,7 @@
                 let discord = document.querySelector('#discord');
                 let hotkeys = document.querySelector('#keys');
                 welcome.style.display = message.ts2js_havekey ? 'none' : 'block';
+                dragons.style.display = message.ts2js_havekey ? 'block' : 'none';
                 info.style.display = message.ts2js_user ? 'flex' : '';
                 plan.style.display = message.ts2js_user ? 'flex' : '';
                 document.querySelector('.sidebar-logged span').innerHTML = message.ts2js_user;

@@ -27,22 +27,28 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     _history: string[] = [];
     selected_lines_count: number = 0;
     access_level: number = -1;
+    cancel_token: vscode.CancellationToken | undefined = undefined;
 
     constructor(private readonly _context: any) {}
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
-        _token: vscode.CancellationToken
+        cancel_token: vscode.CancellationToken
     ) {
         this._view = webviewView;
+        this.cancel_token = cancel_token;
 
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [this._context.extensionUri],
         };
-
-        webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
+        webviewView.webview.html = this._html(webviewView.webview);
+        webviewView.onDidChangeVisibility(() => {
+            if (webviewView.visible) {
+                this.update_webview();
+            }
+        });
 
         this.update_webview();
         // this.get_bookmarks();
@@ -146,7 +152,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }); // onDidReceiveMessage
 
-        webviewView.webview.postMessage({ command: "focus" });
+        // webviewView.webview.postMessage({ command: "focus" });
     } // resolveWebView
 
     public update_webview()
@@ -204,7 +210,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //     return this._view!.webview.postMessage({ command: "update_bookmarks_list", value: bookmarks });
     // }
 
-    private _getHtmlForWebview(webview: vscode.Webview)
+    private _html(webview: vscode.Webview)
     {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
@@ -233,7 +239,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div id="sidebar" class="sidebar">
                     <div class="toolbox">
-                    <div class="refact-welcome" style="display: none">
+                    <div class="refact-welcome__here_be_dragons" style="display: none">New chat will live in the sidebar, under construction.</div>
+                    <div class="refact-welcome__whole" style="display: none">
                         <div class="refact-welcome__menu">
                             <div class="refact-welcome__container">
                                 <div class="refact-welcome__lead">Refact plugin initial setup:</div>

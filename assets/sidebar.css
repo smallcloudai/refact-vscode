@@ -908,7 +908,11 @@ body.vscode-light #logout {
 	font-size: 11px;
 }
 
-.refact-welcome {
+.refact-welcome__whole {
+	height: 100%;
+	box-sizing: border-box;
+}
+.refact-welcome__here_be_dragons {
 	height: 100%;
 	box-sizing: border-box;
 }

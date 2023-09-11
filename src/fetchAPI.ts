@@ -74,7 +74,8 @@ export class PendingRequest {
         this.streaming_error = false;
         this.api_fields = api_fields;
         h2stream.catch((error) => {
-            if (error.message && !error.message.includes("aborted")) {
+            let aborted = error && error.message && error.message.includes("aborted");
+            if (!aborted) {
                 usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, error, "");
             } else {
                 // Totally normal, user cancelled the request.
@@ -147,7 +148,8 @@ export class PendingRequest {
                     resolve(json_arrived);
                 }
             }).catch(async (error) => {
-                if (error && !error.message.includes("aborted")) {
+                let aborted = error && error.message && error.message.includes("aborted");
+                if (!aborted) {
                     usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
                 }
                 if (this.streaming_end_callback) {
@@ -166,10 +168,11 @@ export class PendingRequest {
             }
             // console.log(["--pendingRequests", _global_reqs.length, request.seq]);
         }).catch((error) => {
+            let aborted = error && error.message && error.message.includes("aborted");
             if (error === undefined) {
                 // This is a result of reject() without parameters
                 return;
-            } else if (!error || !error.message || !error.message.includes("aborted")) {
+            } else if (!aborted) {
                 usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
             }
         });
