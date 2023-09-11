@@ -257,6 +257,20 @@ export function inference_url(addthis: string, third_party: boolean)
 }
 
 
+export function rust_url(addthis: string)
+{
+    if (!global.rust_binary_blob) {
+        return "";
+    }
+    let url = global.rust_binary_blob.rust_url();
+    while (url.endsWith("/")) {
+        url = url.slice(0, -1);
+    }
+    url += addthis;
+    return url;
+}
+
+
 export let non_verifying_ctx = fetchH2.context({
     session: {
         rejectUnauthorized: false,
@@ -386,8 +400,11 @@ export function fetch_code_completion(
     api_fields: estate.ApiFields,
 ): Promise<fetchH2.Response>
 {
+    let url = rust_url("/v1/code-completion");
+    if (!url) {
+        return Promise.reject("No rust binary working");
+    }
     let third_party = false;
-    let url = inference_url("/v1/code-completion", third_party);
     let ctx = inference_context(third_party);
     let model: string = vscode.workspace.getConfiguration().get('refactai.model') || "";
     const apiKey = userLogin.secret_api_key();

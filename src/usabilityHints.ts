@@ -36,6 +36,7 @@ async function _countdown(key: string, start: number)
 
 export async function hint_after_successful_completion()
 {
+    return; // TODO: come up with a better hint
     let fire = await _countdown("codify.countdownHint1", 5);
     if (fire) {
         await show_hint1();

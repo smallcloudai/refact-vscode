@@ -356,8 +356,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             }
             return [cached_completion, cached.serial_number];
         }
-        let login: any = await userLogin.inference_login();
-        if (!login) { return ["", -1]; }
+        // let login: any = await userLogin.inference_login();
+        // if (!login) { return ["", -1]; }
         if (debounce_if_not_cached) {
             let drop = await this.slowdown(cancelToken);
             if (drop) { return ["", -1]; }

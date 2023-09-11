@@ -124,8 +124,7 @@
 				},
 				"refactai.xDebugPort": {
 					"type": "number|undefined",
-					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own.",
-					"default": null
+					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own."
 				}
 			}
 		},

@@ -18,17 +18,34 @@ export class RustBinaryBlob
         this.asset_path = asset_path;
     }
 
+    public rust_url(): string
+    {
+        let userport: number|undefined = vscode.workspace.getConfiguration().get("refactai.xDebugPort");
+        let port_not_set = userport === undefined || userport === null;
+        let port = port_not_set ? this.port : userport;
+        if (!port) {
+            return "";
+        }
+        return "http://127.0.0.1:" + port.toString() + "/";
+    }
+
     public async settings_changed()
     {
-        let port: number|undefined = vscode.workspace.getConfiguration().get("refactai.port");
-        if (port === undefined) {
+        let userport: number|undefined = vscode.workspace.getConfiguration().get("refactai.xDebugPort");
+        let port_not_set = userport === undefined || userport === null;
+        let port: number;
+        if (port_not_set) {
             port = this.port;
             if (port === 0) {
                 port = Math.floor(Math.random() * 10) + 8090;
             }
+        } else {
+            console.log("RUST debug port is set, assuming debugging session, don't start rust binary");
+            this.terminate();
+            return;
         }
         let url: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
-        if (url === undefined) {
+        if (url === undefined || url === null || url === "") {
             this.terminate();
             return;
         }
@@ -51,8 +68,10 @@ export class RustBinaryBlob
     public terminate()
     {
         if (this.process) {
+            console.log("RUST TERMINATE");
             this.process.kill();
             this.process = undefined;
+            this.cmdline = [];
         }
     }
 
