@@ -26,6 +26,7 @@
 
                     deleteButton.addEventListener("click", (event) => {
                         event.stopPropagation();
+                        event.preventDefault();
 
                         vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
                         chatItem.remove();

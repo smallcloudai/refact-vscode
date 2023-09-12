@@ -204,9 +204,11 @@
             last_answer_div.dataset.raw = data.answer_raw;
             last_answer_div.dataset.have_editor = data.have_editor;
         }
+
         if (message_pair_div.children.length > 0) {
             chat_content.appendChild(message_pair_div);
         }
+        Prism.highlightAll();
     }
 
     function backquote_backquote_backquote_remove_syntax_highlighting(code) {
@@ -231,7 +233,6 @@
         if (!answer_div) { return; }
         const snippets = answer_div.querySelectorAll('pre code');
         const raw = answer_div.dataset.raw;
-        console.log("raw: " + raw);
         const raw_snippets = raw.split('```');
         for (let i = 0; i < snippets.length; i++) {
             let pre = snippets[i];
