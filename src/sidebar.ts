@@ -340,7 +340,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <label class="refact-welcome__label">API Key</label>
                                 <input class="refact-welcome__apikey_hf refact-welcome__input" type="text" name="api_key" value="${api_key}">
                             </div>
-                            <div>You can view your API key at <a href="x" class="refact-welcome__hf_open_tokens">https://huggingface.co/settings/tokens</a></div>
+                            <div class="refact-welcome__hflink">You can view your API key at <a href="x" class="refact-welcome__hf_open_tokens">https://huggingface.co/settings/tokens</a></div>
                             <div class="refact-welcome__actions">
                                 <button data-target="huggingface" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
                                 <button class="refact-welcome__next refact-welcome__next_hf">Next&nbsp;&nbsp;&rsaquo;</button>

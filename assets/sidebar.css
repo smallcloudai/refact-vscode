@@ -1114,3 +1114,6 @@ body.vscode-light .refact-welcome__subpanel {
 	padding: 10px;
 	background-color: rgba(0, 0, 0, 0.05);
 }
+.refact-welcome__hflink {
+	margin: 15px 0;
+}
