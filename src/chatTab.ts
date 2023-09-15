@@ -7,7 +7,7 @@ import * as estate from "./estate";
 import * as crlf from "./crlf";
 import ChatHistoryProvider from "./chatHistory";
 
-export class ChatTab {
+export class ChatTab{
   // public static current_tab: ChatTab | undefined;
   // private _disposables: vscode.Disposable[] = [];
   public web_panel: vscode.WebviewPanel;
@@ -19,8 +19,10 @@ export class ChatTab {
   public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
   public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
   public model_to_thirdparty: { [key: string]: boolean };
-  private chatHistoryProvider: ChatHistoryProvider;
-  private chatId: string = "";
+  public chatHistoryProvider: ChatHistoryProvider;
+  public chatId: string = "";
+
+  public static chat_instance: ChatTab | undefined;
 
   private constructor(
     panel: vscode.WebviewPanel,
@@ -43,6 +45,58 @@ export class ChatTab {
     }
   }
 
+  public static async initializeChat(
+    chatHistoryProvider: ChatHistoryProvider,
+    question: string,
+    editor: vscode.TextEditor | undefined,
+    attach_default: boolean,
+    use_model: string,
+    use_model_function: string,
+    old_chat: boolean,
+    questions: string[] | undefined,
+    answers: string[] | undefined,
+    chatId: string
+  ) {
+    let context: vscode.ExtensionContext | undefined = global.global_context;
+    if (!context) {
+      return;
+    }
+
+    const panel = vscode.window.createWebviewPanel(
+      "refact-chat-tab",
+      "Refact.ai Chat",
+      vscode.ViewColumn.Two,
+      {
+        enableScripts: true,
+        retainContextWhenHidden: true,
+      }
+    );
+    panel.iconPath = vscode.Uri.file(
+      context.asAbsolutePath("images/discussion-bubble.svg")
+    );
+
+    let new_tab = new ChatTab(
+      panel,
+      context.extensionUri,
+      chatHistoryProvider,
+      chatId,
+      context
+    );
+    ChatTab.chat_instance = new_tab;
+    await ChatTab.activate_from_outside(
+      question,
+      editor,
+      attach_default,
+      use_model,
+      use_model_function,
+      old_chat,
+      questions,
+      answers,
+      chatId,
+      chatHistoryProvider
+    );
+  }
+
   public static async activate_from_outside(
     question: string,
     editor: vscode.TextEditor | undefined,
@@ -59,7 +113,7 @@ export class ChatTab {
     if (!context) {
       return;
     }
-
+    /*
     const panel = vscode.window.createWebviewPanel(
       "refact-chat-tab",
       "Refact.ai Chat",
@@ -80,6 +134,26 @@ export class ChatTab {
       chatId,
       context
     );
+    */
+    if (!ChatTab.chat_instance) {
+      await ChatTab.initializeChat(
+        chatHistoryProvider,
+        question,
+        editor,
+        attach_default,
+        use_model,
+        use_model_function,
+        old_chat,
+        questions,
+        answers,
+        chatId
+      );
+    }
+    let free_floating_tab = ChatTab.chat_instance;
+    if (!free_floating_tab) {
+      //this is to remove typescript type error(remove undefined from free_floating_type)
+      return;
+    }
     let code_snippet = "";
     free_floating_tab.working_on_snippet_range = undefined;
     free_floating_tab.working_on_snippet_editor = undefined;
@@ -206,10 +280,10 @@ export class ChatTab {
       if (code_snippet) {
         pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
       }
-      panel.webview.postMessage(pass_dict);
+      free_floating_tab.web_panel.webview.postMessage(pass_dict);
     }
 
-    panel.webview.onDidReceiveMessage(async (data) => {
+    free_floating_tab.web_panel.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
         case "open-new-file": {
           vscode.workspace.openTextDocument().then((document) => {
@@ -224,15 +298,15 @@ export class ChatTab {
           break;
         }
         case "diff-paste-back": {
-          if (!free_floating_tab.working_on_snippet_editor) {
+          if (!free_floating_tab?.working_on_snippet_editor) {
             return;
           }
           await vscode.window.showTextDocument(
-            free_floating_tab.working_on_snippet_editor.document,
-            free_floating_tab.working_on_snippet_column
+            free_floating_tab?.working_on_snippet_editor.document,
+            free_floating_tab?.working_on_snippet_column
           );
           let state = estate.state_of_document(
-            free_floating_tab.working_on_snippet_editor.document
+            free_floating_tab?.working_on_snippet_editor.document
           );
           if (!state) {
             return;
@@ -241,21 +315,21 @@ export class ChatTab {
           if (state.get_mode() !== estate.Mode.Normal) {
             return;
           }
-          if (!free_floating_tab.working_on_snippet_range) {
+          if (!free_floating_tab?.working_on_snippet_range) {
             return;
           }
           let verify_snippet = editor.document.getText(
-            free_floating_tab.working_on_snippet_range!
+            free_floating_tab?.working_on_snippet_range!
           );
-          if (verify_snippet !== free_floating_tab.working_on_snippet_code) {
+          if (verify_snippet !== free_floating_tab?.working_on_snippet_code) {
             return;
           }
           let text = editor.document.getText();
           let snippet_ofs0 = editor.document.offsetAt(
-            free_floating_tab.working_on_snippet_range.start
+            free_floating_tab?.working_on_snippet_range.start
           );
           let snippet_ofs1 = editor.document.offsetAt(
-            free_floating_tab.working_on_snippet_range.end
+            free_floating_tab?.working_on_snippet_range.end
           );
           let modif_doc: string =
             text.substring(0, snippet_ofs0) +
@@ -268,23 +342,26 @@ export class ChatTab {
           break;
         }
         case "question-posted-within-tab": {
-          await free_floating_tab.chat_post_question(
+          await free_floating_tab?.chat_post_question(
             data.chat_question,
             data.chat_model,
             data.chat_model_function,
             data.chat_attach_file
           );
-          free_floating_tab.messages.forEach((i) => console.log(i));
+          free_floating_tab?.messages.forEach((i) => console.log(i));
           break;
         }
         case "stop-clicked": {
-          free_floating_tab.cancellationTokenSource.cancel();
+          free_floating_tab?.cancellationTokenSource.cancel();
           break;
         }
         case "reset-messages": {
+          if (!free_floating_tab) {
+            return;
+          }
           free_floating_tab.messages = data.messages_backup;
-          free_floating_tab.chatHistoryProvider.popLastMessageFromChat(
-            free_floating_tab.chatId,
+          free_floating_tab?.chatHistoryProvider.popLastMessageFromChat(
+            free_floating_tab?.chatId,
             true,
             true
           );
@@ -293,7 +370,7 @@ export class ChatTab {
       }
     });
 
-    panel.webview.postMessage(fireup_message);
+    free_floating_tab.web_panel.webview.postMessage(fireup_message);
   }
 
   // public dispose()
