@@ -21,7 +21,6 @@ export class ChatTab implements vscode.WebviewViewProvider {
   public model_to_thirdparty: { [key: string]: boolean };
   private chatHistoryProvider: ChatHistoryProvider;
   private chatId: string = "";
-  private was_last_chat_new: boolean = true;
 
   //now constructor will only be called via extension.ts()
   constructor(
@@ -130,12 +129,16 @@ export class ChatTab implements vscode.WebviewViewProvider {
           break;
         }
         case "reset-messages": {
+          let removed = this.messages.length - data.messages_backup.length;
           this.messages = data.messages_backup;
-          this.chatHistoryProvider.popLastMessageFromChat(
-            this.chatId,
-            true,
-            true
-          );
+          while (removed) {
+            this.chatHistoryProvider.popLastMessageFromChat(
+              this.chatId,
+              true,
+              true
+            );
+            removed--;
+          }
           break;
         }
       }
@@ -155,6 +158,24 @@ export class ChatTab implements vscode.WebviewViewProvider {
       );
     }
   }
+  /*
+  if (global.user_logged_in === "") {
+      global.chat_panel?.update_webview_html(false);
+    } else {
+      global.chat_panel?.update_webview_html(true);
+      await global.chat_panel?.activate_from_outside(
+        "",
+        vscode.window.activeTextEditor,
+        false,
+        "",
+        "",
+        false,
+        "",
+        undefined,
+        undefined
+      );
+    }
+  */
 
   public async activate_from_outside(
     question: string,
@@ -167,27 +188,21 @@ export class ChatTab implements vscode.WebviewViewProvider {
     questions: string[] | undefined,
     answers: string[] | undefined
   ) {
+    if (!this._view) {
+      console.log("No view found for chat!!");
+      return;
+    }
+
     let context: vscode.ExtensionContext | undefined = global.global_context;
     if (!context) {
       return;
     }
 
-    //check if chatId is same
-    if (this.chatId === chatId) {
-      console.log("this chat is already running!");
-      return; //already running
-    } else if (chatId === "") {
-      console.log("this chat is already running!");
-      if (this.was_last_chat_new) {
-        return;
-      }
-      this.chatId = this.chatHistoryProvider.generateChatId();
-      this.was_last_chat_new = true;
-    } else {
-      //this if else has been done to skip multiple clicks on same chat/
-      this.chatId = chatId;
-      this.was_last_chat_new = false;
+    if (chatId === "") {
+      chatId = this.chatHistoryProvider.generateChatId();
     }
+    this.chatId = chatId;
+
     /*
     const panel = vscode.window.createWebviewPanel(
       "refact-chat-tab",
@@ -210,10 +225,6 @@ export class ChatTab implements vscode.WebviewViewProvider {
       context
     );*/
 
-    if (!this._view) {
-      console.log("No view found for chat!!");
-      return;
-    }
     let free_floating_tab = this;
     let code_snippet = "";
     free_floating_tab.working_on_snippet_range = undefined;
@@ -304,10 +315,11 @@ export class ChatTab implements vscode.WebviewViewProvider {
     free_floating_tab.working_on_snippet_code = code_snippet;
 
     if (question) {
+      console.log("posted question from question");
       if (code_snippet) {
         question = "```\n" + code_snippet + "\n```\n" + question;
       }
-      free_floating_tab.chat_post_question(
+      await free_floating_tab.chat_post_question(
         question,
         use_model,
         use_model_function,
@@ -321,11 +333,10 @@ export class ChatTab implements vscode.WebviewViewProvider {
       if (code_snippet) {
         pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
       }
-      this._view.webview.postMessage(pass_dict);
+      await this._view.webview.postMessage(pass_dict);
     }
 
-    this._view.webview.postMessage(fireup_message);
-
+    await this._view.webview.postMessage(fireup_message);
     if (old_chat && questions) {
       let messages_backup: [string, string][] = [];
       //console.log("adding old chat");
@@ -335,21 +346,23 @@ export class ChatTab implements vscode.WebviewViewProvider {
         const answer = answers && answers.length > i ? answers[i] : null;
 
         free_floating_tab.messages.push(["user", question]);
-        free_floating_tab._question_to_div(question, messages_backup);
+        await free_floating_tab._question_to_div(question, messages_backup);
         messages_backup.push(["user", question]);
 
         if (answer) {
           free_floating_tab.messages.push(["assistant", answer]);
-          free_floating_tab._answer_to_div(answer, messages_backup);
+          await free_floating_tab._answer_to_div(answer, messages_backup);
           messages_backup.push(["assistant", answer]);
         }
       }
 
       //end streaming once all old q has been posted
-      this._view!.webview.postMessage({
+      await this._view!.webview.postMessage({
         command: "chat-end-streaming",
       });
     }
+
+    console.log("activation finished");
   }
 
   // public dispose()

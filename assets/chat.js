@@ -118,7 +118,7 @@
             message_pair_div.appendChild(question_container);
 
             retry_button.addEventListener('click', () => {
-                console.log("message backup: " + question_div.dataset.messages_backup);
+                //console.log("message backup: " + question_div.dataset.messages_backup);
                 vscode.postMessage({
                     type: "reset-messages",
                     messages_backup: JSON.parse(question_div.dataset.messages_backup)
@@ -131,6 +131,16 @@
                 retry_button.style.display = 'none';
 
                 inputField.focus();
+
+                inputField.value = question_div.dataset.question_backup;
+                answer_counter = parseInt(message_pair_div.dataset.answer_counter);
+                const chats = document.querySelectorAll('.refactcss-chat__item');
+                for (let i = chats.length - 1; i >= 0; i--) {
+                    const chat = chats[i];
+                    if (parseInt(chat.dataset.answer_counter) > answer_counter) {
+                        chat.remove();
+                    }
+                }
             });
 
             cancelButton.addEventListener('click', () => {
@@ -179,14 +189,7 @@
             });
 
             visibility_control(true);
-            answer_counter = parseInt(message_pair_div.dataset.answer_counter);
-            const chats = document.querySelectorAll('.refactcss-chat__item');
-            for (let i = chats.length - 1; i >= 0; i--) {
-                const chat = chats[i];
-                if (parseInt(chat.dataset.answer_counter) >= answer_counter) {
-                    chat.remove();
-                }
-            }
+
         }
 
         // Rest of your code...
@@ -330,19 +333,23 @@
                 input_should_be_visible = true;
                 break;
             case "chat-end-streaming":
+                console.log("end of steraming");
                 input_should_be_visible = true;
                 isStreaming = false;
                 break;
             case "chat-error-streaming":
+                console.log("error in streaming");
                 input_should_be_visible = true;
                 chat_input.value = message.backup_user_phrase;
                 isStreaming = false;
                 break;
             case "chat-post-question":
+                console.log("q posted");
                 chat_render(message);
                 isStreaming = false;
                 break;
             case "chat-post-answer":  // streaming also goes there, with partial answers
+                console.log("a posted");
                 chat_render(message);
                 isStreaming = true;
                 break;

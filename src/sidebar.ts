@@ -22,7 +22,7 @@ export async function open_chat_tab(
   answers: string[] | undefined,
   chatId: string
 ) {
-  console.log("open chat tab called");
+  console.log("open chat tab");
   await global.chat_panel?.activate_from_outside(
     question,
     editor,
@@ -486,19 +486,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         .getConfiguration()
         .get("refactai.staging"),
     });
-
-    //have to re call activate_from_outside to update empty chat_model
-    await global.chat_panel?.activate_from_outside(
-      "",
-      vscode.window.activeTextEditor,
-      false,
-      "",
-      "",
-      false,
-      "",
-      undefined,
-      undefined
-    );
   }
 
   public chatHistoryProvider = new ChatHistoryProvider(

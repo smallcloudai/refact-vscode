@@ -51,6 +51,7 @@ body.vscode-dark {
   margin: 5px 0;
   height: 40px;
   cursor: pointer;
+  max-width: 100px;
   position: relative;
 }
 

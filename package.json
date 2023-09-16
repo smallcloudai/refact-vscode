@@ -75,9 +75,7 @@
     "jupyter"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onView:refactai-toolbox",
-    "onView:refactai-chatSidebar"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
