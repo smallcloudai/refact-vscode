@@ -79,12 +79,56 @@
             answer_counter += 1;
             const question_div = document.createElement('div');
             question_div.classList.add('refactcss-chat__question');
+            console.log(data.question_html)
             question_div.innerHTML = data.question_html;
             question_div.dataset.raw = data.question_raw;
             question_div.dataset.messages_backup = JSON.stringify(data.messages_backup);
             question_div.dataset.question_backup = data.question_raw;
             message_pair_div.appendChild(question_div);
             last_answer_div = null;
+
+            const retryInput = document.createElement('textarea');
+            retryInput.style.display = 'none'
+            retryInput.type = 'text';
+            retryInput.value = data.question_raw;
+            retryInput.classList.add('refactcss-chat__retryinput');
+            question_div.appendChild(retryInput);
+
+            const cancelButton = document.createElement('button');
+            cancelButton.style.display = 'none';
+            cancelButton.innerText = 'Cancel';
+            cancelButton.classList.add('refactcss-chat__cancel-button');
+            cancelButton.addEventListener('click', () => {
+                question_div.style.display = 'block';
+                retryInput.style.display = 'none';
+                retryInput.value = data.question_raw;
+                retry_button.style.display = 'block';
+                cancelButton.style.display = 'none';
+                submitButton.style.display = 'none';
+            })
+            question_div.appendChild(cancelButton);
+
+            const submitButton = document.createElement('button');
+            submitButton.style.display = 'none';
+            submitButton.innerText = 'Submit';
+            submitButton.classList.add('refactcss-chat__submit-button');
+            submitButton.addEventListener('click', ()=> {
+                const message = inputField.value;
+                let chat_model_combo = document.getElementById("chat-model");
+                console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
+                [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
+                let chat_attach_file = document.getElementById("chat-attach");
+                retryInput.value = '';
+                vscode.postMessage({
+                    type: "question-posted-within-tab",
+                    chat_question: message,
+                    chat_model: chat_model,
+                    chat_model_function: chat_model_function,
+                    chat_attach_file: chat_attach_file.checked
+                });
+            })
+            question_div.appendChild(submitButton);
+
             const retry_button = document.createElement('button');
             retry_button.innerText = 'Retry';
             retry_button.classList.add('refactcss-chat__copybutton');
@@ -94,37 +138,12 @@
                     type: "reset-messages",
                     messages_backup: JSON.parse(question_div.dataset.messages_backup)
                 });
-                const previousResponses = document.querySelectorAll('.previous-responses');
-                previousResponses.forEach(response => {
-                    response.style.display = 'none';
-                });
-
-                // Show the question textarea
-                const questionTextarea = document.querySelector('.question-textarea');
-                questionTextarea.style.display = 'block';
-
-                // Populate the textarea with the previous question
-                questionTextarea.value = question_div.dataset.question_backup;
-
-                // Focus the textarea
-                questionTextarea.focus();
-
-                // Handle submit
-                questionTextarea.addEventListener('keypress', e => {
-                    if (e.key === 'Enter') {
-                        // Hide textarea
-                        questionTextarea.style.display = 'none';
-
-                        // Send new question to backend
-                        const newQuestion = questionTextarea.value;
-                        sendNewQuestion(newQuestion);
-
-                        // Show loader
-                        showLoader();
-                    }
-                });
-            })
-
+                question_div.style.display = 'none';
+                retryInput.style.display = 'block';
+                cancelButton.style.display = 'block';
+                submitButton.style.display = 'block';
+                retryInput.focus();
+            });
         }
 
         if (!last_answer_div && data.answer_html) {
@@ -215,21 +234,21 @@
     }
 
     let currentHeight = document.querySelector('.refactcss-chat__content');
-    let autoScrollTimeout;
+    let scrolling = true;
+    currentHeight.addEventListener('click', () => {
+        scrolling = !scrolling;
+    })
     function auto_scroll() {
-        if (autoScrollTimeout) {
-            return;
+        input_care();
+        if (scrolling) {
+            currentHeight.scrollTop = currentHeight.scrollHeight - 100;
         }
-        autoScrollTimeout = setTimeout(() => {
-            input_care();
-            currentHeight.scrollTop = currentHeight.scrollHeight;
-            autoScrollTimeout = null;
-        }, 100);
     }
 
     window.addEventListener("message", (event) => {
         const message = event.data;
         let input_should_be_visible = false;
+
         switch (message.command) {
             case "chat-set-fireup-options":
                 let chat_attach_file = document.getElementById("chat-attach");
@@ -271,6 +290,7 @@
                 break;
             case "chat-post-answer":  // streaming also goes there, with partial answers
                 chat_render(message);
+                chat_add_code_buttons();
                 break;
             case "chat-set-question-text":
                 input_should_be_visible = true;
@@ -303,4 +323,4 @@
     }
 
     chat_input.focus();
-})();  
+})();
