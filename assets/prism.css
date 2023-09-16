@@ -47,9 +47,6 @@ pre[class*="language-"] {
   overflow: auto;
 }
 :not(pre) > code[class*="language-"],
-pre[class*="language-"] {
-  background: #f5f2f0;
-}
 :not(pre) > code[class*="language-"] {
   padding: 0.1em;
   border-radius: 0.3em;
@@ -90,7 +87,6 @@ pre[class*="language-"] {
 .token.operator,
 .token.url {
   color: #9a6e3a;
-  background: hsla(0, 0%, 100%, 0.5);
 }
 .token.atrule,
 .token.attr-value,

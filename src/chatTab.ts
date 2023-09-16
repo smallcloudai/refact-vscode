@@ -7,10 +7,10 @@ import * as estate from "./estate";
 import * as crlf from "./crlf";
 import ChatHistoryProvider from "./chatHistory";
 
-export class ChatTab{
+export class ChatTab implements vscode.WebviewViewProvider {
   // public static current_tab: ChatTab | undefined;
   // private _disposables: vscode.Disposable[] = [];
-  public web_panel: vscode.WebviewPanel;
+  _view?: vscode.WebviewView;
   public messages: [string, string][];
   public cancellationTokenSource: vscode.CancellationTokenSource;
   public working_on_attach_code: string = "";
@@ -19,23 +19,16 @@ export class ChatTab{
   public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
   public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
   public model_to_thirdparty: { [key: string]: boolean };
-  public chatHistoryProvider: ChatHistoryProvider;
-  public chatId: string = "";
+  private chatHistoryProvider: ChatHistoryProvider;
+  private chatId: string = "";
+  private was_last_chat_new: boolean = true;
 
-  public static chat_instance: ChatTab | undefined;
-
-  private constructor(
-    panel: vscode.WebviewPanel,
-    extensionUri: vscode.Uri,
+  //now constructor will only be called via extension.ts()
+  constructor(
+    private readonly _context: any, //add _context to constructor
     chatHistoryProvider: ChatHistoryProvider,
-    chatId: string,
-    context: any
+    chatId: string
   ) {
-    this.web_panel = panel;
-    this.web_panel.webview.html = ChatTab.get_html_for_webview(
-      this.web_panel.webview,
-      extensionUri
-    );
     this.messages = [];
     this.model_to_thirdparty = {};
     this.cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -45,73 +38,155 @@ export class ChatTab{
     }
   }
 
-  public static async initializeChat(
-    chatHistoryProvider: ChatHistoryProvider,
+  public async resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    context: vscode.WebviewViewResolveContext<unknown>,
+    token: vscode.CancellationToken
+  ) {
+    this._view = webviewView;
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [this._context.extensionUri],
+    };
+
+    webviewView.webview.html = this._get_html_for_webview_no_login(
+      webviewView.webview
+    );
+
+    vscode.commands.registerCommand("workbench.action.focusChatSideBar", () => {
+      webviewView.webview.postMessage({ command: "focus" });
+    });
+
+    this._view.webview.onDidReceiveMessage(async (data) => {
+      switch (data.type) {
+        case "open-new-file": {
+          vscode.workspace.openTextDocument().then((document) => {
+            vscode.window
+              .showTextDocument(document, vscode.ViewColumn.Active)
+              .then((editor) => {
+                editor.edit((editBuilder) => {
+                  editBuilder.insert(new vscode.Position(0, 0), data.value);
+                });
+              });
+          });
+          break;
+        }
+        case "diff-paste-back": {
+          if (!this.working_on_snippet_editor) {
+            return;
+          }
+          await vscode.window.showTextDocument(
+            this.working_on_snippet_editor.document,
+            this.working_on_snippet_column
+          );
+          let state = estate.state_of_document(
+            this.working_on_snippet_editor.document
+          );
+          if (!state) {
+            return;
+          }
+          let editor = state.editor;
+          if (state.get_mode() !== estate.Mode.Normal) {
+            return;
+          }
+          if (!this.working_on_snippet_range) {
+            return;
+          }
+          let verify_snippet = editor.document.getText(
+            this.working_on_snippet_range!
+          );
+          if (verify_snippet !== this.working_on_snippet_code) {
+            return;
+          }
+          let text = editor.document.getText();
+          let snippet_ofs0 = editor.document.offsetAt(
+            this.working_on_snippet_range.start
+          );
+          let snippet_ofs1 = editor.document.offsetAt(
+            this.working_on_snippet_range.end
+          );
+          let modif_doc: string =
+            text.substring(0, snippet_ofs0) +
+            data.value +
+            text.substring(snippet_ofs1);
+          [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
+          state.showing_diff_modif_doc = modif_doc;
+          state.showing_diff_move_cursor = true;
+          estate.switch_mode(state, estate.Mode.Diff);
+          break;
+        }
+        case "question-posted-within-tab": {
+          await this.chat_post_question(
+            data.chat_question,
+            data.chat_model,
+            data.chat_model_function,
+            data.chat_attach_file
+          );
+          //this.messages.forEach((i) => console.log(i));
+          break;
+        }
+        case "stop-clicked": {
+          this.cancellationTokenSource.cancel();
+          break;
+        }
+        case "reset-messages": {
+          this.messages = data.messages_backup;
+          this.chatHistoryProvider.popLastMessageFromChat(
+            this.chatId,
+            true,
+            true
+          );
+          break;
+        }
+      }
+    });
+    //add onDidRecieveMessage here
+  }
+
+  public update_webview_html(is_user_logged_in: boolean) {
+    if (!this._view) {
+      return;
+    }
+    if (is_user_logged_in) {
+      this._view.webview.html = this._get_html_for_webview(this._view.webview);
+    } else {
+      this._view.webview.html = this._get_html_for_webview_no_login(
+        this._view.webview
+      );
+    }
+  }
+
+  public async activate_from_outside(
     question: string,
     editor: vscode.TextEditor | undefined,
     attach_default: boolean,
     use_model: string,
     use_model_function: string,
     old_chat: boolean,
+    chatId: string,
     questions: string[] | undefined,
-    answers: string[] | undefined,
-    chatId: string
+    answers: string[] | undefined
   ) {
     let context: vscode.ExtensionContext | undefined = global.global_context;
     if (!context) {
       return;
     }
 
-    const panel = vscode.window.createWebviewPanel(
-      "refact-chat-tab",
-      "Refact.ai Chat",
-      vscode.ViewColumn.Two,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
+    //check if chatId is same
+    if (this.chatId === chatId) {
+      console.log("this chat is already running!");
+      return; //already running
+    } else if (chatId === "") {
+      console.log("this chat is already running!");
+      if (this.was_last_chat_new) {
+        return;
       }
-    );
-    panel.iconPath = vscode.Uri.file(
-      context.asAbsolutePath("images/discussion-bubble.svg")
-    );
-
-    let new_tab = new ChatTab(
-      panel,
-      context.extensionUri,
-      chatHistoryProvider,
-      chatId,
-      context
-    );
-    ChatTab.chat_instance = new_tab;
-    await ChatTab.activate_from_outside(
-      question,
-      editor,
-      attach_default,
-      use_model,
-      use_model_function,
-      old_chat,
-      questions,
-      answers,
-      chatId,
-      chatHistoryProvider
-    );
-  }
-
-  public static async activate_from_outside(
-    question: string,
-    editor: vscode.TextEditor | undefined,
-    attach_default: boolean,
-    use_model: string,
-    use_model_function: string,
-    old_chat: boolean,
-    questions: string[] | undefined,
-    answers: string[] | undefined,
-    chatId: string,
-    chatHistoryProvider: ChatHistoryProvider
-  ) {
-    let context: vscode.ExtensionContext | undefined = global.global_context;
-    if (!context) {
-      return;
+      this.chatId = this.chatHistoryProvider.generateChatId();
+      this.was_last_chat_new = true;
+    } else {
+      //this if else has been done to skip multiple clicks on same chat/
+      this.chatId = chatId;
+      this.was_last_chat_new = false;
     }
     /*
     const panel = vscode.window.createWebviewPanel(
@@ -125,35 +200,21 @@ export class ChatTab{
     );
     panel.iconPath = vscode.Uri.file(
       context.asAbsolutePath("images/discussion-bubble.svg")
-    );
+    );*/
 
-    let free_floating_tab = new ChatTab(
-      panel,
+    /*let free_floating_tab = new ChatTab(
+      this._view,
       context.extensionUri,
       chatHistoryProvider,
       chatId,
       context
-    );
-    */
-    if (!ChatTab.chat_instance) {
-      await ChatTab.initializeChat(
-        chatHistoryProvider,
-        question,
-        editor,
-        attach_default,
-        use_model,
-        use_model_function,
-        old_chat,
-        questions,
-        answers,
-        chatId
-      );
-    }
-    let free_floating_tab = ChatTab.chat_instance;
-    if (!free_floating_tab) {
-      //this is to remove typescript type error(remove undefined from free_floating_type)
+    );*/
+
+    if (!this._view) {
+      console.log("No view found for chat!!");
       return;
     }
+    let free_floating_tab = this;
     let code_snippet = "";
     free_floating_tab.working_on_snippet_range = undefined;
     free_floating_tab.working_on_snippet_editor = undefined;
@@ -242,26 +303,6 @@ export class ChatTab{
     }
     free_floating_tab.working_on_snippet_code = code_snippet;
 
-    if (old_chat && questions) {
-      let messages_backup: [string, string][] = [];
-      //console.log("adding old chat");
-
-      for (let i = 0; i < questions.length; i++) {
-        const question = questions[i];
-        const answer = answers && answers.length > i ? answers[i] : null;
-
-        free_floating_tab.messages.push(["user", question]);
-        free_floating_tab._question_to_div(question, messages_backup);
-        messages_backup.push(["user", question]);
-
-        if (answer) {
-          free_floating_tab.messages.push(["assistant", answer]);
-          free_floating_tab._answer_to_div(answer, messages_backup);
-          messages_backup.push(["assistant", answer]);
-        }
-      }
-    }
-
     if (question) {
       if (code_snippet) {
         question = "```\n" + code_snippet + "\n```\n" + question;
@@ -280,97 +321,35 @@ export class ChatTab{
       if (code_snippet) {
         pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
       }
-      free_floating_tab.web_panel.webview.postMessage(pass_dict);
+      this._view.webview.postMessage(pass_dict);
     }
 
-    free_floating_tab.web_panel.webview.onDidReceiveMessage(async (data) => {
-      switch (data.type) {
-        case "open-new-file": {
-          vscode.workspace.openTextDocument().then((document) => {
-            vscode.window
-              .showTextDocument(document, vscode.ViewColumn.Active)
-              .then((editor) => {
-                editor.edit((editBuilder) => {
-                  editBuilder.insert(new vscode.Position(0, 0), data.value);
-                });
-              });
-          });
-          break;
-        }
-        case "diff-paste-back": {
-          if (!free_floating_tab?.working_on_snippet_editor) {
-            return;
-          }
-          await vscode.window.showTextDocument(
-            free_floating_tab?.working_on_snippet_editor.document,
-            free_floating_tab?.working_on_snippet_column
-          );
-          let state = estate.state_of_document(
-            free_floating_tab?.working_on_snippet_editor.document
-          );
-          if (!state) {
-            return;
-          }
-          let editor = state.editor;
-          if (state.get_mode() !== estate.Mode.Normal) {
-            return;
-          }
-          if (!free_floating_tab?.working_on_snippet_range) {
-            return;
-          }
-          let verify_snippet = editor.document.getText(
-            free_floating_tab?.working_on_snippet_range!
-          );
-          if (verify_snippet !== free_floating_tab?.working_on_snippet_code) {
-            return;
-          }
-          let text = editor.document.getText();
-          let snippet_ofs0 = editor.document.offsetAt(
-            free_floating_tab?.working_on_snippet_range.start
-          );
-          let snippet_ofs1 = editor.document.offsetAt(
-            free_floating_tab?.working_on_snippet_range.end
-          );
-          let modif_doc: string =
-            text.substring(0, snippet_ofs0) +
-            data.value +
-            text.substring(snippet_ofs1);
-          [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
-          state.showing_diff_modif_doc = modif_doc;
-          state.showing_diff_move_cursor = true;
-          estate.switch_mode(state, estate.Mode.Diff);
-          break;
-        }
-        case "question-posted-within-tab": {
-          await free_floating_tab?.chat_post_question(
-            data.chat_question,
-            data.chat_model,
-            data.chat_model_function,
-            data.chat_attach_file
-          );
-          free_floating_tab?.messages.forEach((i) => console.log(i));
-          break;
-        }
-        case "stop-clicked": {
-          free_floating_tab?.cancellationTokenSource.cancel();
-          break;
-        }
-        case "reset-messages": {
-          if (!free_floating_tab) {
-            return;
-          }
-          free_floating_tab.messages = data.messages_backup;
-          free_floating_tab?.chatHistoryProvider.popLastMessageFromChat(
-            free_floating_tab?.chatId,
-            true,
-            true
-          );
-          break;
+    this._view.webview.postMessage(fireup_message);
+
+    if (old_chat && questions) {
+      let messages_backup: [string, string][] = [];
+      //console.log("adding old chat");
+
+      for (let i = 0; i < questions.length; i++) {
+        const question = questions[i];
+        const answer = answers && answers.length > i ? answers[i] : null;
+
+        free_floating_tab.messages.push(["user", question]);
+        free_floating_tab._question_to_div(question, messages_backup);
+        messages_backup.push(["user", question]);
+
+        if (answer) {
+          free_floating_tab.messages.push(["assistant", answer]);
+          free_floating_tab._answer_to_div(answer, messages_backup);
+          messages_backup.push(["assistant", answer]);
         }
       }
-    });
 
-    free_floating_tab.web_panel.webview.postMessage(fireup_message);
+      //end streaming once all old q has been posted
+      this._view!.webview.postMessage({
+        command: "chat-end-streaming",
+      });
+    }
   }
 
   // public dispose()
@@ -385,7 +364,7 @@ export class ChatTab{
   //     }
   // }
 
-  private _question_to_div(
+  private async _question_to_div(
     question: string,
     messages_backup: [string, string][]
   ) {
@@ -401,7 +380,7 @@ export class ChatTab{
       html = question;
     }
     //console.log("question-html: " + html);
-    this.web_panel.webview.postMessage({
+    await this._view!.webview.postMessage({
       command: "chat-post-question",
       question_html: html,
       question_raw: question,
@@ -409,7 +388,10 @@ export class ChatTab{
     });
   }
 
-  private _answer_to_div(answer: string, messages_backup: [string, string][]) {
+  private async _answer_to_div(
+    answer: string,
+    messages_backup: [string, string][]
+  ) {
     let valid_html = false;
     let html = "";
     try {
@@ -421,7 +403,7 @@ export class ChatTab{
     if (!valid_html) {
       html = answer;
     }
-    this.web_panel.webview.postMessage({
+    await this._view!.webview.postMessage({
       command: "chat-post-answer",
       answer_html: html,
       answer_raw: answer,
@@ -435,12 +417,12 @@ export class ChatTab{
     model_function: string,
     attach_file: boolean
   ) {
-    if (!this.web_panel) {
+    if (!this._view!) {
       return false;
     }
     let login = await userLogin.inference_login();
     if (!login) {
-      this.web_panel.webview.postMessage({
+      this._view!.webview.postMessage({
         command: "chat-post-answer",
         answer_html:
           "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
@@ -469,7 +451,7 @@ export class ChatTab{
       if (first_15_characters !== first_16_characters) {
         first_15_characters += "…";
       }
-      this.web_panel.title = first_15_characters;
+      this._view!.title = first_15_characters;
       if (attach_file) {
         this.messages.push(["user", this.working_on_attach_code]);
 
@@ -497,16 +479,16 @@ export class ChatTab{
       "",
       model,
       model_function,
-      this.web_panel.title
+      this._view!.title || ""
     );
 
     if (this.messages.length > 10) {
       this.messages.shift();
       this.messages.shift(); // so it always starts with a user
     }
-    this._question_to_div(question, messages_backup);
+    await this._question_to_div(question, messages_backup);
     //add question to history
-    this.web_panel.webview.postMessage({
+    this._view!.webview.postMessage({
       command: "chat-post-answer",
       answer_html: "⏳",
       answer_raw: "",
@@ -517,7 +499,7 @@ export class ChatTab{
     //add to history once all requests are finished
 
     let answer = "";
-    let stack_web_panel = this.web_panel;
+    let stack_web_panel = this._view;
     let stack_this = this;
 
     async function _streaming_callback(json: any) {
@@ -551,12 +533,12 @@ export class ChatTab{
             html = marked.parse(raw_html);
             valid_html = true;
           } catch (e) {
-            console.log(e);
+            console.log("error during steam callback:" + e);
             valid_html = false;
           }
 
           if (valid_html) {
-            stack_web_panel.webview.postMessage({
+            await stack_web_panel.webview.postMessage({
               command: "chat-post-answer",
               answer_html: html,
               answer_raw: answer,
@@ -593,7 +575,7 @@ export class ChatTab{
           }
         }
         console.log("backup_user_phrase:" + backup_user_phrase);
-        stack_this.web_panel.webview.postMessage({
+        await stack_this._view!.webview.postMessage({
           command: "chat-error-streaming",
           backup_user_phrase: backup_user_phrase,
         });
@@ -606,10 +588,10 @@ export class ChatTab{
           answer,
           model,
           model_function,
-          stack_this.web_panel.title
+          stack_this._view!.title || ""
         );
 
-        stack_this.web_panel.webview.postMessage({
+        await stack_this._view!.webview.postMessage({
           command: "chat-end-streaming",
         });
       }
@@ -636,21 +618,44 @@ export class ChatTab{
     );
   }
 
-  static get_html_for_webview(
-    webview: vscode.Webview,
-    extensionUri: any
-  ): string {
+  private _get_html_for_webview_no_login(webview: vscode.Webview): string {
+    return `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <!--
+            Use a content security policy to only allow loading images from https or from our extension directory,
+            and only allow scripts that have a specific nonce.
+        -->
+        <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <title>Refact.ai Chat</title>
+    </head>
+    <body>
+        <div class="refactcss-chat">
+            <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
+            <div class="no_login_content">
+                <p>Waiting For Login ... </p>
+            </div>
+        </div>        
+    </body>
+    </html>
+    `;
+  }
+
+  private _get_html_for_webview(webview: vscode.Webview): string {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "chat.js")
+      vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat.js")
     );
     const styleMainUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
+      vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat.css")
     );
     const prismJsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "prism.js")
+      vscode.Uri.joinPath(this._context.extensionUri, "assets", "prism.js")
     );
     const prismJsCssUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "prism.css")
+      vscode.Uri.joinPath(this._context.extensionUri, "assets", "prism.css")
     );
     const nonce = ChatTab.getNonce();
 

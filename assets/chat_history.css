@@ -22,16 +22,16 @@ body.vscode-dark {
   position: absolute;
   top: 5px;
   right: 5px;
-  background-color: black;
+  background-color: inherit;
   color: white;
   border: none;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 4px 5px;
   border-radius: 50%;
 }
 
 #back_button {
-  width: 80px;
+  width: 40px;
   display: block;
   background: var(--secondary) !important;
   border: 0 !important;
@@ -49,6 +49,7 @@ body.vscode-dark {
   background-color: #005ba1; /* Blue background color */
   padding: 10px;
   margin: 5px 0;
+  height: 40px;
   cursor: pointer;
   position: relative;
 }

@@ -118,7 +118,7 @@
             message_pair_div.appendChild(question_container);
 
             retry_button.addEventListener('click', () => {
-                console.log(question_div.dataset.messages_backup)
+                console.log("message backup: " + question_div.dataset.messages_backup);
                 vscode.postMessage({
                     type: "reset-messages",
                     messages_backup: JSON.parse(question_div.dataset.messages_backup)
@@ -147,7 +147,7 @@
             submitButton.addEventListener('click', () => {
                 const message = inputField.value;
                 let chat_model_combo = document.getElementById("chat-model");
-                console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
+                //console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 let chat_attach_file = document.getElementById("chat-attach");
                 inputField.value = '';
@@ -302,6 +302,7 @@
         let isStreaming = false;
         switch (message.command) {
             case "chat-set-fireup-options":
+                console.log("chat fired up!");
                 let chat_attach_file = document.getElementById("chat-attach");
                 chat_attach_file.checked = message.chat_attach_default;
                 let label = document.getElementById("chat-attach-label");

@@ -25,7 +25,7 @@ export default class ChatHistoryProvider {
   ) {
     // Initialize the chat history for the current user when the extension is activated
     // Load chat history from global state if available
-    this.currentUser = user;
+    this.currentUser = global.user_logged_in;
     this.loadChatHistoryFromGlobalState().then((history) => {
       if (history) {
         this.chatHistory = history;

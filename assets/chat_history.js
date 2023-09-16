@@ -1,9 +1,9 @@
 (function () {
     const vscode = acquireVsCodeApi();
-    const back_button = document.querySelector("#back_button");
+    const backButton = document.querySelector("#back_button");
     const chatHistoryList = document.querySelector(".chat-history-list");
 
-    back_button.addEventListener('click', () => {
+    backButton.addEventListener('click', () => {
         vscode.postMessage({ type: "close_chat_history" });
     });
 
