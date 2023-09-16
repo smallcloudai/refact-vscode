@@ -118,7 +118,7 @@
             message_pair_div.appendChild(question_container);
 
             retry_button.addEventListener('click', () => {
-                console.log(question_div.dataset.messages_backup)
+                //console.log("message backup: " + question_div.dataset.messages_backup);
                 vscode.postMessage({
                     type: "reset-messages",
                     messages_backup: JSON.parse(question_div.dataset.messages_backup)
@@ -131,6 +131,16 @@
                 retry_button.style.display = 'none';
 
                 inputField.focus();
+
+                inputField.value = question_div.dataset.question_backup;
+                answer_counter = parseInt(message_pair_div.dataset.answer_counter);
+                const chats = document.querySelectorAll('.refactcss-chat__item');
+                for (let i = chats.length - 1; i >= 0; i--) {
+                    const chat = chats[i];
+                    if (parseInt(chat.dataset.answer_counter) > answer_counter) {
+                        chat.remove();
+                    }
+                }
             });
 
             cancelButton.addEventListener('click', () => {
@@ -147,7 +157,7 @@
             submitButton.addEventListener('click', () => {
                 const message = inputField.value;
                 let chat_model_combo = document.getElementById("chat-model");
-                console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
+                //console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 let chat_attach_file = document.getElementById("chat-attach");
                 inputField.value = '';
@@ -179,14 +189,7 @@
             });
 
             visibility_control(true);
-            answer_counter = parseInt(message_pair_div.dataset.answer_counter);
-            const chats = document.querySelectorAll('.refactcss-chat__item');
-            for (let i = chats.length - 1; i >= 0; i--) {
-                const chat = chats[i];
-                if (parseInt(chat.dataset.answer_counter) >= answer_counter) {
-                    chat.remove();
-                }
-            }
+
         }
 
         // Rest of your code...
@@ -302,6 +305,7 @@
         let isStreaming = false;
         switch (message.command) {
             case "chat-set-fireup-options":
+                console.log("chat fired up!");
                 let chat_attach_file = document.getElementById("chat-attach");
                 chat_attach_file.checked = message.chat_attach_default;
                 let label = document.getElementById("chat-attach-label");
@@ -329,19 +333,23 @@
                 input_should_be_visible = true;
                 break;
             case "chat-end-streaming":
+                console.log("end of steraming");
                 input_should_be_visible = true;
                 isStreaming = false;
                 break;
             case "chat-error-streaming":
+                console.log("error in streaming");
                 input_should_be_visible = true;
                 chat_input.value = message.backup_user_phrase;
                 isStreaming = false;
                 break;
             case "chat-post-question":
+                console.log("q posted");
                 chat_render(message);
                 isStreaming = false;
                 break;
             case "chat-post-answer":  // streaming also goes there, with partial answers
+                console.log("a posted");
                 chat_render(message);
                 isStreaming = true;
                 break;

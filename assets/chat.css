@@ -212,6 +212,7 @@ body.vscode-dark {
   box-sizing: border-box;
   text-transform: uppercase;
   font-size: 8px;
+  margin-right: 10px;
 }
 
 .refactcss-chat__newbutton {

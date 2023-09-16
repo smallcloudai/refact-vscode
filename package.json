@@ -75,8 +75,7 @@
     "jupyter"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onView:refactai-toolbox"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -136,6 +135,11 @@
         "command": "refactaicmd.callChat",
         "title": "Call Chat",
         "key": "alt+c",
+        "category": "Refact.ai"
+      },
+      {
+        "command": "workbench.action.focusChatSideBar",
+        "title": "Focus Chat",
         "category": "Refact.ai"
       },
       {
@@ -237,6 +241,11 @@
           "id": "refact-toolbox-pane",
           "title": "Refact",
           "icon": "$(codify-logo)"
+        },
+        {
+          "id": "refact-chat-sidebar-pane",
+          "title": "Chat",
+          "icon": "$(codify-chat)"
         }
       ]
     },
@@ -246,6 +255,13 @@
           "type": "webview",
           "id": "refactai-toolbox",
           "name": "AI Toolbox"
+        }
+      ],
+      "refact-chat-sidebar-pane": [
+        {
+          "type": "webview",
+          "id": "refactai-chatSidebar",
+          "name": "AI Chatbox"
         }
       ]
     },
@@ -359,7 +375,6 @@
     "diff": "^5.1.0",
     "difflib": "^0.2.4",
     "fetch-h2": "^3.0.2",
-    "highlight.js": "^11.8.0",
     "marked": "^4.0.8",
     "uuid": "^9.0.0"
   },

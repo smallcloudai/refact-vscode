@@ -1,11 +1,16 @@
 (function () {
     const vscode = acquireVsCodeApi();
-    const back_button = document.querySelector("#back_button");
+    const backButton = document.querySelector("#back_button");
     const chatHistoryList = document.querySelector(".chat-history-list");
 
-    back_button.addEventListener('click', () => {
+    backButton.addEventListener('click', () => {
         vscode.postMessage({ type: "close_chat_history" });
     });
+
+    function formatTime(time) {
+        const options = { hour: 'numeric', minute: 'numeric', second: 'numeric' };
+        return new Date(time).toLocaleTimeString(undefined, options);
+    }
 
     window.addEventListener("message", (event) => {
         const message = event.data;
@@ -42,8 +47,7 @@
 
                     const time = document.createElement("div");
                     time.classList.add("time");
-                    time.textContent = chat.time;
-                    time.style.display = "none";
+                    time.textContent = formatTime(chat.time); // Format and display time
 
                     chatItem.appendChild(deleteButton);
                     chatItem.appendChild(chatName);
@@ -52,7 +56,6 @@
 
                     chatItem.addEventListener("click", () => {
                         vscode.postMessage({ type: "open_old_chat", chatId: chat.chatId });
-
                     });
 
                     chatHistoryList.appendChild(chatItem);

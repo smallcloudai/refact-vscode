@@ -15,12 +15,13 @@ import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import { PrivacySettings } from "./privacySettings";
 import { Mode } from "./estate";
-import { open_chat_tab } from "./sidebar";
 import ChatHistoryProvider from "./chatHistory";
+import ChatTab from "./chatTab";
 
 declare global {
   var status_bar: statusBar.StatusBarMenu;
   var side_panel: sidebar.PanelWebview | undefined;
+  var chat_panel: ChatTab | undefined;
   var streamlined_login_ticket: string;
   var user_logged_in: string;
   var user_active_plan: string;
@@ -39,19 +40,7 @@ declare global {
 
 async function pressed_call_chat() {
   console.log(["pressed_call_chat"]);
-  let editor = vscode.window.activeTextEditor;
-  await open_chat_tab(
-    "",
-    editor,
-    true,
-    "",
-    "",
-    false,
-    [],
-    [],
-    "",
-    new ChatHistoryProvider(global.global_context,"")
-  )
+  await vscode.commands.executeCommand("workbench.action.focusChatSideBar");
 }
 
 async function pressed_escape() {
@@ -318,6 +307,8 @@ export function activate(context: vscode.ExtensionContext) {
   );
   context.subscriptions.push(view);
 
+  
+
   let settingsCommand = vscode.commands.registerCommand(
     "refactaicmd.openSettings",
     () => {
@@ -370,6 +361,18 @@ export function activate(context: vscode.ExtensionContext) {
   setTimeout(() => {
     userLogin.login();
   }, 100);
+
+  global.chat_panel = new ChatTab(
+    context,
+    new ChatHistoryProvider(context, global.user_logged_in),
+    ""
+  );
+  let chatView = vscode.window.registerWebviewViewProvider(
+    "refactai-chatSidebar",
+    global.chat_panel,
+    { webviewOptions: { retainContextWhenHidden: true } }
+  );
+  context.subscriptions.push(chatView);
 
   vscode.workspace.onDidChangeConfiguration((e) => {
     if (e.affectsConfiguration("refactai.infurl")) {

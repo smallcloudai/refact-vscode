@@ -20,20 +20,19 @@ export async function open_chat_tab(
   old_chat: boolean,
   questions: string[] | undefined,
   answers: string[] | undefined,
-  chatId: string,
-  chatHistoryProvider: ChatHistoryProvider
+  chatId: string
 ) {
-  await ChatTab.activate_from_outside(
+  console.log("open chat tab");
+  await global.chat_panel?.activate_from_outside(
     question,
     editor,
     attach_default,
     model,
     model_function,
     old_chat,
-    questions,
-    answers,
     chatId,
-    chatHistoryProvider
+    questions,
+    answers
   );
 }
 
@@ -138,8 +137,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 false,
                 [],
                 [],
-                "",
-                this.chatHistoryProvider
+                ""
               );
             } else {
               await open_chat_tab(
@@ -151,8 +149,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 false,
                 [],
                 [],
-                "",
-                this.chatHistoryProvider
+                ""
               );
             }
           } else {
@@ -165,10 +162,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
               false,
               [],
               [],
-              "",
-              this.chatHistoryProvider
+              ""
             );
           }
+          vscode.commands.executeCommand("workbench.action.focusChatSideBar");
           break;
         }
         case "delete_chat": {
@@ -197,8 +194,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 true,
                 chat?.questions,
                 chat?.answers,
-                chatId,
-                this.chatHistoryProvider
+                chatId
               );
             } else {
               await open_chat_tab(
@@ -210,8 +206,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 true,
                 chat?.questions,
                 chat?.answers,
-                chatId,
-                this.chatHistoryProvider
+                chatId
               );
             }
           } else {
@@ -224,10 +219,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
               true,
               chat?.questions,
               chat?.answers,
-              chatId,
-              this.chatHistoryProvider
+              chatId
             );
           }
+          vscode.commands.executeCommand("workbench.action.focusChatSideBar");
           break;
         }
         case "function_activated": {
@@ -327,8 +322,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
               false,
               [],
               [],
-              "",
-              this.chatHistoryProvider
+              ""
             );
           } else if (function_dict.supports_highlight && selected_text === "") {
             await extension.follow_intent_highlight(
@@ -405,6 +399,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
           global.user_logged_in = "";
           global.user_active_plan = "";
           this.update_webview();
+          global.chat_panel?.update_webview_html(false);
           await userLogin.login();
           break;
         }
@@ -468,7 +463,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
   }
 
-  public update_webview() {
+  public async update_webview() {
     if (!this._view) {
       return;
     }
@@ -479,7 +474,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
       plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
     }
 
-    this._view!.webview.postMessage({
+    await this._view!.webview.postMessage({
       command: "ts2web",
       ts2web_user: global.user_logged_in,
       ts2web_custom_infurl: global.custom_infurl,
