@@ -477,46 +477,40 @@ export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
     messages: [string, string][],
-    function_name: string,
     model: string,
-    stop_tokens: string[],
     third_party: boolean = false,
 ): [Promise<fetchH2.Response>, estate.ApiFields]
 {
-    let url = "";
-    if (global.chat_v1_style) {
-        url = inference_url("/v1/chat", third_party);
-    } else {
-        url = inference_url("/chat-v1/completions", third_party);
+    let url = rust_url("/v1/chat");
+    if (!url) {
+        console.log(["fetch_code_completion: No rust binary working"]);
+        return [Promise.reject("No rust binary working"), new estate.ApiFields()];
     }
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
         return [Promise.reject("No API key"), new estate.ApiFields()];
     }
     let ctx = inference_context(third_party);
-    let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
     let api_fields = new estate.ApiFields();
     api_fields.scope = scope;
     api_fields.url = url;
-    api_fields.function = function_name;
+    api_fields.function = "chat";
     api_fields.ts_req = Date.now();
     api_fields.model = model;
     let json_messages = [];
     for (let i=0; i<messages.length; i++) {
-        let role = messages[i][0];
-        let text = messages[i][1];
         json_messages.push({
-            "role": role,
-            "content": text,
+            "role": messages[i][0],
+            "content": messages[i][1],
         });
-        console.log([i, "chat", role]);
     }
     const body = JSON.stringify({
         "messages": json_messages,
-        "function": function_name,
-        "stop": stop_tokens,
         "model": model,
-        "client": `vscode-${client_version}`,
+        "parameters": {
+            "max_new_tokens": 1000,
+        },
+        "stream": true,
     });
     const headers = {
         "Content-Type": "application/json",

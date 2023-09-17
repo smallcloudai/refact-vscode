@@ -92,6 +92,7 @@ export class ChatTab {
         //         fireup_message["chat_models"] = [["gpt3.5", "chat"]];
         //     }
         // }
+        fireup_message["chat_models"].push(["llama2/13b", "chat"]);
         if (editor) {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
@@ -252,16 +253,16 @@ export class ChatTab {
         if(!this.web_panel) {
             return false;
         }
-        let login = await userLogin.inference_login();
-        if (!login) {
-            this.web_panel.webview.postMessage({
-                command: "chat-post-answer",
-                answer_html: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
-                answer_raw: "",
-                have_editor: false,
-            });
-            return;
-        }
+        // let login = await userLogin.inference_login();
+        // if (!login) {
+        //     this.web_panel.webview.postMessage({
+        //         command: "chat-post-answer",
+        //         answer_html: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
+        //         answer_raw: "",
+        //         have_editor: false,
+        //     });
+        //     return;
+        // }
 
         chat_model_set(model, model_function);  // successfully used model, save it
 
@@ -318,10 +319,7 @@ export class ChatTab {
                 let delta = "";
                 if (json && json["choices"]) {
                     let choice0 = json["choices"][0];
-                    delta = choice0["delta"];
-                }
-                if (json && json["delta"]) { // TODO: remove this after inference server is updated
-                    delta = json["delta"];
+                    delta = choice0["delta"]["content"];
                 }
                 if (delta) {
                     answer += delta;
@@ -389,9 +387,7 @@ export class ChatTab {
             cancelToken,
             "chat-tab",
             this.messages,
-            model_function,
             model,
-            [],
             third_party,
         ));
     }
