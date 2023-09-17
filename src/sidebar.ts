@@ -10,6 +10,7 @@ import * as privacy from "./privacy";
 import { ChatTab } from "./chatTab";
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
+import * as crlf from "./crlf";
 
 export async function open_chat_tab(
   question: string,
@@ -22,19 +23,35 @@ export async function open_chat_tab(
   answers: string[] | undefined,
   chatId: string,
   chatHistoryProvider: ChatHistoryProvider
-) {
-  await ChatTab.activate_from_outside(
-    question,
-    editor,
-    attach_default,
-    model,
-    model_function,
-    old_chat,
-    questions,
-    answers,
-    chatId,
-    chatHistoryProvider
-  );
+) { 
+  if (global.side_panel?.chat) {
+    global.side_panel.chat = null;
+  }
+  if (global.side_panel && global.side_panel._view) {
+    global.side_panel.chat = new ChatTab(chatHistoryProvider, chatId);
+    let context: vscode.ExtensionContext | undefined = global.global_context;
+    if (!context) {
+      return;
+    }
+
+    global.side_panel._view.webview.html =
+      global.side_panel.chat.get_html_for_webview(
+        global.side_panel._view.webview,
+        context.extensionUri
+      );
+    await ChatTab.activate_from_outside(
+      question,
+      editor,
+      attach_default,
+      model,
+      model_function,
+      old_chat,
+      questions,
+      answers,
+      chatId,
+      chatHistoryProvider
+    );
+  }
 }
 
 export class PanelWebview implements vscode.WebviewViewProvider {
@@ -44,6 +61,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
   access_level: number = -1;
 
   constructor(private readonly _context: any) {}
+
+  public chat: ChatTab | null = null;
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -418,6 +437,98 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             "@ext:smallcloud.codify"
           );
           break;
+        }
+
+        //chat commands
+        case "open-new-file": {
+          vscode.workspace.openTextDocument().then((document) => {
+            vscode.window
+              .showTextDocument(document, vscode.ViewColumn.Active)
+              .then((editor) => {
+                editor.edit((editBuilder) => {
+                  editBuilder.insert(new vscode.Position(0, 0), data.value);
+                });
+              });
+          });
+          break;
+        }
+        case "diff-paste-back": {
+          if (!this.chat?.working_on_snippet_editor) {
+            return;
+          }
+          await vscode.window.showTextDocument(
+            this.chat?.working_on_snippet_editor.document,
+            this.chat?.working_on_snippet_column
+          );
+          let state = estate.state_of_document(
+            this.chat?.working_on_snippet_editor.document
+          );
+          if (!state) {
+            return;
+          }
+          let editor = state.editor;
+          if (state.get_mode() !== estate.Mode.Normal) {
+            return;
+          }
+          if (!this.chat?.working_on_snippet_range) {
+            return;
+          }
+          let verify_snippet = editor.document.getText(
+            this.chat?.working_on_snippet_range!
+          );
+          if (verify_snippet !== this.chat?.working_on_snippet_code) {
+            return;
+          }
+          let text = editor.document.getText();
+          let snippet_ofs0 = editor.document.offsetAt(
+            this.chat?.working_on_snippet_range.start
+          );
+          let snippet_ofs1 = editor.document.offsetAt(
+            this.chat?.working_on_snippet_range.end
+          );
+          let modif_doc: string =
+            text.substring(0, snippet_ofs0) +
+            data.value +
+            text.substring(snippet_ofs1);
+          [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
+          state.showing_diff_modif_doc = modif_doc;
+          state.showing_diff_move_cursor = true;
+          estate.switch_mode(state, estate.Mode.Diff);
+          break;
+        }
+        case "question-posted-within-tab": {
+          await this.chat?.chat_post_question(
+            data.chat_question,
+            data.chat_model,
+            data.chat_model_function,
+            data.chat_attach_file
+          );
+          this.chat?.messages.forEach((i) => console.log(i));
+          break;
+        }
+        case "stop-clicked": {
+          this.chat?.cancellationTokenSource.cancel();
+          break;
+        }
+        case "reset-messages": {
+          if (this.chat?.messages) {
+            this.chat.messages = data.messages_backup;
+
+            this.chat.chatHistoryProvider.popLastMessageFromChat(
+              this.chat?.chatId,
+              true,
+              true
+            );
+          }
+          break;
+        }
+        case "back-from-chat": {
+          webviewView.webview.html = this._getHtmlForWebview(
+            webviewView.webview
+          );
+          this.update_webview();
+          this.get_bookmarks();
+          this.chat = null;
         }
         // case "checkSelection": {
         //     this.check_selection();

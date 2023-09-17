@@ -1,11 +1,18 @@
 (function () {
     const vscode = acquireVsCodeApi();
-    const back_button = document.querySelector("#back_button");
+    const backButton = document.querySelector("#back_button");
     const chatHistoryList = document.querySelector(".chat-history-list");
 
-    back_button.addEventListener('click', () => {
+    backButton.addEventListener('click', () => {
         vscode.postMessage({ type: "close_chat_history" });
     });
+
+    function getCurrentTimestamp() {
+        const now = new Date();
+        const date = now.toLocaleDateString();
+        const time = now.toLocaleTimeString();
+        return `${date} ${time}`;
+    }
 
     window.addEventListener("message", (event) => {
         const message = event.data;
@@ -14,6 +21,7 @@
                 // Clear the chat history list
                 chatHistoryList.innerHTML = "";
                 const chatHistory = message.history || [];
+                console.log(chatHistory);
 
                 chatHistory.forEach((chat) => {
                     const chatItem = document.createElement("div");
@@ -40,19 +48,18 @@
                     lastQuestion.classList.add("last-question");
                     lastQuestion.textContent = chat.lastQuestion;
 
-                    const time = document.createElement("div");
-                    time.classList.add("time");
-                    time.textContent = chat.time;
-                    time.style.display = "none";
+                    const timestamp = document.createElement('div');
+                    timestamp.classList.add('chat-timestamp');
+                    timestamp.innerText = getCurrentTimestamp();
+                    chatItem.appendChild(timestamp);
 
                     chatItem.appendChild(deleteButton);
                     chatItem.appendChild(chatName);
                     chatItem.appendChild(lastQuestion);
-                    chatItem.appendChild(time);
+
 
                     chatItem.addEventListener("click", () => {
                         vscode.postMessage({ type: "open_old_chat", chatId: chat.chatId });
-
                     });
 
                     chatHistoryList.appendChild(chatItem);

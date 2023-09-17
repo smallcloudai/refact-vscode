@@ -22,23 +22,28 @@ body.vscode-dark {
   position: absolute;
   top: 5px;
   right: 5px;
-  background-color: black;
+  background-color: inherit;
   color: white;
   border: none;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 4px 5px;
   border-radius: 50%;
 }
 
 #back_button {
-  width: 80px;
-  display: block;
-  background: var(--secondary) !important;
-  border: 0 !important;
-  color: var(--vscode-editorWidget-background) !important;
-  padding: 4px 6px;
+  background-color: #f0f0f0; 
+  color: #333;
+  border: none;
+  padding: 5px 5px;
   cursor: pointer;
-  height: 28px;
+  font-size: 14px;
+  border-radius: 10px;
+  width:40px;
+  margin-bottom: 5px; 
+}
+
+#back_button:hover {
+  background-color: #ddd; 
 }
 
 .chat-history-list {
@@ -49,8 +54,11 @@ body.vscode-dark {
   background-color: #005ba1; /* Blue background color */
   padding: 10px;
   margin: 5px 0;
+  height: 50px;
   cursor: pointer;
+  max-width: 250px;
   position: relative;
+  border-radius: 10px;
 }
 
 .chat-name {
@@ -61,7 +69,8 @@ body.vscode-dark {
   color: lightgrey; /* Light grey text color */
 }
 
-.time {
+.chat-timestamp {
   font-size: 12px;
-  display: none; /* Hide the time element */
+  color: #999; /* Gray color for the timestamp */
+  margin-bottom: 5px;
 }

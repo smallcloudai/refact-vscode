@@ -10,7 +10,6 @@ import ChatHistoryProvider from "./chatHistory";
 export class ChatTab {
   // public static current_tab: ChatTab | undefined;
   // private _disposables: vscode.Disposable[] = [];
-  public web_panel: vscode.WebviewPanel;
   public messages: [string, string][];
   public cancellationTokenSource: vscode.CancellationTokenSource;
   public working_on_attach_code: string = "";
@@ -19,21 +18,10 @@ export class ChatTab {
   public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
   public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
   public model_to_thirdparty: { [key: string]: boolean };
-  private chatHistoryProvider: ChatHistoryProvider;
-  private chatId: string = "";
+  public chatHistoryProvider: ChatHistoryProvider;
+  public chatId: string = "";
 
-  private constructor(
-    panel: vscode.WebviewPanel,
-    extensionUri: vscode.Uri,
-    chatHistoryProvider: ChatHistoryProvider,
-    chatId: string,
-    context: any
-  ) {
-    this.web_panel = panel;
-    this.web_panel.webview.html = ChatTab.get_html_for_webview(
-      this.web_panel.webview,
-      extensionUri
-    );
+  public constructor(chatHistoryProvider: ChatHistoryProvider, chatId: string) {
     this.messages = [];
     this.model_to_thirdparty = {};
     this.cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -60,26 +48,11 @@ export class ChatTab {
       return;
     }
 
-    const panel = vscode.window.createWebviewPanel(
-      "refact-chat-tab",
-      "Refact.ai Chat",
-      vscode.ViewColumn.Two,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
-      }
-    );
-    panel.iconPath = vscode.Uri.file(
-      context.asAbsolutePath("images/discussion-bubble.svg")
-    );
-
-    let free_floating_tab = new ChatTab(
-      panel,
-      context.extensionUri,
-      chatHistoryProvider,
-      chatId,
-      context
-    );
+    let free_floating_tab = global.side_panel?.chat;
+    if (!free_floating_tab) {
+      console.log("no chat found!");
+      return;
+    }
     let code_snippet = "";
     free_floating_tab.working_on_snippet_range = undefined;
     free_floating_tab.working_on_snippet_editor = undefined;
@@ -206,9 +179,9 @@ export class ChatTab {
       if (code_snippet) {
         pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
       }
-      panel.webview.postMessage(pass_dict);
+      global.side_panel?._view?.webview.postMessage(pass_dict);
     }
-
+    /*
     panel.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
         case "open-new-file": {
@@ -292,8 +265,8 @@ export class ChatTab {
         }
       }
     });
-
-    panel.webview.postMessage(fireup_message);
+    */
+    global.side_panel?._view?.webview.postMessage(fireup_message);
   }
 
   // public dispose()
@@ -324,7 +297,7 @@ export class ChatTab {
       html = question;
     }
     //console.log("question-html: " + html);
-    this.web_panel.webview.postMessage({
+    global.side_panel?._view?.webview.postMessage({
       command: "chat-post-question",
       question_html: html,
       question_raw: question,
@@ -344,7 +317,7 @@ export class ChatTab {
     if (!valid_html) {
       html = answer;
     }
-    this.web_panel.webview.postMessage({
+    global.side_panel?._view?.webview.postMessage({
       command: "chat-post-answer",
       answer_html: html,
       answer_raw: answer,
@@ -358,12 +331,12 @@ export class ChatTab {
     model_function: string,
     attach_file: boolean
   ) {
-    if (!this.web_panel) {
-      return false;
+    if (!global.side_panel?._view) {
+      return;
     }
     let login = await userLogin.inference_login();
     if (!login) {
-      this.web_panel.webview.postMessage({
+      global.side_panel?._view?.webview.postMessage({
         command: "chat-post-answer",
         answer_html:
           "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
@@ -383,16 +356,16 @@ export class ChatTab {
       let first_normal_char_index = question.search(/[^ \n\r\t`]/);
       let first_15_characters = question.substring(
         first_normal_char_index,
-        first_normal_char_index + 15
+        first_normal_char_index + 40
       );
       let first_16_characters = question.substring(
         first_normal_char_index,
-        first_normal_char_index + 16
+        first_normal_char_index + 41
       );
       if (first_15_characters !== first_16_characters) {
         first_15_characters += "…";
       }
-      this.web_panel.title = first_15_characters;
+      global.side_panel._view.title = first_15_characters;
       if (attach_file) {
         this.messages.push(["user", this.working_on_attach_code]);
 
@@ -420,7 +393,7 @@ export class ChatTab {
       "",
       model,
       model_function,
-      this.web_panel.title
+      global.side_panel._view.title || ""
     );
 
     if (this.messages.length > 10) {
@@ -429,7 +402,7 @@ export class ChatTab {
     }
     this._question_to_div(question, messages_backup);
     //add question to history
-    this.web_panel.webview.postMessage({
+    global.side_panel?._view?.webview.postMessage({
       command: "chat-post-answer",
       answer_html: "⏳",
       answer_raw: "",
@@ -440,7 +413,6 @@ export class ChatTab {
     //add to history once all requests are finished
 
     let answer = "";
-    let stack_web_panel = this.web_panel;
     let stack_this = this;
 
     async function _streaming_callback(json: any) {
@@ -479,7 +451,7 @@ export class ChatTab {
           }
 
           if (valid_html) {
-            stack_web_panel.webview.postMessage({
+            global.side_panel?._view?.webview.postMessage({
               command: "chat-post-answer",
               answer_html: html,
               answer_raw: answer,
@@ -516,7 +488,7 @@ export class ChatTab {
           }
         }
         console.log("backup_user_phrase:" + backup_user_phrase);
-        stack_this.web_panel.webview.postMessage({
+        global.side_panel?._view?.webview.postMessage({
           command: "chat-error-streaming",
           backup_user_phrase: backup_user_phrase,
         });
@@ -529,10 +501,10 @@ export class ChatTab {
           answer,
           model,
           model_function,
-          stack_this.web_panel.title
+          global.side_panel?._view?.title || ""
         );
 
-        stack_this.web_panel.webview.postMessage({
+        global.side_panel?._view?.webview.postMessage({
           command: "chat-end-streaming",
         });
       }
@@ -559,7 +531,7 @@ export class ChatTab {
     );
   }
 
-  static get_html_for_webview(
+  public get_html_for_webview(
     webview: vscode.Webview,
     extensionUri: any
   ): string {
@@ -595,6 +567,7 @@ export class ChatTab {
             </head>
             <body>
                 <div class="refactcss-chat">
+                    <button class="back-button">← Back</button>
                     <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__content"></div>

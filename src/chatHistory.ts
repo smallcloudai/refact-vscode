@@ -52,10 +52,18 @@ export default class ChatHistoryProvider {
       lastQuestion: string;
     }[] = userChatData.map((chat) => ({
       chatId: chat.chatId,
-      chatName: chat.chatName,
+      chatName:
+        chat.chatName.length > 15
+          ? chat.chatName.substring(0, 15) + "..."
+          : chat.chatName,
       time: chat.time,
-      lastQuestion: chat.questions[chat.questions.length - 1] || "",
+      lastQuestion: chat.questions[chat.questions.length - 1]
+        ? chat.questions[chat.questions.length - 1].length > 15
+          ? chat.questions[chat.questions.length - 1].substring(0, 15) + "..."
+          : chat.questions[chat.questions.length - 1]
+        : "",
     }));
+
     chatNamesWithTime.sort((a, b) => {
       const aTime = a.time instanceof Date ? a.time.getTime() : 0;
       const bTime = b.time instanceof Date ? b.time.getTime() : 0;

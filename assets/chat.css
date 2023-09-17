@@ -314,6 +314,21 @@ body.vscode-dark {
   margin-top: 5px;
 }
 
+.back-button {
+  background-color: #f0f0f0; /* Light gray background color */
+  color: #333;
+  border: none;
+  padding: 5px 5px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 10px;
+  margin-bottom: 5px; 
+}
+
+.back-button:hover {
+  background-color: #ddd; 
+}
+
 .refactcss-chat__submit-button {
   background-color: #66cc66; /* Green background color */
   color: #fff;
