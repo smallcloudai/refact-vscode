@@ -71,7 +71,8 @@ export class CompletionApiFieldsWithTimer extends estate.ApiFields
             for (let i = 0; i < gray_edited_split.length; i++) {
                 console.log(["edited", gray_edited_split[i]]);
             }
-            if (gray_suggested !== this.grey_text_explicitly) {
+            let gray_suggested_without_slash_r = gray_suggested.replace(/\r/g, "");
+            if (gray_suggested_without_slash_r !== this.grey_text_explicitly) {
                     let gray_split = this.grey_text_explicitly.split(/\r?\n/);
                     for (let i = 0; i < gray_split.length; i++) {
                         console.log(["grey_text_explicitly", gray_split[i]]);
