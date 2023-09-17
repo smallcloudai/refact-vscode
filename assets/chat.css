@@ -277,3 +277,47 @@ body.vscode-dark {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
+
+.refactcss-chat__cancel-button, .refactcss-chat__submit-button {
+	border: 1px solid var(--secondary);
+	width: 100px;
+	cursor: pointer;
+  }
+  
+  .refactcss-chat__input-field {
+	width: 100%;
+	box-sizing: border-box;
+	border: 1px solid var(--secondary);
+	padding: 10px;
+	background: transparent !important;
+	color: var(--secondary) !important;
+	font-family: sans-serif !important;
+	font-size: 14px;
+	overflow-x: auto;
+}
+  
+  .refactcss-chat__retry-input {
+	width: 100%;
+	box-sizing: border-box;
+	border: 1px solid var(--secondary);
+	padding: 10px;
+	background: transparent !important;
+	color: var(--secodary) !important;
+	font-family: sans-serif !important;
+	font-size: 14px;
+	overflow-x: auto;
+	min-height: 32px;
+	resize: vertical;
+  }
+  
+  .refactcss-chat__question {
+	text-align: center;
+  }
+
+  .refactcss-chat__input-container{
+	flex-direction: column;
+  }
+
+  .refactcss-chat__button-container{
+	justify-content: space-evenly;
+  }

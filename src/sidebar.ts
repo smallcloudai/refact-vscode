@@ -431,7 +431,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div id="sidebar" class="sidebar">
                     <div class="toolbox">
                         <div class="toolbox-inline">
-                            <input class="toolbox-search" id="toolbox-search" placeholder="press F1; ↓ commands; ↑ history">
+                            <input class="toolbox-search" id="toolbox-search" placeholder="press F1; ↓ commands;">
                         </div>
                         <div class="toolbox-tags">
                         </div>

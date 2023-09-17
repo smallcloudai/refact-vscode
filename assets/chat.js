@@ -87,38 +87,44 @@
             message_pair_div.appendChild(question_div);
             last_answer_div = null;
 
-            const retryInput = document.createElement('textarea');
-            retryInput.style.display = 'none'
-            retryInput.type = 'text';
-            retryInput.value = data.question_raw;
-            retryInput.classList.add('refactcss-chat__retryinput');
-            question_div.appendChild(retryInput);
+            const input_container = document.createElement('div');
+            input_container.classList.add('refactcss-chat__input-container');
+            input_container.style.display = 'none';
+            message_pair_div.appendChild(input_container);
 
-            const cancelButton = document.createElement('button');
-            cancelButton.style.display = 'none';
-            cancelButton.innerText = 'Cancel';
-            cancelButton.classList.add('refactcss-chat__cancel-button');
-            cancelButton.addEventListener('click', () => {
+            const retry_input = document.createElement('textarea');
+            retry_input.style.display = 'block';
+            retry_input.type = 'text';
+            retry_input.value = data.question_raw;
+            retry_input.classList.add('refactcss-chat__retry-input');
+            input_container.appendChild(retry_input);
+            const button_container = document.createElement('div');
+            button_container.classList.add('refactcss-chat__button-container');
+            button_container.style.display = 'flex';
+            input_container.appendChild(button_container);
+
+            const cancel_button = document.createElement('button');
+            cancel_button.style.display = 'block';
+            cancel_button.innerText = 'Cancel';
+            cancel_button.classList.add('refactcss-chat__cancel-button');
+            cancel_button.addEventListener('click', () => {
                 question_div.style.display = 'block';
-                retryInput.style.display = 'none';
-                retryInput.value = data.question_raw;
-                retry_button.style.display = 'block';
-                cancelButton.style.display = 'none';
-                submitButton.style.display = 'none';
+                retry_input.value = data.question_raw;
+                input_container.style.display = 'none';
             })
-            question_div.appendChild(cancelButton);
+            button_container.appendChild(cancel_button);
 
-            const submitButton = document.createElement('button');
-            submitButton.style.display = 'none';
-            submitButton.innerText = 'Submit';
-            submitButton.classList.add('refactcss-chat__submit-button');
-            submitButton.addEventListener('click', ()=> {
-                const message = inputField.value;
+            const submit_button = document.createElement('button');
+            submit_button.style.display = 'block';
+            submit_button.innerText = 'Submit';
+            submit_button.classList.add('refactcss-chat__submit-button');
+            submit_button.addEventListener('click', ()=> {
+                const message = retry_input.value;
                 let chat_model_combo = document.getElementById("chat-model");
                 console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 let chat_attach_file = document.getElementById("chat-attach");
-                retryInput.value = '';
+                retry_input.value = '';
                 vscode.postMessage({
                     type: "question-posted-within-tab",
                     chat_question: message,
@@ -126,8 +132,21 @@
                     chat_model_function: chat_model_function,
                     chat_attach_file: chat_attach_file.checked
                 });
+                if (!chat_controls_moved) {
+                    const chat_controls = document.querySelector('.refactcss-chat__controls');
+                    const chat_content = document.querySelector('.refactcss-chat__content');
+                    chat_content.appendChild(chat_controls);
+                    chat_controls_moved = true;
+                    const chat_label = document.getElementById("chat-attach-label");
+                    const chat_input = document.getElementById("chat-attach");
+                    if (chat_input.checked) {
+                        chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
+                    }
+                    document.querySelector('.refactcss-chat__panel').style.maxHeight = '180px';
+                }
+                input_container.style.display = 'none';
             })
-            question_div.appendChild(submitButton);
+            button_container.appendChild(submit_button);
 
             const retry_button = document.createElement('button');
             retry_button.innerText = 'Retry';
@@ -139,11 +158,20 @@
                     messages_backup: JSON.parse(question_div.dataset.messages_backup)
                 });
                 question_div.style.display = 'none';
-                retryInput.style.display = 'block';
-                cancelButton.style.display = 'block';
-                submitButton.style.display = 'block';
-                retryInput.focus();
+                input_container.style.display = 'flex';
+                retry_input.focus();
             });
+
+            visibility_control(true);
+            answer_counter = parseInt(message_pair_div.dataset.answer_counter);
+            const chats = document.querySelectorAll('.refactcss-chat__item');
+            for (let i = chats.length - 1; i >= 0; i--) {
+                const chat = chats[i];
+                if (parseInt(chat.dataset.answer_counter) >= answer_counter) {
+                    chat.remove();
+                }
+            }
+            
         }
 
         if (!last_answer_div && data.answer_html) {
