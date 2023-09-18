@@ -310,7 +310,6 @@
         let isStreaming = false;
         switch (message.command) {
             case "chat-set-fireup-options":
-                console.log("chat fired up!");
                 let chat_attach_file = document.getElementById("chat-attach");
                 chat_attach_file.checked = message.chat_attach_default;
                 let label = document.getElementById("chat-attach-label");
@@ -338,23 +337,19 @@
                 input_should_be_visible = true;
                 break;
             case "chat-end-streaming":
-                console.log("end of steraming");
                 input_should_be_visible = true;
                 isStreaming = false;
                 break;
             case "chat-error-streaming":
-                console.log("error in streaming");
                 input_should_be_visible = true;
                 chat_input.value = message.backup_user_phrase;
                 isStreaming = false;
                 break;
             case "chat-post-question":
-                console.log("q posted");
                 chat_render(message);
                 isStreaming = false;
                 break;
             case "chat-post-answer":  // streaming also goes there, with partial answers
-                console.log("a posted");
                 chat_render(message);
                 isStreaming = true;
                 break;
