@@ -58,9 +58,12 @@ export default class ChatHistoryProvider {
           : chat.chatName,
       time: chat.time,
       lastQuestion: chat.questions[chat.questions.length - 1]
-        ? chat.questions[chat.questions.length - 1].length > 15
-          ? chat.questions[chat.questions.length - 1].substring(0, 15) + "..."
-          : chat.questions[chat.questions.length - 1]
+        ? chat.questions[chat.questions.length - 1].replace("'''", "").length >
+          15
+          ? chat.questions[chat.questions.length - 1]
+              .replace("'''", "")
+              .substring(0, 15) + "..."
+          : chat.questions[chat.questions.length - 1].replace("'''", "")
         : "",
     }));
 
