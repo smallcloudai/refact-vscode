@@ -34,7 +34,7 @@ declare global {
     var streamlined_login_countdown: number;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
-    var chat_v1_style: boolean;
+    var chat_models: string[];
 }
 
 async function pressed_call_chat() {
