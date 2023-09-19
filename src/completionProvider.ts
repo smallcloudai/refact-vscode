@@ -395,12 +395,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let ms_int = Math.round(t1 - t0);
         console.log([`API request ${ms_int}ms`]);
 
-        let completion = json[0]["code_completion"];
+        let completion = json["choices"][0]["code_completion"];
         if (completion === undefined || completion === "" || completion === "\n") {
             console.log(["completion is empty", completion]);
             return ["", -1];
         }
-        let de_facto_model = json[0]["model"];
+        let de_facto_model = json["model"];
         _completion_data_feedback_candidate.grey_text_explicitly = completion;
         _completion_data_feedback_candidate.de_facto_model = de_facto_model;
         let forward_key = cache_key;

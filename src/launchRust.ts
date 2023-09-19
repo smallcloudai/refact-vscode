@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import * as mod_child_process from 'child_process';
 import * as fetchH2 from 'fetch-h2';
+import * as userLogin from './userLogin';
 import { join } from 'path';
 
 
@@ -31,6 +32,7 @@ export class RustBinaryBlob
     public async settings_changed()
     {
         let userport: number|undefined = vscode.workspace.getConfiguration().get("refactai.xDebugPort");
+        let api_key: string = userLogin.secret_api_key();
         let port_not_set = userport === undefined || userport === null;
         let port: number;
         if (port_not_set) {
@@ -53,10 +55,11 @@ export class RustBinaryBlob
         }
         let new_cmdline: string[] = [
             join(this.asset_path, "code-scratchpads"),
-            "--address-url",
-            url,
-            "--port",
-            port.toString(),
+            "--address-url", url,
+            "--port", port.toString(),
+            "--api-key", api_key,
+            "--enduser-client-version", "refact-vscode-" + vscode.version,
+            "--basic-telemetry"
         ];
         let cmdline_existing: string = this.cmdline.join(" ");
         let cmdline_new: string = new_cmdline.join(" ");
