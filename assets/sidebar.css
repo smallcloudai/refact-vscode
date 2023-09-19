@@ -1075,7 +1075,7 @@ body.vscode-light .refact-welcome__hf {
 	font-weight: bold;
 	color: var(--vscode-editor-selectionForeground) !important;
 	cursor: pointer;
-	margin-bottom: 10px;
+	margin-bottom: 20px;
 }
 .refact-welcome__actions {
 	display: flex;
@@ -1116,4 +1116,8 @@ body.vscode-light .refact-welcome__subpanel {
 }
 .refact-welcome__hflink {
 	margin: 15px 0;
+}
+.refact-welcome__or {
+	margin: 10px 0;
+	text-align: center;
 }

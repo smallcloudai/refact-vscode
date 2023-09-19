@@ -96,6 +96,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
                     break;
                 }
+                case "button_refact_save": {
+                    await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
+                    await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
+                    break;
+                }
                 case "button_refact_open_streamlined": {
                     vscode.commands.executeCommand('refactaicmd.login');
                     break;
@@ -112,6 +117,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 }
                 case "save_selfhosted": {
                     await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
+                    await vscode.workspace.getConfiguration().update('refactai.apiKey', 'aaa', vscode.ConfigurationTarget.Global);
                     break;
                 }
                 case "privacy": {
@@ -349,11 +355,17 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                         <div data-provider="refact" class="refact-welcome__subpanel">
                             <h2>Refact Cloud</h2>
+                            <div>
+                                <label class="refact-welcome__label">API Key</label>
+                                <input class="refact-welcome__apikey_refact refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                            </div>
+                            <div class="refact-welcome__or">or</div>
                             <button class="refact-welcome__refact">
                                 Login / Create Account
                             </button>
                             <div class="refact-welcome__actions">
                                 <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
+                                <button class="refact-welcome__next refact-welcome__next_refact">Next&nbsp;&nbsp;&rsaquo;</button>
                             </div>
                         </div>
 

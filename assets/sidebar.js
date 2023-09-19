@@ -49,6 +49,22 @@
         });
     });
 
+    const next_button_refact = document.querySelector('.refact-welcome__next_refact');
+    next_button_refact.addEventListener("click", () => {
+        const enter_apikey = document.querySelector('.refact-welcome__apikey_refact');
+        vscode.postMessage({
+            type: "button_refact_save",
+            refact_api_key: enter_apikey.value,
+        });
+    });
+
+    const selfhosting_input = document.querySelector('.refact-welcome__endpoint');
+    selfhosting_input.addEventListener("change",() => {
+        if(selfhosting_input.value === '') {
+            selfhosting_input.value = 'http://127.0.0.1:8008'
+        }
+    });
+
     function change_provider_subscreen(selection_type) {
         const screens = document.querySelectorAll(".refact-welcome__subscreen");
         screens.forEach((screen) => {
@@ -400,7 +416,7 @@
                     staging = message.ts2js_staging;
                 }
                 if (message.ts2js_havekey) {
-                    login.style.display = 'none';
+                    // login.style.display = 'none';
                     // settings.classList.toggle('settings-full');
                 }
                 break;
