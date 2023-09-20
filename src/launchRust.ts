@@ -43,14 +43,14 @@ export class RustBinaryBlob
         } else {
             console.log("RUST debug port is set, assuming debugging session, don't start rust binary. Also, will try to read caps. If that fails, things like lists of available models will be empty.");
             this.cmdline = [];
-            this.terminate();
+            await this.terminate();
             await this.read_caps();
             return;
         }
         let url: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
         if (url === undefined || url === null || url === "") {
             this.cmdline = [];
-            this.terminate();
+            await this.terminate();
             return;
         }
         let new_cmdline: string[] = [
@@ -70,10 +70,13 @@ export class RustBinaryBlob
         }
     }
 
-    public terminate()
+    public async terminate()
     {
         if (this.process) {
-            console.log("RUST TERMINATE");
+            console.log("RUST SIGINT");
+            this.process.kill("SIGINT");
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log("RUST SIGTERM");
             this.process.kill();
             this.process = undefined;
         }
@@ -81,7 +84,7 @@ export class RustBinaryBlob
 
     public async launch()
     {
-        this.terminate();
+        await this.terminate();
         console.log(["RUST LAUNCH:", this.cmdline.join(" ")]);
         this.process = mod_child_process.spawn(
             this.cmdline[0],
