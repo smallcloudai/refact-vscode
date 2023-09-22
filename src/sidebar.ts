@@ -1,628 +1,731 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as fetchAPI from "./fetchAPI";
-import * as userLogin from "./userLogin";
-import { marked } from "marked"; // Markdown parser documentation: https://marked.js.org/
 import * as estate from "./estate";
-import * as crlf from "./crlf";
-import ChatHistoryProvider from "./history";
+import * as userLogin from "./userLogin";
+import * as dataCollectionPage from "./dataCollectionPage";
+import * as dataCollection from "./dataCollection";
+import * as extension from "./extension";
+import * as fetchH2 from "fetch-h2";
+import * as privacy from "./privacy";
+import { ChatTab } from "./chatTab";
+import ChatHistoryProvider from "./chatHistory";
+import { Chat } from "./chatHistory";
 
-export class ChatTab {
-  // public static current_tab: ChatTab | undefined;
-  // private _disposables: vscode.Disposable[] = [];
-  public web_panel: vscode.WebviewPanel;
-  public messages: [string, string][];
-  public cancellationTokenSource: vscode.CancellationTokenSource;
-  public working_on_attach_code: string = "";
-  public working_on_snippet_code: string = "";
-  public working_on_snippet_range: vscode.Range | undefined = undefined;
-  public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
-  public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
-  public model_to_thirdparty: { [key: string]: boolean };
-  private chatHistoryProvider: ChatHistoryProvider;
-  private chatId: string = "";
+export async function open_chat_tab(
+  question: string,
+  editor: vscode.TextEditor | undefined,
+  attach_default: boolean,
+  model: string,
+  model_function: string = "",
+  old_chat: boolean,
+  questions: string[] | undefined,
+  answers: string[] | undefined,
+  chatId: string,
+  chatHistoryProvider: ChatHistoryProvider
+) {
+  await ChatTab.activate_from_outside(
+    question,
+    editor,
+    attach_default,
+    model,
+    model_function,
+    old_chat,
+    questions,
+    answers,
+    chatId,
+    chatHistoryProvider
+  );
+}
 
-  private constructor(
-    panel: vscode.WebviewPanel,
-    extensionUri: vscode.Uri,
-    chatHistoryProvider: ChatHistoryProvider,
-    chatId: string,
-    context: any
+export class PanelWebview implements vscode.WebviewViewProvider {
+  _view?: vscode.WebviewView;
+  _history: string[] = [];
+  selected_lines_count: number = 0;
+  access_level: number = -1;
+
+  constructor(private readonly _context: any) {}
+
+  public resolveWebviewView(
+    webviewView: vscode.WebviewView,
+    context: vscode.WebviewViewResolveContext,
+    _token: vscode.CancellationToken
   ) {
-    this.web_panel = panel;
-    this.web_panel.webview.html = ChatTab.get_html_for_webview(
-      this.web_panel.webview,
-      extensionUri
-    );
-    this.messages = [];
-    this.model_to_thirdparty = {};
-    this.cancellationTokenSource = new vscode.CancellationTokenSource();
-    this.chatHistoryProvider = chatHistoryProvider;
-    if (chatId === "" || chatId === undefined) {
-      this.chatId = this.chatHistoryProvider.generateChatId();
-    }
-  }
+    this._view = webviewView;
 
-  public static async activate_from_outside(
-    question: string,
-    editor: vscode.TextEditor | undefined,
-    attach_default: boolean,
-    use_model: string,
-    use_model_function: string,
-    old_chat: boolean,
-    questions: string[] | undefined,
-    answers: string[] | undefined,
-    chatId: string,
-    chatHistoryProvider: ChatHistoryProvider
-  ) {
-    let context: vscode.ExtensionContext | undefined = global.global_context;
-    if (!context) {
-      return;
-    }
+    setTimeout(() => {
+      webviewView.webview.postMessage({
+        command: "editor_inform",
+        selected_lines_count: this.selected_lines_count,
+        access_level: this.access_level,
+      });
+    }, 1000);
 
-    const panel = vscode.window.createWebviewPanel(
-      "refact-chat-tab",
-      "Refact.ai Chat",
-      vscode.ViewColumn.Two,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
-      }
-    );
-    panel.iconPath = vscode.Uri.file(
-      context.asAbsolutePath("images/discussion-bubble.svg")
-    );
-
-    let free_floating_tab = new ChatTab(
-      panel,
-      context.extensionUri,
-      chatHistoryProvider,
-      chatId,
-      context
-    );
-    let code_snippet = "";
-    free_floating_tab.working_on_snippet_range = undefined;
-    free_floating_tab.working_on_snippet_editor = undefined;
-    free_floating_tab.working_on_snippet_column = undefined;
-    if (!use_model) {
-      [use_model, use_model_function] = await chat_model_get();
-    }
-    let fireup_message = {
-      command: "chat-set-fireup-options",
-      chat_models: [] as [string, string][],
-      chat_use_model: use_model,
-      chat_use_model_function: use_model_function,
-      chat_attach_file: "",
-      chat_attach_default: false,
-      manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl"),
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [this._context.extensionUri],
     };
 
-    if (global.longthink_functions_today) {
-      const keys = Object.keys(global.longthink_functions_today);
-      for (let i = 0; i < keys.length; i++) {
-        let key = keys[i];
-        if (key.includes("chat-") || key.includes("-chat")) {
-          let function_dict = global.longthink_functions_today[key];
-          let model = function_dict.model;
-          if (model === "open-chat") {
-            // TODO: for backward compatibility, remove this later
-            model = "gpt3.5";
-          }
-          fireup_message["chat_models"].push([
-            model,
-            function_dict.function_name,
-          ]);
-          free_floating_tab.model_to_thirdparty[model] =
-            !!function_dict.thirdparty;
-        }
-      }
-      if (fireup_message["chat_models"].length === 0 && !global.chat_v1_style) {
-        fireup_message["chat_models"] = [["gpt3.5", "chat"]];
-      }
-    }
-    if (editor) {
-      let selection = editor.selection;
-      let empty =
-        selection.start.line === selection.end.line &&
-        selection.start.character === selection.end.character;
-      if (!empty) {
-        let last_line_empty = selection.end.character === 0;
-        selection = new vscode.Selection(
-          selection.start.line,
-          0,
-          selection.end.line,
-          last_line_empty ? 0 : 999999
-        );
-        code_snippet = editor.document.getText(selection);
-        free_floating_tab.working_on_snippet_range = selection;
-        free_floating_tab.working_on_snippet_editor = editor;
-        free_floating_tab.working_on_snippet_column = editor.viewColumn;
-      }
-      let fn = editor.document.fileName;
-      let short_fn = fn.replace(/.*[\/\\]/, "");
-      fireup_message["chat_attach_file"] = short_fn;
-      fireup_message["chat_attach_default"] = attach_default;
-      let pos0 = selection.start;
-      let pos1 = selection.end;
-      let attach = "";
-      while (1) {
-        let attach_test = editor.document.getText(new vscode.Range(pos0, pos1));
-        if (attach_test.length > 2000) {
-          break;
-        }
-        attach = attach_test;
-        let moved = false;
-        if (pos0.line > 0) {
-          pos0 = new vscode.Position(pos0.line - 1, 0);
-          moved = true;
-        }
-        if (pos1.line < editor.document.lineCount - 1) {
-          pos1 = new vscode.Position(pos1.line + 1, 999999);
-          moved = true;
-        }
-        if (!moved) {
-          break;
-        }
-      }
-      free_floating_tab.working_on_attach_code = attach;
-    }
-    free_floating_tab.working_on_snippet_code = code_snippet;
+    webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    if (old_chat && questions) {
-      let messages_backup: [string, string][] = [];
-      //console.log("adding old chat");
+    this.update_webview();
+    this.get_bookmarks();
 
-      for (let i = 0; i < questions.length; i++) {
-        const question = questions[i];
-        const answer = answers && answers.length > i ? answers[i] : null;
+    vscode.commands.registerCommand("workbench.action.focusSideBar", () => {
+      webviewView.webview.postMessage({ command: "focus" });
+    });
 
-        free_floating_tab.messages.push(["user", question]);
-        free_floating_tab._question_to_div(question, messages_backup);
-        messages_backup.push(["user", question]);
-
-        if (answer) {
-          free_floating_tab.messages.push(["assistant", answer]);
-          free_floating_tab._answer_to_div(answer, messages_backup);
-          messages_backup.push(["assistant", answer]);
-        }
-      }
-    }
-
-    if (question) {
-      if (code_snippet) {
-        question = "```\n" + code_snippet + "\n```\n" + question;
-      }
-      free_floating_tab.chat_post_question(
-        question,
-        use_model,
-        use_model_function,
-        !!code_snippet
-      );
-    } else {
-      let pass_dict = {
-        command: "chat-set-question-text",
-        value: { question: "" },
-      };
-      if (code_snippet) {
-        pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
-      }
-      panel.webview.postMessage(pass_dict);
-    }
-
-    panel.webview.onDidReceiveMessage(async (data) => {
+    webviewView.webview.onDidReceiveMessage(async (data) => {
       switch (data.type) {
-        case "open-new-file": {
-          vscode.workspace.openTextDocument().then((document) => {
-            vscode.window
-              .showTextDocument(document, vscode.ViewColumn.Active)
-              .then((editor) => {
-                editor.edit((editBuilder) => {
-                  editBuilder.insert(new vscode.Position(0, 0), data.value);
-                });
-              });
+        // case "toolboxSelected": {
+        //     vscode.window.onDidChangeTextEditorSelection((e) => {
+        //         this.check_selection();
+        //     });
+        // }
+        case "focus_back_to_editor": {
+          vscode.commands.executeCommand(
+            "workbench.action.focusActiveEditorGroup"
+          );
+          break;
+        }
+        case "submit_like": {
+          this.submit_like(data.function_name, data.like);
+          break;
+        }
+        case "submit_bookmark": {
+          this.set_bookmark(data.function_name, data.state);
+          break;
+        }
+        case "open_chat_history": {
+          const history =
+            await this.chatHistoryProvider.getChatNamesSortedByTime();
+
+          webviewView.webview.html = this._getHtmlForHistoryWebview(
+            webviewView.webview
+          );
+
+          webviewView.webview.postMessage({
+            command: "loadHistory",
+            history: history,
           });
           break;
         }
-        case "diff-paste-back": {
-          if (!free_floating_tab.working_on_snippet_editor) {
-            return;
-          }
-          await vscode.window.showTextDocument(
-            free_floating_tab.working_on_snippet_editor.document,
-            free_floating_tab.working_on_snippet_column
+        case "close_chat_history": {
+          webviewView.webview.html = this._getHtmlForWebview(
+            webviewView.webview
           );
-          let state = estate.state_of_document(
-            free_floating_tab.working_on_snippet_editor.document
-          );
-          if (!state) {
-            return;
-          }
-          let editor = state.editor;
-          if (state.get_mode() !== estate.Mode.Normal) {
-            return;
-          }
-          if (!free_floating_tab.working_on_snippet_range) {
-            return;
-          }
-          let verify_snippet = editor.document.getText(
-            free_floating_tab.working_on_snippet_range!
-          );
-          if (verify_snippet !== free_floating_tab.working_on_snippet_code) {
-            return;
-          }
-          let text = editor.document.getText();
-          let snippet_ofs0 = editor.document.offsetAt(
-            free_floating_tab.working_on_snippet_range.start
-          );
-          let snippet_ofs1 = editor.document.offsetAt(
-            free_floating_tab.working_on_snippet_range.end
-          );
-          let modif_doc: string =
-            text.substring(0, snippet_ofs0) +
-            data.value +
-            text.substring(snippet_ofs1);
-          [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
-          state.showing_diff_modif_doc = modif_doc;
-          state.showing_diff_move_cursor = true;
-          estate.switch_mode(state, estate.Mode.Diff);
-          break;
-        }
-        case "question-posted-within-tab": {
-          await free_floating_tab.chat_post_question(
-            data.chat_question,
-            data.chat_model,
-            data.chat_model_function,
-            data.chat_attach_file
-          );
-          free_floating_tab.messages.forEach((i) => console.log(i));
-          break;
-        }
-        case "stop-clicked": {
-          free_floating_tab.cancellationTokenSource.cancel();
-          break;
-        }
-        case "reset-messages": {
-          free_floating_tab.messages = data.messages_backup;
-          free_floating_tab.chatHistoryProvider.popLastMessageFromChat(
-            free_floating_tab.chatId,
-            true,
-            true
-          );
-          break;
-        }
-      }
-    });
+          this.update_webview();
+          this.get_bookmarks();
 
-    panel.webview.postMessage(fireup_message);
+          break;
+        }
+        case "open_new_chat": {
+          let question = data.question;
+          let chat_empty = data.chat_empty;
+          if (!question) {
+            question = "";
+          }
+          let editor = vscode.window.activeTextEditor;
+          if (editor) {
+            let selection = editor.selection;
+            let attach_default = !selection.isEmpty || !chat_empty;
+            if (selection.isEmpty) {
+              await open_chat_tab(
+                question,
+                editor,
+                attach_default,
+                data.chat_model,
+                data.chat_model_function,
+                false,
+                [],
+                [],
+                "",
+                this.chatHistoryProvider
+              );
+            } else {
+              await open_chat_tab(
+                question,
+                editor,
+                attach_default,
+                data.chat_model,
+                data.chat_model_function,
+                false,
+                [],
+                [],
+                "",
+                this.chatHistoryProvider
+              );
+            }
+          } else {
+            await open_chat_tab(
+              "",
+              undefined,
+              false,
+              "",
+              "",
+              false,
+              [],
+              [],
+              "",
+              this.chatHistoryProvider
+            );
+          }
+          break;
+        }
+        case "delete_chat": {
+          const chatId = data.chatId;
+          await this.chatHistoryProvider.deleteChatEntry(chatId);
+        }
+        case "open_old_chat": {
+          const chatId = data.chatId;
+          if (!chatId) {
+            break;
+          }
+          let editor = vscode.window.activeTextEditor;
+          let chat: Chat | undefined = await this.chatHistoryProvider.getChat(
+            chatId
+          );
+          if (editor) {
+            let selection = editor.selection;
+            let attach_default = !selection.isEmpty;
+            if (selection.isEmpty) {
+              await open_chat_tab(
+                "",
+                editor,
+                attach_default,
+                data.chat_model,
+                data.chat_model_function,
+                true,
+                chat?.questions,
+                chat?.answers,
+                chatId,
+                this.chatHistoryProvider
+              );
+            } else {
+              await open_chat_tab(
+                "",
+                editor,
+                attach_default,
+                data.chat_model,
+                data.chat_model_function,
+                true,
+                chat?.questions,
+                chat?.answers,
+                chatId,
+                this.chatHistoryProvider
+              );
+            }
+          } else {
+            await open_chat_tab(
+              "",
+              editor,
+              true,
+              data.chat_model,
+              data.chat_model_function,
+              true,
+              chat?.questions,
+              chat?.answers,
+              chatId,
+              this.chatHistoryProvider
+            );
+          }
+          break;
+        }
+        case "function_activated": {
+          if (
+            vscode.workspace.getConfiguration().get("refactai.autoHideSidebar")
+          ) {
+            vscode.commands.executeCommand(
+              "workbench.action.toggleSidebarVisibility"
+            );
+          }
+          console.log("*** function_activated ***", data);
+          if (!data.data_function) {
+            console.log(["function_dict is not defined", data.data_function]);
+            return;
+          }
+          let function_dict: any = JSON.parse(data.data_function);
+          let editor = vscode.window.activeTextEditor;
+          let function_name: string = "";
+          let model_suggest: string = function_dict.model;
+          let selected_text = "";
+          if (editor) {
+            let state = estate.state_of_editor(editor, "function_activated");
+            let selection = editor.selection;
+            let selection_empty = selection.isEmpty;
+            // let selected_lines_count = selection.end.line - selection.start.line + 1;
+            // let access_level = await privacy.get_file_access(editor.document.fileName);
+            // should be, min < selected_lines_count < max, but we don't care because UI was disabled so wrong function is not likely to
+            // happen, and we have the access level check closer to the socket in query_diff()
+            if (selection_empty) {
+              function_name = function_dict.function_highlight;
+              if (!function_name) {
+                function_name = function_dict.function_name;
+              }
+              if (
+                selection_empty &&
+                function_dict.supports_highlight === false
+              ) {
+                console.log([
+                  "no selection, but function",
+                  function_name,
+                  "doesn't support highlight",
+                ]);
+                return;
+              }
+            } else {
+              function_name = function_dict.function_selection;
+              if (!function_name) {
+                function_name = function_dict.function_name;
+              }
+              if (function_dict.supports_selection === false) {
+                console.log([
+                  "selection present, but",
+                  function_name,
+                  "doesn't support selection",
+                ]);
+                return;
+              }
+            }
+            if (state) {
+              let current_mode = state.get_mode();
+              if (
+                current_mode !== estate.Mode.Normal &&
+                current_mode !== estate.Mode.Highlight
+              ) {
+                console.log([
+                  `don't run "${function_name}" because mode is ${current_mode}`,
+                ]);
+                return;
+              }
+              state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+              state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+              await estate.switch_mode(state, estate.Mode.Normal);
+            }
+            selected_text = editor.document.getText(selection);
+          }
+          if (typeof function_name !== "string") {
+            console.log(["function_name is not a string", function_name]);
+            return;
+          }
+          let intent: string;
+          if (function_dict.model_fixed_intent) {
+            intent = function_dict.model_fixed_intent;
+          } else {
+            if (typeof data.intent !== "string") {
+              console.log(["data.value is not a string", data.value]);
+              return;
+            }
+            intent = data.intent;
+          }
+          if (function_name.includes("free-chat")) {
+            await open_chat_tab(
+              intent,
+              editor,
+              true,
+              model_suggest,
+              function_name,
+              false,
+              [],
+              [],
+              "",
+              this.chatHistoryProvider
+            );
+          } else if (function_dict.supports_highlight && selected_text === "") {
+            await extension.follow_intent_highlight(
+              intent,
+              function_name,
+              model_suggest,
+              !!function_dict.third_party
+            );
+          } else if (function_dict.supports_selection && selected_text !== "") {
+            await extension.follow_intent_diff(
+              intent,
+              function_name,
+              model_suggest,
+              !!function_dict.third_party
+            );
+          } else if (
+            !function_dict.supports_selection &&
+            selected_text === ""
+          ) {
+            await extension.follow_intent_diff(
+              intent,
+              function_name,
+              model_suggest,
+              !!function_dict.third_party
+            );
+          } else {
+            console.log(["don't know how to run function", function_name]);
+          }
+          break;
+        }
+
+        case "login": {
+          vscode.commands.executeCommand("refactaicmd.login");
+          break;
+        }
+        case "privacy": {
+          vscode.commands.executeCommand("refactaicmd.privacySettings");
+          break;
+        }
+        case "js2ts_report_bug": {
+          vscode.env.openExternal(
+            vscode.Uri.parse(
+              `https://github.com/smallcloudai/refact-vscode/issues`
+            )
+          );
+          break;
+        }
+        case "js2ts_discord": {
+          vscode.env.openExternal(
+            vscode.Uri.parse(`https://www.smallcloud.ai/discord`)
+          );
+          break;
+        }
+        case "js2ts_logout": {
+          vscode.commands.executeCommand("refactaicmd.logout");
+          break;
+        }
+        case "js2ts_goto_profile": {
+          vscode.env.openExternal(
+            vscode.Uri.parse(
+              `https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`
+            )
+          );
+          break;
+        }
+        case "js2ts_goto_datacollection": {
+          if (global.global_context !== undefined) {
+            dataCollectionPage.DataReviewPage.render(global.global_context);
+            dataCollection.data_collection_prepare_package_for_sidebar();
+          }
+          break;
+        }
+        case "js2ts_refresh_login": {
+          global.user_logged_in = "";
+          global.user_active_plan = "";
+          this.update_webview();
+          await userLogin.login();
+          break;
+        }
+        case "openSettings": {
+          vscode.commands.executeCommand("refactaicmd.openSettings");
+          break;
+        }
+        case "openKeys": {
+          vscode.commands.executeCommand(
+            "workbench.action.openGlobalKeybindings",
+            "@ext:smallcloud.codify"
+          );
+          break;
+        }
+        // case "checkSelection": {
+        //     this.check_selection();
+        //     break;
+        // }
+        // case "checkSelectionDefault": {
+        //     this.check_selection_default(data.intent);
+        //     break;
+        // }
+      }
+    }); // onDidReceiveMessage
+
+    webviewView.webview.postMessage({ command: "focus" });
+  } // resolveWebView
+
+  public async editor_inform_how_many_lines_selected(
+    ev_editor: vscode.TextEditor | undefined
+  ) {
+    let selected_lines: number = 0;
+    let access_level: number = -1;
+    if (ev_editor) {
+      if (!ev_editor.selection.isEmpty) {
+        selected_lines =
+          1 + ev_editor.selection.end.line - ev_editor.selection.start.line;
+      }
+      access_level = await privacy.get_file_access(ev_editor.document.fileName);
+    }
+    let state = estate.state_of_editor(ev_editor, "how_many_lines_selected");
+    if (state) {
+      let current_mode = state.get_mode();
+      if (
+        current_mode !== estate.Mode.Normal &&
+        current_mode !== estate.Mode.Highlight
+      ) {
+        access_level = -1;
+      }
+    }
+    this.selected_lines_count = selected_lines;
+    this.access_level = access_level;
+    if (this._view) {
+      if (this._view.webview) {
+        this._view.webview.postMessage({
+          command: "editor_inform",
+          selected_lines_count: this.selected_lines_count,
+          access_level: access_level, // this doesn't decide to proceed or not, this is just for the UI
+        });
+      }
+    }
   }
 
-  // public dispose()
-  // {
-  //     ChatTab.current_tab = undefined;
-  //     this.web_panel.dispose();
-  //     while (this._disposables.length) {
-  //         const disposable = this._disposables.pop();
-  //         if (disposable) {
-  //             disposable.dispose();
+  public update_webview() {
+    if (!this._view) {
+      return;
+    }
+    let plan_msg = global.user_active_plan;
+    if (!plan_msg && global.streamlined_login_countdown > -1) {
+      plan_msg = `Waiting for website login... ${global.streamlined_login_countdown}`;
+    } else if (plan_msg) {
+      plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
+    }
+
+    this._view!.webview.postMessage({
+      command: "ts2web",
+      ts2web_user: global.user_logged_in,
+      ts2web_custom_infurl: global.custom_infurl,
+      ts2web_plan: plan_msg,
+      ts2web_metering_balance: global.user_metering_balance,
+      ts2web_longthink_functions: global.longthink_functions_today,
+      ts2web_longthink_filters: global.longthink_filters,
+      ts2web_staging: vscode.workspace
+        .getConfiguration()
+        .get("refactai.staging"),
+    });
+  }
+
+  public chatHistoryProvider = new ChatHistoryProvider(
+    this._context,
+    global.user_logged_in
+  );
+
+  public async set_bookmark(function_name: string, state: boolean) {
+    let global_context: vscode.ExtensionContext | undefined =
+      global.global_context;
+    if (global_context === undefined) {
+      return;
+    }
+    let data: { [key: string]: boolean } = {};
+    let bookmarks: { [key: string]: boolean } | undefined =
+      await global_context.globalState.get("refactBookmarks");
+    if (bookmarks !== undefined) {
+      data = bookmarks;
+    }
+    data[function_name] = state;
+    console.log(["Setting bookmark:", function_name, state]);
+    await global_context.globalState.update("refactBookmarks", data);
+    this.get_bookmarks();
+  }
+
+  public async get_bookmarks() {
+    let global_context: vscode.ExtensionContext | undefined =
+      global.global_context;
+    if (global_context === undefined) {
+      return 0;
+    }
+    let bookmarks_: { [key: string]: boolean } | undefined =
+      await global_context.globalState.get("refactBookmarks");
+    let bookmarks: { [key: string]: boolean } = {};
+    if (bookmarks_ !== undefined) {
+      bookmarks = bookmarks_;
+    }
+    return this._view!.webview.postMessage({
+      command: "update_bookmarks_list",
+      value: bookmarks,
+    });
+  }
+
+  public async submit_like(function_name: string, like: number) {
+    const apiKey = userLogin.secret_api_key();
+    if (!apiKey) {
+      return;
+    }
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    };
+    let url = `https://www.smallcloud.ai/v1/longthink-like?function_name=${function_name}&like=${like}`;
+    let response = await fetchH2.fetch(url, {
+      method: "GET",
+      headers: headers,
+    });
+    if (response.status !== 200) {
+      console.log([response.status, url]);
+      return;
+    }
+    if (response.status === 200) {
+      let json = await response.json();
+      if (json.retcode === "OK") {
+        let longthink_functions_today:
+          | { [key: string]: { [key: string]: any } }
+          | undefined = global.longthink_functions_today; // any or number
+        if (longthink_functions_today !== undefined) {
+          for (const key of Object.keys(longthink_functions_today)) {
+            if (key === function_name) {
+              if (json.inserted === 1) {
+                longthink_functions_today[key].likes += 1;
+                longthink_functions_today[key].is_liked = 1;
+              }
+              if (json.deleted === 1) {
+                longthink_functions_today[key].likes -= 1;
+                longthink_functions_today[key].is_liked = 0;
+              }
+              this._view!.webview.postMessage({
+                command: "update_longthink_functions",
+                value: longthink_functions_today,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // public async presetIntent(intent: string) {
+  //     let editor = vscode.window.activeTextEditor;
+  //     if (!editor) {
+  //         return;
+  //     }
+  //     let selection = editor.selection;
+  //     let selectionEmpty = selection.isEmpty;
+
+  //     if (selectionEmpty) {
+  //         if (intent) {
+  //             highlight.query_highlight(editor, intent);
+  //         }
+  //     } else {
+  //         if (intent) {
+  //             estate.saveIntent(intent);
+  //             editor.selection = new vscode.Selection(selection.start, selection.start);
+  //             interactiveDiff.query_diff(editor, selection, "diff-selection");
   //         }
   //     }
   // }
 
-  private _question_to_div(
-    question: string,
-    messages_backup: [string, string][]
-  ) {
-    let valid_html = false;
-    let html = "";
-    try {
-      html = marked.parse(question);
-      valid_html = true;
-    } catch (e) {
-      valid_html = false;
-    }
-    if (!valid_html) {
-      html = question;
-    }
-    //console.log("question-html: " + html);
-    this.web_panel.webview.postMessage({
-      command: "chat-post-question",
-      question_html: html,
-      question_raw: question,
-      messages_backup: messages_backup,
-    });
-  }
+  // public updateQuery(intent: string) {
+  //     if (!this._view) {
+  //         return;
+  //     }
+  //     this._view!.webview.postMessage({ command: "updateQuery", value: intent });
+  // }
 
-  private _answer_to_div(answer: string, messages_backup: [string, string][]) {
-    let valid_html = false;
-    let html = "";
-    try {
-      html = marked.parse(answer);
-      valid_html = true;
-    } catch (e) {
-      valid_html = false;
-    }
-    if (!valid_html) {
-      html = answer;
-    }
-    this.web_panel.webview.postMessage({
-      command: "chat-post-answer",
-      answer_html: html,
-      answer_raw: answer,
-      messages_backup: messages_backup,
-    });
-  }
+  // public addHistory(intent: string) {
+  //     if (!this._view) {
+  //         return;
+  //     }
+  //     this._history.push(intent);
+  //     this._view!.webview.postMessage({
+  //         command: "updateHistory",
+  //         value: this._history,
+  //     });
+  // }
 
-  async chat_post_question(
-    question: string,
-    model: string,
-    model_function: string,
-    attach_file: boolean
-  ) {
-    if (!this.web_panel) {
-      return false;
-    }
-    let login = await userLogin.inference_login();
-    if (!login) {
-      this.web_panel.webview.postMessage({
-        command: "chat-post-answer",
-        answer_html:
-          "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
-        answer_raw: "",
-        have_editor: false,
-      });
-      return;
-    }
-
-    chat_model_set(model, model_function); // successfully used model, save it
-
-    this.cancellationTokenSource = new vscode.CancellationTokenSource();
-    let cancelToken = this.cancellationTokenSource.token;
-
-    if (this.messages.length === 0) {
-      // find first 15 characters, non space, non newline, non special character
-      let first_normal_char_index = question.search(/[^ \n\r\t`]/);
-      let first_15_characters = question.substring(
-        first_normal_char_index,
-        first_normal_char_index + 15
-      );
-      let first_16_characters = question.substring(
-        first_normal_char_index,
-        first_normal_char_index + 16
-      );
-      if (first_15_characters !== first_16_characters) {
-        first_15_characters += "…";
-      }
-      this.web_panel.title = first_15_characters;
-      if (attach_file) {
-        this.messages.push(["user", this.working_on_attach_code]);
-
-        this.messages.push([
-          "assistant",
-          "Thanks for context, what's your question?",
-        ]);
-      }
-    }
-
-    if (
-      this.messages.length > 0 &&
-      this.messages[this.messages.length - 1][0] === "user"
-    ) {
-      this.messages.length -= 1;
-    }
-
-    let messages_backup = this.messages.slice();
-
-    //local save + globalStorage save question
-    this.messages.push(["user", question]);
-    await this.chatHistoryProvider.addMessageToChat(
-      this.chatId,
-      question,
-      "",
-      model,
-      model_function,
-      this.web_panel.title
-    );
-
-    if (this.messages.length > 10) {
-      this.messages.shift();
-      this.messages.shift(); // so it always starts with a user
-    }
-    this._question_to_div(question, messages_backup);
-    //add question to history
-    this.web_panel.webview.postMessage({
-      command: "chat-post-answer",
-      answer_html: "⏳",
-      answer_raw: "",
-      have_editor: false,
-    });
-    await fetchAPI.wait_until_all_requests_finished();
-
-    //add to history once all requests are finished
-
-    let answer = "";
-    let stack_web_panel = this.web_panel;
-    let stack_this = this;
-
-    async function _streaming_callback(json: any) {
-      if (json === undefined) {
-        return;
-      }
-      if (cancelToken.isCancellationRequested) {
-        console.log(["chat request is cancelled, new data is coming", json]);
-        return;
-      } else {
-        let delta = "";
-        if (json && json["choices"]) {
-          let choice0 = json["choices"][0];
-          delta = choice0["delta"];
-        }
-        if (json && json["delta"]) {
-          // TODO: remove this after inference server is updated
-          delta = json["delta"];
-        }
-        if (delta) {
-          answer += delta;
-          let valid_html = false;
-          let html = "";
-          try {
-            let raw_html = answer;
-            let backtick_backtick_backtick_count = (answer.match(/```/g) || [])
-              .length;
-            if (backtick_backtick_backtick_count % 2 === 1) {
-              raw_html = answer + "\n```";
-            }
-            html = marked.parse(raw_html);
-            valid_html = true;
-          } catch (e) {
-            valid_html = false;
-          }
-          console.log("answer html: " + html);
-
-          if (valid_html) {
-            stack_web_panel.webview.postMessage({
-              command: "chat-post-answer",
-              answer_html: html,
-              answer_raw: answer,
-              have_editor: Boolean(stack_this.working_on_snippet_editor),
-            });
-            // console.log(["assistant", answer]);
-          }
-        }
-        if (json && json["metering_balance"]) {
-          global.user_metering_balance = json["metering_balance"];
-          if (global.side_panel) {
-            global.side_panel.update_webview();
-          }
-        }
-      }
-    }
-
-    async function _streaming_end_callback(any_error: boolean) {
-      // stack_this.web_panel.reveal();
-      console.log("streaming end callback, error: " + any_error);
-      if (any_error) {
-        let backup_user_phrase = "";
-        for (
-          let i = stack_this.messages.length - 1;
-          i < stack_this.messages.length;
-          i++
-        ) {
-          if (i >= 0) {
-            if (stack_this.messages[i][0] === "user") {
-              backup_user_phrase = stack_this.messages[i][1];
-              stack_this.messages.length -= 1;
-              break;
-            }
-          }
-        }
-        console.log("backup_user_phrase:" + backup_user_phrase);
-        stack_this.web_panel.webview.postMessage({
-          command: "chat-error-streaming",
-          backup_user_phrase: backup_user_phrase,
-        });
-      } else {
-        stack_this.messages.push(["assistant", answer]);
-        await stack_this.chatHistoryProvider.addMessageToChat(
-          stack_this.chatId,
-          "",
-          answer,
-          model,
-          model_function,
-          stack_this.web_panel.title
-        );
-
-        stack_this.web_panel.webview.postMessage({
-          command: "chat-end-streaming",
-        });
-      }
-    }
-
-    let request = new fetchAPI.PendingRequest(undefined, cancelToken);
-    request.set_streaming_callback(
-      _streaming_callback,
-      _streaming_end_callback
-    );
-    let third_party = true;
-    third_party = this.model_to_thirdparty[model];
-
-    request.supply_stream(
-      ...fetchAPI.fetch_chat_promise(
-        cancelToken,
-        "chat-tab",
-        this.messages,
-        model_function,
-        model,
-        [],
-        third_party
-      )
-    );
-  }
-
-  static get_html_for_webview(
-    webview: vscode.Webview,
-    extensionUri: any
-  ): string {
+  private _getHtmlForWebview(webview: vscode.Webview) {
     const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "chat.js")
+      vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
     );
     const styleMainUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
+      vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
     );
-    const highlight = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "highlight.js")
-    );
-
-    const nonce = ChatTab.getNonce();
+    const nonce = this.getNonce();
 
     return `<!DOCTYPE html>
-            <html lang="en">
-            <head>
+                <html lang="en">
+                <head>
                 <meta charset="UTF-8">
                 <!--
                     Use a content security policy to only allow loading images from https or from our extension directory,
                     and only allow scripts that have a specific nonce.
                 -->
-                <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                <title>Refact.ai Chat</title>
+                <title>Presets</title>
                 <link href="${styleMainUri}" rel="stylesheet">
-                 
             </head>
             <body>
-                <div class="refactcss-chat">
-                    <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
-                    <div class="refactcss-chat__wrapper">
-                        <div class="refactcss-chat__content"></div>
-                        <div class="refactcss-chat__panel">
-                            <div class="refactcss-chat__controls">
-                                <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                                <div class="refactcss-chat__model">Use model:<select id="chat-model"></select></div>
-                            </div>
-                            <div class="refactcss-chat__commands">
-                                <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
-                                <textarea id="chat-input" class="refactcss-chat__input"></textarea>
-                                <button id="chat-send" class="refactcss-chat__button"><span></span></button>
-                            </div>
+                <div id="sidebar" class="sidebar">
+                    <div class="toolbox">
+                        <div class="toolbox-inline">
+                            <input class="toolbox-search" id="toolbox-search" placeholder="press F1; ↓ commands;">
+                        </div>
+                        <div class="toolbox-tags">
+                        </div>
+                        <div class="toolbox-container">
+                            <div class="toolbox-list"></div>
                         </div>
                     </div>
-                </div>                
-                <script nonce="${nonce}" src="${scriptUri}"></script>
-                <script nonce="${nonce}" src="${highlight}"></script>
-                <script>
-                  const observer = new MutationObserver(list => {
-                  const evt = new CustomEvent('dom-changed', { detail: list });
-                  document.body.dispatchEvent(evt);
-                });
-                  observer.observe(document.body, { attributes: true, childList: true, subtree: true });
-
-                  document.body.addEventListener('dom-changed', e => hljs.highlightAll());
-    </script>
-            </body>
-            </html>`;
+                    <div class="sidebar-controls">
+                        <button tabindex="-1" id="datacollection">Review Data...</button>
+                        <div class="sidebar-buttons">
+                            <button tabindex="-1" id="login">Login / Register</button>
+                            <button tabindex="-1" id="chat"><span></span>New Chat</button>
+                            <button tabindex="-1" id="history"><span></span>Chat History</button>
+                            <button tabindex="-1" id="privacy"><span></span>Privacy</button>
+                            <button tabindex="-1" id="settings"><i></i><span>Settings</span></button>
+                            <button tabindex="-1" id="keys"><span></span></button>
+                        </div>
+                        <div class="sidebar-inline sidebar-account">
+                            <div class="sidebar-logged"><b><span></span></b></div>
+                            <div class="sidebar-coins">
+                            <div class="sidebar-coin"></div><span>0</span></div>
+                        </div>
+                        <div class="sidebar-inline">
+                            <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
+                            <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
+                        </div>
+                        <div class="sidebar-inline">
+                            <button tabindex="-1" id="profile"><span></span>Your&nbsp;Account</button>
+                            <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
+                            <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
+                        </div>
+                    </div>
+                </div>
+                    <script nonce="${nonce}" src="${scriptUri}"></script>
+                </body>
+                </html>`;
   }
 
-  static getNonce() {
+  private _getHtmlForHistoryWebview(webview: vscode.Webview) {
+    const scriptUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._context.extensionUri,
+        "assets",
+        "chat_history.js"
+      )
+    );
+    const styleMainUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(
+        this._context.extensionUri,
+        "assets",
+        "chat_history.css"
+      )
+    );
+    const nonce = this.getNonce();
+    return `<!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <!--
+          Use a content security policy to only allow loading images from https or from our extension directory,
+          and only allow scripts that have a specific nonce.
+      -->
+      <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+      <title>Presets</title>
+      <link href="${styleMainUri}" rel="stylesheet">
+  </head>
+  <body>
+      <div id="sidebar" class="sidebar">
+        <div id="back_button">Back</div>
+        <div class="chat-history-list"></div>
+      </div>
+          <script nonce="${nonce}" src="${scriptUri}"></script>
+      </body>
+      </html>`;
+  }
+
+  getNonce() {
     let text = "";
     const possible =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -631,45 +734,7 @@ export class ChatTab {
     }
     return text;
   }
+  save_like(function_name: string) {}
 }
 
-export async function chat_model_get(): Promise<[string, string]> {
-  let context: vscode.ExtensionContext | undefined = global.global_context;
-  if (!context) {
-    return ["", ""];
-  }
-  let chat_model_ = await context.globalState.get("chat_model");
-  let chat_model_function_ = await context.globalState.get(
-    "chat_model_function"
-  );
-  let chat_model: string = "";
-  if (typeof chat_model_ !== "string") {
-    chat_model = "";
-  } else {
-    chat_model = chat_model_;
-  }
-  let chat_model_function: string = "";
-  if (typeof chat_model_function_ !== "string") {
-    chat_model_function = "";
-  } else {
-    chat_model_function = chat_model_function_;
-  }
-  return [chat_model, chat_model_function];
-}
-
-export async function chat_model_set(
-  chat_model: string,
-  model_function: string
-) {
-  let context: vscode.ExtensionContext | undefined = global.global_context;
-  if (!context) {
-    return;
-  }
-  if (!chat_model) {
-    return;
-  }
-  await context.globalState.update("chat_model", chat_model);
-  await context.globalState.update("chat_model_function", model_function);
-}
-
-export default ChatTab;
+export default PanelWebview;

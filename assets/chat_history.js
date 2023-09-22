@@ -11,6 +11,7 @@
         const message = event.data;
         switch (message.command) {
             case "loadHistory":
+                // Clear the chat history list
                 chatHistoryList.innerHTML = "";
                 const chatHistory = message.history || [];
 
@@ -25,6 +26,7 @@
 
                     deleteButton.addEventListener("click", (event) => {
                         event.stopPropagation();
+                        event.preventDefault();
 
                         vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
                         chatItem.remove();

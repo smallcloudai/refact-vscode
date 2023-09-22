@@ -26,7 +26,8 @@
     let history_mode = false;
     let command_mode = false;
 
-    function reset_everything_about_commands() {
+    function reset_everything_about_commands()
+    {
         current_history = 0;
         command_mode = false;
         history_mode = false;
@@ -77,37 +78,6 @@
                 }
             }
         }
-        if (event.key === "ArrowDown") {
-            if (!command_mode && history_mode && current_history === 0) {
-                current_history = 0;
-                toolboxSearch.value = history_backup;
-                history_mode = false;
-
-            } else if (!command_mode && history_mode && current_history > 0) {
-                current_history--;
-                toolboxSearch.value = history[current_history];
-
-            } else if (command_mode && !history_mode && current_command >= 0) {
-                const toolbox_items = document.querySelectorAll(".toolbox-item");
-                const all_visible = Array.from(toolbox_items).filter(child => {
-                    return child.style.display !== 'none';
-                });
-                all_visible[current_command].classList.remove('item-selected');
-                if (current_command < all_visible.length - 1) {
-                    current_command += 1;
-                }
-                all_visible[current_command].classList.add('item-selected');
-
-            } else if (!command_mode && !history_mode) {
-                command_mode = true;
-                const toolbox_items = document.querySelectorAll(".toolbox-item");
-                const all_visible = Array.from(toolbox_items).filter(child => {
-                    return child.style.display !== 'none';
-                });
-                current_command = 0;
-                all_visible[current_command].classList.add('item-selected');
-            }
-        }
     });
 
 
@@ -116,7 +86,7 @@
         if (event.key === "Enter") {
             let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
             let single_page = document.querySelector(".item-active");  // single page
-            if (toolboxSearch.value.endsWith("?")) {
+            if(toolboxSearch.value.endsWith("?")) {
                 let intent = toolboxSearch.value;
                 vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
             }
@@ -165,23 +135,23 @@
             let intent = toolboxSearch.value;
             let target = event.target.parentElement.parentElement.parentElement;
             let selected_function = last_model_used[target.dataset.funciton_name];
-            if (!selected_function) {
-                if (target.dataset.function) {
-                    if (target.dataset.ids) {
+            if(!selected_function) {
+                if(target.dataset.function) {
+                    if(target.dataset.ids) {
                         const current_ids = JSON.parse(target.dataset.ids);
-                        if (current_ids.length > 0) {
+                        if(current_ids.length > 0) {
                             selected_function = current_ids[0];
                         }
                         else {
                             selected_function = target.dataset.function_name;
-                            if (staging) {
+                            if(staging) {
                                 selected_function = 'staging-' + selected_function;
                             }
                         }
                     }
                     else {
                         selected_function = target.dataset.function_name;
-                        if (staging) {
+                        if(staging) {
                             selected_function = 'staging-' + selected_function;
                         }
                     }
@@ -190,11 +160,11 @@
             if (!target) {
                 return;
             }
-            if (event.target.parentElement.classList.contains('toolbox-content-actions')) {
+            if(event.target.parentElement.classList.contains('toolbox-content-actions')) {
                 let parent_function = event.target.parentElement.parentElement.parentElement;
                 const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
                 const hasOptions = select && select.options && select.options.length > 0;
-                if (hasOptions) {
+                if(hasOptions) {
                     selected_function = select.value;
                     selected_model = select.querySelector('option[value="' + selected_function + '"]').innerHTML;
                     pref_model_func[target.id] = selected_model;
@@ -310,7 +280,7 @@
     function function_tag(function_name) {
         let result = false;
         longthink_filters.forEach((item) => {
-            if (function_name.toLowerCase().endsWith(item.toLowerCase())) {
+            if(function_name.toLowerCase().endsWith(item.toLowerCase())) {
                 result = item;
             }
         });
@@ -338,9 +308,9 @@
             let item = data[key];
             // render_function(data[key]);
 
-            if (document.querySelector(`.toolbox-item[data-title="${item.label}"]`)) {
+            if(document.querySelector(`.toolbox-item[data-title="${item.label}"]`)) {
                 let tag = function_tag(item.function_name);
-                if (tag) {
+                if(tag) {
                     const label_model = document.createElement("span");
                     label_model.classList.add('toolbox-function');
                     label_model.innerHTML = 'Multiple';
@@ -466,7 +436,7 @@
             bookmark_button.addEventListener('click', function () {
                 const current_icon = this.querySelector('i');
                 let current_bookmark_state;
-                if (current_icon.classList.contains("toolbox-mark-empty")) {
+                if(current_icon.classList.contains("toolbox-mark-empty")) {
                     current_icon.classList.remove("toolbox-mark-empty");
                     current_icon.classList.add("toolbox-mark");
                     current_bookmark_state = true;
@@ -483,7 +453,7 @@
             likes_button.addEventListener('click', function () {
                 const current_icon = this.querySelector('i');
                 let current_like_state;
-                if (current_icon.classList.contains("toolbox-like-empty")) {
+                if(current_icon.classList.contains("toolbox-like-empty")) {
                     current_icon.classList.remove("toolbox-like-empty");
                     current_icon.classList.add("toolbox-like");
                     current_like_state = 1;
@@ -518,13 +488,13 @@
             const label_wrapper = document.createElement("span");
             label_wrapper.classList.add('toolbox-title');
             // if (item.third_party) {
-            //     label_wrapper.innerHTML = key;
-            // } else {
-            // }
+            //      label_wrapper.innerHTML = key;
+            //  } else {
+            //  }
             label_wrapper.innerHTML = item.label;
 
             let tag = function_tag(item.function_name);
-            if (tag) {
+            if(tag) {
                 const label_model = document.createElement("span");
                 label_model.classList.add('toolbox-function');
                 label_model.innerHTML = tag;
@@ -582,7 +552,7 @@
     function renderTags(data) {
         const filters_bar = document.querySelector('.toolbox-tags');
         filters_bar.innerHTML = "";
-        if (data.length > 0) {
+        if(data.length > 0) {
             data.forEach((item) => {
                 const filter = document.createElement("div");
                 filter.classList.add("toolbox-tag");
@@ -594,7 +564,7 @@
         const tags = document.querySelectorAll('.toolbox-tag');
         tags.forEach((item) => {
             item.addEventListener('click', function (event) {
-                if (current_filter !== this.dataset.title) {
+                if(current_filter !== this.dataset.title) {
                     tags.forEach((item) => {
                         item.classList.remove("toolbox-tag-inactive");
                         item.classList.add("toolbox-tag-inactive");
@@ -609,9 +579,9 @@
                     const filteredDivs = itemsArray.filter(div => {
                         div.querySelector('.toolbox-function').innerHTML = tag;
                         const tags = div.dataset.tags_filter;
-                        if (tags) {
+                        if(tags) {
                             const all_tags = JSON.parse(div.dataset.tags_filter);
-                            if (all_tags.includes(tag)) {
+                            if(all_tags.includes(tag)) {
                                 return div;
                             }
                         }
@@ -631,7 +601,7 @@
 
                     const filteredDivs = itemsArray.filter(div => {
                         const tags = JSON.parse(div.dataset.tags_filter);
-                        if (tags) {
+                        if(tags) {
                             if (tags.length > 1) {
                                 div.querySelector('.toolbox-function').innerHTML = 'Multiple';
                             }
@@ -708,7 +678,7 @@
             reset_everything_about_commands();
             const searchTerm = this.value.toLowerCase();
             const itemsArray = Array.from(filterItems);
-            if (searchTerm.endsWith("?")) {
+            if(searchTerm.endsWith("?")) {
                 const chat = document.querySelector('[data-function_name="free-chat"]');
                 chat.style.display = 'block';
                 // chat.classList.add('item-selected');
@@ -737,9 +707,9 @@
         const toolboxItems = document.querySelectorAll(".toolbox-item");
         toolboxItems.forEach((item) => {
             item.addEventListener("click", (event) => {
-                if (event.target.tagName === 'SPAN') {
+                if(event.target.tagName === 'SPAN') {
                     let active = document.querySelector(".item-active");
-                    if (active) {
+                    if(active) {
                         active.classList.remove("item-active");
                     }
                     item.classList.add("item-active");
@@ -752,10 +722,10 @@
                     // const item_title = item.dataset.title;
                     const current_item = document.querySelector(`.item-active`);
                     let ids = null;
-                    if (current_item.dataset.ids) {
+                    if(current_item.dataset.ids) {
                         ids = JSON.parse(current_item.dataset.ids);
                     }
-                    if (typeof ids === 'object' && ids.length > 0) {
+                    if(typeof ids === 'object' && ids.length > 0) {
                         current_item.querySelector('.toolbox-dropdown-wrapper').style.display = 'block';
                         const all_tags = JSON.parse(current_item.dataset.tags_filter);
                         const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
@@ -850,7 +820,7 @@
                 // TODO: always show settings, a place to put custom infurl
                 // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
                 keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                if (message.ts2web_user === 'self-hosted') {
+                if(message.ts2web_user === 'self-hosted') {
                     document.querySelector('.sidebar-account').style.display = 'none';
                     profile.style.display = 'none';
                 }
@@ -868,10 +838,10 @@
                         toolbox_update_likes();
                     }
                 }
-                if (message.ts2web_staging) {
+                if(message.ts2web_staging) {
                     staging = message.ts2web_staging;
                 }
-                if (message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
+                if(message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
                     login.style.display = 'none';
                     // settings.classList.toggle('settings-full');
                 }

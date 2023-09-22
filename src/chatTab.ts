@@ -5,7 +5,7 @@ import * as userLogin from "./userLogin";
 import { marked } from "marked"; // Markdown parser documentation: https://marked.js.org/
 import * as estate from "./estate";
 import * as crlf from "./crlf";
-import ChatHistoryProvider from "./history";
+import ChatHistoryProvider from "./chatHistory";
 
 export class ChatTab {
   // public static current_tab: ChatTab | undefined;
@@ -474,9 +474,9 @@ export class ChatTab {
             html = marked.parse(raw_html);
             valid_html = true;
           } catch (e) {
+            console.log(e);
             valid_html = false;
           }
-          console.log("answer html: " + html);
 
           if (valid_html) {
             stack_web_panel.webview.postMessage({
@@ -522,6 +522,7 @@ export class ChatTab {
         });
       } else {
         stack_this.messages.push(["assistant", answer]);
+        //console.log(answer);
         await stack_this.chatHistoryProvider.addMessageToChat(
           stack_this.chatId,
           "",
@@ -568,10 +569,12 @@ export class ChatTab {
     const styleMainUri = webview.asWebviewUri(
       vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
     );
-    const highlight = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, "assets", "highlight.js")
+    const prismJsUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, "assets", "prism.js")
     );
-
+    const prismJsCssUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, "assets", "prism.css")
+    );
     const nonce = ChatTab.getNonce();
 
     return `<!DOCTYPE html>
@@ -587,7 +590,8 @@ export class ChatTab {
 
                 <title>Refact.ai Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
-                 
+                <link href="${prismJsCssUri}" rel="stylesheet">
+                <script nonce="${nonce}" src="${prismJsUri}" data-manual></script>
             </head>
             <body>
                 <div class="refactcss-chat">
@@ -608,16 +612,9 @@ export class ChatTab {
                     </div>
                 </div>                
                 <script nonce="${nonce}" src="${scriptUri}"></script>
-                <script nonce="${nonce}" src="${highlight}"></script>
-                <script>
-                  const observer = new MutationObserver(list => {
-                  const evt = new CustomEvent('dom-changed', { detail: list });
-                  document.body.dispatchEvent(evt);
-                });
-                  observer.observe(document.body, { attributes: true, childList: true, subtree: true });
-
-                  document.body.addEventListener('dom-changed', e => hljs.highlightAll());
-    </script>
+                <script nonce="${nonce}">
+                  Prism.highlightAll();
+                </script>
             </body>
             </html>`;
   }
