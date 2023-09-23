@@ -48,9 +48,7 @@ export async function open_chat_tab(
         model_function,
         old_chat,
         questions,
-        answers,
-        chatId,
-        chatHistoryProvider
+        answers
       );
     }
   }

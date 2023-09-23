@@ -21,7 +21,7 @@
                 // Clear the chat history list
                 chatHistoryList.innerHTML = "";
                 const chatHistory = message.history || [];
-                console.log(chatHistory);
+                //console.log(chatHistory);
 
                 chatHistory.forEach((chat) => {
                     const chatItem = document.createElement("div");

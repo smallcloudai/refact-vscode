@@ -387,7 +387,7 @@ export class ChatTab {
         ));
     }
 
-    static get_html_for_webview(
+    public get_html_for_webview(
         webview: vscode.Webview,
         extensionUri: any,
     ): string
@@ -425,6 +425,7 @@ export class ChatTab {
             </head>
             <body>
                 <div class="refactcss-chat">
+                    <button class="back-button">← Back</button>
                     <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__content"></div>
