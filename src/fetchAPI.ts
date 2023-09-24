@@ -69,14 +69,15 @@ export class PendingRequest {
         }
     }
 
-    supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: estate.ApiFields)
+    supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: estate.ApiFields|undefined)
     {
         this.streaming_error = false;
-        this.api_fields = api_fields;
+        // this.api_fields = api_fields;
         h2stream.catch((error) => {
             let aborted = error && error.message && error.message.includes("aborted");
             if (!aborted) {
-                usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, error, "");
+                console.log(["h2stream error (1)", error]);
+                // usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, error, "");
             } else {
                 // Totally normal, user cancelled the request.
             }
@@ -113,11 +114,11 @@ export class PendingRequest {
                             // likely a error, because it's not a stream, no "data: " prefix
                             console.log(["looks like a error", this.streaming_buf]);
                             this.streaming_error = true;
-                            usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, this.streaming_buf, "");
+                            // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, this.streaming_buf, "");
                         } else if (this.streaming_error) {
-                            usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, "streaming_error", "");
+                            // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, "streaming_error", "");
                         } else {
-                            usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", "");
+                            // usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", "");
                         }
                         // Normally [DONE] produces a callback, but it's possible there's no [DONE] sent by the server.
                         // Wait 500ms because inside VS Code "readable" and "end"/"close" are sometimes called in the wrong order.
@@ -144,13 +145,14 @@ export class PendingRequest {
                     if (typeof json_arrived === "object" && json_arrived.length !== undefined) {
                         model_name = json_arrived[0]["model"];
                     }
-                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", model_name);
+                    // usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", model_name);
                     resolve(json_arrived);
                 }
             }).catch(async (error) => {
                 let aborted = error && error.message && error.message.includes("aborted");
                 if (!aborted) {
-                    usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
+                    console.log(["h2stream error (2)", error]);
+                    // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
                 }
                 if (this.streaming_end_callback) {
                     await this.streaming_end_callback(error !== undefined);
@@ -173,7 +175,8 @@ export class PendingRequest {
                 // This is a result of reject() without parameters
                 return;
             } else if (!aborted) {
-                usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
+                console.log(["h2stream error (3)", error]);
+                // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
             }
         });
         _global_reqs.push(this);
@@ -401,7 +404,7 @@ export function fetch_code_completion(
     cursor_line: number,
     cursor_character: number,
     max_new_tokens: number,
-    api_fields: estate.ApiFields,
+    // api_fields: estate.ApiFields,
 ): Promise<fetchH2.Response>
 {
     let url = rust_url("/v1/code-completion");
@@ -412,22 +415,22 @@ export function fetch_code_completion(
     let third_party = false;
     let ctx = inference_context(third_party);
     let model: string = vscode.workspace.getConfiguration().get('refactai.model') || "";
-    const apiKey = userLogin.secret_api_key();
-    if (!apiKey) {
-        return Promise.reject("No API key");
-    }
+    // const apiKey = userLogin.secret_api_key();
+    // if (!apiKey) {
+    //     return Promise.reject("No API key");
+    // }
     let temp = 0.2;
     let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
-    api_fields.scope = "code-completion";
-    api_fields.url = url;
-    api_fields.model = model;
-    api_fields.sources = sources;
-    api_fields.intent = "";
-    api_fields.function = "completion";
-    api_fields.cursor_file = cursor_file;
-    api_fields.cursor_pos0 = -1;
-    api_fields.cursor_pos1 = -1;
-    api_fields.ts_req = Date.now();
+    // api_fields.scope = "code-completion";
+    // api_fields.url = url;
+    // api_fields.model = model;
+    // api_fields.sources = sources;
+    // api_fields.intent = "";
+    // api_fields.function = "completion";
+    // api_fields.cursor_file = cursor_file;
+    // api_fields.cursor_pos0 = -1;
+    // api_fields.cursor_pos1 = -1;
+    // api_fields.ts_req = Date.now();
     const post = JSON.stringify({
         "model": model,
         "inputs": {
@@ -447,7 +450,7 @@ export function fetch_code_completion(
     });
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        // "Authorization": `Bearer ${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
