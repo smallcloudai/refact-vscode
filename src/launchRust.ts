@@ -4,6 +4,8 @@ import * as mod_child_process from 'child_process';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from './userLogin';
 import { join } from 'path';
+import * as lspClient from 'vscode-languageclient/node';
+import * as net from 'net';
 
 
 export class RustBinaryBlob
@@ -12,6 +14,8 @@ export class RustBinaryBlob
     public asset_path: string;
     public cmdline: string[] = [];
     public port: number = 0;
+    public lsp_disposable: vscode.Disposable|undefined = undefined;
+    public lsp_socket: net.Socket|undefined = undefined;
 
     constructor(asset_path: string)
     {
@@ -45,6 +49,7 @@ export class RustBinaryBlob
             this.cmdline = [];
             await this.terminate();
             await this.read_caps();
+            await this.start_lsp();
             return;
         }
         let url: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
@@ -72,6 +77,7 @@ export class RustBinaryBlob
 
     public async terminate()
     {
+        this.stop_lsp();
         if (this.process) {
             console.log("RUST SIGINT");
             this.process.kill("SIGINT");
@@ -85,41 +91,122 @@ export class RustBinaryBlob
     public async launch()
     {
         await this.terminate();
-        console.log(["RUST LAUNCH:", this.cmdline.join(" ")]);
-        this.process = mod_child_process.spawn(
-            this.cmdline[0],
-            this.cmdline.slice(1)
-        );
-        this.process.on('close', this.bad_things_happened);
-        this.process.on('exit', this.bad_things_happened);
-        this.process.on('error', this.bad_things_happened);
-        if (this.process.stdout) {
-            this.process.stdout.on('data', async (data: Buffer) => {
-                let all_strings = data.toString().split("\n");
-                for (let str of all_strings) {
-                    if (str === "") {
-                        continue;
-                    }
-                    if (str.startsWith("PORT_BUSY ")) {
-                        this.port = 0;
-                        this.settings_changed();  // async function will run "later"
-                    } else if (str.startsWith("URL_NOT_WORKING ")) {
-                        this.bad_url_not_working(str.slice("URL_NOT_WOKRING ".length));
-                    } else if (str.startsWith("STARTED ")) {
-                        this.started_fine();
-                    } else if (str.startsWith("CAPS")) {
-                        await this.read_caps();
-                    } else {
-                        console.error(`RUST unhandled ${str}`);
-                    }
-                }
-            });
+        this.start_lsp();
+        return;
+        // console.log(["RUST LAUNCH:", this.cmdline.join(" ")]);
+        // this.process = mod_child_process.spawn(
+        //     this.cmdline[0],
+        //     this.cmdline.slice(1)
+        // );
+        // this.process.on('close', this.bad_things_happened);
+        // this.process.on('exit', this.bad_things_happened);
+        // this.process.on('error', this.bad_things_happened);
+        // if (this.process.stderr) {
+        //     this.process.stderr.on('data', async (data: Buffer) => {
+        //         let all_strings = data.toString().split("\n");
+        //         for (let str of all_strings) {
+        //             if (str === "") {
+        //                 continue;
+        //             }
+        //             if (str.startsWith("PORT_BUSY ")) {
+        //                 this.port = 0;
+        //                 this.settings_changed();  // async function will run "later"
+        //             } else if (str.startsWith("URL_NOT_WORKING ")) {
+        //                 this.bad_url_not_working(str.slice("URL_NOT_WOKRING ".length));
+        //             } else if (str.startsWith("STARTED ")) {
+        //                 this.started_fine();
+        //             } else if (str.startsWith("CAPS")) {
+        //                 await this.read_caps();
+        //                 await this.start_lsp();
+        //             } else {
+        //                 console.log(`stderr ${data}`);
+        //             }
+        //         }
+        //     });
+        // }
+    }
+
+    public async start_lsp()
+    {
+        if (this.lsp_disposable) {
+            return;
         }
-        if (this.process.stderr) {
-            this.process.stderr.on('data', (data: Buffer) => {
-                console.log(`stderr ${data}`);
-            });
+        console.log("RUST start_lsp");
+
+        // let path = this.cmdline[0];
+        // let myserv: lspClient.Executable = {
+        //     command: String(path),
+        //     args: this.cmdline.slice(1),
+        //     options: { cwd: process.cwd(), detached: true, shell: true }
+        // };
+
+        // let serverOptions: lspClient.ServerOptions = {
+        //     run: myserv,
+        //     debug: myserv
+        // };
+
+        let clientOptions: lspClient.LanguageClientOptions = {
+            documentSelector: [{ scheme: 'file', language: 'python' }],
+            diagnosticCollectionName: 'RUST LSP',
+            progressOnInitialization: true,
+            traceOutputChannel: vscode.window.createOutputChannel('RUST LSP'),
+            revealOutputChannelOn: lspClient.RevealOutputChannelOn.Info,
+            // middleware: {
+            //     executeCommand: async (command, args, next) => {
+            //         return next(command, args);
+            //     }
+            // }
+        };
+
+        // let client = new lspClient.LanguageClient(
+        //     'Custom rust LSP server',
+        //     serverOptions,
+        //     clientOptions
+        // );
+        // client.registerProposedFeatures();
+        // this.lsp_disposable = client.start();
+
+        this.lsp_socket = new net.Socket();
+        this.lsp_socket.on('error', (error) => {
+            console.log("RUST socket error");
+            console.log(error);
+            console.log("RUST /error");
+            this.stop_lsp();
+        });
+        this.lsp_socket.on('close', () => {
+            console.log("RUST socket closed");
+            this.stop_lsp();
+        });
+        this.lsp_socket.on('connect', () => {
+            console.log("RUST LSP socket connected");
+            let client: lspClient.LanguageClient;
+            client = new lspClient.LanguageClient(
+                'Custom rust LSP server',
+                async () => {
+                    if (this.lsp_socket === undefined) {
+                        return Promise.reject("this.lsp_socket is undefined, that should not happen");
+                    }
+                    return Promise.resolve({
+                        reader: this.lsp_socket,
+                        writer: this.lsp_socket
+                    });
+                },
+                clientOptions
+            );
+            client.registerProposedFeatures();
+            this.lsp_disposable = client.start();
+        });
+        this.lsp_socket.connect(8002);
+    }
+
+    public stop_lsp()
+    {
+        console.log("RUST stop_lsp");
+        if (this.lsp_disposable) {
+            this.lsp_disposable.dispose();
+            this.lsp_disposable = undefined;
         }
+        this.lsp_socket = undefined;
     }
 
     public started_fine()
