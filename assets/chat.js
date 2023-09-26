@@ -7,7 +7,7 @@
     const stop_button = document.querySelector('#chat-stop');
     let chat_controls_moved = false;
     const back_button = document.querySelector('.back-button');
-    
+
     back_button.addEventListener('click', () => {
         vscode.postMessage({ type: "back-from-chat" });
     });
@@ -122,8 +122,22 @@
             question_container.appendChild(submitButton);
             message_pair_div.appendChild(question_container);
 
+            inputField.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && event.shiftKey === false) {
+                    event.preventDefault();
+                    submitButton.click();
+                    return true;
+                }
+                auto_scroll();
+            });
+
             retry_button.addEventListener('click', () => {
                 //console.log("message backup: " + question_div.dataset.messages_backup);
+
+                //do nothing if chat-stop is visible
+                if (stop_button.style.display !== 'none') {
+                    return;
+                }
                 vscode.postMessage({
                     type: "reset-messages",
                     messages_backup: JSON.parse(question_div.dataset.messages_backup)
@@ -191,6 +205,11 @@
                 inputField.style.display = 'none';
                 cancelButton.style.display = 'none';
                 submitButton.style.display = 'none';
+
+                //remove current chatItem as it would get re-added anyway
+                const chats = document.querySelectorAll('.refactcss-chat__item');
+                const last = chats[chats.length - 1];
+                last.remove();
             });
 
             visibility_control(true);
@@ -348,9 +367,11 @@
             case "chat-post-question":
                 chat_render(message);
                 isStreaming = false;
+                input_should_be_visible = false;
                 break;
             case "chat-post-answer":  // streaming also goes there, with partial answers
                 chat_render(message);
+                input_should_be_visible = false;
                 isStreaming = true;
                 break;
             case "chat-set-question-text":
