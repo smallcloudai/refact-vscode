@@ -413,12 +413,12 @@ export async function follow_intent_diff(intent: string, function_name: string, 
 }
 
 
-export function deactivate(context: vscode.ExtensionContext)
+export async function deactivate(context: vscode.ExtensionContext)
 {
     usageStats.report_usage_stats();
     global.global_context = undefined;
     if (global.rust_binary_blob) {
-        global.rust_binary_blob.terminate();
+        await global.rust_binary_blob.terminate();
         global.rust_binary_blob = undefined;
     }
 }
