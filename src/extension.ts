@@ -298,7 +298,7 @@ export function activate(context: vscode.ExtensionContext)
     global.rust_binary_blob.settings_changed();  // async function will finish later
     let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration("refactai.infurl") || e.affectsConfiguration("refactai.addressURL") || e.affectsConfiguration("refactai.xDebugPort")) {
+        if (e.affectsConfiguration("refactai.infurl") || e.affectsConfiguration("refactai.addressURL") || e.affectsConfiguration("refactai.xDebug")) {
             if (config_debounce) {
                 clearTimeout(config_debounce);
             }

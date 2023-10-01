@@ -111,16 +111,20 @@ export class RustBinaryBlob
     public async stop_lsp()
     {
         if (this.lsp_client) {
-            console.log("RUST STOP LSP");
+            console.log("RUST STOP");
             try {
-                console.log("STOP2");
                 let ts = Date.now();
                 await this.lsp_client.stop();
-                console.log(`STOP3 in ${Date.now() - ts}ms`);
+                console.log(`RUST /STOP ${Date.now() - ts}ms`);
             } catch (e) {
                 console.log(`RUST STOP ERROR e=${e}`);
             }
         }
+        this.lsp_dispose();
+    }
+
+    public lsp_dispose()
+    {
         if (this.lsp_disposable) {
             this.lsp_disposable.dispose();
             this.lsp_disposable = undefined;
@@ -186,9 +190,13 @@ export class RustBinaryBlob
             this.lsp_client_options
         );
         this.lsp_disposable = this.lsp_client.start();
-        console.log(`RUST WAIT LSP`);
-        await this.lsp_client.onReady();
-        console.log(`RUST /WAIT LSP`);
+        console.log(`RUST START`);
+        try {
+            await this.lsp_client.onReady();
+            console.log(`RUST /START`);
+        } catch (e) {
+            console.log(`RUST START PROBLEM e=${e}`);
+        }
     }
 
     public async start_lsp_socket()
@@ -199,16 +207,16 @@ export class RustBinaryBlob
             console.log("RUST socket error");
             console.log(error);
             console.log("RUST /error");
-            this.stop_lsp();
+            this.lsp_dispose();
         });
         this.lsp_socket.on('close', () => {
             console.log("RUST socket closed");
-            this.stop_lsp();
+            this.lsp_dispose();
         });
-        this.lsp_socket.on('connect', () => {
+        this.lsp_socket.on('connect', async () => {
             console.log("RUST LSP socket connected");
-            let client: lspClient.LanguageClient;
-            client = new lspClient.LanguageClient(
+            // let client: lspClient.LanguageClient;
+            this.lsp_client = new lspClient.LanguageClient(
                 'Custom rust LSP server',
                 async () => {
                     if (this.lsp_socket === undefined) {
@@ -221,8 +229,15 @@ export class RustBinaryBlob
                 },
                 this.lsp_client_options
             );
-            client.registerProposedFeatures();
-            this.lsp_disposable = client.start();
+            // client.registerProposedFeatures();
+            this.lsp_disposable = this.lsp_client.start();
+            console.log(`RUST DEBUG START`);
+            try {
+                await this.lsp_client.onReady();
+                console.log(`RUST DEBUG /START`);
+            } catch (e) {
+                console.log(`RUST DEBUG START PROBLEM e=${e}`);
+            }
         });
         this.lsp_socket.connect(DEBUG_LSP_PORT);
     }
