@@ -80,6 +80,16 @@
         }
     }
 
+    function reset_everything_about_commands() {
+        current_history = 0;
+        command_mode = false;
+        history_mode = false;
+        let active = document.querySelector(".item-selected");
+        if (active) {
+            active.classList.remove("item-selected");
+        }
+    }
+
     function change_welcome_subscreen(selection_type) {
         document.querySelector('.refact-welcome__menu').style.display = "none";
         switch (selection_type) {
@@ -127,7 +137,124 @@
         vscode.postMessage({
             type: "button_refact_open_streamlined",
         });
+
+    body.addEventListener("keyup", (event) => {
+        event.preventDefault();
+        if (event.key === "Enter") {
+            let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
+            let single_page = document.querySelector(".item-active");  // single page
+            if (toolboxSearch.value.endsWith("?")) {
+                let intent = toolboxSearch.value;
+                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
+            }
+            else if (single_page) {
+                let intent = toolboxSearch.value;
+                history.splice(0, 0, intent);
+                vscode.postMessage({
+                    type: "function_activated",
+                    intent: intent,
+                    data_function: active.dataset.function, // this a string containing json
+                });
+            } else if (selected_in_list) {
+                let intent = toolboxSearch.value;
+                history.splice(0, 0, intent);
+                vscode.postMessage({
+                    type: "function_activated",
+                    intent: intent,
+                    data_function: selected_in_list.dataset.function, // this a string containing json
+                });
+            } else {
+                let intent = toolboxSearch.value;
+                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
+            }
+            reset_everything_about_commands();
+            toolboxSearch.value = '';
+            vscode.postMessage({
+                type: "focus_back_to_editor",
+            });
+            toolbox_update_likes();
+        }
+        if (event.key === "Escape") {
+            event.preventDefault();
+            let active = document.querySelector(".item-active");
+            if (active) {
+                active.classList.remove("item-active");
+            } else {
+                vscode.postMessage({
+                    type: "focus_back_to_editor",
+                });
+            }
+        }
     });
+
+    toolboxList.addEventListener("click", (event) => {
+        if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
+            let intent = toolboxSearch.value;
+            let target = event.target.parentElement.parentElement.parentElement;
+            let selected_function = last_model_used[target.dataset.funciton_name];
+            if (!selected_function) {
+                if (target.dataset.function) {
+                    if (target.dataset.ids) {
+                        const current_ids = JSON.parse(target.dataset.ids);
+                        if (current_ids.length > 0) {
+                            selected_function = current_ids[0];
+                        }
+                        else {
+                            selected_function = target.dataset.function_name;
+                            if (staging) {
+                                selected_function = 'staging-' + selected_function;
+                            }
+                        }
+                    }
+                    else {
+                        selected_function = target.dataset.function_name;
+                        if (staging) {
+                            selected_function = 'staging-' + selected_function;
+                        }
+                    }
+                }
+            }
+            if (!target) {
+                return;
+            }
+            if (event.target.parentElement.classList.contains('toolbox-content-actions')) {
+                let parent_function = event.target.parentElement.parentElement.parentElement;
+                const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
+                const hasOptions = select && select.options && select.options.length > 0;
+                if (hasOptions) {
+                    selected_function = select.value;
+                    selected_model = select.querySelector('option[value="' + selected_function + '"]').innerHTML;
+                    pref_model_func[target.id] = selected_model;
+                    last_model_used[parent_function.dataset.funciton_name] = selected_function;
+                }
+                else {
+                    selected_function = parent_function.dataset.function_name;
+                }
+            }
+            history.splice(0, 0, intent);
+            vscode.postMessage({
+                type: "function_activated",
+                intent: intent,
+                data_function: JSON.stringify(longthink_functions_today[selected_function])
+            });
+            vscode.postMessage({
+                type: "focus_back_to_editor",
+            });
+        }
+        if (event.target.classList.contains("toolbox-back")) {
+            let active = document.querySelector(".item-active");
+            document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
+            if (active) {
+                // toolboxSearch.value = '';
+                active.classList.remove("item-active");
+                toolbox_update_likes();
+            }
+        }
+    });
+
+
+
+
 
     const back_buttons = document.querySelectorAll('.refact-welcome__back');
     back_buttons.forEach(button => {
@@ -166,6 +293,11 @@
     const chatButton = document.querySelector("#chat");
     chatButton.addEventListener("click", () => {
         vscode.postMessage({ type: "open_new_chat", question: '', chat_empty: true, chat_model: "" });
+    });
+
+    const chatHistoryButton = document.querySelector("#history");
+    chatHistoryButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "open_chat_history" });
     });
 
     const settingsButton = document.querySelector("#settings");
@@ -232,7 +364,7 @@
     function function_tag(function_name) {
         let result = false;
         longthink_filters.forEach((item) => {
-            if(function_name.toLowerCase().endsWith(item.toLowerCase())) {
+            if (function_name.toLowerCase().endsWith(item.toLowerCase())) {
                 result = item;
             }
         });
@@ -243,7 +375,7 @@
     function renderTags(data) {
         const filters_bar = document.querySelector('.toolbox-tags');
         filters_bar.innerHTML = "";
-        if(data.length > 0) {
+        if (data.length > 0) {
             data.forEach((item) => {
                 const filter = document.createElement("div");
                 filter.classList.add("toolbox-tag");
@@ -255,7 +387,7 @@
         const tags = document.querySelectorAll('.toolbox-tag');
         tags.forEach((item) => {
             item.addEventListener('click', function (event) {
-                if(current_filter !== this.dataset.title) {
+                if (current_filter !== this.dataset.title) {
                     tags.forEach((item) => {
                         item.classList.remove("toolbox-tag-inactive");
                         item.classList.add("toolbox-tag-inactive");
@@ -270,9 +402,9 @@
                     const filteredDivs = itemsArray.filter(div => {
                         div.querySelector('.toolbox-function').innerHTML = tag;
                         const tags = div.dataset.tags_filter;
-                        if(tags) {
+                        if (tags) {
                             const all_tags = JSON.parse(div.dataset.tags_filter);
-                            if(all_tags.includes(tag)) {
+                            if (all_tags.includes(tag)) {
                                 return div;
                             }
                         }
@@ -292,7 +424,7 @@
 
                     const filteredDivs = itemsArray.filter(div => {
                         const tags = JSON.parse(div.dataset.tags_filter);
-                        if(tags) {
+                        if (tags) {
                             if (tags.length > 1) {
                                 div.querySelector('.toolbox-function').innerHTML = 'Multiple';
                             }
@@ -389,6 +521,8 @@
                 let sidebar_account = document.querySelector('.sidebar-account');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
+                // let chatHistory = document.querySelector('#history');
+                // let bug = document.querySelector('#report_bugs');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
                 let hotkeys = document.querySelector('#keys');
@@ -400,25 +534,58 @@
                 document.querySelector('.sidebar-plan span').innerHTML = message.ts2js_plan;
                 sidebar_account.style.display = message.ts2js_user ? 'flex' : 'none'; // common box for name and coins
 
-                profile.style.display = message.ts2js_user ? 'inline-flex' : 'none';
-                logout.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
-                // data.style.display = message.ts2js_user ? 'block' : 'none';
-                coins.style.display = message.ts2js_user ? 'flex' : 'none';
-                privacy.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                // profile.style.display = message.ts2js_user ? 'inline-flex' : 'none';
+                // logout.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                // chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                // // data.style.display = message.ts2js_user ? 'block' : 'none';
+                // coins.style.display = message.ts2js_user ? 'flex' : 'none';
+                // privacy.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                // // TODO: always show settings, a place to put custom infurl
+                // // settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                // hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                // if (message.ts2js_metering_balance) {
+                //     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
+                // }
+                discord.style.display = 'inline-flex';
+                bug.style.display = 'inline-flex';
+                info.style.display = message.ts2web_user ? 'flex' : '';
+                plan.style.display = message.ts2web_plan ? 'flex' : '';
+                document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
+                document.querySelector('.sidebar-plan span').innerHTML = message.ts2web_plan;
+                login.style.display = message.ts2web_user ? 'none' : 'block';
+                profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                chat.style.display = message.ts2web_user ? 'flex' : 'none';
+                chatHistory.style.display = message.ts2web_user ? 'flex' : 'none';
+                data.style.display = message.ts2web_user ? 'block' : 'none';
+                coins.style.display = message.ts2web_user ? 'flex' : 'none';
+                privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
                 // TODO: always show settings, a place to put custom infurl
-                // settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                if (message.ts2js_metering_balance) {
-                    document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
+                // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
+                if (message.ts2web_user === 'self-hosted') {
+                    document.querySelector('.sidebar-account').style.display = 'none';
+                    profile.style.display = 'none';
                 }
                 if (message.ts2js_staging) {
                     staging = message.ts2js_staging;
                 }
-                if (message.ts2js_havekey) {
+                // if (message.ts2js_havekey) {
                     // login.style.display = 'none';
-                    // settings.classList.toggle('settings-full');
-                }
+                // if (message.ts2web_longthink_functions) {
+                //     let json2 = JSON.stringify(message.ts2web_longthink_functions, null, 4);
+                //     if (longthink_functions_json !== json2) {
+                //         longthink_functions_today = message.ts2web_longthink_functions;
+                //         longthink_functions_json = json2;
+                //         longthink_filters = message.ts2web_longthink_filters;
+                //         // longthink_filters.push('starcoder');
+                //         toolbox_update_likes();
+                //     }
+                // }
+                // if (message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
+                //     login.style.display = 'none';
+                //     // settings.classList.toggle('settings-full');
+                // }
                 break;
             default:
                 break;

@@ -20,7 +20,7 @@ import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
 import { fileURLToPath } from 'url';
-
+import ChatHistoryProvider from './chatHistory';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -40,7 +40,18 @@ declare global {
 async function pressed_call_chat() {
     console.log(["pressed_call_chat"]);
     let editor = vscode.window.activeTextEditor;
-    await open_chat_tab("", editor, true, "", "");
+    await open_chat_tab(
+      "",
+      editor,
+      true,
+      "",
+      "",
+      false,
+      [],
+      [],
+      "",
+      new ChatHistoryProvider(global.global_context,"")
+    );
 }
 
 

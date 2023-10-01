@@ -41,14 +41,14 @@ body.vscode-dark {
 	box-sizing: border-box;
 }
 .refactcss-chat__panel {
-	height: 100%;
-	max-height: 220px;
-	margin-top: auto;
-	display: flex;
-	flex-direction: column;
-	box-sizing: border-box;
-	overflow: hidden;
-	align-items: flex-end;
+    height: 100%;
+    max-height: 220px;
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+    align-items: flex-end;
 }
 .refactcss-chat__controls {
 	width: 100%;
@@ -79,7 +79,7 @@ body.vscode-dark {
 	box-sizing: border-box;
 }
 .refactcss-chat__question {
-	padding: 5px 10px;
+	padding: 5px 5px;
     width: 90%;
     max-width: 600px;
     background-color: var(--light);
@@ -277,3 +277,89 @@ body.vscode-dark {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
+
+
+.refactcss-chat__cancel-button {
+    background-color: #ff6666; /* Red background color */
+    color: #fff; /* White text color */
+    border: none;
+    padding: 5px 10px;
+    margin-right: 10px;
+    margin-left: auto;
+    cursor: pointer;
+    margin-top: 5px;
+  }
+  
+.back-button {
+    background-color: #f0f0f0; /* Light gray background color */
+    color: #333;
+    border: none;
+    padding: 5px 5px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 10px;
+    margin-bottom: 5px; 
+}
+  
+.back-button:hover {
+    background-color: #ddd; 
+}
+  
+.refactcss-chat__submit-button {
+    background-color: #66cc66; /* Green background color */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: 10px;
+    margin-top: 5px;
+}
+.refactcss-chat__question_div {
+    width: 100%;
+    box-sizing: border-box;
+    background: transparent !important;
+    font-family: sans-serif !important;
+    font-size: 14px;
+    overflow-x: auto;
+    text-align: left;
+}
+.refactcss-chat__input-field {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--secondary);
+    padding: 10px;
+    background: transparent !important;
+    color: var(--secondary) !important;
+    font-family: sans-serif !important;
+    font-size: 14px;
+    overflow-x: auto;
+}
+.refactcss-chat__cancel-button,
+.refactcss-chat__submit-button {
+    display: inline-block;
+    background-color: #ff6666; 
+    color: #fff; 
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin: 5px 5px; 
+}
+.refactcss-chat__submit-button {
+    background-color: #66cc66; 
+}
+.refactcss-chat__question-input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--secondary);
+    padding: 10px;
+    background: transparent !important;
+    color: var(--secodary) !important;
+    font-family: sans-serif !important;
+    font-size: 14px;
+    overflow-x: auto;
+    min-height: 40px; 
+    resize: vertical; 
+}
+.refactcss-chat__question {
+    text-align: center;
+}  

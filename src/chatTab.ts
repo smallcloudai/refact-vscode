@@ -3,14 +3,11 @@ import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
-import * as estate from "./estate";
-import * as crlf from "./crlf";
-
+import ChatHistoryProvider from "./chatHistory";
 
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
     // private _disposables: vscode.Disposable[] = [];
-    public web_panel: vscode.WebviewPanel;
     public messages: [string, string][];
     public cancellationTokenSource: vscode.CancellationTokenSource;
     public working_on_attach_code: string = "";
@@ -19,17 +16,17 @@ export class ChatTab {
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
     public model_to_thirdparty: {[key: string]: boolean};
+    public chatHistoryProvider: ChatHistoryProvider;
+    public chatId: string = "";
 
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
-    {
-        this.web_panel = panel;
-        this.web_panel.webview.html = ChatTab.get_html_for_webview(
-            this.web_panel.webview,
-            extensionUri,
-        );
+    public constructor(chatHistoryProvider: ChatHistoryProvider, chatId: string) {
         this.messages = [];
         this.model_to_thirdparty = {};
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
+        this.chatHistoryProvider = chatHistoryProvider;
+        if (chatId === "" || chatId === undefined) {
+          this.chatId = this.chatHistoryProvider.generateChatId();
+        }
     }
 
     public static async activate_from_outside(
@@ -38,6 +35,9 @@ export class ChatTab {
         attach_default: boolean,
         use_model: string,
         use_model_function: string,
+        old_chat: boolean,
+        questions: string[] | undefined,
+        answers: string[] | undefined,
         )
     {
         let context: vscode.ExtensionContext | undefined = global.global_context;
@@ -45,24 +45,21 @@ export class ChatTab {
             return;
         }
 
-        const panel = vscode.window.createWebviewPanel(
-            "refact-chat-tab",
-            "Refact.ai Chat",
-            vscode.ViewColumn.Two,
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-            }
-        );
-        panel.iconPath = vscode.Uri.file(context.asAbsolutePath("images/discussion-bubble.svg"));
-
-        let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
+        let free_floating_tab = global.side_panel?.chat;
+        if (!free_floating_tab) {
+            console.log("no chat found!");
+            return;
+        }
         let code_snippet = "";
         free_floating_tab.working_on_snippet_range = undefined;
         free_floating_tab.working_on_snippet_editor = undefined;
         free_floating_tab.working_on_snippet_column = undefined;
         if (!use_model) {
             [use_model, use_model_function] = await chat_model_get();
+            //re do if no model gets fetched; atleast 1 redo
+            if(!use_model || !use_model_function){
+                [use_model, use_model_function] = await chat_model_get();
+            };
         }
         let fireup_message = {
             command: "chat-set-fireup-options",
@@ -116,6 +113,27 @@ export class ChatTab {
             free_floating_tab.working_on_attach_code = attach;
         }
         free_floating_tab.working_on_snippet_code = code_snippet;
+
+        if (old_chat && questions) {
+            let messages_backup: [string, string][] = [];
+            //console.log("adding old chat");
+
+            for (let i = 0; i < questions.length; i++) {
+              const question = questions[i];
+              const answer = answers && answers.length > i ? answers[i] : null;
+
+              free_floating_tab.messages.push(["user", question]);
+              free_floating_tab._question_to_div(question, messages_backup);
+              messages_backup.push(["user", question]);
+
+              if (answer) {
+                free_floating_tab.messages.push(["assistant", answer]);
+                free_floating_tab._answer_to_div(answer, messages_backup);
+                messages_backup.push(["assistant", answer]);
+              }
+            }
+        }
+
         if (question) {
             if (code_snippet) {
                 question = "```\n" + code_snippet + "\n```\n" + question;
@@ -126,72 +144,11 @@ export class ChatTab {
             if (code_snippet) {
                 pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
             }
-            panel.webview.postMessage(pass_dict);
+            global.side_panel?._view?.webview.postMessage(pass_dict);
         }
 
-        panel.webview.onDidReceiveMessage(async (data) => {
-			switch (data.type) {
-                case "open-new-file": {
-                    vscode.workspace.openTextDocument().then((document) => {
-                        vscode.window.showTextDocument(document, vscode.ViewColumn.Active).then((editor) => {
-                            editor.edit((editBuilder) => {
-                                editBuilder.insert(new vscode.Position(0, 0), data.value);
-                            });
-                        });
-                    });
-                    break;
-                }
-                case "diff-paste-back": {
-                    if (!free_floating_tab.working_on_snippet_editor) {
-                        return;
-                    }
-                    await vscode.window.showTextDocument(free_floating_tab.working_on_snippet_editor.document, free_floating_tab.working_on_snippet_column);
-                    let state = estate.state_of_document(free_floating_tab.working_on_snippet_editor.document);
-                    if (!state) {
-                        return;
-                    }
-                    let editor = state.editor;
-                    if (state.get_mode() !== estate.Mode.Normal) {
-                        return;
-                    }
-                    if (!free_floating_tab.working_on_snippet_range) {
-                        return;
-                    }
-                    let verify_snippet = editor.document.getText(free_floating_tab.working_on_snippet_range!);
-                    if (verify_snippet !== free_floating_tab.working_on_snippet_code) {
-                        return;
-                    }
-                    let text = editor.document.getText();
-                    let snippet_ofs0 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.start);
-                    let snippet_ofs1 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.end);
-                    let modif_doc: string = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
-                    [modif_doc, ] = crlf.cleanup_cr_lf(modif_doc, []);
-                    state.showing_diff_modif_doc = modif_doc;
-                    state.showing_diff_move_cursor = true;
-                    estate.switch_mode(state, estate.Mode.Diff);
-                    break;
-                }
-				case "question-posted-within-tab": {
-                    await free_floating_tab.chat_post_question(
-                        data.chat_question,
-                        data.chat_model,
-                        data.chat_model_function,
-                        data.chat_attach_file
-                    );
-                    break;
-				}
-                case "stop-clicked": {
-                    free_floating_tab.cancellationTokenSource.cancel();
-                    break;
-                }
-                case "reset-messages": {
-                    free_floating_tab.messages = data.messages_backup;
-                    break;
-                }
-			}
-		});
-
-        panel.webview.postMessage(fireup_message);
+        //on didRecieveMessage was shifted to sidebar.ts entirely
+        global.side_panel?._view?.webview.postMessage(fireup_message);
     }
 
     // public dispose()
@@ -206,7 +163,7 @@ export class ChatTab {
     //     }
     // }
 
-    private _question_to_div(question: string, messages_backup: [string, string][])
+    public _question_to_div(question: string, messages_backup: [string, string][])
     {
         let valid_html = false;
         let html = "";
@@ -219,11 +176,31 @@ export class ChatTab {
         if (!valid_html) {
             html = question;
         }
-        this.web_panel.webview.postMessage({
+        global.side_panel?._view?.webview.postMessage({
             command: "chat-post-question",
             question_html: html,
             question_raw: question,
             messages_backup: messages_backup,
+        });
+    }
+
+    public _answer_to_div(answer: string, messages_backup: [string, string][]) {
+        let valid_html = false;
+        let html = "";
+        try {
+          html = marked.parse(answer);
+          valid_html = true;
+        } catch (e) {
+          valid_html = false;
+        }
+        if (!valid_html) {
+          html = answer;
+        }
+        global.side_panel?._view?.webview.postMessage({
+          command: "chat-post-answer",
+          answer_html: html,
+          answer_raw: answer,
+          messages_backup: messages_backup,
         });
     }
 
@@ -233,8 +210,8 @@ export class ChatTab {
         model_function: string,
         attach_file: boolean
     ) {
-        if(!this.web_panel) {
-            return false;
+        if (!global.side_panel?._view) {
+            return;
         }
         // let login = await userLogin.inference_login();
         // if (!login) {
@@ -247,7 +224,7 @@ export class ChatTab {
         //     return;
         // }
 
-        chat_model_set(model, model_function);  // successfully used model, save it
+        await chat_model_set(model, model_function);  // successfully used model, save it
 
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         let cancelToken = this.cancellationTokenSource.token;
@@ -255,12 +232,12 @@ export class ChatTab {
         if (this.messages.length === 0) {
             // find first 15 characters, non space, non newline, non special character
             let first_normal_char_index = question.search(/[^ \n\r\t`]/);
-            let first_15_characters = question.substring(first_normal_char_index, first_normal_char_index + 15);
-            let first_16_characters = question.substring(first_normal_char_index, first_normal_char_index + 16);
-            if (first_15_characters !== first_16_characters) {
-                first_15_characters += "…";
+            let first_40_characters = question.substring(first_normal_char_index, first_normal_char_index + 40);
+            let first_41_characters = question.substring(first_normal_char_index, first_normal_char_index + 41);
+            if (first_40_characters !== first_41_characters) {
+                first_40_characters += "…";
             }
-            this.web_panel.title = first_15_characters;
+            global.side_panel._view.title = first_40_characters; //change sideview title
             if (attach_file) {
                 this.messages.push(["user", this.working_on_attach_code]);
                 this.messages.push(["assistant", "Thanks for context, what's your question?"]);
@@ -273,12 +250,20 @@ export class ChatTab {
 
         let messages_backup = this.messages.slice();
         this.messages.push(["user", question]);
+        await this.chatHistoryProvider.addMessageToChat(
+            this.chatId,
+            question,
+            "",
+            model,
+            model_function,
+            global.side_panel._view.title || ""
+        );
         if (this.messages.length > 10) {
             this.messages.shift();
             this.messages.shift(); // so it always starts with a user
         }
         this._question_to_div(question, messages_backup);
-        this.web_panel.webview.postMessage({
+        global.side_panel?._view?.webview.postMessage({
             command: "chat-post-answer",
             answer_html: "⏳",
             answer_raw: "",
@@ -287,7 +272,6 @@ export class ChatTab {
         await fetchAPI.wait_until_all_requests_finished();
 
         let answer = "";
-        let stack_web_panel = this.web_panel;
         let stack_this = this;
 
         async function _streaming_callback(json: any)
@@ -320,7 +304,7 @@ export class ChatTab {
                         valid_html = false;
                     }
                     if (valid_html) {
-                        stack_web_panel.webview.postMessage({
+                        global.side_panel?._view?.webview.postMessage({
                             command: "chat-post-answer",
                             answer_html: html,
                             answer_raw: answer,
@@ -354,10 +338,18 @@ export class ChatTab {
                     }
                 }
                 console.log("backup_user_phrase:" + backup_user_phrase);
-                stack_this.web_panel.webview.postMessage({ command: "chat-error-streaming", backup_user_phrase: backup_user_phrase });
+                global.side_panel?._view?.webview.postMessage({ command: "chat-error-streaming", backup_user_phrase: backup_user_phrase });
             } else {
                 stack_this.messages.push(["assistant", answer]);
-                stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
+                await stack_this.chatHistoryProvider.addMessageToChat(
+                    stack_this.chatId,
+                    "",
+                    answer,
+                    model,
+                    model_function,
+                    global.side_panel?._view?.title || ""
+                );
+                global.side_panel?._view?.webview.postMessage({ command: "chat-end-streaming" });
             }
         }
 
@@ -375,7 +367,7 @@ export class ChatTab {
         ));
     }
 
-    static get_html_for_webview(
+    public get_html_for_webview(
         webview: vscode.Webview,
         extensionUri: any,
     ): string
@@ -385,6 +377,12 @@ export class ChatTab {
         );
         const styleMainUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
+        );
+        const prismJsUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "prism.js")
+        );
+        const prismJsCssUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "prism.css")
         );
 
         const nonce = ChatTab.getNonce();
@@ -402,9 +400,12 @@ export class ChatTab {
 
                 <title>Refact.ai Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
+                <link href="${prismJsCssUri}" rel="stylesheet">
+                <script nonce="${nonce}" src="${prismJsUri}" data-manual></script>
             </head>
             <body>
                 <div class="refactcss-chat">
+                    <button class="back-button">← Back</button>
                     <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__content"></div>
@@ -423,6 +424,9 @@ export class ChatTab {
                 </div>
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
+                <script nonce="${nonce}">
+                  Prism.highlightAll();
+                </script>
             </body>
             </html>`;
     }

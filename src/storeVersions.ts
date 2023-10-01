@@ -21,4 +21,3 @@ export function filename_from_document(document: vscode.TextDocument): string
     }
     return file_name;
 }
-
