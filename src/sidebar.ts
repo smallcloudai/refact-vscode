@@ -23,34 +23,32 @@ export async function open_chat_tab(
     answers: string[] | undefined,
     chatId: string,
     chatHistoryProvider: ChatHistoryProvider
-  ) {
+) {
     if (global.side_panel?.chat) {
-      global.side_panel.chat = null;
+        global.side_panel.chat = null;
     }
     if (global.side_panel && global.side_panel._view) {
-      global.side_panel.chat = new ChatTab(chatHistoryProvider, chatId);
-      let context: vscode.ExtensionContext | undefined = global.global_context;
-      if (!context) {
-        return;
-      }
-
-      global.side_panel._view.webview.html =
-        global.side_panel.chat.get_html_for_webview(
-          global.side_panel._view.webview,
-          context.extensionUri
+        global.side_panel.chat = new ChatTab(chatHistoryProvider, chatId);
+        let context: vscode.ExtensionContext | undefined = global.global_context;
+        if (!context) {
+            return;
+        }
+        global.side_panel._view.webview.html = global.side_panel.chat.get_html_for_webview(
+            global.side_panel._view.webview,
+            context.extensionUri
         );
-      await ChatTab.activate_from_outside(
-        question,
-        editor,
-        attach_default,
-        model,
-        model_function,
-        old_chat,
-        questions,
-        answers
-      );
+        await ChatTab.activate_from_outside(
+            question,
+            editor,
+            attach_default,
+            model,
+            model_function,
+            old_chat,
+            questions,
+            answers
+        );
     }
-  }
+}
 
 export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
@@ -117,66 +115,34 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     history: history,
                 });
                 break;
-                }
+            }
             case "close_chat_history": {
                 this._view.webview.html = this._getHtmlForWebview(
                     this._view.webview
                 );
                 this.update_webview();
-                // this.get_bookmarks();
                 break;
             }
             case "open_new_chat": {
                 let question = data.question;
-                let chat_empty = data.chat_empty;
+                // let chat_empty = data.chat_empty;
                 if (!question) {
                     question = "";
                 }
                 let editor = vscode.window.activeTextEditor;
-                if (editor) {
-                    let selection = editor.selection;
-                    let attach_default = !selection.isEmpty || !chat_empty;
-                    if (selection.isEmpty) {
-                        await open_chat_tab(
-                        question,
-                        editor,
-                        attach_default,
-                        data.chat_model,
-                        data.chat_model_function,
-                        false,
-                        [],
-                        [],
-                        "",
-                        this.chatHistoryProvider
-                        );
-                    } else {
-                        await open_chat_tab(
-                        question,
-                        editor,
-                        attach_default,
-                        data.chat_model,
-                        data.chat_model_function,
-                        false,
-                        [],
-                        [],
-                        "",
-                        this.chatHistoryProvider
-                        );
-                    }
-                    } else {
-                    await open_chat_tab(
-                        "",
-                        undefined,
-                        false,
-                        "",
-                        "",
-                        false,
-                        [],
-                        [],
-                        "",
-                        this.chatHistoryProvider
-                    );
-                    }
+                let attach_default = !!vscode.window.activeTextEditor;
+                await open_chat_tab(
+                    question,
+                    editor,
+                    attach_default,
+                    data.chat_model,
+                    data.chat_model_function,
+                    false,
+                    [],
+                    [],
+                    "",
+                    this.chatHistoryProvider
+                );
                 break;
             }
             case "delete_chat": {
@@ -189,41 +155,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 let editor = vscode.window.activeTextEditor;
-                let chat: Chat | undefined = await this.chatHistoryProvider.getChat(
-                    chatId
-                );
-                if (editor) {
-                    let selection = editor.selection;
-                    let attach_default = !selection.isEmpty;
-                    if (selection.isEmpty) {
-                    await open_chat_tab(
-                        "",
-                        editor,
-                        attach_default,
-                        data.chat_model,
-                        data.chat_model_function,
-                        true,
-                        chat?.questions,
-                        chat?.answers,
-                        chatId,
-                        this.chatHistoryProvider
-                    );
-                    } else {
-                    await open_chat_tab(
-                        "",
-                        editor,
-                        attach_default,
-                        data.chat_model,
-                        data.chat_model_function,
-                        true,
-                        chat?.questions,
-                        chat?.answers,
-                        chatId,
-                        this.chatHistoryProvider
-                    );
-                    }
-                } else {
-                    await open_chat_tab(
+                let chat: Chat | undefined = await this.chatHistoryProvider.getChat(chatId);
+                await open_chat_tab(
                     "",
                     editor,
                     true,
@@ -234,8 +167,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     chat?.answers,
                     chatId,
                     this.chatHistoryProvider
-                    );
-                }
+                );
                 break;
             }
             case "button_hf_open_tokens": {

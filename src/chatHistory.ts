@@ -97,13 +97,13 @@ export default class ChatHistoryProvider {
 
         if (!existingChat) {
             userChatData.push({
-            chatId,
-            chatName: chatName,
-            questions: [],
-            answers: [],
-            time: new Date(),
-            chatModel,
-            chatModelFunction,
+                chatId,
+                chatName: chatName,
+                questions: [],
+                answers: [],
+                time: new Date(),
+                chatModel,
+                chatModelFunction,
             });
         }
 
