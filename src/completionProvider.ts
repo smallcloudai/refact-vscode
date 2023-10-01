@@ -295,7 +295,7 @@ export function inline_accepted(serial_number: number)
 
 export function inline_rejected(reason: string)
 {
-    console.log(["inline_rejected", reason]);
+    // console.log(["inline_rejected", reason]);
     // let feed: CompletionApiFieldsWithTimer = _completion_data_feedback_candidate;
     // if (feed.ts_presented === 0) {
     //     return;

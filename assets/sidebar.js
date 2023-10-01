@@ -188,75 +188,6 @@
         }
     });
 
-    toolboxList.addEventListener("click", (event) => {
-        if (event.target.classList.contains("toolbox-run") && !event.target.classList.contains("toolbox-run-disabled")) {
-            let intent = toolboxSearch.value;
-            let target = event.target.parentElement.parentElement.parentElement;
-            let selected_function = last_model_used[target.dataset.funciton_name];
-            if (!selected_function) {
-                if (target.dataset.function) {
-                    if (target.dataset.ids) {
-                        const current_ids = JSON.parse(target.dataset.ids);
-                        if (current_ids.length > 0) {
-                            selected_function = current_ids[0];
-                        }
-                        else {
-                            selected_function = target.dataset.function_name;
-                            if (staging) {
-                                selected_function = 'staging-' + selected_function;
-                            }
-                        }
-                    }
-                    else {
-                        selected_function = target.dataset.function_name;
-                        if (staging) {
-                            selected_function = 'staging-' + selected_function;
-                        }
-                    }
-                }
-            }
-            if (!target) {
-                return;
-            }
-            if (event.target.parentElement.classList.contains('toolbox-content-actions')) {
-                let parent_function = event.target.parentElement.parentElement.parentElement;
-                const select = document.querySelector('.item-active .toolbox-dropdown-wrapper select');
-                const hasOptions = select && select.options && select.options.length > 0;
-                if (hasOptions) {
-                    selected_function = select.value;
-                    selected_model = select.querySelector('option[value="' + selected_function + '"]').innerHTML;
-                    pref_model_func[target.id] = selected_model;
-                    last_model_used[parent_function.dataset.funciton_name] = selected_function;
-                }
-                else {
-                    selected_function = parent_function.dataset.function_name;
-                }
-            }
-            history.splice(0, 0, intent);
-            vscode.postMessage({
-                type: "function_activated",
-                intent: intent,
-                data_function: JSON.stringify(longthink_functions_today[selected_function])
-            });
-            vscode.postMessage({
-                type: "focus_back_to_editor",
-            });
-        }
-        if (event.target.classList.contains("toolbox-back")) {
-            let active = document.querySelector(".item-active");
-            document.querySelector(".item-active .toolbox-notice").classList.remove('toolbox-notice-hidden');
-            if (active) {
-                // toolboxSearch.value = '';
-                active.classList.remove("item-active");
-                toolbox_update_likes();
-            }
-        }
-    });
-
-
-
-
-
     const back_buttons = document.querySelectorAll('.refact-welcome__back');
     back_buttons.forEach(button => {
         button.addEventListener('click', function(event) {
@@ -522,7 +453,7 @@
                 let sidebar_account = document.querySelector('.sidebar-account');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
-                // let chatHistory = document.querySelector('#history');
+                let chatHistory = document.querySelector('#history');
                 // let bug = document.querySelector('#report_bugs');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
@@ -531,16 +462,18 @@
                 dragons.style.display = message.ts2js_havekey ? 'block' : 'none';
                 info.style.display = message.ts2js_user ? 'flex' : '';
                 plan.style.display = message.ts2js_user ? 'flex' : '';
+                // info.style.display = message.ts2web_user ? 'flex' : '';
+                // plan.style.display = message.ts2web_plan ? 'flex' : '';
                 document.querySelector('.sidebar-logged span').innerHTML = message.ts2js_user;
                 document.querySelector('.sidebar-plan span').innerHTML = message.ts2js_plan;
                 sidebar_account.style.display = message.ts2js_user ? 'flex' : 'none'; // common box for name and coins
 
-                // profile.style.display = message.ts2js_user ? 'inline-flex' : 'none';
-                // logout.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                // chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                profile.style.display = message.ts2js_user ? 'inline-flex' : 'none';
+                coins.style.display = message.ts2js_user ? 'flex' : 'none';
+                logout.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 // // data.style.display = message.ts2js_user ? 'block' : 'none';
-                // coins.style.display = message.ts2js_user ? 'flex' : 'none';
-                // privacy.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                privacy.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                // privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
                 // // TODO: always show settings, a place to put custom infurl
                 // // settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 // hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
@@ -548,29 +481,23 @@
                 //     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
                 // }
                 discord.style.display = 'inline-flex';
-                bug.style.display = 'inline-flex';
-                info.style.display = message.ts2web_user ? 'flex' : '';
-                plan.style.display = message.ts2web_plan ? 'flex' : '';
+                // bug.style.display = 'inline-flex';
                 document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
                 document.querySelector('.sidebar-plan span').innerHTML = message.ts2web_plan;
-                login.style.display = message.ts2web_user ? 'none' : 'block';
-                profile.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                logout.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                chat.style.display = message.ts2web_user ? 'flex' : 'none';
-                chatHistory.style.display = message.ts2web_user ? 'flex' : 'none';
-                data.style.display = message.ts2web_user ? 'block' : 'none';
-                coins.style.display = message.ts2web_user ? 'flex' : 'none';
-                privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
+                chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                chatHistory.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 // TODO: always show settings, a place to put custom infurl
                 // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                keys.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                if (message.ts2web_user === 'self-hosted') {
-                    document.querySelector('.sidebar-account').style.display = 'none';
-                    profile.style.display = 'none';
-                }
-                if (message.ts2js_staging) {
-                    staging = message.ts2js_staging;
-                }
+                // hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                hotkeys.style.display = 'inline-flex';
+
+                // if (message.ts2web_user === 'self-hosted') {
+                //     document.querySelector('.sidebar-account').style.display = 'none';
+                //     profile.style.display = 'none';
+                // }
+                // if (message.ts2js_staging) {
+                //     staging = message.ts2js_staging;
+                // }
                 // if (message.ts2js_havekey) {
                     // login.style.display = 'none';
                 // if (message.ts2web_longthink_functions) {
