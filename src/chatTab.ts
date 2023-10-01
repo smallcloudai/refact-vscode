@@ -25,7 +25,7 @@ export class ChatTab {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         this.chatHistoryProvider = chatHistoryProvider;
         if (chatId === "" || chatId === undefined) {
-          this.chatId = this.chatHistoryProvider.generateChatId();
+            this.chatId = this.chatHistoryProvider.generateChatId();
         }
     }
 

@@ -203,6 +203,7 @@ export function activate(context: vscode.ExtensionContext)
     global.enable_longthink_completion = false;
     global.streamlined_login_countdown = -1;
     global.last_positive_result = 0;
+    global.chat_models = [];
     let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();
