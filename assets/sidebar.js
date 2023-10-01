@@ -61,7 +61,7 @@
     const selfhosting_input = document.querySelector('.refact-welcome__endpoint');
     selfhosting_input.addEventListener("change",() => {
         if(selfhosting_input.value === '') {
-            selfhosting_input.value = 'http://127.0.0.1:8008'
+            selfhosting_input.value = 'http://127.0.0.1:8008';
         }
     });
 
@@ -137,6 +137,7 @@
         vscode.postMessage({
             type: "button_refact_open_streamlined",
         });
+    });
 
     body.addEventListener("keyup", (event) => {
         event.preventDefault();
