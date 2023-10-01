@@ -454,66 +454,29 @@
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
                 let chatHistory = document.querySelector('#history');
-                // let bug = document.querySelector('#report_bugs');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
+                let settings = document.querySelector('#settings');
                 let hotkeys = document.querySelector('#keys');
                 welcome.style.display = message.ts2js_havekey ? 'none' : 'block';
                 dragons.style.display = message.ts2js_havekey ? 'block' : 'none';
                 info.style.display = message.ts2js_user ? 'flex' : '';
                 plan.style.display = message.ts2js_user ? 'flex' : '';
-                // info.style.display = message.ts2web_user ? 'flex' : '';
-                // plan.style.display = message.ts2web_plan ? 'flex' : '';
                 document.querySelector('.sidebar-logged span').innerHTML = message.ts2js_user;
                 document.querySelector('.sidebar-plan span').innerHTML = message.ts2js_plan;
                 sidebar_account.style.display = message.ts2js_user ? 'flex' : 'none'; // common box for name and coins
-
                 profile.style.display = message.ts2js_user ? 'inline-flex' : 'none';
                 coins.style.display = message.ts2js_user ? 'flex' : 'none';
                 logout.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                // // data.style.display = message.ts2js_user ? 'block' : 'none';
                 privacy.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                // privacy.style.display = (message.ts2web_user || message.ts2web_custom_infurl) ? 'inline-flex' : 'none';
-                // // TODO: always show settings, a place to put custom infurl
-                // // settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                // hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 // if (message.ts2js_metering_balance) {
                 //     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
                 // }
                 discord.style.display = 'inline-flex';
-                // bug.style.display = 'inline-flex';
-                document.querySelector('.sidebar-logged span').innerHTML = message.ts2web_user;
-                document.querySelector('.sidebar-plan span').innerHTML = message.ts2web_plan;
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 chatHistory.style.display = message.ts2js_havekey ? 'flex' : 'none';
-                // TODO: always show settings, a place to put custom infurl
-                // settings.style.display = message.ts2web_user ? 'inline-flex' : 'none';
-                // hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                hotkeys.style.display = 'inline-flex';
-
-                // if (message.ts2web_user === 'self-hosted') {
-                //     document.querySelector('.sidebar-account').style.display = 'none';
-                //     profile.style.display = 'none';
-                // }
-                // if (message.ts2js_staging) {
-                //     staging = message.ts2js_staging;
-                // }
-                // if (message.ts2js_havekey) {
-                    // login.style.display = 'none';
-                // if (message.ts2web_longthink_functions) {
-                //     let json2 = JSON.stringify(message.ts2web_longthink_functions, null, 4);
-                //     if (longthink_functions_json !== json2) {
-                //         longthink_functions_today = message.ts2web_longthink_functions;
-                //         longthink_functions_json = json2;
-                //         longthink_filters = message.ts2web_longthink_filters;
-                //         // longthink_filters.push('starcoder');
-                //         toolbox_update_likes();
-                //     }
-                // }
-                // if (message.ts2web_custom_infurl && message.ts2web_custom_infurl !== '') {
-                //     login.style.display = 'none';
-                //     // settings.classList.toggle('settings-full');
-                // }
+                settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 break;
             default:
                 break;
