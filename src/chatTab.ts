@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
-import * as userLogin from "./userLogin";
+// import * as userLogin from "./userLogin";
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 import ChatHistoryProvider from "./chatHistory";
 
@@ -147,7 +147,6 @@ export class ChatTab {
             global.side_panel?._view?.webview.postMessage(pass_dict);
         }
 
-        //on didRecieveMessage was shifted to sidebar.ts entirely
         global.side_panel?._view?.webview.postMessage(fireup_message);
     }
 
@@ -367,7 +366,7 @@ export class ChatTab {
         ));
     }
 
-    public get_html_for_webview(
+    public get_html_for_chat(
         webview: vscode.Webview,
         extensionUri: any,
     ): string

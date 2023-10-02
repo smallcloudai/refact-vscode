@@ -44,13 +44,12 @@ async function pressed_call_chat() {
       "",
       editor,
       true,
-      "",
-      "",
-      false,
-      [],
-      [],
-      "",
-      new ChatHistoryProvider(global.global_context,"")
+      "", "",
+      false,  // old_chat
+      [],     // questions
+      [],     // answers
+      "",     // chatId
+      new ChatHistoryProvider(global.global_context, global.user_logged_in)
     );
 }
 
@@ -204,6 +203,8 @@ export function activate(context: vscode.ExtensionContext)
     global.streamlined_login_countdown = -1;
     global.last_positive_result = 0;
     global.chat_models = [];
+    global.user_logged_in = "";
+    global.user_active_plan = "";
     let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 (function () {
     const vscode = acquireVsCodeApi();
     const backButton = document.querySelector("#back_button");
@@ -7,7 +8,7 @@
         vscode.postMessage({ type: "close_chat_history" });
     });
 
-    function getCurrentTimestamp() {
+    function print_date_time() {
         const now = new Date();
         const date = now.toLocaleDateString();
         const time = now.toLocaleTimeString();
@@ -50,7 +51,7 @@
 
                     const timestamp = document.createElement('div');
                     timestamp.classList.add('chat-timestamp');
-                    timestamp.innerText = getCurrentTimestamp();
+                    timestamp.innerText = print_date_time();
                     chatItem.appendChild(timestamp);
 
                     chatItem.appendChild(deleteButton);

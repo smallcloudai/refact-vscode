@@ -18,7 +18,7 @@ export type ChatHistory = {
 
 export default class ChatHistoryProvider {
     private chatHistory: ChatHistory = {};
-    private currentUser: string;
+    public currentUser: string;
 
     constructor(
         private context: vscode.ExtensionContext | undefined,

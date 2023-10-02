@@ -28,12 +28,13 @@ export async function open_chat_tab(
         global.side_panel.chat = null;
     }
     if (global.side_panel && global.side_panel._view) {
-        global.side_panel.chat = new ChatTab(chatHistoryProvider, chatId);
+        let chat = global.side_panel.new_chat(chatId);
+
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
         }
-        global.side_panel._view.webview.html = global.side_panel.chat.get_html_for_webview(
+        global.side_panel._view.webview.html = chat.get_html_for_chat(
             global.side_panel._view.webview,
             context.extensionUri
         );
@@ -57,9 +58,29 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     access_level: number = -1;
     cancel_token: vscode.CancellationToken | undefined = undefined;
 
-    constructor(private readonly _context: any) {}
-
     public chat: ChatTab | null = null;
+    public chatHistoryProvider: ChatHistoryProvider|undefined;
+
+    constructor(private readonly _context: any) {
+        this.chatHistoryProvider = undefined;
+    }
+
+    public make_sure_have_chat_history_provider()
+    {
+        if (!this.chatHistoryProvider || this.chatHistoryProvider.currentUser !== global.user_logged_in) {
+            this.chatHistoryProvider = new ChatHistoryProvider(
+                this._context,
+                global.user_logged_in
+            );
+        }
+        return this.chatHistoryProvider;
+    }
+
+    public new_chat(chatId: string)
+    {
+        this.chat = new ChatTab(this.make_sure_have_chat_history_provider(), chatId);
+        return this.chat;
+    }
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
@@ -104,7 +125,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
             case "open_chat_history": {
                 const history =
-                    await this.chatHistoryProvider.getChatNamesSortedByTime();
+                    await this.make_sure_have_chat_history_provider().getChatNamesSortedByTime();
 
                 this._view.webview.html = this._getHtmlForHistoryWebview(
                     this._view.webview
@@ -141,13 +162,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     [],
                     [],
                     "",
-                    this.chatHistoryProvider
+                    this.make_sure_have_chat_history_provider()
                 );
                 break;
             }
             case "delete_chat": {
                 const chatId = data.chatId;
-                await this.chatHistoryProvider.deleteChatEntry(chatId);
+                await this.make_sure_have_chat_history_provider().deleteChatEntry(chatId);
             }
             case "open_old_chat": {
                 const chatId = data.chatId;
@@ -155,7 +176,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     break;
                 }
                 let editor = vscode.window.activeTextEditor;
-                let chat: Chat | undefined = await this.chatHistoryProvider.getChat(chatId);
+                let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().getChat(chatId);
                 await open_chat_tab(
                     "",
                     editor,
@@ -166,7 +187,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     chat?.questions,
                     chat?.answers,
                     chatId,
-                    this.chatHistoryProvider
+                    this.make_sure_have_chat_history_provider()
                 );
                 break;
             }
@@ -308,12 +329,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             case "reset-messages": {
                 if (this.chat?.messages) {
                     this.chat.messages = data.messages_backup;
-
-                    this.chat.chatHistoryProvider.popLastMessageFromChat(
-                    this.chat?.chatId,
-                    true,
-                    true
-                );
+                    this.make_sure_have_chat_history_provider().popLastMessageFromChat(
+                        this.chat?.chatId,
+                        true,
+                        true
+                    );
                 }
                 break;
             }
@@ -341,6 +361,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
+
         let plan_msg = global.user_active_plan;
         if (!plan_msg && global.streamlined_login_countdown > -1) {
             plan_msg = `Waiting for website login... ${global.streamlined_login_countdown}`;
@@ -360,11 +381,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2js_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
         });
     }
-
-    public chatHistoryProvider = new ChatHistoryProvider(
-        this._context,
-        global.user_logged_in
-    );
 
     private _getHtmlForWebview(webview: vscode.Webview)
     {
