@@ -235,9 +235,8 @@
         // Prism.highlightAll();
     }
 
-    function backquote_backquote_backquote_remove_syntax_highlighting(code) {
+    function backquote_backquote_backquote_remove_language_name(code) {
         // this removes ```python or ```json or similar, assuming ``` itself is already not there
-        let dont_freeze = 1000;
         while (1) {
             if (code.startsWith('\n')) {
                 return code.substring(1);
@@ -247,10 +246,7 @@
                 code = code.substring(1);
                 continue;
             }
-            dont_freeze--;
-            if (dont_freeze < 0) {
-                return code;
-            }
+            return code;
         }
     }
 
@@ -269,7 +265,7 @@
             if (raw_snippets.length <= 2 * i + 1) {
                 continue;
             }
-            const code = backquote_backquote_backquote_remove_syntax_highlighting(raw_snippets[2 * i + 1]);
+            const code = backquote_backquote_backquote_remove_language_name(raw_snippets[2 * i + 1]);
             const copy_button = document.createElement('button');
             const new_button = document.createElement('button');
             copy_button.innerText = 'Copy';
