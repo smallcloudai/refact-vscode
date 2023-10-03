@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-(function () {
-    const vscode = acquireVsCodeApi();
-    const backButton = document.querySelector("#back_button");
+function chat_history_script(vscode) {
+    // const backButton = document.querySelector("#back_button");
     const chatHistoryList = document.querySelector(".chat-history-list");
 
-    backButton.addEventListener('click', () => {
-        vscode.postMessage({ type: "close_chat_history" });
-    });
+    // backButton.addEventListener('click', () => {
+    //     vscode.postMessage({ type: "close_chat_history" });
+    // });
 
     function print_date_time() {
         const now = new Date();
@@ -68,4 +67,4 @@
                 break;
         }
     });
-})();
+}

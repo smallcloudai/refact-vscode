@@ -30,7 +30,7 @@ declare global {
     var user_logged_in: string;
     var user_active_plan: string;
     var user_metering_balance: number;
-    var global_context: vscode.ExtensionContext|undefined;
+    var global_context: vscode.ExtensionContext;
     var streamlined_login_countdown: number;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
@@ -429,7 +429,7 @@ export async function follow_intent_diff(intent: string, function_name: string, 
 export async function deactivate(context: vscode.ExtensionContext)
 {
     usageStats.report_usage_stats();
-    global.global_context = undefined;
+    // global.global_context = undefined;
     if (global.rust_binary_blob) {
         await global.rust_binary_blob.terminate();
         global.rust_binary_blob = undefined;

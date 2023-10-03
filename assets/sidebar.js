@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-(function () {
-    const vscode = acquireVsCodeApi();
+function sidebar_general_script(vscode) {
     // let presets = document.querySelectorAll(".presets li");
     const body = document.querySelector("body");
     const sidebar = document.querySelector("#sidebar");
-    const toolbox = document.querySelector(".toolbox");
-    const toolboxSearch = document.querySelector("#toolbox-search");
-    const toolboxList = document.querySelector(".toolbox-list");
+    // const toolbox = document.querySelector(".toolbox");
+    // const toolboxSearch = document.querySelector("#toolbox-search");
+    // const toolboxList = document.querySelector(".toolbox-list");
     let longthink_filters;
     // let editor_inform_how_many_lines_selected = 0;
     // let editor_inform_file_access_level = 0;
@@ -139,54 +138,54 @@
         });
     });
 
-    body.addEventListener("keyup", (event) => {
-        event.preventDefault();
-        if (event.key === "Enter") {
-            let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
-            let single_page = document.querySelector(".item-active");  // single page
-            if (toolboxSearch.value.endsWith("?")) {
-                let intent = toolboxSearch.value;
-                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
-            }
-            else if (single_page) {
-                let intent = toolboxSearch.value;
-                history.splice(0, 0, intent);
-                vscode.postMessage({
-                    type: "function_activated",
-                    intent: intent,
-                    data_function: active.dataset.function, // this a string containing json
-                });
-            } else if (selected_in_list) {
-                let intent = toolboxSearch.value;
-                history.splice(0, 0, intent);
-                vscode.postMessage({
-                    type: "function_activated",
-                    intent: intent,
-                    data_function: selected_in_list.dataset.function, // this a string containing json
-                });
-            } else {
-                let intent = toolboxSearch.value;
-                vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
-            }
-            reset_everything_about_commands();
-            toolboxSearch.value = '';
-            vscode.postMessage({
-                type: "focus_back_to_editor",
-            });
-            toolbox_update_likes();
-        }
-        if (event.key === "Escape") {
-            event.preventDefault();
-            let active = document.querySelector(".item-active");
-            if (active) {
-                active.classList.remove("item-active");
-            } else {
-                vscode.postMessage({
-                    type: "focus_back_to_editor",
-                });
-            }
-        }
-    });
+    // body.addEventListener("keyup", (event) => {
+    //     event.preventDefault();
+    //     if (event.key === "Enter") {
+    //         let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
+    //         let single_page = document.querySelector(".item-active");  // single page
+    //         if (toolboxSearch.value.endsWith("?")) {
+    //             let intent = toolboxSearch.value;
+    //             vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
+    //         }
+    //         else if (single_page) {
+    //             let intent = toolboxSearch.value;
+    //             history.splice(0, 0, intent);
+    //             vscode.postMessage({
+    //                 type: "function_activated",
+    //                 intent: intent,
+    //                 data_function: active.dataset.function, // this a string containing json
+    //             });
+    //         } else if (selected_in_list) {
+    //             let intent = toolboxSearch.value;
+    //             history.splice(0, 0, intent);
+    //             vscode.postMessage({
+    //                 type: "function_activated",
+    //                 intent: intent,
+    //                 data_function: selected_in_list.dataset.function, // this a string containing json
+    //             });
+    //         } else {
+    //             let intent = toolboxSearch.value;
+    //             vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
+    //         }
+    //         reset_everything_about_commands();
+    //         toolboxSearch.value = '';
+    //         vscode.postMessage({
+    //             type: "focus_back_to_editor",
+    //         });
+    //         toolbox_update_likes();
+    //     }
+    //     if (event.key === "Escape") {
+    //         event.preventDefault();
+    //         let active = document.querySelector(".item-active");
+    //         if (active) {
+    //             active.classList.remove("item-active");
+    //         } else {
+    //             vscode.postMessage({
+    //                 type: "focus_back_to_editor",
+    //             });
+    //         }
+    //     }
+    // });
 
     const back_buttons = document.querySelectorAll('.refact-welcome__back');
     back_buttons.forEach(button => {
@@ -227,10 +226,10 @@
         vscode.postMessage({ type: "open_new_chat", question: '', chat_empty: true, chat_model: "" });
     });
 
-    const chatHistoryButton = document.querySelector("#history");
-    chatHistoryButton.addEventListener("click", () => {
-        vscode.postMessage({ type: "open_chat_history" });
-    });
+    // const chatHistoryButton = document.querySelector("#history");
+    // chatHistoryButton.addEventListener("click", () => {
+    //     vscode.postMessage({ type: "open_chat_history" });
+    // });
 
     const settingsButton = document.querySelector("#settings");
     settingsButton.addEventListener("click", () => {
@@ -293,87 +292,87 @@
         return data;
     }
 
-    function function_tag(function_name) {
-        let result = false;
-        longthink_filters.forEach((item) => {
-            if (function_name.toLowerCase().endsWith(item.toLowerCase())) {
-                result = item;
-            }
-        });
-        return result;
-    }
+    // function function_tag(function_name) {
+    //     let result = false;
+    //     longthink_filters.forEach((item) => {
+    //         if (function_name.toLowerCase().endsWith(item.toLowerCase())) {
+    //             result = item;
+    //         }
+    //     });
+    //     return result;
+    // }
 
-    let current_filter = "";
-    function renderTags(data) {
-        const filters_bar = document.querySelector('.toolbox-tags');
-        filters_bar.innerHTML = "";
-        if (data.length > 0) {
-            data.forEach((item) => {
-                const filter = document.createElement("div");
-                filter.classList.add("toolbox-tag");
-                filter.dataset.title = item;
-                filter.innerHTML = item;
-                filters_bar.appendChild(filter);
-            });
-        }
-        const tags = document.querySelectorAll('.toolbox-tag');
-        tags.forEach((item) => {
-            item.addEventListener('click', function (event) {
-                if (current_filter !== this.dataset.title) {
-                    tags.forEach((item) => {
-                        item.classList.remove("toolbox-tag-inactive");
-                        item.classList.add("toolbox-tag-inactive");
-                    });
-                    this.classList.remove('toolbox-tag-inactive');
-                    const tag = this.dataset.title;
-                    const filterItems = document.querySelectorAll(".toolbox-item");
-                    const itemsArray = Array.from(filterItems);
-                    filterItems.forEach(item => {
-                        item.style.display = 'none';
-                    });
-                    const filteredDivs = itemsArray.filter(div => {
-                        div.querySelector('.toolbox-function').innerHTML = tag;
-                        const tags = div.dataset.tags_filter;
-                        if (tags) {
-                            const all_tags = JSON.parse(div.dataset.tags_filter);
-                            if (all_tags.includes(tag)) {
-                                return div;
-                            }
-                        }
-                    });
-                    filteredDivs.forEach(div => {
-                        div.style.display = 'block';
-                    });
-                    current_filter = this.dataset.title;
-                }
-                else {
-                    current_filter = "";
-                    tags.forEach((item) => {
-                        item.classList.remove("toolbox-tag-inactive");
-                    });
-                    const filterItems = document.querySelectorAll(".toolbox-item");
-                    const itemsArray = Array.from(filterItems);
+    // let current_filter = "";
+    // function renderTags(data) {
+    //     const filters_bar = document.querySelector('.toolbox-tags');
+    //     filters_bar.innerHTML = "";
+    //     if (data.length > 0) {
+    //         data.forEach((item) => {
+    //             const filter = document.createElement("div");
+    //             filter.classList.add("toolbox-tag");
+    //             filter.dataset.title = item;
+    //             filter.innerHTML = item;
+    //             filters_bar.appendChild(filter);
+    //         });
+    //     }
+    //     const tags = document.querySelectorAll('.toolbox-tag');
+    //     tags.forEach((item) => {
+    //         item.addEventListener('click', function (event) {
+    //             if (current_filter !== this.dataset.title) {
+    //                 tags.forEach((item) => {
+    //                     item.classList.remove("toolbox-tag-inactive");
+    //                     item.classList.add("toolbox-tag-inactive");
+    //                 });
+    //                 this.classList.remove('toolbox-tag-inactive');
+    //                 const tag = this.dataset.title;
+    //                 const filterItems = document.querySelectorAll(".toolbox-item");
+    //                 const itemsArray = Array.from(filterItems);
+    //                 filterItems.forEach(item => {
+    //                     item.style.display = 'none';
+    //                 });
+    //                 const filteredDivs = itemsArray.filter(div => {
+    //                     div.querySelector('.toolbox-function').innerHTML = tag;
+    //                     const tags = div.dataset.tags_filter;
+    //                     if (tags) {
+    //                         const all_tags = JSON.parse(div.dataset.tags_filter);
+    //                         if (all_tags.includes(tag)) {
+    //                             return div;
+    //                         }
+    //                     }
+    //                 });
+    //                 filteredDivs.forEach(div => {
+    //                     div.style.display = 'block';
+    //                 });
+    //                 current_filter = this.dataset.title;
+    //             }
+    //             else {
+    //                 current_filter = "";
+    //                 tags.forEach((item) => {
+    //                     item.classList.remove("toolbox-tag-inactive");
+    //                 });
+    //                 const filterItems = document.querySelectorAll(".toolbox-item");
+    //                 const itemsArray = Array.from(filterItems);
 
-                    const filteredDivs = itemsArray.filter(div => {
-                        const tags = JSON.parse(div.dataset.tags_filter);
-                        if (tags) {
-                            if (tags.length > 1) {
-                                div.querySelector('.toolbox-function').innerHTML = 'Multiple';
-                            }
-                            if (tags.length === 1) {
-                                div.querySelector('.toolbox-function').innerHTML = tags[0];
-                            }
-                            return div;
-                        }
-                    });
-                    filteredDivs.forEach(div => {
-                        div.style.display = 'block';
-                    });
-                    filterItems.forEach(item => item.style.display = 'block');
-                }
-            });
-        });
-    }
+    //                 const filteredDivs = itemsArray.filter(div => {
+    //                     const tags = JSON.parse(div.dataset.tags_filter);
+    //                     if (tags) {
+    //                         if (tags.length > 1) {
+    //                             div.querySelector('.toolbox-function').innerHTML = 'Multiple';
+    //                         }
+    //                         if (tags.length === 1) {
+    //                             div.querySelector('.toolbox-function').innerHTML = tags[0];
+    //                         }
+    //                         return div;
+    //                     }
+    //                 });
+    //                 filteredDivs.forEach(div => {
+    //                     div.style.display = 'block';
+    //                 });
+    //                 filterItems.forEach(item => item.style.display = 'block');
+    //             }
+    //         });
+    //     });
+    // }
 
     // function on_how_many_lines_selected() {
     //     const toolboxItems = document.querySelectorAll(".toolbox-item");
@@ -445,7 +444,7 @@
                 break;
             case "ts2js":
                 let welcome = document.querySelector('.refact-welcome__whole');
-                let dragons = document.querySelector('.refact-welcome__here_be_dragons');
+                // let dragons = document.querySelector('.refact-welcome__here_be_dragons');
                 let info = document.querySelector('.sidebar-logged');
                 let plan = document.querySelector('.sidebar-plan');
                 let coins = document.querySelector('.sidebar-coins');
@@ -453,13 +452,13 @@
                 let sidebar_account = document.querySelector('.sidebar-account');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
-                let chatHistory = document.querySelector('#history');
+                // let chatHistory = document.querySelector('#history');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
                 let settings = document.querySelector('#settings');
                 let hotkeys = document.querySelector('#keys');
                 welcome.style.display = message.ts2js_havekey ? 'none' : 'block';
-                dragons.style.display = message.ts2js_havekey ? 'block' : 'none';
+                // dragons.style.display = message.ts2js_havekey ? 'block' : 'none';
                 info.style.display = message.ts2js_user ? 'flex' : '';
                 plan.style.display = message.ts2js_user ? 'flex' : '';
                 document.querySelector('.sidebar-logged span').innerHTML = message.ts2js_user;
@@ -474,7 +473,7 @@
                 // }
                 discord.style.display = 'inline-flex';
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
-                chatHistory.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                // chatHistory.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 break;
@@ -482,4 +481,4 @@
                 break;
         }
     });
-})();
+}

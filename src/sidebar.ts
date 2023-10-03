@@ -110,6 +110,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async (data) => {
             this.js2ts_message(data);
         });
+
+        const history = this.make_sure_have_chat_history_provider().getChatNamesSortedByTime();
+        this._view.webview.postMessage({
+            command: "loadHistory",
+            history: history,
+        });
     }
 
     public async js2ts_message(data: any)
@@ -123,27 +129,29 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
                 break;
             }
-            case "open_chat_history": {
-                const history =
-                    await this.make_sure_have_chat_history_provider().getChatNamesSortedByTime();
 
-                this._view.webview.html = this._getHtmlForHistoryWebview(
-                    this._view.webview
-                );
+            // case "open_chat_history": {
+            //     const history = await this.make_sure_have_chat_history_provider().getChatNamesSortedByTime();
+            //     this._view.webview.postMessage({
+            //         command: "loadHistory",
+            //         history: history,
+            //     });
+            //     break;
+            // }
 
-                this._view.webview.postMessage({
-                    command: "loadHistory",
-                    history: history,
-                });
-                break;
-            }
-            case "close_chat_history": {
-                this._view.webview.html = this._getHtmlForWebview(
-                    this._view.webview
-                );
-                this.update_webview();
-                break;
-            }
+            //     // this._view.webview.html = this._getHtmlForHistoryWebview(
+            //     //     this._view.webview
+            //     // );
+
+            //     break;
+            // }
+            // case "close_chat_history": {
+            //     this._view.webview.html = this._getHtmlForWebview(
+            //         this._view.webview
+            //     );
+            //     this.update_webview();
+            //     break;
+            // }
             case "open_new_chat": {
                 let question = data.question;
                 // let chat_empty = data.chat_empty;
@@ -384,17 +392,23 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     private _getHtmlForWebview(webview: vscode.Webview)
     {
-        const scriptUri = webview.asWebviewUri(
+        const scriptUri1 = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
             );
-        const styleMainUri = webview.asWebviewUri(
+        const scriptUri2 = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.js")
+            );
+        const styleMainUri1 = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
             );
-            const nonce = this.getNonce();
-            const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
-            const manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+        const styleMainUri2 = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.css")
+            );
+        const nonce = this.getNonce();
+        const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
+        const manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
 
-            return `<!DOCTYPE html>
+        return `<!DOCTYPE html>
                 <html lang="en">
                 <head>
                 <meta charset="UTF-8">
@@ -405,12 +419,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                <title>Presets</title>
-                <link href="${styleMainUri}" rel="stylesheet">
+                <title>Main Toolbox</title>
+                <link href="${styleMainUri1}" rel="stylesheet">
+                <link href="${styleMainUri2}" rel="stylesheet">
             </head>
             <body>
                 <div id="sidebar" class="sidebar">
-                    <div class="toolbox">
+                    <div class="chat-history-list"></div>
                     <div class="refact-welcome__here_be_dragons" style="display: none">New chat will live in the sidebar, under construction.</div>
                     <div class="refact-welcome__whole" style="display: none">
                         <div class="refact-welcome__menu">
@@ -551,7 +566,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <div class="sidebar-buttons">
                             <div></div>
                             <button tabindex="-1" id="chat"><span></span>New&nbsp;Chat</button>
-                            <button tabindex="-1" id="history"><span></span>Chat&nbsp;History</button>
                             <button tabindex="-1" id="privacy"><span></span>Privacy</button>
                             <button tabindex="-1" id="settings"><i></i><span>Settings</span></button>
                             <button tabindex="-1" id="keys"><span></span></button>
@@ -572,50 +586,44 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </div>
                     </div>
                 </div>
-                    <script nonce="${nonce}" src="${scriptUri}"></script>
+                <script nonce="${nonce}" src="${scriptUri1}"></script>
+                <script nonce="${nonce}" src="${scriptUri2}"></script>
+                <script>
+                    const vscode = acquireVsCodeApi();
+                    sidebar_general_script(vscode);
+                    chat_history_script(vscode);
+                </script>
                 </body>
                 </html>`;
     }
 
-    private _getHtmlForHistoryWebview(webview: vscode.Webview) {
-        const scriptUri = webview.asWebviewUri(
-          vscode.Uri.joinPath(
-            this._context.extensionUri,
-            "assets",
-            "chat_history.js"
-          )
-        );
-        const styleMainUri = webview.asWebviewUri(
-          vscode.Uri.joinPath(
-            this._context.extensionUri,
-            "assets",
-            "chat_history.css"
-          )
-        );
-        const nonce = this.getNonce();
-        return `<!DOCTYPE html>
-          <html lang="en">
-          <head>
-          <meta charset="UTF-8">
-          <!--
-              Use a content security policy to only allow loading images from https or from our extension directory,
-              and only allow scripts that have a specific nonce.
-          -->
-          <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    // private _getHtmlForHistoryWebview(webview: vscode.Webview) {
+    //     const scriptUri = webview.asWebviewUri(
+    //       vscode.Uri.joinPath(
+    //         this._context.extensionUri,
+    //         "assets",
+    //         "chat_history.js"
+    //       )
+    //     );
+    //     const nonce = this.getNonce();
+    //     return `<!DOCTYPE html>
+    //       <html lang="en">
+    //       <head>
+    //       <meta charset="UTF-8">
+    //       <!--
+    //           Use a content security policy to only allow loading images from https or from our extension directory,
+    //           and only allow scripts that have a specific nonce.
+    //       -->
+    //       <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
+    //       <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-          <title>Presets</title>
-          <link href="${styleMainUri}" rel="stylesheet">
-      </head>
-      <body>
-          <div id="sidebar" class="sidebar">
-            <div id="back_button">Back</div>
-            <div class="chat-history-list"></div>
-          </div>
-              <script nonce="${nonce}" src="${scriptUri}"></script>
-          </body>
-          </html>`;
-    }
+    //       <title>Presets</title>
+    //       <link href="${styleMainUri}" rel="stylesheet">
+    //   </head>
+    //   <body>
+    //       </body>
+    //       </html>`;
+    // }
 
     getNonce() {
         let text = "";

@@ -21,26 +21,20 @@ export default class ChatHistoryProvider {
     public currentUser: string;
 
     constructor(
-        private context: vscode.ExtensionContext | undefined,
+        private context: vscode.ExtensionContext,
         private user: string
     ) {
-        // Initialize the chat history for the current user when the extension is activated
-        // Load chat history from global state if available
         this.currentUser = user;
-        this.loadChatHistoryFromGlobalState().then((history) => {
-            if (history) {
-               this.chatHistory = history;
-            }
-        });
+        this.chatHistory = this.loadChatHistoryFromGlobalState();
     }
 
     public generateChatId(): string {
         return uuidv4();
     }
 
-    public async getChatNamesSortedByTime(): Promise<
+    public getChatNamesSortedByTime():
         { chatId: string; chatName: string; time: Date; lastQuestion: string }[]
-    > {
+    {
         const userChatData = this.chatHistory[this.currentUser];
         if (!userChatData) {
             return [];
@@ -181,9 +175,12 @@ export default class ChatHistoryProvider {
         );
     }
 
-    private async loadChatHistoryFromGlobalState(): Promise<
-        ChatHistory | undefined
-    > {
-        return this.context?.globalState.get<ChatHistory>("refact_chat_history");
+    private loadChatHistoryFromGlobalState(): ChatHistory
+    {
+        let maybe_history = this.context.globalState.get<ChatHistory>("refact_chat_history");
+        if (maybe_history) {
+            return maybe_history;
+        }
+        return {};
     }
 }
