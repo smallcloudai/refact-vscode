@@ -30,7 +30,7 @@ function chat_history_script(vscode) {
 
                     const deleteButton = document.createElement("button");
                     deleteButton.classList.add("delete-button");
-                    deleteButton.textContent = "x";
+                    deleteButton.textContent = "×";
 
                     deleteButton.addEventListener("click", (event) => {
                         event.stopPropagation();

@@ -304,6 +304,7 @@ body.vscode-light #login {
 	margin: 5px 0;
     margin-right: 5px;
     display: none;
+	border-radius: 8px;
 }
 #history {
 	font-size: 13px;

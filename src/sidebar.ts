@@ -353,6 +353,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 // this.get_bookmarks();
                 this.chat = null;
             }
+            
             // case "checkSelection": {
             //     this.check_selection();
             //     break;
@@ -425,26 +426,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             </head>
             <body>
                 <div id="sidebar" class="sidebar">
+                    <button tabindex="-1" id="chat"><span></span>New&nbsp;Chat</button>
                     <div class="chat-history-list"></div>
                     <div class="refact-welcome__here_be_dragons" style="display: none">New chat will live in the sidebar, under construction.</div>
                     <div class="refact-welcome__whole" style="display: none">
                         <div class="refact-welcome__menu">
                             <div class="refact-welcome__container">
                                 <div class="refact-welcome__lead">Refact plugin initial setup:</div>
-
-                                <label class="refact-welcome__select" data-type="enterprise">
-                                    <div class="refact-welcome__content">
-                                        <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />
-                                        <span>Enterprise</span>
-                                        <div class="refact-welcome__desc">
-                                            <ul>
-                                                <li>Doesn't connect to public cloud ever</li>
-                                                <li>Uses your private endpoint only</li>
-                                                <li>Sends telemetry to your private server</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </label>
 
                                 <label class="refact-welcome__select" data-type="personal">
                                     <div class="refact-welcome__content">
@@ -471,6 +459,21 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                         </div>
                                     </div>
                                 </label>
+
+                                <label class="refact-welcome__select" data-type="enterprise">
+                                <div class="refact-welcome__content">
+                                    <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />
+                                    <span>Enterprise</span>
+                                    <div class="refact-welcome__desc">
+                                        <ul>
+                                            <li>Doesn't connect to public cloud ever</li>
+                                            <li>Uses your private endpoint only</li>
+                                            <li>Sends telemetry to your private server</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                </label>
+                                
                                 <div class="refact-welcome__actions">
                                     <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
                                 </div>
@@ -490,51 +493,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
                             </div>
                         </div>
+                    
                         <div class="refact-welcome__personal refact-welcome__subscreen">
-                            <div class="refact-welcome__providers">
-                                <label class="refact-welcome__provider" data-type="huggingface">
-                                    <div class="refact-welcome__content">
-                                        <input type="radio" class="refact-welcome__proradio" value="huggingface" name="provider-type" />
-                                        <span>Huggingface Cloud</span>
-                                        <div class="refact-welcome__desc">
-                                            <ul>
-                                                <li>Features</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </label>
-                                <label class="refact-welcome__provider" data-type="refact">
-                                    <div class="refact-welcome__content">
-                                        <input type="radio" class="refact-welcome__proradio" value="refact" name="provider-type" />
-                                        <span>Refact Cloud</span>
-                                        <div class="refact-welcome__desc">
-                                            <ul>
-                                                <li>Features</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </label>
-                                <div class="refact-welcome__actions">
-                                    <button data-target="personal" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                    <button class="refact-welcome__next refact-welcome__nextprov">Next&nbsp;&nbsp;&rsaquo;</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div data-provider="huggingface" class="refact-welcome__subpanel">
-                            <h2>Huggingface Cloud</h2>
-                            <div>
-                                <label class="refact-welcome__label">API Key</label>
-                                <input class="refact-welcome__apikey_hf refact-welcome__input" type="text" name="api_key" value="${api_key}">
-                            </div>
-                            <div class="refact-welcome__hflink">You can view your API key at <a href="x" class="refact-welcome__hf_open_tokens">https://huggingface.co/settings/tokens</a></div>
-                            <div class="refact-welcome__actions">
-                                <button data-target="huggingface" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__next refact-welcome__next_hf">Next&nbsp;&nbsp;&rsaquo;</button>
-                            </div>
-                        </div>
-
-                        <div data-provider="refact" class="refact-welcome__subpanel">
                             <h2>Refact Cloud</h2>
                             <div>
                                 <label class="refact-welcome__label">API Key</label>
@@ -565,7 +525,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="sidebar-controls">
                         <div class="sidebar-buttons">
                             <div></div>
-                            <button tabindex="-1" id="chat"><span></span>New&nbsp;Chat</button>
                             <button tabindex="-1" id="privacy"><span></span>Privacy</button>
                             <button tabindex="-1" id="settings"><i></i><span>Settings</span></button>
                             <button tabindex="-1" id="keys"><span></span></button>

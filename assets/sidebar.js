@@ -33,21 +33,6 @@ function sidebar_general_script(vscode) {
         change_welcome_subscreen(selection_type);
     });
 
-    const next_provider_button = document.querySelector('.refact-welcome__nextprov');
-    next_provider_button.addEventListener("click", () => {
-        const selection_type = document.querySelector('.refact-welcome__proradio:checked').value;
-        change_provider_subscreen(selection_type);
-    });
-
-    const next_button_hf = document.querySelector('.refact-welcome__next_hf');
-    next_button_hf.addEventListener("click", () => {
-        const enter_apikey = document.querySelector('.refact-welcome__apikey_hf');
-        vscode.postMessage({
-            type: "button_hf_save",
-            hf_api_key: enter_apikey.value,
-        });
-    });
-
     const next_button_refact = document.querySelector('.refact-welcome__next_refact');
     next_button_refact.addEventListener("click", () => {
         const enter_apikey = document.querySelector('.refact-welcome__apikey_refact');
@@ -124,13 +109,6 @@ function sidebar_general_script(vscode) {
         });
     });
 
-    const button_hf_open_tokens = document.querySelector('.refact-welcome__hf_open_tokens');
-    button_hf_open_tokens.addEventListener("click", () => {
-        vscode.postMessage({
-            type: "button_hf_open_tokens",
-        });
-    });
-
     const button_refact = document.querySelector('.refact-welcome__refact');
     button_refact.addEventListener("click", () => {
         vscode.postMessage({
@@ -193,13 +171,6 @@ function sidebar_general_script(vscode) {
             const button_target = event.target.dataset.target;
             let panels = document.querySelectorAll(".refact-welcome__subpanel");
             switch (button_target) {
-                case "huggingface":
-                case "refact":
-                    panels.forEach((panel) => {
-                        panel.classList.remove('refact-welcome__subpanel--selected');
-                    });
-                    document.querySelector('.refact-welcome__personal').classList.toggle('refact-welcome__subscreen--selected');
-                    break;
                 default:
                     const screens = document.querySelectorAll(".refact-welcome__subscreen");
                     screens.forEach((screen) => {

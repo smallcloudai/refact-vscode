@@ -387,7 +387,7 @@
                 break;
         }
         visibility_control(input_should_be_visible);
-        chat_add_code_buttons(isStreaming);
+        // chat_add_code_buttons(isStreaming);
         if (message.command.includes("streaming")) {
             chat_input.focus();
         }

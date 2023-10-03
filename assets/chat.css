@@ -4,6 +4,9 @@
 	font-weight: normal;
 	font-style: normal;
 }
+* {
+    box-sizing: border-box;
+}
 body.vscode-light {
 	--color: #000;
 	--secondary: rgba(0, 0, 0, 0.5);
@@ -30,7 +33,7 @@ body.vscode-dark {
 }
 
 .refactcss-chat__wrapper {
-	height: calc(100vh - 60px);
+	height: calc(100vh - 100px);
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
