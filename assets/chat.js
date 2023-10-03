@@ -222,7 +222,6 @@
         }
 
         if (last_answer_div && data.answer_html) {
-            // console.log(["data.answer_html", data.answer_html]);
             last_answer_div.innerHTML = data.answer_html;
             last_answer_div.dataset.raw = data.answer_raw;
             last_answer_div.dataset.have_editor = data.have_editor;
@@ -238,6 +237,7 @@
 
     function backquote_backquote_backquote_remove_syntax_highlighting(code) {
         // this removes ```python or ```json or similar, assuming ``` itself is already not there
+        let dont_freeze = 1000;
         while (1) {
             if (code.startsWith('\n')) {
                 return code.substring(1);
@@ -246,6 +246,10 @@
             if (first_char >= 'a' && first_char <= 'z' || first_char >= '0' && first_char <= '9') {
                 code = code.substring(1);
                 continue;
+            }
+            dont_freeze--;
+            if (dont_freeze < 0) {
+                return code;
             }
         }
     }
