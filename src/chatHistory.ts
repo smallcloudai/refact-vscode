@@ -168,10 +168,20 @@ export default class ChatHistoryProvider {
         return true;
     }
 
-    private async saveChatHistoryToGlobalState() {
+    private async saveChatHistoryToGlobalState()
+    {
+        let validated_dict: ChatHistory = {};
+        for (const user in this.chatHistory) {
+            if (typeof user !== "string") {
+                continue;
+            }
+            if (this.chatHistory[user].length > 0) {
+                validated_dict[user] = this.chatHistory[user];
+            }
+        }
         await this.context?.globalState.update(
             "refact_chat_history",
-            this.chatHistory
+            validated_dict
         );
     }
 

@@ -111,11 +111,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             this.js2ts_message(data);
         });
 
+        this.update_chat_history();
+    }
+
+    public update_chat_history()
+    {
         const history = this.make_sure_have_chat_history_provider().getChatNamesSortedByTime();
-        this._view.webview.postMessage({
-            command: "loadHistory",
-            history: history,
-        });
+        if (this._view) {
+            this._view.webview.postMessage({
+                command: "loadHistory",
+                history: history,
+            });
+        }
     }
 
     public async js2ts_message(data: any)
@@ -370,6 +377,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
+
+        this.update_chat_history();
 
         let plan_msg = global.user_active_plan;
         if (!plan_msg && global.streamlined_login_countdown > -1) {

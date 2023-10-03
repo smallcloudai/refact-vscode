@@ -309,7 +309,6 @@ export class ChatTab {
                             answer_raw: answer,
                             have_editor: Boolean(stack_this.working_on_snippet_editor)
                         });
-                        // console.log(["assistant", answer]);
                     }
                 }
                 if (json && json["metering_balance"]) {
@@ -424,7 +423,7 @@ export class ChatTab {
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
                 <script nonce="${nonce}">
-                  Prism.highlightAll();
+                //   Prism.highlightAll();
                 </script>
             </body>
             </html>`;

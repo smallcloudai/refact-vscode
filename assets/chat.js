@@ -80,7 +80,6 @@
         message_pair_div.classList.add('refactcss-chat__item');
         message_pair_div.dataset.answer_counter = answer_counter;
 
-
         if (data.question_html) {
             answer_counter += 1;
 
@@ -213,11 +212,7 @@
             });
 
             visibility_control(true);
-
         }
-
-        // Rest of your code...
-
 
         if (!last_answer_div && data.answer_html) {
             const answer_div = document.createElement('div');
@@ -227,6 +222,7 @@
         }
 
         if (last_answer_div && data.answer_html) {
+            // console.log(["data.answer_html", data.answer_html]);
             last_answer_div.innerHTML = data.answer_html;
             last_answer_div.dataset.raw = data.answer_raw;
             last_answer_div.dataset.have_editor = data.have_editor;
@@ -235,7 +231,9 @@
         if (message_pair_div.children.length > 0) {
             chat_content.appendChild(message_pair_div);
         }
-        Prism.highlightAll();
+
+        // console.log(`Prism: ${Prism}`);
+        // Prism.highlightAll();
     }
 
     function backquote_backquote_backquote_remove_syntax_highlighting(code) {
@@ -326,7 +324,7 @@
     window.addEventListener("message", (event) => {
         const message = event.data;
         let input_should_be_visible = false;
-        let isStreaming = false;
+        // let isStreaming = false;
         switch (message.command) {
             case "chat-set-fireup-options":
                 let chat_attach_file = document.getElementById("chat-attach");
@@ -357,26 +355,26 @@
                 break;
             case "chat-end-streaming":
                 input_should_be_visible = true;
-                isStreaming = false;
+                // isStreaming = false;
                 break;
             case "chat-error-streaming":
                 input_should_be_visible = true;
                 chat_input.value = message.backup_user_phrase;
-                isStreaming = false;
+                // isStreaming = false;
                 break;
             case "chat-post-question":
                 chat_render(message);
-                isStreaming = false;
+                // isStreaming = false;
                 input_should_be_visible = false;
                 break;
             case "chat-post-answer":  // streaming also goes there, with partial answers
                 chat_render(message);
                 input_should_be_visible = false;
-                isStreaming = true;
+                // isStreaming = true;
                 break;
             case "chat-set-question-text":
                 input_should_be_visible = true;
-                isStreaming = false;
+                // isStreaming = false;
                 chat_input.value = message.value.question;
                 setTimeout(() => {
                     input_care();
@@ -387,7 +385,7 @@
                 break;
         }
         visibility_control(input_should_be_visible);
-        // chat_add_code_buttons(isStreaming);
+        chat_add_code_buttons();  // isStreaming
         if (message.command.includes("streaming")) {
             chat_input.focus();
         }

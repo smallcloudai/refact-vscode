@@ -52,8 +52,9 @@ export class PendingRequest {
             if (to_eat === "[DONE]") {
                 if (this.streaming_end_callback) {
                     // The normal way to end the streaming
-                    await this.streaming_end_callback(this.streaming_error);
+                    let my_cb = this.streaming_end_callback;
                     this.streaming_end_callback = undefined;
+                    await my_cb(this.streaming_error);
                 }
                 break;
             }
@@ -124,8 +125,9 @@ export class PendingRequest {
                         // Wait 500ms because inside VS Code "readable" and "end"/"close" are sometimes called in the wrong order.
                         await new Promise(resolve => setTimeout(resolve, 500));
                         if (this.streaming_end_callback) {
-                            await this.streaming_end_callback(this.streaming_error);
+                            let my_cb = this.streaming_end_callback;
                             this.streaming_end_callback = undefined;
+                            await my_cb(this.streaming_error);
                         }
                     });
                     resolve("");
@@ -155,8 +157,9 @@ export class PendingRequest {
                     // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
                 }
                 if (this.streaming_end_callback) {
-                    await this.streaming_end_callback(error !== undefined);
+                    let my_cb = this.streaming_end_callback;
                     this.streaming_end_callback = undefined;
+                    await my_cb(error !== undefined);
                 }
                 reject();
             });
