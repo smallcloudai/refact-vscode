@@ -7,13 +7,13 @@
 * {
   box-sizing: border-box;
 }
+body {
+  overflow: hidden;
+}
 body.vscode-light {
   --color: #000;
   --secondary: rgba(0, 0, 0, 0.5);
   --dark: rgba(0, 0, 0, 0.7);
-}
-body {
-  overflow: hidden;
 }
 body.vscode-dark {
   --color: #fff;
@@ -25,22 +25,34 @@ body.vscode-dark {
   position: absolute;
   top: 5px;
   right: 5px;
-  background-color: inherit;
-  color: white;
+  background-color: var(--secondary);
+  color: var(--color);
   border: none;
   cursor: pointer;
   padding: 4px 5px;
   border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  opacity: 0.4;
+  transition: 0.23s all ease-in;
+
+}
+.delete-button:hover {
+  opacity: 0.7;
+  transition: 0.23s all ease-in;
 }
 
 #back_button {
-  background-color: #f0f0f0;
-  color: #333;
+  background-color: var(--secondary);
+  color: var(--color);
   border: none;
   padding: 5px 5px;
   cursor: pointer;
   font-size: 14px;
-  border-radius: 10px;
+  border-radius: 6px;
   width:40px;
   margin-bottom: 5px;
 }
@@ -48,33 +60,61 @@ body.vscode-dark {
 #back_button:hover {
   background-color: #ddd;
 }
-
+.chat-history {
+  height: calc(100vh - 150px);
+  position: relative;
+}
 .chat-history-list {
   box-sizing: border-box;
-  margin-top: 10px;
+  margin-top: 0px;
+  overflow-y: auto;
+  height: calc(100vh - 150px);
+  /* position: relative; */
+}
+.chat-history::after {
+  content: '';
+  display: block;
+  position: absolute;
+  bottom: 0;
+  height: 50px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(0deg, var(--vscode-sideBar-background) 0%, rgba(0,0,0,0) 100%);
+  z-index: 999;
 }
 
+
 .chat-history-item {
-  background-color: #005ba1; /* Blue background color */
+  background-color: var(--vscode-editor-selectionBackground);
   padding: 15px;
   margin: 5px 0;
   height: auto;
   cursor: pointer;
   width: 100%;
   position: relative;
-  border-radius: 8px;
+  border-radius: 6px;
+  opacity: 0.8;
+  transition: 0.23s all ease-in;
+}
+.chat-history-item:hover {
+  opacity: 1;
+  transition: 0.23s all ease-in;
+  transform: translateX(-1px);
 }
 
 .chat-name {
   font-weight: bold;
+  text-transform: capitalize;
 }
 
 .last-question {
-  color: lightgrey; /* Light grey text color */
+  color: var(--secondary);
+  font-size: 12px;
+  margin-top: 5px;
 }
 
 .chat-timestamp {
   font-size: 12px;
-  color: #999; /* Gray color for the timestamp */
-  margin-bottom: 5px;
+  color: var(--secondary);
+  margin-top: 5px;
 }

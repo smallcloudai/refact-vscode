@@ -436,7 +436,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div id="sidebar" class="sidebar">
                     <button tabindex="-1" id="chat"><span></span>New&nbsp;Chat</button>
-                    <div class="chat-history-list"></div>
+                    <div class="chat-history">
+                        <div class="chat-history-list"></div>
+                    </div>
                     <div class="refact-welcome__here_be_dragons" style="display: none">New chat will live in the sidebar, under construction.</div>
                     <div class="refact-welcome__whole" style="display: none">
                         <div class="refact-welcome__menu">

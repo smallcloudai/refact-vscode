@@ -24,6 +24,7 @@ function chat_history_script(vscode) {
                 //console.log(chatHistory);
 
                 chatHistory.forEach((chat) => {
+                    console.log(chat);
                     const chatItem = document.createElement("div");
                     chatItem.classList.add("chat-history-item");
                     chatItem.dataset.chatId = chat.chatId;
@@ -44,17 +45,17 @@ function chat_history_script(vscode) {
                     chatName.classList.add("chat-name");
                     chatName.textContent = chat.chatName;
 
-                    const lastQuestion = document.createElement("div");
-                    lastQuestion.classList.add("last-question");
-                    lastQuestion.textContent = chat.lastQuestion;
-
                     const timestamp = document.createElement('div');
                     timestamp.classList.add('chat-timestamp');
                     timestamp.innerText = print_date_time();
-                    chatItem.appendChild(timestamp);
-
+                    
+                    const lastQuestion = document.createElement("div");
+                    lastQuestion.classList.add("last-question");
+                    lastQuestion.textContent = 'Questions: '  + chat.totalQuestions;
+                    
                     chatItem.appendChild(deleteButton);
                     chatItem.appendChild(chatName);
+                    chatItem.appendChild(timestamp);
                     chatItem.appendChild(lastQuestion);
 
 

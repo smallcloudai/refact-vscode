@@ -7,14 +7,14 @@
 * {
     box-sizing: border-box;
 }
+body {
+    box-sizing: border-box;
+}
 body.vscode-light {
 	--color: #000;
 	--secondary: rgba(0, 0, 0, 0.5);
 	--dark: rgba(0, 0, 0, 0.7);
 	--light: rgba(0, 0, 0, 0.1);
-}
-body {
-	box-sizing: border-box;
 }
 body.vscode-dark {
 	--color: #fff;

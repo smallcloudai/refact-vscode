@@ -167,6 +167,7 @@ body.vscode-light #profile {
 	margin: 5px 0;
 	flex-grow: 0;
 	flex-shrink: 0;
+	border-radius: 6px;
 }
 #settings span {
 	display: none;
@@ -210,6 +211,7 @@ body.vscode-light #profile {
 	margin-left: 5px;
 	position: relative;
     display: none;
+	border-radius: 6px;
 }
 #keys span::before {
 	color: var(--vscode-sideBar-background);
@@ -247,6 +249,7 @@ body.vscode-light #profile {
     justify-content: center;
 	margin: 5px 5px 5px 0;
     display: none;
+	border-radius: 6px;
 }
 #privacy span::before {
 	color: var(--secondary);
@@ -304,7 +307,7 @@ body.vscode-light #login {
 	margin: 5px 0;
     margin-right: 5px;
     display: none;
-	border-radius: 8px;
+	border-radius: 6px;
 }
 #history {
 	font-size: 13px;
@@ -948,6 +951,7 @@ body.vscode-light #logout {
 	cursor: pointer;
 	padding-left: 12px;
 	box-sizing: border-box;
+	border-radius: 6px;
 }
 .refact-welcome__select:hover,
 .refact-welcome__provider:hover {
@@ -986,6 +990,7 @@ body.vscode-light .refact-welcome__provider:hover {
 	background-color: transparent;
 	color: var(--secondary);
 	box-sizing: border-box;
+	border-radius: 6px;
 }
 
 .refact-welcome__select:hover .refact-welcome__desc {
@@ -1023,6 +1028,7 @@ body.vscode-light .refact-welcome__provider:hover {
 	display: inline-flex;
 	color: var(--secondary);
 	background-color: transparent;
+	border-radius: 6px;
 }
 .refact-welcome__back:hover {
 	background-color: var(--vscode-editor-selectionBackground) !important;
@@ -1059,6 +1065,7 @@ body.vscode-light .refact-welcome__provider:hover {
 	display: inline-flex;
 	color: var(--vscode-editor-selectionForeground) !important;
 	background-color: var(--vscode-editor-selectionBackground) !important;
+	border-radius: 6px;
 }
 .refact-welcome__hf {
 	/* border: 0;
@@ -1095,6 +1102,7 @@ body.vscode-light .refact-welcome__hf {
 	color: var(--vscode-editor-selectionForeground) !important;
 	cursor: pointer;
 	margin-bottom: 20px;
+	border-radius: 6px;
 }
 .refact-welcome__actions {
 	display: flex;
@@ -1116,6 +1124,7 @@ body.vscode-light .refact-welcome__hf {
 	text-align: center;
 	margin: 5px 0;
 	margin-left: auto;
+	border-radius: 6px;
 }
 .refact-welcome__content  {
 	box-sizing: border-box;

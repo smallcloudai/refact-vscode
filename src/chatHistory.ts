@@ -47,8 +47,9 @@ export default class ChatHistoryProvider {
             lastQuestion: string;
         }[] = userChatData.map((chat) => ({
             chatId: chat.chatId,
-            chatName: chat.chatName.length > 15 ? chat.chatName.substring(0, 15) + "..." : chat.chatName,
+            chatName: chat.chatName.substring(0, 100),
             time: chat.time,
+            totalQuestions: chat.questions.length,
             lastQuestion:
                 chat.questions[chat.questions.length - 1] ?
                     chat.questions[chat.questions.length - 1].replace("'''", "").length > 15 ?
