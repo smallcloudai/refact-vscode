@@ -27,11 +27,11 @@ declare global {
     var status_bar: statusBar.StatusBarMenu;
     var side_panel: sidebar.PanelWebview|undefined;
     var streamlined_login_ticket: string;
+    var streamlined_login_countdown: number;
     var user_logged_in: string;
     var user_active_plan: string;
     var user_metering_balance: number;
     var global_context: vscode.ExtensionContext;
-    var streamlined_login_countdown: number;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
     var chat_models: string[];
@@ -156,9 +156,7 @@ async function login_clicked()
         if (global.user_logged_in || i % 10 === 0) {
             userLogin.streamlined_login();
         } else {
-            if (global.side_panel) {
-                global.side_panel.update_webview();
-            }
+            global.side_panel?.update_webview();  // shows countdown
         }
         if (global.user_logged_in || i === 200) {
             global.streamlined_login_countdown = -1;
@@ -323,9 +321,7 @@ export function activate(context: vscode.ExtensionContext)
             }, 1000);
         }
         if (e.affectsConfiguration("refactai.apiKey")) {
-            if (global.side_panel) {
-                global.side_panel.update_webview();
-            }
+            global.side_panel?.goto_main();
         }
     });
 

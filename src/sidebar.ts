@@ -28,16 +28,13 @@ export async function open_chat_tab(
         global.side_panel.chat = null;
     }
     if (global.side_panel && global.side_panel._view) {
-        let chat = global.side_panel.new_chat(chatId);
+        let chat: ChatTab = global.side_panel.new_chat(chatId);
 
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
         }
-        global.side_panel._view.webview.html = chat.get_html_for_chat(
-            global.side_panel._view.webview,
-            context.extensionUri
-        );
+        global.side_panel.goto_chat(chat);
         await ChatTab.activate_from_outside(
             question,
             editor,
@@ -57,12 +54,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     selected_lines_count: number = 0;
     access_level: number = -1;
     cancel_token: vscode.CancellationToken | undefined = undefined;
+    public address: string;
 
     public chat: ChatTab | null = null;
     public chatHistoryProvider: ChatHistoryProvider|undefined;
 
     constructor(private readonly _context: any) {
         this.chatHistoryProvider = undefined;
+        this.address = "";
     }
 
     public make_sure_have_chat_history_provider()
@@ -79,6 +78,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     public new_chat(chatId: string)
     {
         this.chat = new ChatTab(this.make_sure_have_chat_history_provider(), chatId);
+        this.address = chatId;
         return this.chat;
     }
 
@@ -94,14 +94,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             enableScripts: true,
             localResourceRoots: [this._context.extensionUri],
         };
-        webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible) {
                 this.update_webview();
             }
         });
 
-        this.update_webview();
+        this.goto_main();
 
         vscode.commands.registerCommand('workbench.action.focusSideBar', () => {
             webviewView.webview.postMessage({ command: "focus" });
@@ -110,8 +109,29 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async (data) => {
             this.js2ts_message(data);
         });
+    }
 
-        this.update_chat_history();
+    public goto_main()
+    {
+        this.address = "";
+        if (!this._view) {
+            return;
+        }
+        this._view.webview.html = this.html_main_screen(this._view.webview);
+        this.update_webview();
+    }
+
+    public goto_chat(chat: ChatTab)
+    {
+        this.address = chat.chatId;
+        if (!this._view) {
+            return;
+        }
+        this._view.webview.html = chat.get_html_for_chat(
+            this._view.webview,
+            this._context.extensionUri
+        );
+        this.update_webview();
     }
 
     public update_chat_history()
@@ -136,29 +156,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
                 break;
             }
-
-            // case "open_chat_history": {
-            //     const history = await this.make_sure_have_chat_history_provider().getChatNamesSortedByTime();
-            //     this._view.webview.postMessage({
-            //         command: "loadHistory",
-            //         history: history,
-            //     });
-            //     break;
-            // }
-
-            //     // this._view.webview.html = this._getHtmlForHistoryWebview(
-            //     //     this._view.webview
-            //     // );
-
-            //     break;
-            // }
-            // case "close_chat_history": {
-            //     this._view.webview.html = this._getHtmlForWebview(
-            //         this._view.webview
-            //     );
-            //     this.update_webview();
-            //     break;
-            // }
             case "open_new_chat": {
                 let question = data.question;
                 // let chat_empty = data.chat_empty;
@@ -353,14 +350,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 break;
             }
             case "back-from-chat": {
-                this._view.webview.html = this._getHtmlForWebview(
-                    this._view.webview
-                );
-                this.update_webview();
-                // this.get_bookmarks();
+                this.goto_main();
                 this.chat = null;
             }
-            
+
             // case "checkSelection": {
             //     this.check_selection();
             //     break;
@@ -378,7 +371,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return;
         }
 
-        this.update_chat_history();
+        let have_key = !!userLogin.secret_api_key();
+        if (have_key) {
+            this.update_chat_history();
+        }
 
         let plan_msg = global.user_active_plan;
         if (!plan_msg && global.streamlined_login_countdown > -1) {
@@ -386,9 +382,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         } else if (plan_msg) {
             plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
         }
-
-        let have_key = !!userLogin.secret_api_key();
-        console.log(`have_key: ${have_key}`);
 
         this._view!.webview.postMessage({
             command: "ts2js",
@@ -400,7 +393,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    private _getHtmlForWebview(webview: vscode.Webview)
+    private html_main_screen(webview: vscode.Webview)
     {
         const scriptUri1 = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
@@ -484,7 +477,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                     </div>
                                 </div>
                                 </label>
-                                
+
                                 <div class="refact-welcome__actions">
                                     <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
                                 </div>
@@ -504,7 +497,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
                             </div>
                         </div>
-                    
+
                         <div class="refact-welcome__personal refact-welcome__subscreen">
                             <h2>Refact Cloud</h2>
                             <div>

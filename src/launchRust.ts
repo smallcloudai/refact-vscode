@@ -95,6 +95,7 @@ export class RustBinaryBlob
             this.port = port;
             await this.launch();
         }
+        global.side_panel?.update_webview();
     }
 
     public async launch()
@@ -163,6 +164,7 @@ export class RustBinaryBlob
         } catch (e) {
             console.log(["read_caps:", e]);
         }
+        global.side_panel?.update_webview();
     }
 
     public async start_lsp_stdin_stdout()
