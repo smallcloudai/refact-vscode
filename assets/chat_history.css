@@ -25,19 +25,20 @@ body.vscode-dark {
   position: absolute;
   top: 5px;
   right: 5px;
-  background-color: var(--secondary);
   color: var(--color);
   border: none;
   cursor: pointer;
   padding: 4px 5px;
+  font-size: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   opacity: 0.4;
   transition: 0.23s all ease-in;
+  background-color: transparent;
 
 }
 .delete-button:hover {
@@ -45,9 +46,9 @@ body.vscode-dark {
   transition: 0.23s all ease-in;
 }
 
-#back_button {
-  background-color: var(--secondary);
-  color: var(--color);
+/* #back_button {
+  border: var(--secondary);
+  color: var(--secondary);
   border: none;
   padding: 5px 5px;
   cursor: pointer;
@@ -59,35 +60,24 @@ body.vscode-dark {
 
 #back_button:hover {
   background-color: #ddd;
-}
+} */
 .chat-history {
   height: calc(100vh - 150px);
   position: relative;
+  padding: 0 0 0 10px;
+  margin-top: 10px;
 }
 .chat-history-list {
   box-sizing: border-box;
   margin-top: 0px;
-  overflow-y: auto;
+  overflow-y: scroll;
   height: calc(100vh - 150px);
-  /* position: relative; */
 }
-.chat-history::after {
-  content: '';
-  display: block;
-  position: absolute;
-  bottom: 0;
-  height: 50px;
-  left: 0;
-  right: 0;
-  background: linear-gradient(0deg, var(--vscode-sideBar-background) 0%, rgba(0,0,0,0) 100%);
-  z-index: 999;
-}
-
 
 .chat-history-item {
-  background-color: var(--vscode-editor-selectionBackground);
+  background-color: var(--vscode-activityBar-background);
   padding: 15px;
-  margin: 5px 0;
+  margin: 0px 0 10px;
   height: auto;
   cursor: pointer;
   width: 100%;
@@ -109,12 +99,26 @@ body.vscode-dark {
 
 .last-question {
   color: var(--secondary);
-  font-size: 12px;
-  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
 }
-
+.last-question svg {
+  margin-right: 3px;
+}
 .chat-timestamp {
-  font-size: 12px;
   color: var(--secondary);
+  display: flex;
+  align-items: center;
+}
+.chat-timestamp svg {
+  margin-right: 3px;
+}
+.chat-info {
   margin-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font-size: 11px;
+  width: 100%;
 }

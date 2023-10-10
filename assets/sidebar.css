@@ -9,8 +9,13 @@ body.vscode-light {
 	--secondary: rgba(0, 0, 0, 0.5);
 	--dark: rgba(0, 0, 0, 0.7);
 }
+* {
+	box-sizing: border-box !important;
+}
 body {
-	overflow: hidden;
+	padding: 0;
+	margin: 0;
+	position: relative;
 }
 body.vscode-dark {
 	--color: #fff;
@@ -22,16 +27,32 @@ body.vscode-dark {
 	bottom: 0px;
 	left: 0;
 	right: 0;
+	width: 100%;
+	box-sizing: border-box;
+	/* background-color: var(--vscode-sideBar-background) !important; */
+	z-index: 10 !important;
+	overflow: hidden;
+	padding: 50px 0 0px;
+}
+.sidebar-controls-inner {
 	display: flex;
 	justify-content: flex-start;
 	flex-direction: column;
 	align-items: center;
-	width: 100%;
-	box-sizing: border-box;
+	position: relative;
+	padding: 0 10px 1px;
 	background-color: var(--vscode-sideBar-background) !important;
-	padding: 0 0 10px 0;
-	z-index: 10 !important;
-	overflow: hidden;
+}
+.sidebar-controls-inner::before {
+	content: '';
+	display: block;
+	position: absolute;
+	height: 20px;
+	left: 0;
+	top: -20px;
+	right: 0;
+	background: linear-gradient(0deg, var(--vscode-sideBar-background) 0%, rgba(0,0,0,0) 100%);
+	z-index: 999;
 }
 .sidebar-buttons {
 	width: 100%;
@@ -289,9 +310,14 @@ body.vscode-light #login {
 	color: var(--secondary);
 	border-color: var(--secondary);
 }
-
+.chat-panel {
+	position: relative;
+	width: 100%;
+	padding: 0 10px;
+}
 #chat {
 	font-size: 13px;
+	margin: 0;
 	border: 1px solid var(--secondary);
 	padding: 8px 6px;
 	color: var(--secondary);
@@ -304,8 +330,6 @@ body.vscode-light #login {
 	justify-content: center;
 	width: 100%;
 	text-align: center;
-	margin: 5px 0;
-    margin-right: 5px;
     display: none;
 	border-radius: 6px;
 }
@@ -540,6 +564,7 @@ body.vscode-light #logout {
     position: relative;
     box-sizing: border-box;
     height: 100vh;
+	width: 100%;
 }
 .toolbox {
     height: 100%;
@@ -800,10 +825,6 @@ body.vscode-light #logout {
 	.sidebar-buttons {
 		flex-wrap: wrap;
 	}
-	.sidebar-inline {
-		flex-direction: column;
-        align-items: flex-start;
-	}
 	#login {
 		width: calc(100% - 38px);
 		margin-left: 0 !important;
@@ -813,9 +834,6 @@ body.vscode-light #logout {
     }
 	#key {
 		width: 32px !important;
-	}
-	#chat {
-		margin-right: 0;
 	}
     #settings {
         margin-left: 0;

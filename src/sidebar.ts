@@ -428,7 +428,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             </head>
             <body>
                 <div id="sidebar" class="sidebar">
-                    <button tabindex="-1" id="chat"><span></span>New&nbsp;Chat</button>
+                    <div class="chat-panel">
+                        <button tabindex="-1" id="chat"><span></span>New&nbsp;Chat</button>
+                    </div>
                     <div class="chat-history">
                         <div class="chat-history-list"></div>
                     </div>
@@ -527,25 +529,27 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     </div>
 
                     <div class="sidebar-controls">
-                        <div class="sidebar-buttons">
-                            <div></div>
-                            <button tabindex="-1" id="privacy"><span></span>Privacy</button>
-                            <button tabindex="-1" id="settings"><i></i><span>Settings</span></button>
-                            <button tabindex="-1" id="keys"><span></span></button>
-                        </div>
-                        <div class="sidebar-inline sidebar-account">
-                            <div class="sidebar-logged"><b><span></span></b></div>
-                            <div class="sidebar-coins">
-                            <div class="sidebar-coin"></div><span>0</span></div>
-                        </div>
-                        <div class="sidebar-inline">
-                            <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
-                            <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
-                        </div>
-                        <div class="sidebar-inline">
-                            <button tabindex="-1" id="profile"><span></span>Your&nbsp;Account</button>
-                            <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
-                            <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
+                        <div class="sidebar-controls-inner">
+                            <div class="sidebar-buttons">
+                                <div></div>
+                                <button tabindex="-1" id="privacy"><span></span>Privacy</button>
+                                <button tabindex="-1" id="settings"><i></i><span>Settings</span></button>
+                                <button tabindex="-1" id="keys"><span></span></button>
+                            </div>
+                            <div class="sidebar-inline sidebar-account">
+                                <div class="sidebar-logged"><b><span></span></b></div>
+                                <div class="sidebar-coins">
+                                <div class="sidebar-coin"></div><span>0</span></div>
+                            </div>
+                            <div class="sidebar-inline">
+                                <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
+                                <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
+                            </div>
+                            <div class="sidebar-inline">
+                                <button tabindex="-1" id="profile"><span></span>Your&nbsp;Account</button>
+                                <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
+                                <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
+                            </div>                        
                         </div>
                     </div>
                 </div>
