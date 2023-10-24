@@ -36,7 +36,7 @@ jobs:
 
       # # - name: Pakckage VSCE extension
       #   run: |
-      #     chmod +x ./assets/code-scratchpads*
+      #     chmod +x ./assets/refact-lsp*
       #     vsce package --target ${{ matrix.code-target }}
 
       # # - name: Upload artifacts
