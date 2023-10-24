@@ -80,7 +80,7 @@ export class RustBinaryBlob
             return;
         }
         let new_cmdline: string[] = [
-            join(this.asset_path, "code-scratchpads"),
+            join(this.asset_path, "refact-lsp"),
             "--address-url", url,
             "--api-key", api_key,
             "--http-port", port.toString(),
