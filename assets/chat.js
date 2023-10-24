@@ -39,18 +39,18 @@
             chat_model_function: chat_model_function,
             chat_attach_file: chat_attach_file.checked
         });
-        if (!chat_controls_moved) {
-            const chat_controls = document.querySelector('.refactcss-chat__controls');
-            const chat_content = document.querySelector('.refactcss-chat__content');
-            chat_content.appendChild(chat_controls);
-            chat_controls_moved = true;
-            const chat_label = document.getElementById("chat-attach-label");
-            const chat_input = document.getElementById("chat-attach");
-            if (chat_input.checked) {
-                chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
-            }
-            document.querySelector('.refactcss-chat__panel').style.maxHeight = '180px';
-        }
+        // if (!chat_controls_moved) {
+        //     const chat_controls = document.querySelector('.refactcss-chat__controls');
+        //     const chat_content = document.querySelector('.refactcss-chat__content');
+        //     chat_content.appendChild(chat_controls);
+        //     chat_controls_moved = true;
+        //     const chat_label = document.getElementById("chat-attach-label");
+        //     const chat_input = document.getElementById("chat-attach");
+        //     if (chat_input.checked) {
+        //         chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
+        //     }
+        //     document.querySelector('.refactcss-chat__panel').style.maxHeight = '180px';
+        // }
     });
 
     stop_button.addEventListener('click', () => {
@@ -186,18 +186,18 @@
                     chat_model_function: chat_model_function,
                     chat_attach_file: chat_attach_file.checked
                 });
-                if (!chat_controls_moved) {
-                    const chat_controls = document.querySelector('.refactcss-chat__controls');
-                    const chat_content = document.querySelector('.refactcss-chat__content');
-                    chat_content.appendChild(chat_controls);
-                    chat_controls_moved = true;
-                    const chat_label = document.getElementById("chat-attach-label");
-                    const chat_input = document.getElementById("chat-attach");
-                    if (chat_input.checked) {
-                        chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
-                    }
-                    document.querySelector('.refactcss-chat__panel').style.maxHeight = '180px';
-                }
+                // if (!chat_controls_moved) {
+                //     // const chat_controls = document.querySelector('.refactcss-chat__controls');
+                //     const chat_content = document.querySelector('.refactcss-chat__content');
+                //     chat_content.appendChild(chat_controls);
+                //     chat_controls_moved = true;
+                //     const chat_label = document.getElementById("chat-attach-label");
+                //     const chat_input = document.getElementById("chat-attach");
+                //     if (chat_input.checked) {
+                //         chat_label.innerText = chat_label.innerText.replace("Attach", "Attached");
+                //     }
+                //     document.querySelector('.refactcss-chat__panel').style.maxHeight = '180px';
+                // }
 
                 // Toggle visibility of elements
                 retry_button.style.display = 'inline-block';

@@ -405,17 +405,19 @@ export class ChatTab {
                 <div class="refactcss-chat">
                     <button class="back-button">← Back</button>
                     <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
+                    <div class="refactcss-chat__controls">
+                        <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
+                        <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model"></select></div>
+                    </div>
                     <div class="refactcss-chat__wrapper">
-                        <div class="refactcss-chat__content"></div>
-                        <div class="refactcss-chat__panel">
-                            <div class="refactcss-chat__controls">
-                                <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                                <div class="refactcss-chat__model">Use model:<select id="chat-model"></select></div>
-                            </div>
-                            <div class="refactcss-chat__commands">
-                                <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
-                                <textarea id="chat-input" class="refactcss-chat__input"></textarea>
-                                <button id="chat-send" class="refactcss-chat__button"><span></span></button>
+                        <div class="refactcss-chat__inner">
+                            <div class="refactcss-chat__content"></div>
+                            <div class="refactcss-chat__panel">
+                                <div class="refactcss-chat__commands">
+                                    <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
+                                    <textarea id="chat-input" class="refactcss-chat__input"></textarea>
+                                    <button id="chat-send" class="refactcss-chat__button"><span></span></button>
+                                </div>
                             </div>
                         </div>
                     </div>

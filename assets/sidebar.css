@@ -948,13 +948,13 @@ body.vscode-light #logout {
 	font-size: 11px;
 }
 
-.refact-welcome__whole {
+.refact-welcome__container {
 	height: 100%;
 	box-sizing: border-box;
 }
-.refact-welcome__here_be_dragons {
-	height: 100%;
-	box-sizing: border-box;
+.refact-welcome__whole {
+	padding: 0 10px;
+	margin-top: 10px;
 }
 .refact-welcome__menu { }
 .refact-welcome__lead {

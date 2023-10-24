@@ -21,10 +21,13 @@ function chat_history_script(vscode) {
                 // Clear the chat history list
                 chatHistoryList.innerHTML = "";
                 const chatHistory = message.history || [];
-                //console.log(chatHistory);
+                console.log(chatHistory);
+                if(chatHistory.length > 0) {
+                    document.querySelector('.chat-history').style.display = 'flex';
+                }
 
                 chatHistory.forEach((chat) => {
-                    console.log(chat);
+                    // console.log(chat);
                     const chatItem = document.createElement("div");
                     chatItem.classList.add("chat-history-item");
                     chatItem.dataset.chatId = chat.chatId;
@@ -33,13 +36,13 @@ function chat_history_script(vscode) {
                     deleteButton.classList.add("delete-button");
                     deleteButton.textContent = "×";
 
-                    deleteButton.addEventListener("click", (event) => {
-                        event.stopPropagation();
-                        event.preventDefault();
+                    // deleteButton.addEventListener("click", (event) => {
+                    //     event.stopPropagation();
+                    //     event.preventDefault();
 
-                        vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
-                        chatItem.remove();
-                    });
+                    //     vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
+                    //     chatItem.remove();
+                    // });
 
                     const chatName = document.createElement("div");
                     chatName.classList.add("chat-name");
@@ -63,8 +66,14 @@ function chat_history_script(vscode) {
                     chatItem.appendChild(chatInfo);
 
 
-                    chatItem.addEventListener("click", () => {
-                        vscode.postMessage({ type: "open_old_chat", chatId: chat.chatId });
+                    chatItem.addEventListener("click", (evt) => {
+                        evt.preventDefault();
+                        if(evt.target.classList.contains('delete-button')) {
+                            vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
+                            chatItem.remove();
+                        } else {
+                            vscode.postMessage({ type: "open_old_chat", chatId: chat.chatId });
+                        }
                     });
 
                     chatHistoryList.appendChild(chatItem);

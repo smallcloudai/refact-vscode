@@ -25,7 +25,13 @@ body.vscode-dark {
 }
 .refactcss-chat {
 	max-width: 900px;
-	
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.refactcss-chat ::-webkit-scrollbar:horizontal{
+    height: 6px !important;
 }
 .refactcss-chat__title {
 	margin-bottom: 10px;
@@ -37,29 +43,32 @@ body.vscode-dark {
 }
 
 .refactcss-chat__wrapper {
-	height: calc(100vh - 100px);
-	display: flex;
-	flex-direction: column;
-	
+    height: calc(100% - 145px);
+    width: 100%;
+}
+.refactcss-chat__inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
 }
 .refactcss-chat__content {
-	height: 100%;
-	overflow-y: auto;
-	
+    max-height: calc(100% - 190px);
+    overflow-y: auto;
 }
 .refactcss-chat__panel {
-    height: 100%;
-    max-height: 220px;
+    height: 190px;
     margin-top: auto;
     display: flex;
     flex-direction: column;
-    
+    padding: 0 10px;
     overflow: hidden;
     align-items: flex-end;
 }
 .refactcss-chat__controls {
 	width: 100%;
-	
+	padding: 0 10px;
+    margin-bottom: 15px;
 }
 .refactcss-chat__controls > div {
 	display: flex;
@@ -82,26 +91,32 @@ body.vscode-dark {
 	pointer-events: none !important;
 }
 .refactcss-chat__item {
+    padding: 0 10px;
 	/* margin-bottom: 30px; */
 }
 .refactcss-chat__question {
-	padding: 5px 5px;
-    width: 90%;
+	padding: 5px 15px;
+    width: 100%;
     max-width: 600px;
     background-color: var(--light);
     margin-left: auto;
     overflow: hidden;
-	
+	border-radius: 6px;
 	position: relative;
 }
 .refactcss-chat__answer {
 	margin-top: 10px;
-    width: 90%;
+    width: 100%;
     max-width: 600px;
-    margin-right: auto;
-    padding: 5px 10px;
+    /* margin-right: auto; */
+    padding: 5px 15px;
+    padding-right: 0px;
+    padding-left: 25px;
     overflow: hidden;
-	
+	width: 100%;
+    margin-bottom: 20px;
+    /* border-radius: 6px; */
+    border-left: 2px solid var(--light);
 }
 .refactcss-chat__commands {
 	margin-top: auto;
@@ -115,9 +130,9 @@ body.vscode-dark {
 
 .refactcss-chat__input {
 	width: 100%;
-	
+	border-radius: 6px;
 	border: 1px solid var(--secondary);
-	padding: 10px;
+	padding: 15px;
 	background: transparent !important;
 	color: var(--secodary) !important;
 	font-family: sans-serif !important;
@@ -134,7 +149,7 @@ body.vscode-dark {
 	height: 30px;
 	border: none !important;
 	cursor: pointer;
-	
+	border-radius: 6px;
 	color: var(--secodary) !important;
 	background: transparent !important;
 	z-index: 999 !important;
@@ -196,9 +211,15 @@ body.vscode-dark {
 	height: 20px;
 	border: none !important;
 	cursor: pointer;
-	
+	border-radius: 4px;
     text-transform: uppercase;
     font-size: 8px;
+    opacity: 0.4;
+    transition: 0.23s all ease-in;
+}
+.refactcss-chat__copybutton:hover {
+    opacity: 1;
+    transition: 0.23s all ease-in;
 }
 .refactcss-chat__newbutton {
     position: absolute;
@@ -208,9 +229,15 @@ body.vscode-dark {
 	height: 20px;
 	border: none !important;
 	cursor: pointer;
-	
+	border-radius: 4px;
     text-transform: uppercase;
     font-size: 8px;
+    opacity: 0.4;
+    transition: 0.23s all ease-in;
+}
+.refactcss-chat__newbutton:hover {
+    opacity: 1;
+    transition: 0.23s all ease-in;
 }
 .refactcss-chat__diffbutton {
     position: absolute;
@@ -221,9 +248,15 @@ body.vscode-dark {
 	height: 20px;
 	border: none !important;
 	cursor: pointer;
-	
+	border-radius: 4px;
     text-transform: uppercase;
     font-size: 8px;
+    opacity: 0.4;
+    transition: 0.23s all ease-in;
+}
+.refactcss-chat__diffbutton:hover {
+    opacity: 1;
+    transition: 0.23s all ease-in;
 }
 
 .refactcss-chat__item ul li {
@@ -300,9 +333,9 @@ body.vscode-dark {
     background-color: transparent;
     border: 1px solid var(--secondary);
     color: var(--secondary);
-    padding: 5px 5px;
+    padding: 5px 20px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 12px;
     border-radius: 8px;
     margin-bottom: 5px; 
     margin-left: 10px;
@@ -370,3 +403,17 @@ body.vscode-dark {
 .refactcss-chat__question {
     text-align: center;
 }  
+
+#chat-model {
+    background-color: transparent !important;
+    border-radius: 4px;
+    color: var(--secodary) !important;
+    border-color: var(--secodary) !important;
+    padding: 4px;
+    font-size: 12px;
+    width: 100%;
+}
+.refactcss-chat__model span {
+    width: 100px;
+    display: block;
+}

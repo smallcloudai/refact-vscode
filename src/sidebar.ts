@@ -181,6 +181,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             case "delete_chat": {
                 const chatId = data.chatId;
                 await this.make_sure_have_chat_history_provider().deleteChatEntry(chatId);
+                break;
             }
             case "open_old_chat": {
                 const chatId = data.chatId;
@@ -434,7 +435,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="chat-history">
                         <div class="chat-history-list"></div>
                     </div>
-                    <div class="refact-welcome__here_be_dragons" style="display: none">New chat will live in the sidebar, under construction.</div>
+
                     <div class="refact-welcome__whole" style="display: none">
                         <div class="refact-welcome__menu">
                             <div class="refact-welcome__container">

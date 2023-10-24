@@ -66,12 +66,15 @@ body.vscode-dark {
   position: relative;
   padding: 0 0 0 10px;
   margin-top: 10px;
+  display: none;
+  width: 100%;
 }
 .chat-history-list {
   box-sizing: border-box;
   margin-top: 0px;
   overflow-y: scroll;
   height: calc(100vh - 150px);
+  width: 100%;
 }
 
 .chat-history-item {
