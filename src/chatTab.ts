@@ -382,6 +382,9 @@ export class ChatTab {
         const prismJsCssUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "prism.css")
         );
+        const hlUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "hl.min.js")
+        );
 
         const nonce = ChatTab.getNonce();
 
@@ -417,15 +420,15 @@ export class ChatTab {
                                     <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
                                     <textarea id="chat-input" class="refactcss-chat__input"></textarea>
                                     <button id="chat-send" class="refactcss-chat__button"><span></span></button>
-                                </div>
+                                </d1iv>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
+                <script nonce="${nonce}" src="${hlUri}"></script>
                 <script nonce="${nonce}">
-                //   Prism.highlightAll();
                 </script>
             </body>
             </html>`;

@@ -230,7 +230,7 @@
         if (message_pair_div.children.length > 0) {
             chat_content.appendChild(message_pair_div);
         }
-
+        hljs.highlightAll();
         // console.log(`Prism: ${Prism}`);
         // Prism.highlightAll();
     }
