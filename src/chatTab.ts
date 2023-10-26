@@ -285,7 +285,16 @@ export class ChatTab {
                 let delta = "";
                 if (json && json["choices"]) {
                     let choice0 = json["choices"][0];
-                    delta = choice0["delta"]["content"];
+                    if (choice0["delta"]["role"] === "context") {
+                        delta += 'Sources:<br>';
+                        delta += '<ul>';
+                        for (let r of choice0["delta"]["content"]["results"]) {
+                            delta += `<li>* ${r["file_name"]}</li>`;
+                        }
+                        delta += '</ul>';
+                    } else {
+                        delta = choice0["delta"]["content"];
+                    }
                 }
                 if (delta) {
                     answer += delta;
