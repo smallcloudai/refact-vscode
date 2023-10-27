@@ -94,8 +94,8 @@ body.vscode-dark {
 }
 
 .refactcss-chat__content .refactcss-chat__controls {
-    opacity: 0.35 !important;
-    pointer-events: none !important;
+    /* opacity: 0.35 !important;
+    pointer-events: none !important; */
 }
 
 .refactcss-chat__item {
