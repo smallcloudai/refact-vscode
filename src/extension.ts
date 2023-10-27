@@ -152,13 +152,13 @@ async function login_clicked()
         clearInterval(global_autologin_timer);
     }
     global_autologin_timer = setInterval(() => {
+        let have_key = !!userLogin.secret_api_key();
         global.streamlined_login_countdown = 10 - (i % 10);
-        if (global.user_logged_in || i % 10 === 0) {
+        if (!have_key && i % 10 === 0) {
             userLogin.streamlined_login();
-        } else {
-            global.side_panel?.update_webview();  // shows countdown
         }
-        if (global.user_logged_in || i === 200) {
+        global.side_panel?.update_webview();  // shows countdown
+        if (have_key || i === 200) {
             global.streamlined_login_countdown = -1;
             clearInterval(global_autologin_timer);
             return;
@@ -309,7 +309,12 @@ export function activate(context: vscode.ExtensionContext)
     global.rust_binary_blob.settings_changed();  // async function will finish later
     let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
-        if (e.affectsConfiguration("refactai.infurl") || e.affectsConfiguration("refactai.addressURL") || e.affectsConfiguration("refactai.xDebug")) {
+        if (
+            e.affectsConfiguration("refactai.infurl") ||
+            e.affectsConfiguration("refactai.addressURL") ||
+            e.affectsConfiguration("refactai.xDebug") ||
+            e.affectsConfiguration("refactai.apiKey")
+        ) {
             if (config_debounce) {
                 clearTimeout(config_debounce);
             }
@@ -331,9 +336,10 @@ export function activate(context: vscode.ExtensionContext)
 
 export function first_run_message(context: vscode.ExtensionContext)
 {
-    const firstRun = context.globalState.get('codifyFirstRun');
-    if (firstRun) { return; };
-    context.globalState.update('codifyFirstRun', true);
+    let have_key = !!userLogin.secret_api_key();
+    if (have_key) {
+        return;
+    }
     userLogin.welcome_message();
 }
 

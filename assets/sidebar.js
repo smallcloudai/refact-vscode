@@ -415,7 +415,6 @@ function sidebar_general_script(vscode) {
                 break;
             case "ts2js":
                 let welcome = document.querySelector('.refact-welcome__whole');
-                // let dragons = document.querySelector('.refact-welcome__here_be_dragons');
                 let info = document.querySelector('.sidebar-logged');
                 let plan = document.querySelector('.sidebar-plan');
                 let coins = document.querySelector('.sidebar-coins');
@@ -423,13 +422,11 @@ function sidebar_general_script(vscode) {
                 let sidebar_account = document.querySelector('.sidebar-account');
                 let logout = document.querySelector('#logout');
                 let chat = document.querySelector('#chat');
-                // let chatHistory = document.querySelector('#history');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
                 let settings = document.querySelector('#settings');
                 let hotkeys = document.querySelector('#keys');
                 welcome.style.display = message.ts2js_havekey ? 'none' : 'block';
-                // dragons.style.display = message.ts2js_havekey ? 'block' : 'none';
                 info.style.display = message.ts2js_user ? 'flex' : '';
                 plan.style.display = message.ts2js_user ? 'flex' : '';
                 document.querySelector('.sidebar-logged span').innerHTML = message.ts2js_user;
@@ -444,8 +441,7 @@ function sidebar_general_script(vscode) {
                 // }
                 discord.style.display = 'inline-flex';
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
-                // chatHistory.style.display = message.ts2js_havekey ? 'flex' : 'none';
-                settings.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                settings.style.display = 'inline-flex';
                 hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
                 break;
             default:
