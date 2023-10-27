@@ -319,17 +319,41 @@
         document.body.removeChild(textarea);
     }
 
-    let chatContent = document.querySelector('.refactcss-chat__content');
+    // TODO: Old scroll function, delete if new is working
+    // let chatContent = document.querySelector('.refactcss-chat__content');
 
-    //auto scroll can be toggled by clicking on the chat content
-    let do_auto_scroll = true;
-    chatContent.addEventListener('click', function () {
-        do_auto_scroll = !do_auto_scroll;
+    // //auto scroll can be toggled by clicking on the chat content
+    // let do_auto_scroll = true;
+    // chatContent.addEventListener('click', function () {
+    //     do_auto_scroll = !do_auto_scroll;
+    // });
+    // function auto_scroll() {
+    //     input_care();
+    //     if (do_auto_scroll) {
+    //         chatContent.scrollTop = chatContent.scrollHeight;
+    //     }
+
+    // }
+
+    let chatContent = document.querySelector('.refactcss-chat__content');
+    let isAutoScrollPaused = false;
+
+    function isScrolledToBottom() {
+        return chatContent.scrollHeight - chatContent.clientHeight <= chatContent.scrollTop + 1;
+    }
+
+    chatContent.addEventListener('scroll', function() {
+        if (isScrolledToBottom()) {
+            isAutoScrollPaused = false;
+        } else {
+            isAutoScrollPaused = true;
+        }
     });
+
     function auto_scroll() {
         input_care();
-        if (do_auto_scroll) {
-            chatContent.scrollTop = chatContent.scrollHeight;
+        if (!isAutoScrollPaused) {
+            chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
         }
     }
 
