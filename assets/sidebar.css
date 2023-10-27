@@ -32,7 +32,7 @@ body.vscode-dark {
 	/* background-color: var(--vscode-sideBar-background) !important; */
 	z-index: 10 !important;
 	overflow: hidden;
-	padding: 50px 0 0px;
+	padding: 20px 0 0px;
 }
 .sidebar-controls-inner {
 	display: flex;
