@@ -225,7 +225,6 @@ function sidebar_general_script(vscode) {
     const logoutButton = document.querySelector("#logout");
     logoutButton.addEventListener("click", () => {
         vscode.postMessage({ type: "js2ts_logout" });
-        welcome.style.display = message.ts2js_havekey ? 'none' : 'block';
     });
 
     const discordButton = document.querySelector("#discord");
