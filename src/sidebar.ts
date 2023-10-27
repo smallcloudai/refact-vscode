@@ -410,7 +410,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             );
         const nonce = this.getNonce();
         const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
-        const manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+        let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
 
         return `<!DOCTYPE html>
                 <html lang="en">
@@ -487,9 +487,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             </div>
                         </div>
                         <div class="refact-welcome__enterprise refact-welcome__subscreen">
+                            <div classs="refact-welcome__note">You should have corporate endpoint URL and personal API key. Please contact your system administrator.</div>
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__enterendpoint refact-welcome__input" type="text" name="endpoint_address" value="${manual_infurl}">
+                                <input class="refact-welcome__enterendpoint refact-welcome__input" placeholder="http://127.0.X.X:8008/" type="text" name="endpoint_address" value="${manual_infurl}">
                             </div>
                             <div>
                                 <label class="refact-welcome__label">API Key</label>
@@ -520,7 +521,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <div class="refact-welcome__selfhosted refact-welcome__subscreen">
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" name="endpoint_address" value="${manual_infurl}">
+                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" placeholder="http://127.0.X.X:8008/" name="endpoint_address" value="${manual_infurl}">
                             </div>
                             <div class="refact-welcome__actions">
                                 <button data-target="selfhosted" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>

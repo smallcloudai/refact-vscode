@@ -40,17 +40,8 @@ body.vscode-dark {
     height: 6px !important;
 }
 
-.refactcss-chat__title {
-    margin-bottom: 10px;
-    height: 32px;
-    margin-top: 0;
-    text-transform: uppercase;
-    font-size: 14px;
-    padding: 10px;
-}
-
 .refactcss-chat__wrapper {
-    height: calc(100% - 145px);
+    height: calc(100% - 35px);
     width: 100%;
 }
 
@@ -109,19 +100,34 @@ body.vscode-dark {
 
 .refactcss-chat__item {
     padding: 0 10px;
+    position: relative;
     /* margin-bottom: 30px; */
 }
 
 .refactcss-chat__question {
-    padding: 5px 15px;
-    width: calc(100% - 40px);
+    padding: 10px;
+    width: calc(100%);
     max-width: 600px;
-    border: 3px solid var(--light);
-    margin-left: auto;
     overflow: hidden;
     border-radius: 6px;
-    position: relative;
-    margin-left: 40px;
+    border: 1px solid var(--light);
+    background-color: var(--vscode-editor-background);
+}
+.refactcss-chat__question::after {
+    content: '';
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-left: 1px solid var(--light);
+    border-bottom: 1px solid var(--light);
+    position: absolute;
+    right: 24px;
+    margin-top: 4px;
+    border-bottom-left-radius: 2px;
+    transform: rotate(-45deg);
+    transform-origin: center;
+    z-index: 5;
+    background-color: var(--vscode-editor-background);
 }
 
 .refactcss-chat__answer {
@@ -129,8 +135,7 @@ body.vscode-dark {
     width: 100%;
     max-width: 600px;
     /* margin-right: auto; */
-    padding: 5px 15px;
-    padding-right: 30px;
+    padding: 5px 0;
     /* padding-left: 25px; */
     overflow: hidden;
     width: 100%;
@@ -142,7 +147,6 @@ body.vscode-dark {
 .refactcss-chat__commands {
     margin-top: auto;
     position: relative;
-
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -177,6 +181,13 @@ body.vscode-dark {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.vscode-high-contrast .refactcss-chat__button {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
+
+.refactcss-chat__snippet {
+    position: relative;
 }
 
 .refactcss-chat__button span::before {
@@ -221,6 +232,10 @@ body.vscode-dark {
     line-height: 1.1;
     border-radius: 6px;
 }
+.vscode-high-contrast .refactcss-chat__item pre code {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
+
 
 .refactcss-chat__item ul {
     list-style: none;
@@ -240,6 +255,10 @@ body.vscode-dark {
     font-size: 8px;
     opacity: 0.4;
     transition: 0.23s all ease-in;
+}
+
+.refactcss-chat__question .refactcss-chat__copybutton {
+    right: 13px;
 }
 
 .refactcss-chat__copybutton:hover {
@@ -374,6 +393,10 @@ body.vscode-dark {
     border-radius: 8px;
     margin-bottom: 5px;
     margin-left: 10px;
+}
+
+.vscode-high-contrast .back-button {
+    border: 1px solid var(--vscode-textSeparator-foreground);
 }
 
 .back-button:hover {

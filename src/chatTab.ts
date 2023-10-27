@@ -376,12 +376,6 @@ export class ChatTab {
         const styleMainUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
         );
-        const prismJsUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "prism.js")
-        );
-        const prismJsCssUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "prism.css")
-        );
         const hlUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "hl.min.js")
         );
@@ -401,20 +395,19 @@ export class ChatTab {
 
                 <title>Refact.ai Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
-                <link href="${prismJsCssUri}" rel="stylesheet">
-                <script nonce="${nonce}" src="${prismJsUri}" data-manual></script>
             </head>
             <body>
                 <div class="refactcss-chat">
                     <button class="back-button">← Back</button>
-                    <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
-                    <div class="refactcss-chat__controls">
-                        <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                        <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model"></select></div>
-                    </div>
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
-                            <div class="refactcss-chat__content"></div>
+                            <div class="refactcss-chat__content">
+                    
+                                <div class="refactcss-chat__controls">
+                                    <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
+                                    <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model"></select></div>
+                                </div>
+                            </div>
                             <div class="refactcss-chat__panel">
                                 <div class="refactcss-chat__commands">
                                     <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>

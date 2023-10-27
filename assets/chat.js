@@ -231,8 +231,6 @@
             chat_content.appendChild(message_pair_div);
         }
         hljs.highlightAll();
-        // console.log(`Prism: ${Prism}`);
-        // Prism.highlightAll();
     }
 
     function backquote_backquote_backquote_remove_language_name(code) {
@@ -260,12 +258,20 @@
         const raw = answer_div.dataset.raw;
         const raw_snippets = raw.split('```');
         for (let i = 0; i < snippets.length; i++) {
+            const code_wrapper = document.createElement('div');
+            if (!snippets[i].closest('.refactcss-chat__snippet')) {
+                code_wrapper.classList.add('refactcss-chat__snippet');
+                snippets[i].parentNode.replaceChild(code_wrapper, snippets[i]);
+                code_wrapper.appendChild(snippets[i]);
+            }
+
             let pre = snippets[i];
             // const code = pre.innerHTML;
             if (raw_snippets.length <= 2 * i + 1) {
                 continue;
             }
-            const code = backquote_backquote_backquote_remove_language_name(raw_snippets[2 * i + 1]);
+            // const code = backquote_backquote_backquote_remove_language_name(raw_snippets[2 * i + 1]);
+            const code = raw_snippets[2 * i + 1];
             const copy_button = document.createElement('button');
             const new_button = document.createElement('button');
             copy_button.innerText = 'Copy';
@@ -288,10 +294,16 @@
                 });
                 diff_button.innerText = 'Diff';
                 diff_button.classList.add('refactcss-chat__diffbutton');
-                pre.appendChild(diff_button);
+                if(!code_wrapper.querySelector('.refactcss-chat__diffbutton')) {
+                    code_wrapper.appendChild(diff_button);
+                }
             }
-            pre.appendChild(copy_button);
-            pre.appendChild(new_button);
+            if(!code_wrapper.querySelector('.refactcss-chat__copybutton')) {
+                code_wrapper.appendChild(copy_button);
+            }
+            if(!code_wrapper.querySelector('.refactcss-chat__newbutton')) {
+                code_wrapper.appendChild(new_button);
+            }
         }
         const codeButtons = document.querySelectorAll('.refactcss-chat__copybutton, .refactcss-chat__newbutton, .refactcss-chat__diffbutton');
     }

@@ -194,6 +194,9 @@ body.vscode-light #profile {
 	display: none;
 	margin-left: 5px;
 }
+.vscode-high-contrast #settings {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
 #settings i::before {
 	color: var(--secondary);
 	content: "\e805";
@@ -256,6 +259,12 @@ body.vscode-light #profile {
 	text-transform: none;
 	line-height: 1em;
 }
+.vscode-high-contrast #keys {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
+.vscode-high-contrast #keys span::before {
+	color: var(--vscode-textSeparator-foreground) !important;
+}
 #privacy {
 	font-size: 13px;
 	border: 1px solid var(--secondary);
@@ -286,6 +295,9 @@ body.vscode-light #profile {
 	line-height: 1em;
 	font-size: 13px;
 	margin-right: 5px;
+}
+.vscode-high-contrast #privacy {
+    border: 1px solid var(--vscode-textSeparator-foreground);
 }
 body.vscode-light #settings {
 	color: var(--secondary);
@@ -333,6 +345,10 @@ body.vscode-light #login {
     display: none;
 	border-radius: 6px;
 }
+.vscode-high-contrast #chat {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
+
 #history {
 	font-size: 13px;
 	border: 1px solid var(--secondary);
@@ -1084,6 +1100,12 @@ body.vscode-light .refact-welcome__provider:hover {
 	color: var(--vscode-editor-selectionForeground) !important;
 	background-color: var(--vscode-editor-selectionBackground) !important;
 	border-radius: 6px;
+}
+.vscode-high-contrast .refact-welcome__savebutton, 
+.vscode-high-contrast .refact-welcome__next,
+.vscode-high-contrast .refact-welcome__back,
+.vscode-high-contrast input {
+    border: 1px solid var(--vscode-textSeparator-foreground);
 }
 .refact-welcome__hf {
 	/* border: 0;

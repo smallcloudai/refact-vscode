@@ -78,7 +78,7 @@ body.vscode-dark {
 }
 
 .chat-history-item {
-  background-color: var(--vscode-activityBar-background);
+  background-color: var(--vscode-editor-background);
   padding: 15px;
   margin: 0px 0 10px;
   height: auto;
@@ -89,19 +89,24 @@ body.vscode-dark {
   opacity: 0.8;
   transition: 0.23s all ease-in;
 }
+.vscode-high-contrast .chat-history-item {
+  border: 1px solid var(--vscode-textSeparator-foreground) !important;
+}
 .chat-history-item:hover {
   opacity: 1;
   transition: 0.23s all ease-in;
   transform: translateX(-1px);
 }
-
+.vscode-high-contrast .chat-history-item:hover {
+  transform: translateX(0px);
+}
 .chat-name {
   font-weight: bold;
   text-transform: capitalize;
 }
 
 .last-question {
-  color: var(--secondary);
+  color: var(--vscode-foreground);
   display: flex;
   align-items: center;
   margin-left: 10px;
@@ -110,7 +115,7 @@ body.vscode-dark {
   margin-right: 3px;
 }
 .chat-timestamp {
-  color: var(--secondary);
+  color: var(--vscode-foreground);
   display: flex;
   align-items: center;
 }
