@@ -15,6 +15,7 @@ import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
+import * as fetchH2 from 'fetch-h2';
 
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
@@ -187,6 +188,34 @@ export async function inline_accepted(this_completion_serial_number: number)
 {
     if (typeof this_completion_serial_number === "number") {
         completionProvider.inline_accepted(this_completion_serial_number);
+
+        let url = fetchAPI.rust_url("/v1/snippet-accepted");
+        if (!url) {
+            console.log(["Failed to get url for /v1/snippet-accepted"]);
+        }
+        const post = JSON.stringify({
+            "snippet_telemetry_id": this_completion_serial_number
+        });
+        const headers = {
+            "Content-Type": "application/json",
+            // "Authorization": `Bearer ${apiKey}`,
+        };
+        let req = new fetchH2.Request(url, {
+            method: "POST",
+            headers: headers,
+            body: post,
+            redirect: "follow",
+            cache: "no-cache",
+            referrer: "no-referrer"
+        });
+    
+        try {
+            await fetchH2.fetch(req);
+        } catch (error) {
+            console.log("failed to post to /v1/snippet-accepted");
+        }
+    
+    
     } else {
         console.log(["WARNING: inline_accepted no serial number!", this_completion_serial_number]);
     }

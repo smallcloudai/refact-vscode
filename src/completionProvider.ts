@@ -238,7 +238,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             return ["", -1];
         }
         // let de_facto_model = json["model"];
-        let serial_number = 7000;
+        let serial_number = json["snippet_telemetry_id"];
         return [completion, serial_number];
     }
 }
