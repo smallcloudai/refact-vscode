@@ -70,17 +70,16 @@ export class PendingRequest {
         }
     }
 
-    supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: estate.ApiFields|undefined)
+    supply_stream(h2stream: Promise<fetchH2.Response>, scope: string, url: string)
     {
         this.streaming_error = false;
-        // this.api_fields = api_fields;
         h2stream.catch((error) => {
             let aborted = error && error.message && error.message.includes("aborted");
             if (!aborted) {
                 console.log(["h2stream error (1)", error]);
-                // usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, error, "");
+                usageStats.send_network_problems_to_status_bar(false, scope, url, error, "");
             } else {
-                // Totally normal, user cancelled the request.
+                // Normal, user cancelled the request.
             }
             return;
         });
@@ -115,11 +114,11 @@ export class PendingRequest {
                             // likely a error, because it's not a stream, no "data: " prefix
                             console.log(["looks like a error", this.streaming_buf]);
                             this.streaming_error = true;
-                            // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, this.streaming_buf, "");
+                            usageStats.send_network_problems_to_status_bar(false, scope, url, this.streaming_buf, "");
                         } else if (this.streaming_error) {
-                            // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, "streaming_error", "");
+                            usageStats.send_network_problems_to_status_bar(false, scope, url, "streaming_error", "");
                         } else {
-                            // usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", "");
+                            usageStats.send_network_problems_to_status_bar(true, scope, url, "", "");
                         }
                         // Normally [DONE] produces a callback, but it's possible there's no [DONE] sent by the server.
                         // Wait 500ms because inside VS Code "readable" and "end"/"close" are sometimes called in the wrong order.
@@ -139,7 +138,7 @@ export class PendingRequest {
                         // until the previous one is finished, should be fine...
                         usabilityHints.show_message_from_server("InferenceServer", json_arrived.inference_message);
                     }
-                    if (look_for_common_errors(json_arrived, api_fields)) {
+                    if (look_for_common_errors(json_arrived, scope, "")) {
                         reject();
                         return;
                     }
@@ -147,14 +146,14 @@ export class PendingRequest {
                     if (typeof json_arrived === "object" && json_arrived.length !== undefined) {
                         model_name = json_arrived[0]["model"];
                     }
-                    // usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", model_name);
+                    usageStats.send_network_problems_to_status_bar(true, scope, url, "", model_name);
                     resolve(json_arrived);
                 }
             }).catch(async (error) => {
                 let aborted = error && error.message && error.message.includes("aborted");
                 if (!aborted) {
                     console.log(["h2stream error (2)", error]);
-                    // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
+                    usageStats.send_network_problems_to_status_bar(false, scope, url, error, "");
                 }
                 if (this.streaming_end_callback) {
                     let my_cb = this.streaming_end_callback;
@@ -179,7 +178,7 @@ export class PendingRequest {
                 return;
             } else if (!aborted) {
                 console.log(["h2stream error (3)", error]);
-                // usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
+                usageStats.send_network_problems_to_status_bar(false, scope, url, error, "");
             }
         });
         _global_reqs.push(this);
@@ -281,14 +280,6 @@ export function rust_url(addthis: string)
 }
 
 
-export let non_verifying_ctx = fetchH2.context({
-    session: {
-        rejectUnauthorized: false,
-        sessionTimeout: 600,
-    },
-});
-
-
 export function inference_context(third_party: boolean)
 {
     let modified_url = vscode.workspace.getConfiguration().get('refactai.infurl');
@@ -296,20 +287,14 @@ export function inference_context(third_party: boolean)
         // Backward compatibility: codify is the old name
         modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
     }
-    // If user has modified the URL, we don't check the certificate, because we assume it's self-signed self-hosted server.
-    // Unless it's a third party request -- that always has a valid certificate.
-    let dont_check_certificate: boolean = !third_party && !!modified_url;
-    if (dont_check_certificate) {
-        return non_verifying_ctx;
-    } else {
-        return {
-            disconnect: fetchH2.disconnect,
-            disconnectAll: fetchH2.disconnectAll,
-            fetch: fetchH2.fetch,
-            onPush: fetchH2.onPush,
-            setup: fetchH2.setup,
-        };
-    }
+    // in previous versions, it was possible to skip certificate verification
+    return {
+        disconnect: fetchH2.disconnect,
+        disconnectAll: fetchH2.disconnectAll,
+        fetch: fetchH2.fetch,
+        onPush: fetchH2.onPush,
+        setup: fetchH2.setup,
+    };
 }
 
 
@@ -485,24 +470,18 @@ export function fetch_chat_promise(
     messages: [string, string][],
     model: string,
     third_party: boolean = false,
-): [Promise<fetchH2.Response>, estate.ApiFields]
+): [Promise<fetchH2.Response>, string, string]
 {
     let url = rust_url("/v1/chat");
     if (!url) {
         console.log(["fetch_code_completion: No rust binary working"]);
-        return [Promise.reject("No rust binary working"), new estate.ApiFields()];
+        return [Promise.reject("No rust binary working"), scope, ""];
     }
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
-        return [Promise.reject("No API key"), new estate.ApiFields()];
+        return [Promise.reject("No API key"), "chat", ""];
     }
     let ctx = inference_context(third_party);
-    let api_fields = new estate.ApiFields();
-    api_fields.scope = scope;
-    api_fields.url = url;
-    api_fields.function = "chat";
-    api_fields.ts_req = Date.now();
-    api_fields.model = model;
     let json_messages = [];
     for (let i=0; i<messages.length; i++) {
         json_messages.push({
@@ -542,35 +521,29 @@ export function fetch_chat_promise(
         init.signal = abort.signal;
     }
     let promise = ctx.fetch(req, init);
-    return [promise, api_fields];
+    return [promise, scope, ""];
 }
 
 
-export function look_for_common_errors(json: any, api_fields: estate.ApiFields | undefined): boolean
+export function look_for_common_errors(json: any, scope: string, url: string): boolean
 {
     if (json === undefined) {
         // undefined means error is already handled, do nothing
         return true;
     }
-    let scope = "unknown";
-    let url = "unknown";
-    if (api_fields !== undefined) {
-        scope = api_fields.scope;
-        url = api_fields.url;
-    }
     if (json.detail) {
-        usageStats.report_success_or_failure(false, scope, url, json.detail, "");
+        usageStats.send_network_problems_to_status_bar(false, scope, url, json.detail, "");
         return true;
     }
     if (json.retcode && json.retcode !== "OK") {
-        usageStats.report_success_or_failure(false, scope, url, json.human_readable_message, "");
+        usageStats.send_network_problems_to_status_bar(false, scope, url, json.human_readable_message, "");
         return true;
     }
     if (json.error) {
         if (typeof json.error === "string") {
-            usageStats.report_success_or_failure(false, scope, url, json.error, "");
+            usageStats.send_network_problems_to_status_bar(false, scope, url, json.error, "");
         } else {
-            usageStats.report_success_or_failure(false, scope, url, json.error.message, "");
+            usageStats.send_network_problems_to_status_bar(false, scope, url, json.error.message, "");
         }
     }
     return false;

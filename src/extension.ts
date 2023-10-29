@@ -2,8 +2,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as completionProvider from "./completionProvider";
-import * as highlight from "./highlight";
-import * as storeVersions from "./storeVersions";
 import * as statusBar from "./statusBar";
 import * as codeLens from "./codeLens";
 import * as interactiveDiff from "./interactiveDiff";
@@ -101,37 +99,37 @@ async function pressed_tab()
 }
 
 
-async function code_lens_clicked(arg0: any)
-{
-    let editor = vscode.window.activeTextEditor;
-    if (editor) {
-        let state = estate.state_of_editor(editor, "code_lens_clicked");
-        if (!state) {
-            return;
-        }
-        if (arg0 === "APPROVE") {
-            await interactiveDiff.like_and_accept(editor);
-        } else if (arg0 === "REJECT") {
-            await pressed_escape();  // might return to highlight
-        } else if (arg0 === "RERUN") {
-            await rollback_and_regen(editor);
-        } else if (arg0 === "COMP_APPROVE") {
-            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
-            codeLens.quick_refresh();
-            await vscode.commands.executeCommand('editor.action.inlineSuggest.commit');
-        } else if (arg0 === "COMP_REJECT") {
-            state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
-            codeLens.quick_refresh();
-            await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
-        } else if (arg0 === "COMP_THINK_LONGER") {
-            state.completion_longthink = 1;
-            await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
-            await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
-        } else {
-            console.log(["code_lens_clicked: can't do", arg0]);
-        }
-    }
-}
+// async function code_lens_clicked(arg0: any)
+// {
+//     let editor = vscode.window.activeTextEditor;
+//     if (editor) {
+//         let state = estate.state_of_editor(editor, "code_lens_clicked");
+//         if (!state) {
+//             return;
+//         }
+//         if (arg0 === "APPROVE") {
+//             await interactiveDiff.like_and_accept(editor);
+//         } else if (arg0 === "REJECT") {
+//             await pressed_escape();  // might return to highlight
+//         } else if (arg0 === "RERUN") {
+//             await rollback_and_regen(editor);
+//         } else if (arg0 === "COMP_APPROVE") {
+//             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+//             codeLens.quick_refresh();
+//             await vscode.commands.executeCommand('editor.action.inlineSuggest.commit');
+//         } else if (arg0 === "COMP_REJECT") {
+//             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+//             codeLens.quick_refresh();
+//             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
+//         } else if (arg0 === "COMP_THINK_LONGER") {
+//             state.completion_longthink = 1;
+//             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
+//             await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
+//         } else {
+//             console.log(["code_lens_clicked: can't do", arg0]);
+//         }
+//     }
+// }
 
 
 let global_autologin_timer: NodeJS.Timeout|undefined = undefined;
@@ -204,7 +202,7 @@ export function activate(context: vscode.ExtensionContext)
     global.user_logged_in = "";
     global.user_active_plan = "";
     let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
-    let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
+    // let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();
     global.status_bar.createStatusBarBlock(context);
 
@@ -254,7 +252,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
     context.subscriptions.push(disposable1);
-    context.subscriptions.push(disposable2);
+    // context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable9);
     context.subscriptions.push(disposable10);
     context.subscriptions.push(disposable11);
@@ -278,16 +276,6 @@ export function activate(context: vscode.ExtensionContext)
     let login = vscode.commands.registerCommand('refactaicmd.login', () => {
         login_clicked();
     });
-
-    let stats_timer = setInterval(() => {
-        usageStats.report_usage_stats();
-        clearInterval(stats_timer);
-        // We at SMC need to know quickly if there is any widespread problems,
-        // look inside: there is not much being sent.
-        stats_timer = setInterval(() => {
-            usageStats.report_usage_stats();
-        }, 3600000); // 1 hour
-    }, 60000); // Start with 1 minute, change to 1 hour
 
     context.subscriptions.push(login);
     let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
@@ -362,7 +350,7 @@ export async function rollback_and_regen(editor: vscode.TextEditor)
     let state = estate.state_of_editor(editor, "rollback_and_regen");
     if (state) {
         await estate.switch_mode(state, Mode.Normal);  // dislike_and_rollback inside
-        await interactiveDiff.query_the_same_thing_again(editor);
+        // await interactiveDiff.query_the_same_thing_again(editor);
     }
 }
 
@@ -392,45 +380,44 @@ export async function ask_and_save_intent(): Promise<boolean>
 }
 
 
-export async function follow_intent_highlight(intent: string, function_name: string, model_name: string, third_party: boolean)
-{
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        return;
-    }
-    if (!intent) {
-        return;
-    }
-    await highlight.query_highlight(editor, intent, function_name, model_name, third_party);
-}
+// export async function follow_intent_highlight(intent: string, function_name: string, model_name: string, third_party: boolean)
+// {
+//     let editor = vscode.window.activeTextEditor;
+//     if (!editor) {
+//         return;
+//     }
+//     if (!intent) {
+//         return;
+//     }
+//     await highlight.query_highlight(editor, intent, function_name, model_name, third_party);
+// }
 
-export async function follow_intent_diff(intent: string, function_name: string, model_name: string, third_party: boolean)
-{
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        return;
-    }
-    if (!intent) {
-        return;
-    }
-    let selection = editor.selection;
-    // empty selection will become current line selection
-    editor.selection = new vscode.Selection(selection.start, selection.start);  // this clears the selection, moves cursor up
-    if (selection.end.line > selection.start.line && selection.end.character === 0) {
-        let end_pos_in_chars = editor.document.lineAt(selection.end.line - 1).range.end.character;
-        selection = new vscode.Selection(
-            selection.start,
-            new vscode.Position(selection.end.line - 1, end_pos_in_chars)
-        );
-    }
-    estate.save_intent(intent);
-    await interactiveDiff.query_diff(editor, selection, function_name || "diff-selection", model_name, third_party);
-}
+// export async function follow_intent_diff(intent: string, function_name: string, model_name: string, third_party: boolean)
+// {
+//     let editor = vscode.window.activeTextEditor;
+//     if (!editor) {
+//         return;
+//     }
+//     if (!intent) {
+//         return;
+//     }
+//     let selection = editor.selection;
+//     // empty selection will become current line selection
+//     editor.selection = new vscode.Selection(selection.start, selection.start);  // this clears the selection, moves cursor up
+//     if (selection.end.line > selection.start.line && selection.end.character === 0) {
+//         let end_pos_in_chars = editor.document.lineAt(selection.end.line - 1).range.end.character;
+//         selection = new vscode.Selection(
+//             selection.start,
+//             new vscode.Position(selection.end.line - 1, end_pos_in_chars)
+//         );
+//     }
+//     estate.save_intent(intent);
+//     await interactiveDiff.query_diff(editor, selection, function_name || "diff-selection", model_name, third_party);
+// }
 
 
 export async function deactivate(context: vscode.ExtensionContext)
 {
-    usageStats.report_usage_stats();
     // global.global_context = undefined;
     if (global.rust_binary_blob) {
         await global.rust_binary_blob.terminate();

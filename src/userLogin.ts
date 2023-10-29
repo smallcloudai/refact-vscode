@@ -78,7 +78,7 @@ export async function streamlined_login()
                 apiKey = json.secret_key;
                 global.streamlined_login_ticket = "";
                 await vscode.workspace.getConfiguration().update('refactai.apiKey', apiKey, vscode.ConfigurationTarget.Global);
-                await usageStats.report_success_or_failure(true, "recall", recall_url, "", "");
+                await usageStats.send_network_problems_to_status_bar(true, "recall", recall_url, "", "");
                 // fall through
             } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("The API key") && global.streamlined_login_countdown !== -1) {
                 // expected: do nothing
@@ -90,11 +90,11 @@ export async function streamlined_login()
                 }
                 return "";
             } else {
-                await usageStats.report_success_or_failure(false, "recall (1)", recall_url, json, "");
+                await usageStats.send_network_problems_to_status_bar(false, "recall (1)", recall_url, json, "");
                 // fall through, maybe normal login will work
             }
         } catch (error) {
-            await usageStats.report_success_or_failure(false, "recall (2)", recall_url, error, "");
+            await usageStats.send_network_problems_to_status_bar(false, "recall (2)", recall_url, error, "");
             return "";
         }
     }
@@ -157,7 +157,7 @@ export async function inference_login(): Promise<boolean>
         return _last_inference_login_cached_result;
     }
     await fetchH2.disconnectAll();
-    await fetchAPI.non_verifying_ctx.disconnectAll();
+    // await fetchAPI.non_verifying_ctx.disconnectAll();
     console.log(["perform inference login", url]);
     if (!url) {
         return false;
@@ -195,7 +195,7 @@ export async function inference_login(): Promise<boolean>
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = Date.now();
             _last_inference_login_infurl = conf_url;
-            await usageStats.report_success_or_failure(false, "inference_login(1)", report_this_url, error, "");
+            await usageStats.send_network_problems_to_status_bar(false, "inference_login(1)", report_this_url, error, "");
             return false;
         }
         let result = await result_promise;
@@ -205,7 +205,7 @@ export async function inference_login(): Promise<boolean>
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = Date.now();
             _last_inference_login_infurl = conf_url;
-            await usageStats.report_success_or_failure(false, "inference_login(2)", report_this_url, json.detail, "");
+            await usageStats.send_network_problems_to_status_bar(false, "inference_login(2)", report_this_url, json.detail, "");
         } else if (json.retcode === "OK") {
             // Success here
             if (json.inference_message) {
@@ -218,26 +218,26 @@ export async function inference_login(): Promise<boolean>
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = Date.now();
             _last_inference_login_infurl = conf_url;
-            await usageStats.report_success_or_failure(true, "inference_login", report_this_url, "", "");
+            await usageStats.send_network_problems_to_status_bar(true, "inference_login", report_this_url, "", "");
         } else if (json.detail) {
             _last_inference_login_cached_result = false;
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = 0;
             _last_inference_login_infurl = conf_url;
-            await usageStats.report_success_or_failure(false, "inference_login(2)", report_this_url, json.detail, "");
+            await usageStats.send_network_problems_to_status_bar(false, "inference_login(2)", report_this_url, json.detail, "");
         } else {
             _last_inference_login_cached_result = false;
             _last_inference_login_key = apiKey;
             _last_inference_login_ts = 0;
             _last_inference_login_infurl = conf_url;
-            await usageStats.report_success_or_failure(false, "inference_login(3)", report_this_url, json, "");
+            await usageStats.send_network_problems_to_status_bar(false, "inference_login(3)", report_this_url, json, "");
         }
     } catch (error) {
         _last_inference_login_cached_result = false;
         _last_inference_login_key = apiKey;
         _last_inference_login_ts = 0;
         _last_inference_login_infurl = conf_url;
-        await usageStats.report_success_or_failure(false, "inference_login(4)", report_this_url, error, "");
+        await usageStats.send_network_problems_to_status_bar(false, "inference_login(4)", report_this_url, error, "");
     } finally {
         _inference_login_in_progress = false;
     }

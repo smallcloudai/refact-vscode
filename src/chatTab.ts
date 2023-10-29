@@ -411,7 +411,7 @@ export class ChatTab {
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
                             <div class="refactcss-chat__content">
-                    
+
                                 <div class="refactcss-chat__controls">
                                     <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
                                     <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model"></select></div>

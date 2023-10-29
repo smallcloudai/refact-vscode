@@ -5,7 +5,6 @@ import * as userLogin from "./userLogin";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 import * as storeVersions from './storeVersions';
 import * as estate from './estate';
-import * as highlight from "./highlight";
 import * as codeLens from "./codeLens";
 import * as crlf from "./crlf";
 import * as privacy from "./privacy";
@@ -30,7 +29,7 @@ export async function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Pos
                     return;
                 }
                 if (global_nav_counter === my_counter) {
-                    query_diff(editor, element.range, "diff-atcursor", "", false);
+                    // query_diff(editor, element.range, "diff-atcursor", "", false);
                 }
             }, is_mouse ? 0 : 300);
         }
@@ -46,182 +45,182 @@ export async function on_cursor_moved(editor: vscode.TextEditor, pos: vscode.Pos
 }
 
 
-export async function query_diff(
-    editor: vscode.TextEditor,
-    sensitive_area: vscode.Range,
-    model_function: string,
-    model_force: string,
-    third_party: boolean,
-) {
-    // NOT called from estate switch mode
-    let state = estate.state_of_editor(editor, "query_diff");
-    if (!state) {
-        return;
-    }
-    state.showing_diff_for_function = undefined;
-    state.showing_diff_for_model = undefined;
-    state.showing_diff_thirdparty = third_party;
-    state.showing_diff_modif_doc = undefined;
+// export async function query_diff(
+//     editor: vscode.TextEditor,
+//     sensitive_area: vscode.Range,
+//     model_function: string,
+//     model_force: string,
+//     third_party: boolean,
+// ) {
+//     // NOT called from estate switch mode
+//     let state = estate.state_of_editor(editor, "query_diff");
+//     if (!state) {
+//         return;
+//     }
+//     state.showing_diff_for_function = undefined;
+//     state.showing_diff_for_model = undefined;
+//     state.showing_diff_thirdparty = third_party;
+//     state.showing_diff_modif_doc = undefined;
 
-    let doc = editor.document;
-    let access_level = await privacy.get_file_access(doc.fileName);
-    if (third_party && access_level < 2) {
-        return;
-    }
-    if (!third_party && access_level < 1) {
-        return;
-    }
+//     let doc = editor.document;
+//     let access_level = await privacy.get_file_access(doc.fileName);
+//     if (third_party && access_level < 2) {
+//         return;
+//     }
+//     if (!third_party && access_level < 1) {
+//         return;
+//     }
 
-    let cancellationTokenSource = new vscode.CancellationTokenSource();
-    let cancelToken = cancellationTokenSource.token;
-    let request = new fetchAPI.PendingRequest(undefined, cancelToken);
+//     let cancellationTokenSource = new vscode.CancellationTokenSource();
+//     let cancelToken = cancellationTokenSource.token;
+//     let request = new fetchAPI.PendingRequest(undefined, cancelToken);
 
-    await fetchAPI.cancel_all_requests_and_wait_until_finished();
-    if (state.get_mode() !== estate.Mode.Normal) {
-        await estate.back_to_normal(state);
-    }
-    request.cancellationTokenSource = cancellationTokenSource;
-    let login = await userLogin.inference_login();
-    if (!login) { return; }
-    await fetchAPI.wait_until_all_requests_finished();
-    if (cancelToken.isCancellationRequested) {
-        return;
-    }
-    let file_name = storeVersions.filename_from_document(doc);
-    await estate.switch_mode(state, estate.Mode.DiffWait);
-    state.diff_lens_pos = sensitive_area.start.line;
-    state.showing_diff_for_range = sensitive_area;
-    state.diff_load_animation_head = 0;
-    state.diff_load_animation_mid = "";
-    animation_start(editor, state);
-    codeLens.quick_refresh();
+//     await fetchAPI.cancel_all_requests_and_wait_until_finished();
+//     if (state.get_mode() !== estate.Mode.Normal) {
+//         await estate.back_to_normal(state);
+//     }
+//     request.cancellationTokenSource = cancellationTokenSource;
+//     let login = await userLogin.inference_login();
+//     if (!login) { return; }
+//     await fetchAPI.wait_until_all_requests_finished();
+//     if (cancelToken.isCancellationRequested) {
+//         return;
+//     }
+//     let file_name = storeVersions.filename_from_document(doc);
+//     await estate.switch_mode(state, estate.Mode.DiffWait);
+//     state.diff_lens_pos = sensitive_area.start.line;
+//     state.showing_diff_for_range = sensitive_area;
+//     state.diff_load_animation_head = 0;
+//     state.diff_load_animation_mid = "";
+//     animation_start(editor, state);
+//     codeLens.quick_refresh();
 
-    async function _streaming_callback(json: any)
-    {
-        if (!state) {
-            return;
-        }
-        if (json === undefined) {
-            if (state.get_mode() === estate.Mode.DiffWait) {
-                await estate.switch_mode(state, estate.Mode.Normal);
-            }
-            return;
-        }
-        if (state.get_mode() !== estate.Mode.DiffWait) {
-            return;
-        }
-        if (cancelToken.isCancellationRequested) {
-            console.log("diff request is cancelled, new data is coming");
-            if (state.get_mode() === estate.Mode.DiffWait) {
-                state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
-                codeLens.quick_refresh();
-                await estate.switch_mode(state, estate.Mode.Normal);
-            }
-            return;
-        } else {
-            if (json && json["choices"]) {
-                // let modif_doc = json["choices"][0]["files"][file_name];
-                // let files = files_from_head_mid_tail(sources, json["choices"][0]["files_head_mid_tail"]);
-                let files: { [key: string]: string } = {};
-                let choice0 = json["choices"][0];
-                if ("files_head_mid_tail" in choice0) {
-                    let files_head_mid_tail = json["choices"][0]["files_head_mid_tail"];
-                    for (let key in files_head_mid_tail) {
-                        let hmt = files_head_mid_tail[key];
-                        let original_doc = sources[key];
-                        files[key] = original_doc.substring(0, hmt["head"]) + hmt["mid"] + original_doc.substring(original_doc.length-hmt["tail"]);
-                        if (key === file_name) {
-                            state.diff_load_animation_head = hmt["head"];
-                            state.diff_load_animation_mid = hmt["mid"];
-                        }
-                    }
-                } else {
-                    files = choice0["files"];
-                }
-                let modif_doc = files[file_name];
-                // if (feedback) {
-                //     feedback.results = files;
-                //     feedback.ts_presented = Date.now();
-                // }
-                state.showing_diff_for_function = model_function;
-                state.showing_diff_for_model = model_force;
-                state.showing_diff_thirdparty = third_party;
-                state.showing_diff_modif_doc = modif_doc;
-                await estate.switch_mode(state, estate.Mode.DiffWait);
-            }
-            if (json && json["metering_balance"]) {
-                global.user_metering_balance = json["metering_balance"];
-                if (global.side_panel) {
-                    global.side_panel.update_webview();
-                }
-            }
-        }
-    }
+//     async function _streaming_callback(json: any)
+//     {
+//         if (!state) {
+//             return;
+//         }
+//         if (json === undefined) {
+//             if (state.get_mode() === estate.Mode.DiffWait) {
+//                 await estate.switch_mode(state, estate.Mode.Normal);
+//             }
+//             return;
+//         }
+//         if (state.get_mode() !== estate.Mode.DiffWait) {
+//             return;
+//         }
+//         if (cancelToken.isCancellationRequested) {
+//             console.log("diff request is cancelled, new data is coming");
+//             if (state.get_mode() === estate.Mode.DiffWait) {
+//                 state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
+//                 codeLens.quick_refresh();
+//                 await estate.switch_mode(state, estate.Mode.Normal);
+//             }
+//             return;
+//         } else {
+//             if (json && json["choices"]) {
+//                 // let modif_doc = json["choices"][0]["files"][file_name];
+//                 // let files = files_from_head_mid_tail(sources, json["choices"][0]["files_head_mid_tail"]);
+//                 let files: { [key: string]: string } = {};
+//                 let choice0 = json["choices"][0];
+//                 if ("files_head_mid_tail" in choice0) {
+//                     let files_head_mid_tail = json["choices"][0]["files_head_mid_tail"];
+//                     for (let key in files_head_mid_tail) {
+//                         let hmt = files_head_mid_tail[key];
+//                         let original_doc = sources[key];
+//                         files[key] = original_doc.substring(0, hmt["head"]) + hmt["mid"] + original_doc.substring(original_doc.length-hmt["tail"]);
+//                         if (key === file_name) {
+//                             state.diff_load_animation_head = hmt["head"];
+//                             state.diff_load_animation_mid = hmt["mid"];
+//                         }
+//                     }
+//                 } else {
+//                     files = choice0["files"];
+//                 }
+//                 let modif_doc = files[file_name];
+//                 // if (feedback) {
+//                 //     feedback.results = files;
+//                 //     feedback.ts_presented = Date.now();
+//                 // }
+//                 state.showing_diff_for_function = model_function;
+//                 state.showing_diff_for_model = model_force;
+//                 state.showing_diff_thirdparty = third_party;
+//                 state.showing_diff_modif_doc = modif_doc;
+//                 await estate.switch_mode(state, estate.Mode.DiffWait);
+//             }
+//             if (json && json["metering_balance"]) {
+//                 global.user_metering_balance = json["metering_balance"];
+//                 if (global.side_panel) {
+//                     global.side_panel.update_webview();
+//                 }
+//             }
+//         }
+//     }
 
-    async function _streaming_end_callback(any_error: boolean)
-    {
-        if (!state) {
-            return;
-        }
-        console.log("streaming end callback");
-        if (state.get_mode() === estate.Mode.DiffWait) {
-            await estate.switch_mode(state, estate.Mode.Normal);
-            await estate.switch_mode(state, estate.Mode.Diff);
-        }
-    }
+//     async function _streaming_end_callback(any_error: boolean)
+//     {
+//         if (!state) {
+//             return;
+//         }
+//         console.log("streaming end callback");
+//         if (state.get_mode() === estate.Mode.DiffWait) {
+//             await estate.switch_mode(state, estate.Mode.Normal);
+//             await estate.switch_mode(state, estate.Mode.Diff);
+//         }
+//     }
 
-    let whole_doc = doc.getText();
-    let cursor0 = doc.offsetAt(sensitive_area.start);
-    let cursor1 = doc.offsetAt(sensitive_area.end);
-    let cursors: number[];
-    [whole_doc, cursors] = crlf.cleanup_cr_lf(whole_doc, [cursor0, cursor1]);
-    cursor0 = cursors[0];
-    cursor1 = cursors[1];
-    let sources: { [key: string]: string } = {};
-    let no_newline = whole_doc[whole_doc.length-1] !== "\n";
-    if (no_newline) {
-        whole_doc += "\n";
-    }
-    sources[file_name] = whole_doc;
-    let max_tokens = 550;
-    let stop_tokens: string[] = [];
-    let max_edits = model_function==="diff-atcursor" ? 1 : 10; // the other is "diff-selection"
-    let stream = true;
+//     let whole_doc = doc.getText();
+//     let cursor0 = doc.offsetAt(sensitive_area.start);
+//     let cursor1 = doc.offsetAt(sensitive_area.end);
+//     let cursors: number[];
+//     [whole_doc, cursors] = crlf.cleanup_cr_lf(whole_doc, [cursor0, cursor1]);
+//     cursor0 = cursors[0];
+//     cursor1 = cursors[1];
+//     let sources: { [key: string]: string } = {};
+//     let no_newline = whole_doc[whole_doc.length-1] !== "\n";
+//     if (no_newline) {
+//         whole_doc += "\n";
+//     }
+//     sources[file_name] = whole_doc;
+//     let max_tokens = 550;
+//     let stop_tokens: string[] = [];
+//     let max_edits = model_function==="diff-atcursor" ? 1 : 10; // the other is "diff-selection"
+//     let stream = true;
 
-    request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
-    // let feedback = state.data_feedback_candidate;
-    // if (feedback) {
-    //     feedback.sources = sources;
-    //     feedback.intent = estate.global_intent;
-    //     feedback.function = model_function;
-    //     feedback.cursor_file = file_name;
-    //     feedback.cursor_pos0 = cursor0;
-    //     feedback.cursor_pos1 = cursor1;
-    //     feedback.ts_req = Date.now();
-    // }
+//     request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
+//     // let feedback = state.data_feedback_candidate;
+//     // if (feedback) {
+//     //     feedback.sources = sources;
+//     //     feedback.intent = estate.global_intent;
+//     //     feedback.function = model_function;
+//     //     feedback.cursor_file = file_name;
+//     //     feedback.cursor_pos0 = cursor0;
+//     //     feedback.cursor_pos1 = cursor1;
+//     //     feedback.ts_req = Date.now();
+//     // }
 
-    request.supply_stream(...fetchAPI.fetch_api_promise(
-        cancelToken,
-        "query_diff" + ":" + model_function,  // scope
-        sources,
-        estate.global_intent,
-        model_function,
-        file_name,
-        cursor0,
-        cursor1,
-        max_tokens,
-        max_edits,
-        stop_tokens,
-        stream,
-        model_force,
-        third_party,
-    ));
-}
+//     request.supply_stream(...fetchAPI.fetch_api_promise(
+//         cancelToken,
+//         "query_diff" + ":" + model_function,  // scope
+//         sources,
+//         estate.global_intent,
+//         model_function,
+//         file_name,
+//         cursor0,
+//         cursor1,
+//         max_tokens,
+//         max_edits,
+//         stop_tokens,
+//         stream,
+//         model_force,
+//         third_party,
+//     ));
+// }
 
 
 export async function animation_start(editor: vscode.TextEditor, state: estate.StateOfEditor)
 {
-    highlight.hl_clear(editor);
+    // highlight.hl_clear(editor);
     let grey_deco: vscode.TextEditorDecorationType = vscode.window.createTextEditorDecorationType({opacity: "0.5"});
     let gray_ranges: vscode.Range[] = [];
     let animation_decos: vscode.TextEditorDecorationType[] = [];
@@ -289,7 +288,7 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
         return;
     }
     _remove_decoration(editor);
-    highlight.hl_clear(editor);
+    // highlight.hl_clear(editor);
     let document = editor.document;
     let whole_doc = document.getText();
     let no_newline = whole_doc[whole_doc.length-1] !== "\n";
@@ -558,7 +557,7 @@ export async function like_and_accept(editor: vscode.TextEditor)
         if (state.highlight_json_backup) {
             state.highlight_json_backup = undefined;
             await estate.back_to_normal(state);
-            highlight.query_highlight(editor, "", state.highlight_function, state.highlight_model, state.highlight_thirdparty);
+            // highlight.query_highlight(editor, "", state.highlight_function, state.highlight_model, state.highlight_thirdparty);
         } else {
             state.highlight_json_backup = undefined;
             await estate.back_to_normal(state);
@@ -575,17 +574,17 @@ export async function like_and_accept(editor: vscode.TextEditor)
 }
 
 
-export async function query_the_same_thing_again(editor: vscode.TextEditor)
-{
-    let state = estate.state_of_editor(editor, "query_the_same_thing_again");
-    if (!state) {
-        return;
-    }
-    if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined && state.showing_diff_for_model !== undefined) {
-        _remove_decoration(editor);
-        query_diff(editor, state.showing_diff_for_range, state.showing_diff_for_function, state.showing_diff_for_model, state.showing_diff_thirdparty);
-    }
-}
+// export async function query_the_same_thing_again(editor: vscode.TextEditor)
+// {
+//     let state = estate.state_of_editor(editor, "query_the_same_thing_again");
+//     if (!state) {
+//         return;
+//     }
+//     if (state.showing_diff_for_range !== undefined && state.showing_diff_for_function !== undefined && state.showing_diff_for_model !== undefined) {
+//         _remove_decoration(editor);
+//         query_diff(editor, state.showing_diff_for_range, state.showing_diff_for_function, state.showing_diff_for_model, state.showing_diff_thirdparty);
+//     }
+// }
 
 
 export function hands_off_dont_remove_anything(editor: vscode.TextEditor)

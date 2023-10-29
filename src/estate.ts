@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 import * as codeLens from "./codeLens";
 import * as completionProvider from "./completionProvider";
@@ -196,9 +195,9 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         vscode.commands.executeCommand('setContext', 'refactcx.runTab', false);
         vscode.commands.executeCommand('setContext', 'refactcx.runEsc', false);
     } else if (old_mode === Mode.Highlight) {
-        highlight.hl_clear(state.editor);
+        // highlight.hl_clear(state.editor);
     } else if (old_mode === Mode.DiffWait) {
-        highlight.hl_clear(state.editor);
+        // highlight.hl_clear(state.editor);
     }
 
     if (new_mode === Mode.Diff) {
@@ -215,7 +214,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         codeLens.quick_refresh();
         if (state.highlight_json_backup !== undefined) {
-            highlight.hl_show(state.editor, state.highlight_json_backup);
+            // highlight.hl_show(state.editor, state.highlight_json_backup);
         } else {
             console.log(["cannot enter highlight state, no hl json"]);
         }
@@ -321,7 +320,7 @@ export function on_text_edited(editor: vscode.TextEditor)
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Highlight) {
-        highlight.hl_clear(editor);
+        // highlight.hl_clear(editor);
         state.highlight_json_backup = undefined;
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
