@@ -13,8 +13,11 @@
     });
 
     function input_care() {
-        chat_input.style.height = 'auto';
-        chat_input.style.height = chat_input.scrollHeight + 'px';
+        let current_scroll = chat_input.scrollHeight + 2;
+        message_panel.style.setProperty('height', 'calc(100% - ' + current_scroll + 'px)');
+        chat_input.style.height = current_scroll + 'px';
+        chat_panel.style.height = (current_scroll + 10) + 'px';
+
         const message = chat_input.value;
         let bad = message.trim() === '' || message.length >= 4000;
         chat_send_button.disabled = bad;
@@ -23,6 +26,28 @@
 
     chat_input.addEventListener('input', function () {
         input_care();
+    });
+    
+    const message_panel = document.querySelector('.refactcss-chat__content');
+    const chat_panel = document.querySelector('.refactcss-chat__panel');
+
+    chat_input.addEventListener('focusin', function() {
+        if(chat_input.value.length === 0) {
+            chat_input.style.height = '30vh';
+            chat_panel.style.height = 'calc(30vh + 10px)';
+            message_panel.style.height = `calc(100% - 30vh)`;
+        } else {
+            message_panel.style.setProperty('height', 'calc(100% - ' + chat_input.scrollHeight + 'px)');
+            chat_input.style.height = chat_input.scrollHeight + 'px';
+            chat_panel.style.height = (chat_input.scrollHeight + 10) + 'px';
+        }
+        auto_scroll();
+    });
+
+    chat_input.addEventListener('focusout', function() {
+        message_panel.style.height = 'calc(100% - 70px)';
+        chat_panel.style.height = '80px';
+        chat_input.style.height = '70px';
     });
 
     chat_send_button.addEventListener('click', () => {
@@ -353,10 +378,22 @@
     function auto_scroll() {
         input_care();
         if (!isAutoScrollPaused) {
-            chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+            var currentScroll = chatContent.scrollTop;
+            var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
+            var duration = 300;
+            var startTime = null;
+    
+            function scrollAnimation(timestamp) {
+                if (!startTime) startTime = timestamp;
+                var progress = (timestamp - startTime) / duration;
+                chatContent.scrollTop = currentScroll + progress * distanceToScroll;
+                if (progress < 1) requestAnimationFrame(scrollAnimation);
+                else chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+            }
+    
+            requestAnimationFrame(scrollAnimation);
         }
     }
-
     window.addEventListener("message", (event) => {
         const message = event.data;
         let input_should_be_visible = false;
@@ -440,5 +477,5 @@
         auto_scroll();
     }
 
-    chat_input.focus();
+    // chat_input.focus();
 })();
