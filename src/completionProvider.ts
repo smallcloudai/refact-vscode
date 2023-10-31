@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as fetch from "./fetchAPI";
 import * as userLogin from "./userLogin";
 import * as estate from "./estate";
 import * as storeVersions from "./storeVersions";
@@ -8,6 +7,8 @@ import * as usageStats from "./usageStats";
 import * as privacy from "./privacy";
 import * as completionMetrics from "./completionMetrics";
 import * as dataCollection from "./dataCollection";
+import * as fetchAPI from "./fetchAPI";
+import * as fetchH2 from 'fetch-h2';
 
 
     // public async verify_completion_still_present_in_text()
@@ -206,14 +207,14 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         //     if (drop) { return ["", -1]; }
         // }
 
-        let request = new fetch.PendingRequest(undefined, cancelToken);
+        let request = new fetchAPI.PendingRequest(undefined, cancelToken);
         let max_tokens = 50;
         let sources: { [key: string]: string } = {};
         sources[file_name] = whole_doc;
 
         let t0 = Date.now();
         let promise: any;
-        promise = fetch.fetch_code_completion(
+        promise = fetchAPI.fetch_code_completion(
             cancelToken,
             sources,
             multiline,
@@ -257,60 +258,39 @@ export function _extract_extension(feed: estate.ApiFields)
 }
 
 
-export function inline_accepted(serial_number: number)
+export async function inline_accepted(serial_number: number)
 {
-    console.log(["inline_accepted", serial_number]);
-    // let feed: CompletionApiFieldsWithTimer = _completion_data_feedback_candidate;
-    // if (!feed || feed.serial_number !== serial_number) {
-    //     console.log(["WRONG SERIAL, accepted", serial_number, "stored", feed.serial_number]);
-    //     return;
-    // }
-    // if (feed.ts_presented === 0) {
-    //     return;
-    // }
-    // let ponder_time_ms = feed.ts_reacted - feed.ts_presented;
-    // let req_to_react_ms = feed.ts_reacted - feed.ts_req;
-    // console.log(["inline_accepted", serial_number, "ponder_time_ms", ponder_time_ms, "req_to_react_ms", req_to_react_ms]);
-    // if (!feed.document) {
-    //     console.log(["WARNING: inline_accepted no document"]);
-    //     return;
-    // }
-    // if (feed.on_interval !== undefined) {
-    //     console.log(["WARNING: on_interval already set"]);
-    //     return;
-    // }
-    // // User might have pressed Tab on spaces ahead, that just moves the cursor right and reuses the same completion from cache.
-    // // So don't return on ts_reacted.
-    // feed.ts_reacted = Date.now();
-    // feed.results[feed.cursor_file] = feed.document.getText();
-    // feed.accepted = true;
-    // feed.rejected_reason = "";
-    // feed.on_text_edited_disposable = vscode.workspace.onDidChangeTextDocument((ev: vscode.TextDocumentChangeEvent) => {
-    //     if (ev.document === feed.document) {
-    //         feed.verify_completion_still_present_in_text();
-    //     }
-    // });
+    let url = fetchAPI.rust_url("/v1/snippet-accepted");
+    if (!url) {
+        console.log(["Failed to get url for /v1/snippet-accepted"]);
+    }
+    const post = JSON.stringify({
+        "snippet_telemetry_id": serial_number
+    });
+    const headers = {
+        "Content-Type": "application/json",
+        // "Authorization": `Bearer ${apiKey}`,
+    };
+    let req = new fetchH2.Request(url, {
+        method: "POST",
+        headers: headers,
+        body: post,
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer"
+    });
+
+    try {
+        await fetchH2.fetch(req);
+    } catch (error) {
+        console.log("failed to post to /v1/snippet-accepted");
+    }
 }
 
 
 export function inline_rejected(reason: string)
 {
     // console.log(["inline_rejected", reason]);
-    // let feed: CompletionApiFieldsWithTimer = _completion_data_feedback_candidate;
-    // if (feed.ts_presented === 0) {
-    //     return;
-    // }
-    // if (feed.ts_reacted) {
-    //     return;
-    // }
-    // if (feed.accepted) {
-    //     return;
-    // }
-    // feed.ts_reacted = Date.now();
-    // feed.rejected_reason = reason;
-    // setTimeout(() => {
-    //     feed.transmit_as_rejected();
-    // }, 25000);
 }
 
 
