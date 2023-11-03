@@ -53,6 +53,17 @@ export class RustBinaryBlob
         return "http://127.0.0.1:" + port.toString() + "/";
     }
 
+    public attemping_to_reach(): string
+    {
+        let xdebug = this.x_debug();
+        if (xdebug) {
+            return `debug rust binary on ports ${DEBUG_HTTP_PORT} and ${DEBUG_LSP_PORT}`;
+        } else {
+            let addr = vscode.workspace.getConfiguration().get("refactai.addressURL");
+            return `${addr}`;
+        }
+    }
+
     public async settings_changed()
     {
         let xdebug = this.x_debug();
@@ -68,8 +79,8 @@ export class RustBinaryBlob
             console.log(`RUST debug is set, don't start the rust binary. Will attempt HTTP port ${DEBUG_HTTP_PORT}, LSP port ${DEBUG_LSP_PORT}`);
             console.log("Also, will try to read caps. If that fails, things like lists of available models will be empty.");
             this.cmdline = [];
-            await this.terminate();
-            await this.read_caps();
+            await this.terminate();  // terminate our own
+            await this.read_caps();  // debugging rust already running, can read here
             await this.start_lsp_socket();
             return;
         }
@@ -137,6 +148,8 @@ export class RustBinaryBlob
     public async terminate()
     {
         await this.stop_lsp();
+        global.have_caps = false;
+        status_bar.choose_color();
     }
 
     public async read_caps()
@@ -156,14 +169,18 @@ export class RustBinaryBlob
             let resp = await fetchH2.fetch(req);
             if (resp.status !== 200) {
                 console.log(["read_caps http status", resp.status]);
-                return Promise.reject("Bad status");
+                return Promise.reject("read_caps bad status");
             }
             let json = await resp.json();
             console.log(["successful read_caps", json]);
             global.chat_models = Object.keys(json["code_chat_models"]);
+            global.have_caps = true;
         } catch (e) {
+            global.chat_models = [];
+            global.have_caps = false;
             console.log(["read_caps:", e]);
         }
+        status_bar.choose_color();
         global.side_panel?.update_webview();
     }
 

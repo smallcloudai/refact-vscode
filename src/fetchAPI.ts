@@ -168,7 +168,7 @@ export class PendingRequest {
                 _global_reqs.splice(index, 1);
             }
             if (_global_reqs.length === 0) {
-                global.status_bar.statusbarLoading(false);
+                global.status_bar.statusbar_spinner(false);
             }
             // console.log(["--pendingRequests", _global_reqs.length, request.seq]);
         }).catch((error) => {
@@ -182,7 +182,7 @@ export class PendingRequest {
             }
         });
         _global_reqs.push(this);
-        global.status_bar.statusbarLoading(true);
+        global.status_bar.statusbar_spinner(true);
         // console.log(["++pendingRequests", _global_reqs.length, request.seq]);
     }
 }

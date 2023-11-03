@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as userLogin from "./userLogin";
-import * as estate from './estate';
+import * as launchRust from "./launchRust";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
 
@@ -32,8 +32,6 @@ export class StatusBarMenu {
     last_model_name: string = "";
     inference_attempted: boolean = false;
     access_level: number = -1;
-    // disable_lang: boolean = true;
-    // language_name: string = "";
 
     createStatusBarBlock(context: vscode.ExtensionContext)
     {
@@ -64,6 +62,11 @@ export class StatusBarMenu {
             } else {
                 this.menu.tooltip = `Cannot reach the server:\n` + this.socketerror_msg;
             }
+        } else if (!global.have_caps) {
+            this.menu.text = `$(codify-logo) Refact.ai`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
+            let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
+            this.menu.tooltip = `Inference server is currently unavailable\nAttempting to reach '${reach}'`;
         } else if (this.spinner) {
             this.menu.text = `$(sync~spin) Refact.ai`;
             this.menu.backgroundColor = undefined;
@@ -92,13 +95,14 @@ export class StatusBarMenu {
         } else {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
-            this.menu.tooltip = _website_message || _inference_message || "Refact Plugin\nReady to work";
+            let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
+            this.menu.tooltip = _website_message || _inference_message || `Refact Plugin\nCommunicating with server '${reach}'`;
         }
     }
 
-    statusbarLoading(spinner: boolean)
+    statusbar_spinner(on: boolean)
     {
-        this.spinner = spinner;
+        this.spinner = on;
         this.choose_color();
     }
 
@@ -122,13 +126,6 @@ export class StatusBarMenu {
         }
         this.choose_color();
     }
-
-    // set_language_enabled(state: boolean, language_name: string)
-    // {
-    //     this.disable_lang = state;
-    //     this.language_name = language_name;
-    //     this.choose_color();
-    // }
 
     set_access_level(state: number)
     {
@@ -156,7 +153,6 @@ async function on_change_active_editor(editor: vscode.TextEditor | undefined)
     let document_filename = editor.document.fileName;
     let access_level = await privacy.get_file_access(document_filename);
     global.status_bar.set_access_level(access_level);
-    // global.status_bar.choose_color();
 }
 
 

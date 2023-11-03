@@ -34,6 +34,7 @@ declare global {
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
     var chat_models: string[];
+    var have_caps: boolean;
 }
 
 async function pressed_call_chat() {
@@ -200,6 +201,7 @@ export function activate(context: vscode.ExtensionContext)
     global.streamlined_login_countdown = -1;
     global.last_positive_result = 0;
     global.chat_models = [];
+    global.have_caps = false;
     global.user_logged_in = "";
     global.user_active_plan = "";
     let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
@@ -261,6 +263,11 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable13);
     context.subscriptions.push(disposable6);
 
+    global.rust_binary_blob = new launchRust.RustBinaryBlob(
+        fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
+    );
+    global.rust_binary_blob.settings_changed();  // async function will finish later
+
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
         'refactai-toolbox',
@@ -292,10 +299,6 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...statusBar.status_bar_init());
     context.subscriptions.push(...estate.estate_init());
 
-    global.rust_binary_blob = new launchRust.RustBinaryBlob(
-        fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
-    );
-    global.rust_binary_blob.settings_changed();  // async function will finish later
     let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
         if (
