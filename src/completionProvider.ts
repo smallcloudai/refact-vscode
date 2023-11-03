@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as userLogin from "./userLogin";
 import * as estate from "./estate";
 import * as storeVersions from "./storeVersions";
 import * as privacy from "./privacy";
