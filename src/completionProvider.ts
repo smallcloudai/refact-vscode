@@ -49,14 +49,22 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let called_manually = context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
 
         let completion = "";
-        let cursor_character = multiline ? 0 : position.character;
+        let corrected_cursor_character = 0;
+        if (!multiline) {
+            // VS Code uses UCS-2 or some older encoding internally, so emojis, Chinese characters, are more than one char
+            // according to string.length
+            let replace_emoji_with_one_char = left_of_cursor.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, " ");
+            corrected_cursor_character = position.character;
+            corrected_cursor_character -= left_of_cursor.length - replace_emoji_with_one_char.length;
+        }
+
         let this_completion_serial_number = 6000;
         [completion, this_completion_serial_number] = await this.cached_request(
             cancelToken,
             file_name,
             whole_doc,
             position.line,
-            cursor_character,
+            corrected_cursor_character,
             debounce_if_not_cached,
             multiline,
             called_manually,
@@ -176,8 +184,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             console.log(["completion is empty", completion]);
             return ["", -1];
         }
-        // let de_facto_model = json["model"];
+        let de_facto_model = json["model"];
         let serial_number = json["snippet_telemetry_id"];
+        global.status_bar.completion_model_worked(de_facto_model)
         return [completion, serial_number];
     }
 }

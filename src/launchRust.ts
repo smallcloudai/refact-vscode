@@ -216,6 +216,10 @@ export class RustBinaryBlob
         } catch (e) {
             console.log(`RUST START PROBLEM e=${e}`);
         }
+        // At this point we had successful client_info and workspace_folders server to client calls,
+        // therefore the LSP server is started.
+        // A little doubt remains about the http port, but it's very likely there's no race.
+        await this.read_caps();
     }
 
     public async start_lsp_socket()

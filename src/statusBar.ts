@@ -30,7 +30,7 @@ export class StatusBarMenu {
     spinner: boolean = false;
     last_url: string = "";
     last_model_name: string = "";
-    inference_attempted: boolean = false;
+    have_completion_success: boolean = false;
     access_level: number = -1;
 
     createStatusBarBlock(context: vscode.ExtensionContext)
@@ -70,18 +70,19 @@ export class StatusBarMenu {
         } else if (this.spinner) {
             this.menu.text = `$(sync~spin) Refact.ai`;
             this.menu.backgroundColor = undefined;
-        } else if (this.inference_attempted) {
+        } else if (this.have_completion_success) {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
             let msg: string = "";
-            if (this.last_url) {
-                msg += `⚡ ${this.last_url}`;
+            let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
+            if (reach) {
+                msg += `Communicating with:\n 🌩️ ${reach}`;
             }
             if (this.last_model_name) {
                 if (msg) {
                     msg += "\n";
                 }
-                msg += `🗒️ ${this.last_model_name}`;
+                msg += `Last used model:\n 🧠 ${this.last_model_name}`;
             }
             if (_website_message || _inference_message) {
                 msg += "\n";
@@ -124,6 +125,9 @@ export class StatusBarMenu {
         if (this.socketerror) {
             this.last_model_name = "";
         }
+        if (error) {
+            this.have_completion_success = false;
+        }
         this.choose_color();
     }
 
@@ -133,11 +137,10 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    url_and_model_worked(url: string, model_name: string)
+    completion_model_worked(model_name: string)
     {
-        this.last_url = url;
         this.last_model_name = model_name;
-        this.inference_attempted = url !== "";
+        this.have_completion_success = true;
         this.choose_color();
     }
 }

@@ -56,14 +56,14 @@ export async function send_network_problems_to_status_bar(
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";
     }
-    if (model_name) {
-        global.status_bar.url_and_model_worked(related_url, model_name);
-    }
+    // if (model_name) {
+    //     global.status_bar.url_and_model_worked(related_url, model_name);
+    // }
     global.status_bar.set_socket_error(!positive, error_message);
     if (global.side_panel) {
         global.side_panel.update_webview();
     }
-    global.status_bar.url_and_model_worked("", "");
+    // global.status_bar.url_and_model_worked("", "");
     let error_message_json = JSON.stringify(error_message);
     let msg = `${positive ? "1" : "0"}\t${scope}\t${related_url}\t${error_message_json}`;  // tabs for field separation, still human readable
     console.log([msg]);
