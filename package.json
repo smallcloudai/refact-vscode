@@ -397,7 +397,6 @@
 		"@vscode/test-electron": "^2.1.5",
 		"esbuild": "^0.16.3",
 		"eslint": "^8.18.0",
-		"fetch-h2": "^3.0.2",
 		"glob": "^8.0.3",
 		"mocha": "^10.0.0",
 		"typescript": "^4.7.4"
