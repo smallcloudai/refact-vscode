@@ -275,7 +275,7 @@ export class ChatTab {
 
         async function _streaming_callback(json: any)
         {
-            if (json === undefined) {
+            if (typeof json !== "object") {
                 return;
             }
             if (cancelToken.isCancellationRequested) {
@@ -283,7 +283,7 @@ export class ChatTab {
                 return;
             } else {
                 let delta = "";
-                if (json && json["choices"]) {
+                if (json["choices"]) {
                     let choice0 = json["choices"][0];
                     if (choice0["delta"]["role"] === "context") {
                         delta += 'Sources:<br>';
@@ -320,7 +320,7 @@ export class ChatTab {
                         });
                     }
                 }
-                if (json && json["metering_balance"]) {
+                if (json["metering_balance"]) {
                     global.user_metering_balance = json["metering_balance"];
                     if (global.side_panel) {
                         global.side_panel.update_webview();
@@ -329,11 +329,11 @@ export class ChatTab {
             }
         }
 
-        async function _streaming_end_callback(any_error: boolean)
+        async function _streaming_end_callback(error_message: string)
         {
             // stack_this.web_panel.reveal();
-            console.log("streaming end callback, error: " + any_error);
-            if (any_error) {
+            console.log("streaming end callback, error: " + error_message);
+            if (error_message) {
                 let backup_user_phrase = "";
                 for (let i = stack_this.messages.length - 1; i < stack_this.messages.length; i++) {
                     if (i >= 0) {
@@ -345,7 +345,11 @@ export class ChatTab {
                     }
                 }
                 console.log("backup_user_phrase:" + backup_user_phrase);
-                global.side_panel?._view?.webview.postMessage({ command: "chat-error-streaming", backup_user_phrase: backup_user_phrase });
+                global.side_panel?._view?.webview.postMessage({
+                    command: "chat-error-streaming",
+                    backup_user_phrase: backup_user_phrase,
+                    error_message: error_message,
+                });
             } else {
                 stack_this.messages.push(["assistant", answer]);
                 await stack_this.chatHistoryProvider.addMessageToChat(
@@ -411,15 +415,15 @@ export class ChatTab {
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
                             <div class="refactcss-chat__content">
-
                                 <div class="refactcss-chat__controls">
                                     <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                                    <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model"></select></div>
+                                    <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model-combo"></select></div>
                                 </div>
                             </div>
                             <div class="refactcss-chat__panel">
                                 <div class="refactcss-chat__commands">
                                     <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
+                                    <div id="chat-error-message"><span></span>Error</div>
                                     <textarea id="chat-input" class="refactcss-chat__input"></textarea>
                                     <button id="chat-send" class="refactcss-chat__button"><span></span></button>
                                 </div>

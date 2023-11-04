@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as userLogin from "./userLogin";
-import * as launchRust from "./launchRust";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
 

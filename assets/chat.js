@@ -27,7 +27,7 @@
     chat_input.addEventListener('input', function () {
         input_care();
     });
-    
+
     const message_panel = document.querySelector('.refactcss-chat__content');
     const chat_panel = document.querySelector('.refactcss-chat__panel');
 
@@ -52,7 +52,7 @@
 
     chat_send_button.addEventListener('click', () => {
         const message = chat_input.value;
-        let chat_model_combo = document.getElementById("chat-model");
+        let chat_model_combo = document.getElementById("chat-model-combo");
         console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
         [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
         let chat_attach_file = document.getElementById("chat-attach");
@@ -199,7 +199,7 @@
 
             submitButton.addEventListener('click', () => {
                 const message = inputField.value;
-                let chat_model_combo = document.getElementById("chat-model");
+                let chat_model_combo = document.getElementById("chat-model-combo");
                 //console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 let chat_attach_file = document.getElementById("chat-attach");
@@ -382,7 +382,7 @@
             var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
             var duration = 300;
             var startTime = null;
-    
+
             function scrollAnimation(timestamp) {
                 if (!startTime) startTime = timestamp;
                 var progress = (timestamp - startTime) / duration;
@@ -390,7 +390,7 @@
                 if (progress < 1) requestAnimationFrame(scrollAnimation);
                 else chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
             }
-    
+
             requestAnimationFrame(scrollAnimation);
         }
     }
@@ -411,7 +411,7 @@
                     label.parentElement.style.opacity = 0.35;
                     label.parentElement.style.pointerEvents = 'none';
                 }
-                let chat_model_combo = document.getElementById("chat-model");
+                let chat_model_combo = document.getElementById("chat-model-combo");
                 for (let i = 0; i < message.chat_models.length; i++) {
                     let option = document.createElement("option");
                     option.value = JSON.stringify(message.chat_models[i]);
@@ -433,6 +433,8 @@
             case "chat-error-streaming":
                 input_should_be_visible = true;
                 chat_input.value = message.backup_user_phrase;
+                let chat_error_message = document.getElementById("chat-error-message");
+                chat_error_message.innerText = message.error_message;
                 // isStreaming = false;
                 break;
             case "chat-post-question":

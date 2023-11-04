@@ -13,7 +13,6 @@ import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
-import * as fetchH2 from 'fetch-h2';
 
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";

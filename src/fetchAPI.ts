@@ -19,7 +19,7 @@ export class PendingRequest {
     streaming_callback: Function | undefined;
     streaming_end_callback: Function | undefined;
     streaming_buf: string = "";
-    streaming_error: boolean = false;
+    streaming_error: string = "";
 
     constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken)
     {
@@ -60,10 +60,15 @@ export class PendingRequest {
             }
             if (to_eat === "[ERROR]") {
                 console.log("Streaming error");
-                this.streaming_error = true;
+                this.streaming_error = "[ERROR]";
                 break;
             }
             let json = JSON.parse(to_eat);
+            let error_detail = json["detail"];
+            if (typeof error_detail === "string") {
+                this.streaming_error = error_detail;
+                break;
+            }
             if (this.streaming_callback) {
                 await this.streaming_callback(json);
             }
@@ -72,7 +77,7 @@ export class PendingRequest {
 
     supply_stream(h2stream: Promise<fetchH2.Response>, scope: string, url: string)
     {
-        this.streaming_error = false;
+        this.streaming_error = "";
         h2stream.catch((error) => {
             let aborted = error && error.message && error.message.includes("aborted");
             if (!aborted) {
@@ -113,12 +118,23 @@ export class PendingRequest {
                         if (this.streaming_buf.startsWith("{")) {
                             // likely a error, because it's not a stream, no "data: " prefix
                             console.log(["looks like a error", this.streaming_buf]);
-                            this.streaming_error = true;
-                            usageStats.send_network_problems_to_status_bar(false, scope, url, this.streaming_buf, "");
+                            let error_message: string;
+                            try {
+                                let j = JSON.parse(this.streaming_buf);
+                                error_message = j["detail"];
+                                if (typeof error_message !== "string") {
+                                    error_message = this.streaming_buf;
+                                }
+                            } catch (e) {
+                                console.log(["error parsing error json", e]);
+                                error_message = this.streaming_buf; // as a string
+                            }
+                            this.streaming_error = error_message;
+                            // usageStats.send_network_problems_to_status_bar(false, scope, url, this.streaming_buf, "");
                         } else if (this.streaming_error) {
-                            usageStats.send_network_problems_to_status_bar(false, scope, url, "streaming_error", "");
+                            // usageStats.send_network_problems_to_status_bar(false, scope, url, "streaming_error", "");
                         } else {
-                            usageStats.send_network_problems_to_status_bar(true, scope, url, "", "");
+                            // usageStats.send_network_problems_to_status_bar(true, scope, url, "", "");
                         }
                         // Normally [DONE] produces a callback, but it's possible there's no [DONE] sent by the server.
                         // Wait 500ms because inside VS Code "readable" and "end"/"close" are sometimes called in the wrong order.
