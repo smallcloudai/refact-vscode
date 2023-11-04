@@ -158,7 +158,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
             case "open_new_chat": {
                 let question = data.question;
-                // let chat_empty = data.chat_empty;
                 if (!question) {
                     question = "";
                 }
@@ -430,7 +429,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div id="sidebar" class="sidebar">
                     <div class="chat-panel">
-                        <button tabindex="-1" id="chat"><span></span>New&nbsp;Chat</button>
+                        <button tabindex="-1" id="chat-new"><span></span>New&nbsp;Chat</button>
                     </div>
                     <div class="chat-history">
                         <div class="chat-history-list"></div>
@@ -551,7 +550,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <button tabindex="-1" id="profile"><span></span>Your&nbsp;Account</button>
                                 <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
                                 <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
-                            </div>                        
+                            </div>
                         </div>
                     </div>
                 </div>

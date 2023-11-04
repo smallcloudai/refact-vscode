@@ -108,7 +108,7 @@
         if (data.question_html) {
             answer_counter += 1;
 
-            const question_container = document.createElement('div'); // Parent container for question_div and inputField
+            const question_container = document.createElement('div'); // Parent container for question_div and message_edit_textarea
             question_container.classList.add('refactcss-chat__question');
 
             const question_div = document.createElement('div');
@@ -123,33 +123,33 @@
             retry_button.innerText = 'Retry';
             retry_button.classList.add('refactcss-chat__copybutton');
 
-            const inputField = document.createElement('textarea');
-            inputField.type = 'text';
-            inputField.style.display = 'none'; // Initially hidden
-            inputField.value = data.question_raw;
-            inputField.classList.add('refactcss-chat__input-field');
+            const message_edit_textarea = document.createElement('textarea');
+            message_edit_textarea.type = 'text';
+            message_edit_textarea.style.display = 'none'; // Initially hidden
+            message_edit_textarea.value = data.question_raw;
+            message_edit_textarea.classList.add('refactcss-chat__input-field');
 
-            const cancelButton = document.createElement('button');
-            cancelButton.innerText = 'Cancel';
-            cancelButton.style.display = 'none'; // Initially hidden
-            cancelButton.classList.add('refactcss-chat__cancel-button');
+            const message_edit_cancel = document.createElement('button');
+            message_edit_cancel.innerText = 'Cancel';
+            message_edit_cancel.style.display = 'none'; // Initially hidden
+            message_edit_cancel.classList.add('refactcss-chat__cancel-button');
 
-            const submitButton = document.createElement('button');
-            submitButton.innerText = 'Submit';
-            submitButton.style.display = 'none'; // Initially hidden
-            submitButton.classList.add('refactcss-chat__submit-button');
+            const message_edit_submit = document.createElement('button');
+            message_edit_submit.innerText = 'Submit';
+            message_edit_submit.style.display = 'none'; // Initially hidden
+            message_edit_submit.classList.add('refactcss-chat__submit-button');
 
             question_container.appendChild(question_div);
-            question_container.appendChild(inputField);
+            question_container.appendChild(message_edit_textarea);
             question_container.appendChild(retry_button);
-            question_container.appendChild(cancelButton);
-            question_container.appendChild(submitButton);
+            question_container.appendChild(message_edit_cancel);
+            question_container.appendChild(message_edit_submit);
             message_pair_div.appendChild(question_container);
 
-            inputField.addEventListener('keydown', (event) => {
+            message_edit_textarea.addEventListener('keydown', (event) => {
                 if (event.key === 'Enter' && event.shiftKey === false) {
                     event.preventDefault();
-                    submitButton.click();
+                    message_edit_submit.click();
                     return true;
                 }
                 auto_scroll();
@@ -168,14 +168,14 @@
                 });
 
                 question_div.style.display = 'none';
-                inputField.style.display = 'block';
-                cancelButton.style.display = 'inline-block';
-                submitButton.style.display = 'inline-block';
+                message_edit_textarea.style.display = 'block';
+                message_edit_cancel.style.display = 'inline-block';
+                message_edit_submit.style.display = 'inline-block';
                 retry_button.style.display = 'none';
 
-                inputField.focus();
+                message_edit_textarea.focus();
 
-                inputField.value = question_div.dataset.question_backup;
+                message_edit_textarea.value = question_div.dataset.question_backup;
                 answer_counter = parseInt(message_pair_div.dataset.answer_counter);
                 const chats = document.querySelectorAll('.refactcss-chat__item');
                 for (let i = chats.length - 1; i >= 0; i--) {
@@ -186,24 +186,24 @@
                 }
             });
 
-            cancelButton.addEventListener('click', () => {
+            message_edit_cancel.addEventListener('click', () => {
                 question_div.style.display = 'block';
-                inputField.style.display = 'none';
+                message_edit_textarea.style.display = 'none';
                 retry_button.style.display = 'block';
-                cancelButton.style.display = 'none';
-                submitButton.style.display = 'none';
+                message_edit_cancel.style.display = 'none';
+                message_edit_submit.style.display = 'none';
 
                 // Restore the original question
-                inputField.value = data.question_raw;
+                message_edit_textarea.value = data.question_raw;
             });
 
-            submitButton.addEventListener('click', () => {
-                const message = inputField.value;
+            message_edit_submit.addEventListener('click', () => {
+                const message = message_edit_textarea.value;
                 let chat_model_combo = document.getElementById("chat-model-combo");
                 //console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 [chat_model, chat_model_function] = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 let chat_attach_file = document.getElementById("chat-attach");
-                inputField.value = '';
+                message_edit_textarea.value = '';
                 vscode.postMessage({
                     type: "question-posted-within-tab",
                     chat_question: message,
@@ -226,9 +226,9 @@
 
                 // Toggle visibility of elements
                 retry_button.style.display = 'inline-block';
-                inputField.style.display = 'none';
-                cancelButton.style.display = 'none';
-                submitButton.style.display = 'none';
+                message_edit_textarea.style.display = 'none';
+                message_edit_cancel.style.display = 'none';
+                message_edit_submit.style.display = 'none';
 
                 //remove current chatItem as it would get re-added anyway
                 const chats = document.querySelectorAll('.refactcss-chat__item');

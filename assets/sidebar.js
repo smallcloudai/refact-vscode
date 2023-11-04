@@ -192,8 +192,8 @@ function sidebar_general_script(vscode) {
     //     });
     // });
 
-    const chatButton = document.querySelector("#chat");
-    chatButton.addEventListener("click", () => {
+    const chat_new = document.querySelector("#chat-new");
+    chat_new.addEventListener("click", () => {
         vscode.postMessage({ type: "open_new_chat", question: '', chat_empty: true, chat_model: "" });
     });
 

@@ -238,7 +238,6 @@ export class RustBinaryBlob
         });
         this.lsp_socket.on('connect', async () => {
             console.log("RUST LSP socket connected");
-            // let client: lspClient.LanguageClient;
             this.lsp_client = new lspClient.LanguageClient(
                 'Custom rust LSP server',
                 async () => {

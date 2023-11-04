@@ -327,7 +327,7 @@ body.vscode-light #login {
 	width: 100%;
 	padding: 0 10px;
 }
-#chat {
+#chat-new {
 	font-size: 13px;
 	margin: 0;
 	border: 1px solid var(--secondary);
@@ -1101,7 +1101,7 @@ body.vscode-light .refact-welcome__provider:hover {
 	background-color: var(--vscode-editor-selectionBackground) !important;
 	border-radius: 6px;
 }
-.vscode-high-contrast .refact-welcome__savebutton, 
+.vscode-high-contrast .refact-welcome__savebutton,
 .vscode-high-contrast .refact-welcome__next,
 .vscode-high-contrast .refact-welcome__back,
 .vscode-high-contrast input {
