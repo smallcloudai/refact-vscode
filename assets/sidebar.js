@@ -421,7 +421,7 @@ function sidebar_general_script(vscode) {
                 let profile = document.querySelector('#profile');
                 let sidebar_account = document.querySelector('.sidebar-account');
                 let logout = document.querySelector('#logout');
-                let chat = document.querySelector('#chat');
+                let chat = document.querySelector('#chat-new');
                 let privacy = document.querySelector('#privacy');
                 let discord = document.querySelector('#discord');
                 let settings = document.querySelector('#settings');

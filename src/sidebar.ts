@@ -168,7 +168,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     editor,
                     attach_default,
                     data.chat_model,
-                    data.chat_model_function,
+                    "",
                     false,
                     [],
                     [],
@@ -194,7 +194,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     editor,
                     true,
                     data.chat_model,
-                    data.chat_model_function,
+                    "",
                     true,
                     chat?.questions,
                     chat?.answers,
@@ -328,7 +328,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 await this.chat?.chat_post_question(
                 data.chat_question,
                 data.chat_model,
-                data.chat_model_function,
+                "",
                 data.chat_attach_file
                 );
                 this.chat?.messages.forEach((i) => console.log(i));

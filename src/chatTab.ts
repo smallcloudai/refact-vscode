@@ -54,25 +54,11 @@ export class ChatTab {
         free_floating_tab.working_on_snippet_range = undefined;
         free_floating_tab.working_on_snippet_editor = undefined;
         free_floating_tab.working_on_snippet_column = undefined;
-        if (!use_model) {
-            [use_model, use_model_function] = await chat_model_get();
-            //re do if no model gets fetched; atleast 1 redo
-            if(!use_model || !use_model_function){
-                [use_model, use_model_function] = await chat_model_get();
-            };
-        }
         let fireup_message = {
             command: "chat-set-fireup-options",
-            chat_models: [] as [string, string][],
-            chat_use_model: use_model,
-            chat_use_model_function: use_model_function,
             chat_attach_file: "",
             chat_attach_default: false,
-            manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl")
         };
-        for (let x of global.chat_models) {
-            fireup_message["chat_models"].push([x, "chat"]);
-        }
         if (editor) {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
@@ -146,8 +132,21 @@ export class ChatTab {
             }
             global.side_panel?._view?.webview.postMessage(pass_dict);
         }
-
         global.side_panel?._view?.webview.postMessage(fireup_message);
+
+        if (!use_model) {
+            [use_model, use_model_function] = await chat_model_get();
+        }
+        let combo_populate_message = {
+            command: "chat-models-populate",
+            chat_models: [] as string[],
+            chat_use_model: use_model,
+        };
+        await global.rust_binary_blob?.read_caps();
+        for (let x of global.chat_models) {
+            combo_populate_message["chat_models"].push(x);
+        }
+        global.side_panel?._view?.webview.postMessage(combo_populate_message);
     }
 
     // public dispose()
