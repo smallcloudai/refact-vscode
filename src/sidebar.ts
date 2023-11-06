@@ -17,12 +17,8 @@ export async function open_chat_tab(
     editor: vscode.TextEditor | undefined,
     attach_default: boolean,   // checkbox set on start, means attach the current file
     model: string,
-    model_function: string = "",
-    old_chat: boolean,
-    questions: string[] | undefined,
-    answers: string[] | undefined,
+    messages: [string, string][],
     chatId: string,
-    chatHistoryProvider: ChatHistoryProvider
 ) {
     if (global.side_panel?.chat) {
         global.side_panel.chat = null;
@@ -40,10 +36,7 @@ export async function open_chat_tab(
             editor,
             attach_default,
             model,
-            model_function,
-            old_chat,
-            questions,
-            answers
+            messages,
         );
     }
 }
@@ -168,39 +161,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     editor,
                     attach_default,
                     data.chat_model,
-                    "",
-                    false,
-                    [],
-                    [],
-                    "",
-                    this.make_sure_have_chat_history_provider()
+                    [],      // messages
+                    "",      // chat id
                 );
                 break;
             }
             case "delete_chat": {
                 const chatId = data.chatId;
                 await this.make_sure_have_chat_history_provider().deleteChatEntry(chatId);
-                break;
-            }
-            case "open_old_chat": {
-                const chatId = data.chatId;
-                if (!chatId) {
-                    break;
-                }
-                let editor = vscode.window.activeTextEditor;
-                let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().getChat(chatId);
-                await open_chat_tab(
-                    "",
-                    editor,
-                    true,
-                    data.chat_model,
-                    "",
-                    true,
-                    chat?.questions,
-                    chat?.answers,
-                    chatId,
-                    this.make_sure_have_chat_history_provider()
-                );
                 break;
             }
             case "button_hf_open_tokens": {
@@ -271,7 +239,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.refact');
                 break;
             }
-            //chat commands
             case "open-new-file": {
                 vscode.workspace.openTextDocument().then((document) => {
                     vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
@@ -324,31 +291,65 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 estate.switch_mode(state, estate.Mode.Diff);
                 break;
             }
-            case "question-posted-within-tab": {
-                await this.chat?.chat_post_question(
-                data.chat_question,
-                data.chat_model,
-                "",
-                data.chat_attach_file
+            case "chat-question-enter-hit": {
+                if (!this.chat) {
+                    break;
+                }
+                // if (this.chat && data.chat_messages_backup.length !== this.chat.get_messages().length) {
+                    // oops, we need less messages that already added
+                console.log(`oops, we need ${data.chat_messages_backup.length} messages that already added ${this.chat.get_messages().length}`);
+                await ChatTab.activate_from_outside(
+                    data.chat_question,
+                    undefined,
+                    data.chat_attach_file,
+                    data.chat_model,
+                    data.chat_messages_backup,
                 );
-                this.chat?.messages.forEach((i) => console.log(i));
-            break;
+                await this.chat.chat_post_question(
+                    data.chat_question,
+                    data.chat_model,
+                    "",
+                    data.chat_attach_file,
+                    data.chat_messages_backup,
+                    );
+                break;
+            }
+            case "restore_chat": {
+                const chatId = data.chatId;
+                if (!chatId) {
+                    break;
+                }
+                let editor = vscode.window.activeTextEditor;
+                let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().getChat(chatId);
+                if (!chat) {
+                    console.log(`Chat ${chatId} not found, cannot restore`);
+                    break;
+                }
+                // FIXME: use ChatTab.activate_from_outside directly?
+                await open_chat_tab(
+                    "",
+                    editor,
+                    true,
+                    data.chat_model,
+                    chat.messages,
+                    chatId,
+                );
+                break;
             }
             case "stop-clicked": {
                 this.chat?.cancellationTokenSource.cancel();
                 break;
             }
-            case "reset-messages": {
-                if (this.chat?.messages) {
-                    this.chat.messages = data.messages_backup;
-                    this.make_sure_have_chat_history_provider().popLastMessageFromChat(
-                        this.chat?.chatId,
-                        true,
-                        true
-                    );
-                }
-                break;
-            }
+            // case "reset-messages": {
+            //     if (this.chat?.messages) {
+            //         this.chat.messages = data.messages_backup;
+            //         this.make_sure_have_chat_history_provider().assign_messages_backup(
+            //             this.chat?.chatId,
+            //             this.chat.messages,
+            //         );
+            //     }
+            //     break;
+            // }
             case "back-from-chat": {
                 this.goto_main();
                 this.chat = null;

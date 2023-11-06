@@ -19,6 +19,10 @@ export class ChatTab {
     public chatHistoryProvider: ChatHistoryProvider;
     public chatId: string = "";
 
+    public get_messages(): [string, string][] {
+        return this.messages;
+    }
+
     public constructor(chatHistoryProvider: ChatHistoryProvider, chatId: string) {
         this.messages = [];
         this.model_to_thirdparty = {};
@@ -34,12 +38,8 @@ export class ChatTab {
         editor: vscode.TextEditor | undefined,
         attach_default: boolean,
         use_model: string,
-        use_model_function: string,
-        old_chat: boolean,
-        questions: string[] | undefined,
-        answers: string[] | undefined,
-        )
-    {
+        messages: [string, string][],
+    ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
@@ -99,43 +99,47 @@ export class ChatTab {
             free_floating_tab.working_on_attach_code = attach;
         }
         free_floating_tab.working_on_snippet_code = code_snippet;
+        free_floating_tab.messages = messages;
 
-        if (old_chat && questions) {
-            let messages_backup: [string, string][] = [];
-            //console.log("adding old chat");
-
-            for (let i = 0; i < questions.length; i++) {
-              const question = questions[i];
-              const answer = answers && answers.length > i ? answers[i] : null;
-
-              free_floating_tab.messages.push(["user", question]);
-              free_floating_tab._question_to_div(question, messages_backup);
-              messages_backup.push(["user", question]);
-
-              if (answer) {
-                free_floating_tab.messages.push(["assistant", answer]);
-                free_floating_tab._answer_to_div(answer, messages_backup);
-                messages_backup.push(["assistant", answer]);
-              }
+        // This refills the chat
+        global.side_panel?._view?.webview.postMessage({
+            command: "chat-clear",
+        });
+        let messages_backup: [string, string][] = [];
+        for (let i = 0; i < messages.length; i++) {
+            let [role, content] = messages[i];
+            let is_it_last_message = i === messages.length - 1;
+            if (role === "user" && !is_it_last_message) {
+                free_floating_tab._question_to_div(content, messages_backup);  // message inside
             }
+            if (role === "assistant") {
+                free_floating_tab._answer_to_div(content, messages_backup);  // message inside
+            }
+            messages_backup.push([role, content]);
         }
 
-        if (question) {
-            if (code_snippet) {
-                question = "```\n" + code_snippet + "\n```\n" + question;
+        if (messages.length > 0) {
+            let last_message = messages[messages.length - 1];
+            let [last_role, last_content] = last_message;
+            if (last_role === "user") {
+                let pass_dict = { command: "chat-set-question-text", value: {question: last_content} };
+                global.side_panel?._view?.webview.postMessage(pass_dict);
             }
-            free_floating_tab.chat_post_question(question, use_model, use_model_function, !!code_snippet);
         } else {
+            // fresh new chat, post code snippet if any
             let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
             if (code_snippet) {
-                pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
+                pass_dict["value"]["question"] += "```\n" + code_snippet + "\n```\n";
+            }
+            if (question) {
+                pass_dict["value"]["question"] += question;
             }
             global.side_panel?._view?.webview.postMessage(pass_dict);
         }
         global.side_panel?._view?.webview.postMessage(fireup_message);
 
         if (!use_model) {
-            [use_model, use_model_function] = await chat_model_get();
+            [use_model, ] = await chat_model_get();
         }
         let combo_populate_message = {
             command: "chat-models-populate",
@@ -202,11 +206,12 @@ export class ChatTab {
         });
     }
 
-    async chat_post_question(
+    async chat_post_question(   // User presses Enter
         question: string,
         model: string,
         model_function: string,
-        attach_file: boolean
+        attach_file: boolean,
+        restore_messages_backup: [string, string][],
     ) {
         if (!global.side_panel?._view) {
             return;
@@ -221,6 +226,8 @@ export class ChatTab {
         //     });
         //     return;
         // }
+        console.log(`chat_post_question saved messages backup: ${restore_messages_backup.length}`);
+        this.messages = restore_messages_backup;
 
         await chat_model_set(model, model_function);  // successfully used model, save it
 
@@ -235,7 +242,8 @@ export class ChatTab {
             if (first_40_characters !== first_41_characters) {
                 first_40_characters += "…";
             }
-            global.side_panel._view.title = first_40_characters; //change sideview title
+            // TODO
+            global.side_panel._view.title = first_40_characters;  // change sideview title
             if (attach_file) {
                 this.messages.push(["user", this.working_on_attach_code]);
                 this.messages.push(["assistant", "Thanks for context, what's your question?"]);
@@ -248,10 +256,10 @@ export class ChatTab {
 
         let messages_backup = this.messages.slice();
         this.messages.push(["user", question]);
+        // TODO: save history, not add
         await this.chatHistoryProvider.addMessageToChat(
             this.chatId,
-            question,
-            "",
+            "user", question,
             model,
             model_function,
             global.side_panel._view.title || ""
@@ -266,6 +274,7 @@ export class ChatTab {
             answer_html: "⏳",
             answer_raw: "",
             have_editor: false,
+            messages_backup: messages_backup,
         });
         await fetchAPI.wait_until_all_requests_finished();
 
@@ -315,7 +324,8 @@ export class ChatTab {
                             command: "chat-post-answer",
                             answer_html: html,
                             answer_raw: answer,
-                            have_editor: Boolean(stack_this.working_on_snippet_editor)
+                            have_editor: Boolean(stack_this.working_on_snippet_editor),
+                            messages_backup: messages_backup,
                         });
                     }
                 }
@@ -353,8 +363,7 @@ export class ChatTab {
                 stack_this.messages.push(["assistant", answer]);
                 await stack_this.chatHistoryProvider.addMessageToChat(
                     stack_this.chatId,
-                    "",
-                    answer,
+                    "assistant", answer,
                     model,
                     model_function,
                     global.side_panel?._view?.title || ""

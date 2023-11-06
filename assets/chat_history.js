@@ -72,7 +72,7 @@ function chat_history_script(vscode) {
                             vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
                             chatItem.remove();
                         } else {
-                            vscode.postMessage({ type: "open_old_chat", chatId: chat.chatId });
+                            vscode.postMessage({ type: "restore_chat", chatId: chat.chatId });
                         }
                     });
 

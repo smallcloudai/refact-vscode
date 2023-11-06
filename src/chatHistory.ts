@@ -5,9 +5,10 @@ import { v4 as uuidv4 } from "uuid";
 export type Chat = {
     chatId: string; // Unique identifier for each chat
     chatName: string;
-    questions: string[];
-    answers: string[];
-    time: Date; // Store the initial time of each chat
+    messages: [string, string][]; // role, content
+    // questions: string[];
+    // answers: string[];
+    time: Date;
     chatModel: string;
     chatModelFunction: string;
 };
@@ -33,7 +34,7 @@ export default class ChatHistoryProvider {
     }
 
     public getChatNamesSortedByTime():
-        { chatId: string; chatName: string; time: Date; lastQuestion: string }[]
+        { chatId: string; chatName: string; time: Date; totalQuestions: number }[]
     {
         const userChatData = this.chatHistory[this.currentUser];
         if (!userChatData) {
@@ -44,18 +45,18 @@ export default class ChatHistoryProvider {
             chatId: string;
             chatName: string;
             time: Date;
-            lastQuestion: string;
+            totalQuestions: number;
         }[] = userChatData.map((chat) => ({
             chatId: chat.chatId,
             chatName: chat.chatName.substring(0, 100),
             time: chat.time,
-            totalQuestions: chat.questions.length,
-            lastQuestion:
-                chat.questions[chat.questions.length - 1] ?
-                    chat.questions[chat.questions.length - 1].replace("'''", "").length > 15 ?
-                        chat.questions[chat.questions.length - 1].replace("'''", "").substring(0, 15) + "..."
-                    : chat.questions[chat.questions.length - 1].replace("'''", "")
-                : "",
+            totalQuestions: chat.messages.length,
+            // lastQuestion:
+            //     chat.questions[chat.questions.length - 1] ?
+            //         chat.questions[chat.questions.length - 1].replace("'''", "").length > 15 ?
+            //             chat.questions[chat.questions.length - 1].replace("'''", "").substring(0, 15) + "..."
+            //         : chat.questions[chat.questions.length - 1].replace("'''", "")
+            //     : "",
         }));
 
         chatNamesWithTime.sort((a, b) => {
@@ -77,8 +78,8 @@ export default class ChatHistoryProvider {
 
     public async addMessageToChat(
         chatId: string,
-        question: string,
-        answer: string,
+        role: string,
+        content: string,
         chatModel: string,
         chatModelFunction: string,
         chatName: string
@@ -94,8 +95,7 @@ export default class ChatHistoryProvider {
             userChatData.push({
                 chatId,
                 chatName: chatName,
-                questions: [],
-                answers: [],
+                messages: [],
                 time: new Date(),
                 chatModel,
                 chatModelFunction,
@@ -104,14 +104,7 @@ export default class ChatHistoryProvider {
 
         const chatToUpdate = existingChat || userChatData[userChatData.length - 1];
 
-        if (question !== "") {
-            chatToUpdate.questions.push(question);
-        } else if (answer !== "") {
-            chatToUpdate.answers.push(answer);
-        } else {
-            console.log("nothing to add to chat!!");
-            return false;
-        }
+        chatToUpdate.messages.push([role, content]);
         chatToUpdate.time = new Date();
         this.chatHistory[this.currentUser] = userChatData;
         await this.saveChatHistoryToGlobalState();
@@ -137,35 +130,23 @@ export default class ChatHistoryProvider {
         return true;
     }
 
-    public popLastMessageFromChat(
+    public assign_messages_backup(
         chatId: string,
-        popQ: boolean,
-        popA: boolean
+        messages: [string, string][]
     ): boolean {
         const userChatData = this.chatHistory[this.currentUser];
         if (!userChatData) {
             return false;
         }
-
         const chatToUpdate = userChatData.find((chat) => chat.chatId === chatId);
-
         if (!chatToUpdate) {
+            console.log(`Chat with id ${chatId} not found, cannot reset history`);
             return false;
         }
-
-        if (chatToUpdate.questions.length > 0 && popQ) {
-            chatToUpdate.questions.pop();
-        }
-
-        if (chatToUpdate.answers.length > 0 && popA) {
-            chatToUpdate.answers.pop();
-        }
-
+        chatToUpdate.messages = messages;
         chatToUpdate.time = new Date();
         this.chatHistory[this.currentUser] = userChatData;
-
         this.saveChatHistoryToGlobalState();
-
         return true;
     }
 
@@ -190,7 +171,24 @@ export default class ChatHistoryProvider {
     {
         let maybe_history = this.context.globalState.get<ChatHistory>("refact_chat_history");
         if (maybe_history) {
-            return maybe_history;
+            let validated_dict: ChatHistory = {};
+            for (const user in maybe_history) {
+                if (typeof user !== "string") {
+                    continue;
+                }
+                if (maybe_history[user].length > 0) {
+                    let validated_chats = maybe_history[user].filter((chat) => {
+                        return (
+                            chat.chatId &&
+                            chat.chatName &&
+                            chat.messages &&
+                            chat.time
+                        );
+                    });
+                    validated_dict[user] = validated_chats;
+                }
+            }
+            return validated_dict;
         }
         return {};
     }

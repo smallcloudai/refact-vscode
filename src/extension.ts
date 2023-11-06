@@ -40,15 +40,12 @@ async function pressed_call_chat() {
     console.log(["pressed_call_chat"]);
     let editor = vscode.window.activeTextEditor;
     await open_chat_tab(
-      "",
-      editor,
-      true,
-      "", "",
-      false,  // old_chat
-      [],     // questions
-      [],     // answers
-      "",     // chatId
-      new ChatHistoryProvider(global.global_context, global.user_logged_in)
+        "",
+        editor,
+        true,    // attach file default
+        "",      // model
+        [],      // messages
+        "",      // chat id
     );
 }
 

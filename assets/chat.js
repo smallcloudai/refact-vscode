@@ -57,11 +57,16 @@
         chat_model = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
         let chat_attach_file = document.getElementById("chat-attach");
         chat_input.value = '';
+        console.log(`last_answer_div ${last_answer_div}`);
+        if (last_answer_div) {
+            console.log(`last_answer_div messages_backup ${last_answer_div.dataset.messages_backup}`);
+        }
         vscode.postMessage({
-            type: "question-posted-within-tab",
+            type: "chat-question-enter-hit",
             chat_question: message,
             chat_model: chat_model,
-            chat_attach_file: chat_attach_file.checked
+            chat_attach_file: chat_attach_file.checked,
+            chat_messages_backup: last_answer_div ? JSON.parse(last_answer_div.dataset.messages_backup) : [],
         });
         // if (!chat_controls_moved) {
         //     const chat_controls = document.querySelector('.refactcss-chat__controls');
@@ -161,28 +166,20 @@
                 if (stop_button.style.display !== 'none') {
                     return;
                 }
-                vscode.postMessage({
-                    type: "reset-messages",
-                    messages_backup: JSON.parse(question_div.dataset.messages_backup)
-                });
+                // vscode.postMessage({
+                //     type: "reset-messages",
+                //     messages_backup: JSON.parse(question_div.dataset.messages_backup)
+                // });
 
                 question_div.style.display = 'none';
                 message_edit_textarea.style.display = 'block';
                 message_edit_cancel.style.display = 'inline-block';
                 message_edit_submit.style.display = 'inline-block';
                 retry_button.style.display = 'none';
-
                 message_edit_textarea.focus();
-
                 message_edit_textarea.value = question_div.dataset.question_backup;
                 answer_counter = parseInt(message_pair_div.dataset.answer_counter);
-                const chats = document.querySelectorAll('.refactcss-chat__item');
-                for (let i = chats.length - 1; i >= 0; i--) {
-                    const chat = chats[i];
-                    if (parseInt(chat.dataset.answer_counter) > answer_counter) {
-                        chat.remove();
-                    }
-                }
+                delete_up_to_answer_counter(answer_counter);
             });
 
             message_edit_cancel.addEventListener('click', () => {
@@ -203,12 +200,17 @@
                 chat_model = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
                 let chat_attach_file = document.getElementById("chat-attach");
                 message_edit_textarea.value = '';
+                if (question_div) {
+                    console.log(`messages backup was: ${question_div.dataset.messages_backup}`);
+                }
+                // FIXME
                 vscode.postMessage({
-                    type: "question-posted-within-tab",
+                    type: "chat-question-enter-hit",
                     chat_question: message,
                     chat_model: chat_model,
                     chat_model_function: chat_model_function,
-                    chat_attach_file: chat_attach_file.checked
+                    chat_attach_file: chat_attach_file.checked,
+                    chat_messages_backup: JSON.parse(question_div?.dataset.messages_backup)
                 });
                 // if (!chat_controls_moved) {
                 //     // const chat_controls = document.querySelector('.refactcss-chat__controls');
@@ -249,6 +251,8 @@
             last_answer_div.innerHTML = data.answer_html;
             last_answer_div.dataset.raw = data.answer_raw;
             last_answer_div.dataset.have_editor = data.have_editor;
+            // backup does not include question (nor this answer))
+            last_answer_div.dataset.messages_backup = JSON.stringify(data.messages_backup);
         }
 
         if (message_pair_div.children.length > 0) {
@@ -257,18 +261,14 @@
         hljs.highlightAll();
     }
 
-    function backquote_backquote_backquote_remove_language_name(code) {
-        // this removes ```python or ```json or similar, assuming ``` itself is already not there
-        while (1) {
-            if (code.startsWith('\n')) {
-                return code.substring(1);
+    function delete_up_to_answer_counter(answer_counter)
+    {
+        const chats = document.querySelectorAll('.refactcss-chat__item');
+        for (let i = chats.length - 1; i >= 0; i--) {
+            const chat = chats[i];
+            if (parseInt(chat.dataset.answer_counter) > answer_counter) {
+                chat.remove();
             }
-            let first_char = code[0];
-            if (first_char >= 'a' && first_char <= 'z' || first_char >= '0' && first_char <= '9') {
-                code = code.substring(1);
-                continue;
-            }
-            return code;
         }
     }
 
@@ -396,6 +396,7 @@
     window.addEventListener("message", (event) => {
         const message = event.data;
         let input_should_be_visible = false;
+        console.log("CHATMESSAGE", message.command);
         // let isStreaming = false;
         switch (message.command) {
             case "chat-set-fireup-options":
@@ -414,6 +415,7 @@
                 break;
             case "chat-models-populate":
                 let chat_model_combo = document.getElementById("chat-model-combo");
+                chat_model_combo.innerHTML = "";
                 for (let i = 0; i < message.chat_models.length; i++) {
                     let option = document.createElement("option");
                     option.value = JSON.stringify(message.chat_models[i]);
@@ -426,6 +428,7 @@
                     }
                     chat_model_combo.appendChild(option);
                 }
+                input_should_be_visible = true;
                 break;
             case "chat-end-streaming":
                 input_should_be_visible = true;
@@ -436,6 +439,9 @@
                 chat_input.value = message.backup_user_phrase;
                 let chat_error_message = document.getElementById("chat-error-message");
                 chat_error_message.innerText = message.error_message;
+                if (last_answer_div) {
+                    last_answer_div.style.opacity = 0.5;
+                }
                 // isStreaming = false;
                 break;
             case "chat-post-question":
@@ -456,6 +462,10 @@
                     input_care();
                 }, 100);
                 input_care();
+                break;
+            case "chat-clear":
+                console.log("CHAT CLEAR");
+                delete_up_to_answer_counter(-1);
                 break;
             case "nop":
                 break;
