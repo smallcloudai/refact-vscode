@@ -4,12 +4,14 @@ import * as fetchAPI from "./fetchAPI";
 // import * as userLogin from "./userLogin";
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 import ChatHistoryProvider from "./chatHistory";
+import { v4 as uuidv4 } from "uuid";
 
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
     // private _disposables: vscode.Disposable[] = [];
     public messages: [string, string][];
     public cancellationTokenSource: vscode.CancellationTokenSource;
+    public working_on_attach_filename: string = "";
     public working_on_attach_code: string = "";
     public working_on_snippet_code: string = "";
     public working_on_snippet_range: vscode.Range | undefined = undefined;
@@ -17,19 +19,19 @@ export class ChatTab {
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
     public model_to_thirdparty: {[key: string]: boolean};
     public chatHistoryProvider: ChatHistoryProvider;
-    public chatId: string = "";
+    public chat_id: string = "";
 
     public get_messages(): [string, string][] {
         return this.messages;
     }
 
-    public constructor(chatHistoryProvider: ChatHistoryProvider, chatId: string) {
+    public constructor(chatHistoryProvider: ChatHistoryProvider, chat_id: string) {
         this.messages = [];
         this.model_to_thirdparty = {};
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         this.chatHistoryProvider = chatHistoryProvider;
-        if (chatId === "" || chatId === undefined) {
-            this.chatId = this.chatHistoryProvider.generateChatId();
+        if (chat_id === "" || chat_id === undefined) {
+            this.chat_id = uuidv4();
         }
     }
 
@@ -97,6 +99,7 @@ export class ChatTab {
                 }
             }
             free_floating_tab.working_on_attach_code = attach;
+            free_floating_tab.working_on_attach_filename = short_fn;
         }
         free_floating_tab.working_on_snippet_code = code_snippet;
         free_floating_tab.messages = messages;
@@ -108,12 +111,15 @@ export class ChatTab {
         let messages_backup: [string, string][] = [];
         for (let i = 0; i < messages.length; i++) {
             let [role, content] = messages[i];
-            let is_it_last_message = i === messages.length - 1;
+            let is_it_last_message = i === messages.length - 1;  // otherwise, put user message into the input box
             if (role === "user" && !is_it_last_message) {
-                free_floating_tab._question_to_div(content, messages_backup);  // message inside
+                free_floating_tab._question_to_div(content, messages_backup);  // send message inside
+            }
+            if (role === "context_file") {
+                free_floating_tab._answer_to_div(role, content, messages_backup);  // send message inside
             }
             if (role === "assistant") {
-                free_floating_tab._answer_to_div(content, messages_backup);  // message inside
+                free_floating_tab._answer_to_div(role, content, messages_backup);  // send message inside
             }
             messages_backup.push([role, content]);
         }
@@ -186,24 +192,44 @@ export class ChatTab {
         });
     }
 
-    public _answer_to_div(answer: string, messages_backup: [string, string][]) {
+    public _answer_to_div(role: string, content: string, messages_backup: [string, string][])
+    {
+        let command = "chat-post-answer";
         let valid_html = false;
         let html = "";
+        let md = "";
+        if (role === "assistant") {
+            md = content;
+        } else if (role === "context_file") {
+            command = "chat-post-decoration";
+            let files = JSON.parse(content);
+            // let file_content = file_dict["file_content"];
+            // file_content = escape(file_content);
+            for (let file_dict of files) {
+                md += `<span title="hren">📎 ${file_dict["file_name"]}</span><br/>\n`;
+            }
+        }
+
         try {
-          html = marked.parse(answer);
-          valid_html = true;
+            let raw_md = md;
+            let backtick_backtick_backtick_count = (content.match(/```/g) || []).length;
+            if (backtick_backtick_backtick_count % 2 === 1) {
+                raw_md = md + "\n```";
+            }
+            html = marked.parse(raw_md);
+            valid_html = true;
         } catch (e) {
-          valid_html = false;
+            valid_html = false;
         }
-        if (!valid_html) {
-          html = answer;
+        if (valid_html) {
+            global.side_panel?._view?.webview.postMessage({
+                command: command,
+                answer_html: html,
+                answer_raw: content,
+                // have_editor: Boolean(stack_this.working_on_snippet_editor),
+                messages_backup: messages_backup,
+            });
         }
-        global.side_panel?._view?.webview.postMessage({
-          command: "chat-post-answer",
-          answer_html: html,
-          answer_raw: answer,
-          messages_backup: messages_backup,
-        });
     }
 
     async chat_post_question(   // User presses Enter
@@ -235,20 +261,17 @@ export class ChatTab {
         let cancelToken = this.cancellationTokenSource.token;
 
         if (this.messages.length === 0) {
-            // find first 15 characters, non space, non newline, non special character
-            let first_normal_char_index = question.search(/[^ \n\r\t`]/);
-            let first_40_characters = question.substring(first_normal_char_index, first_normal_char_index + 40);
-            let first_41_characters = question.substring(first_normal_char_index, first_normal_char_index + 41);
-            if (first_40_characters !== first_41_characters) {
-                first_40_characters += "…";
-            }
-            // TODO
-            global.side_panel._view.title = first_40_characters;  // change sideview title
             if (attach_file) {
-                this.messages.push(["user", this.working_on_attach_code]);
-                this.messages.push(["assistant", "Thanks for context, what's your question?"]);
+                let single_file_json = JSON.stringify([{
+                    "file_name": this.working_on_attach_filename,
+                    "file_content": this.working_on_attach_code,
+                }]);
+                this.messages.push(["context_file", single_file_json]);
+                // this.messages.push(["assistant", "Thanks for context, what's your question?"]);
             }
         }
+
+        // global.side_panel._view.title = "Refact.ai Chat";
 
         if (this.messages.length > 0 && this.messages[this.messages.length - 1][0] === "user") {
             this.messages.length -= 1;
@@ -257,12 +280,10 @@ export class ChatTab {
         let messages_backup = this.messages.slice();
         this.messages.push(["user", question]);
         // TODO: save history, not add
-        await this.chatHistoryProvider.addMessageToChat(
-            this.chatId,
-            "user", question,
+        await this.chatHistoryProvider.save_messages_list(
+            this.chat_id,
+            this.messages,
             model,
-            model_function,
-            global.side_panel._view.title || ""
         );
         if (this.messages.length > 10) {
             this.messages.shift();
@@ -279,6 +300,7 @@ export class ChatTab {
         await fetchAPI.wait_until_all_requests_finished();
 
         let answer = "";
+        let answer_role = "";
         let stack_this = this;
 
         async function _streaming_callback(json: any)
@@ -291,44 +313,57 @@ export class ChatTab {
                 return;
             } else {
                 let delta = "";
+                let role0, content0;
                 if (json["choices"]) {
                     let choice0 = json["choices"][0];
-                    if (choice0["delta"]["role"] === "context") {
-                        delta += 'Sources:<br>';
-                        delta += '<ul>';
-                        for (let r of choice0["delta"]["content"]["results"]) {
-                            delta += `<li>* ${r["file_name"]}</li>`;
-                        }
-                        delta += '</ul>';
+                    if (choice0["delta"]) {
+                        role0 = choice0["delta"]["role"];
+                        content0 = choice0["delta"]["content"];
+                    } else if (choice0["message"]) {
+                        role0 = choice0["message"]["role"];
+                        content0 = choice0["message"]["content"];
+                    }
+                    if (role0 === "context_file") {
+                        let file_dict = JSON.parse(content0);
+                        let file_content = file_dict["file_content"];
+                        file_content = escape(file_content);
+                        delta += `<span title="${file_content}">📎 ${file_dict["file_name"]}</span><br/>\n`;
                     } else {
                         delta = choice0["delta"]["content"];
                     }
                 }
                 if (delta) {
                     answer += delta;
-                    let valid_html = false;
-                    let html = "";
-                    try {
-                        let raw_html = answer;
-                        let backtick_backtick_backtick_count = (answer.match(/```/g) || []).length;
-                        if (backtick_backtick_backtick_count % 2 === 1) {
-                            raw_html = answer + "\n```";
-                        }
-                        html = marked.parse(raw_html);
-                        valid_html = true;
-                    } catch (e) {
-                        valid_html = false;
-                    }
-                    if (valid_html) {
-                        global.side_panel?._view?.webview.postMessage({
-                            command: "chat-post-answer",
-                            answer_html: html,
-                            answer_raw: answer,
-                            have_editor: Boolean(stack_this.working_on_snippet_editor),
-                            messages_backup: messages_backup,
-                        });
-                    }
                 }
+                if (role0) {
+                    stack_this._answer_to_div(role0, answer, messages_backup);  // send message inside
+                    answer_role = role0;
+                }
+                // if (delta) {
+                //     answer += delta;
+                //     let valid_html = false;
+                //     let html = "";
+                //     try {
+                //         let raw_html = answer;
+                //         let backtick_backtick_backtick_count = (answer.match(/```/g) || []).length;
+                //         if (backtick_backtick_backtick_count % 2 === 1) {
+                //             raw_html = answer + "\n```";
+                //         }
+                //         html = marked.parse(raw_html);
+                //         valid_html = true;
+                //     } catch (e) {
+                //         valid_html = false;
+                //     }
+                //     if (valid_html) {
+                //         global.side_panel?._view?.webview.postMessage({
+                //             command: "chat-post-answer",
+                //             answer_html: html,
+                //             answer_raw: answer,
+                //             have_editor: Boolean(stack_this.working_on_snippet_editor),
+                //             messages_backup: messages_backup,
+                //         });
+                //     }
+                // }
                 if (json["metering_balance"]) {
                     global.user_metering_balance = json["metering_balance"];
                     if (global.side_panel) {
@@ -360,13 +395,11 @@ export class ChatTab {
                     error_message: error_message,
                 });
             } else {
-                stack_this.messages.push(["assistant", answer]);
-                await stack_this.chatHistoryProvider.addMessageToChat(
-                    stack_this.chatId,
-                    "assistant", answer,
+                stack_this.messages.push([answer_role, answer]);
+                await stack_this.chatHistoryProvider.save_messages_list(
+                    stack_this.chat_id,
+                    stack_this.messages,
                     model,
-                    model_function,
-                    global.side_panel?._view?.title || ""
                 );
                 global.side_panel?._view?.webview.postMessage({ command: "chat-end-streaming" });
             }

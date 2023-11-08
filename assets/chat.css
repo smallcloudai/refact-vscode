@@ -75,6 +75,7 @@ body.vscode-dark {
     width: 100%;
     padding: 0 10px;
     margin-bottom: 15px;
+    white-space: nowrap;
 }
 
 .refactcss-chat__controls>div {
@@ -489,6 +490,7 @@ body.vscode-dark {
 .refactcss-chat__model span {
     width: 100px;
     display: block;
+    white-space: nowrap;
 }
 body.vscode-light {
     --hlbg: #ffffff;

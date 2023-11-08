@@ -449,6 +449,9 @@
                 // isStreaming = false;
                 input_should_be_visible = false;
                 break;
+            case "chat-post-decoration":
+                last_answer_div = undefined;
+                // fall through
             case "chat-post-answer":  // streaming also goes there, with partial answers
                 chat_render(message);
                 input_should_be_visible = false;

@@ -30,7 +30,7 @@ function chat_history_script(vscode) {
                     // console.log(chat);
                     const chatItem = document.createElement("div");
                     chatItem.classList.add("chat-history-item");
-                    chatItem.dataset.chatId = chat.chatId;
+                    chatItem.dataset.chat_id = chat.chat_id;
 
                     const deleteButton = document.createElement("button");
                     deleteButton.classList.add("delete-button");
@@ -40,13 +40,13 @@ function chat_history_script(vscode) {
                     //     event.stopPropagation();
                     //     event.preventDefault();
 
-                    //     vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
+                    //     vscode.postMessage({ type: "delete_chat", chat_id: chat.chat_id });
                     //     chatItem.remove();
                     // });
 
-                    const chatName = document.createElement("div");
-                    chatName.classList.add("chat-name");
-                    chatName.textContent = chat.chatName;
+                    const chat_title = document.createElement("div");
+                    chat_title.classList.add("chat-name");
+                    chat_title.textContent = chat.chat_title;
 
                     const chatInfo = document.createElement("div");
                     chatInfo.classList.add('chat-info');
@@ -60,7 +60,7 @@ function chat_history_script(vscode) {
                     lastQuestion.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-chat-fill" viewBox="0 0 16 16"><path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9.06 9.06 0 0 0 8 15z"/></svg>${chat.totalQuestions}`;
 
                     chatItem.appendChild(deleteButton);
-                    chatItem.appendChild(chatName);
+                    chatItem.appendChild(chat_title);
                     chatInfo.appendChild(timestamp);
                     chatInfo.appendChild(lastQuestion);
                     chatItem.appendChild(chatInfo);
@@ -69,10 +69,10 @@ function chat_history_script(vscode) {
                     chatItem.addEventListener("click", (evt) => {
                         evt.preventDefault();
                         if(evt.target.classList.contains('delete-button')) {
-                            vscode.postMessage({ type: "delete_chat", chatId: chat.chatId });
+                            vscode.postMessage({ type: "delete_chat", chat_id: chat.chat_id });
                             chatItem.remove();
                         } else {
-                            vscode.postMessage({ type: "restore_chat", chatId: chat.chatId });
+                            vscode.postMessage({ type: "restore_chat", chat_id: chat.chat_id });
                         }
                     });
 

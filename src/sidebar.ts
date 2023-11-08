@@ -2,10 +2,6 @@
 import * as vscode from "vscode";
 import * as estate from "./estate";
 import * as userLogin from "./userLogin";
-// import * as dataCollection from "./dataCollection";
-// import * as extension from "./extension";
-// import * as fetchH2 from 'fetch-h2';
-// import * as privacy from "./privacy";
 import { ChatTab } from './chatTab';
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
@@ -18,13 +14,13 @@ export async function open_chat_tab(
     attach_default: boolean,   // checkbox set on start, means attach the current file
     model: string,
     messages: [string, string][],
-    chatId: string,
+    chat_id: string,
 ) {
     if (global.side_panel?.chat) {
         global.side_panel.chat = null;
     }
     if (global.side_panel && global.side_panel._view) {
-        let chat: ChatTab = global.side_panel.new_chat(chatId);
+        let chat: ChatTab = global.side_panel.new_chat(chat_id);
 
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -68,10 +64,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return this.chatHistoryProvider;
     }
 
-    public new_chat(chatId: string)
+    public new_chat(chat_id: string)
     {
-        this.chat = new ChatTab(this.make_sure_have_chat_history_provider(), chatId);
-        this.address = chatId;
+        this.chat = new ChatTab(this.make_sure_have_chat_history_provider(), chat_id);
+        this.address = chat_id;
         return this.chat;
     }
 
@@ -116,7 +112,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public goto_chat(chat: ChatTab)
     {
-        this.address = chat.chatId;
+        this.address = chat.chat_id;
         if (!this._view) {
             return;
         }
@@ -129,7 +125,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public update_chat_history()
     {
-        const history = this.make_sure_have_chat_history_provider().getChatNamesSortedByTime();
+        const history = this.make_sure_have_chat_history_provider().chats_sorted_by_time();
         if (this._view) {
             this._view.webview.postMessage({
                 command: "loadHistory",
@@ -167,8 +163,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 break;
             }
             case "delete_chat": {
-                const chatId = data.chatId;
-                await this.make_sure_have_chat_history_provider().deleteChatEntry(chatId);
+                const chat_id = data.chat_id;
+                await this.make_sure_have_chat_history_provider().deleteChatEntry(chat_id);
                 break;
             }
             case "button_hf_open_tokens": {
@@ -315,14 +311,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 break;
             }
             case "restore_chat": {
-                const chatId = data.chatId;
-                if (!chatId) {
+                const chat_id = data.chat_id;
+                if (!chat_id) {
                     break;
                 }
                 let editor = vscode.window.activeTextEditor;
-                let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().getChat(chatId);
+                let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
                 if (!chat) {
-                    console.log(`Chat ${chatId} not found, cannot restore`);
+                    console.log(`Chat ${chat_id} not found, cannot restore`);
                     break;
                 }
                 // FIXME: use ChatTab.activate_from_outside directly?
@@ -332,7 +328,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     true,
                     data.chat_model,
                     chat.messages,
-                    chatId,
+                    chat_id,
                 );
                 break;
             }
@@ -344,7 +340,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             //     if (this.chat?.messages) {
             //         this.chat.messages = data.messages_backup;
             //         this.make_sure_have_chat_history_provider().assign_messages_backup(
-            //             this.chat?.chatId,
+            //             this.chat?.chat_id,
             //             this.chat.messages,
             //         );
             //     }
