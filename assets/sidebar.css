@@ -225,7 +225,6 @@ body.vscode-light #profile {
 	cursor: pointer;
 	box-sizing: border-box;
 	text-decoration: none;
-    flex: 1 0 auto;
     width: 32px;
     height: 33px;
 	align-items: center;
@@ -274,7 +273,7 @@ body.vscode-light #profile {
     height: 33px;
 	cursor: pointer;
 	box-sizing: border-box;
-	width: 100%;
+	/* width: 100%; */
 	text-align: center;
     justify-content: center;
 	margin: 5px 5px 5px 0;
@@ -404,6 +403,7 @@ body.vscode-light #chat {
 	margin-left: 5px;
 	line-height: 14px;
     display: none;
+	margin-right: auto;
 }
 #logout::before {
 	content: "\e812";
@@ -838,10 +838,10 @@ body.vscode-light #logout {
 	display: none;
 }
 @media screen and (max-width: 300px) {
-	.sidebar-buttons {
+	/* .sidebar-buttons {
 		flex-wrap: wrap;
-	}
-	#login {
+	} */
+	/* #login {
 		width: calc(100% - 38px);
 		margin-left: 0 !important;
 	}
@@ -854,7 +854,7 @@ body.vscode-light #logout {
     #settings {
         margin-left: 0;
         margin-right: 0;
-    }
+    } */
 }
 
 .toolbox-tags {

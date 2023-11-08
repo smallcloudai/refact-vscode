@@ -434,15 +434,15 @@ function sidebar_general_script(vscode) {
                 sidebar_account.style.display = message.ts2js_user ? 'flex' : 'none'; // common box for name and coins
                 profile.style.display = message.ts2js_user ? 'inline-flex' : 'none';
                 coins.style.display = message.ts2js_user ? 'flex' : 'none';
-                logout.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
-                privacy.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                logout.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                privacy.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 // if (message.ts2js_metering_balance) {
                 //     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
                 // }
                 discord.style.display = 'inline-flex';
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
-                settings.style.display = 'inline-flex';
-                hotkeys.style.display = message.ts2js_havekey ? 'inline-flex' : 'none';
+                settings.style.display = 'flex';
+                hotkeys.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 break;
             default:
                 break;
