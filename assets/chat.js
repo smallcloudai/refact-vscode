@@ -39,15 +39,15 @@
         } else {
             message_panel.style.setProperty('height', 'calc(100% - ' + chat_input.scrollHeight + 'px)');
             chat_input.style.height = chat_input.scrollHeight + 'px';
-            chat_panel.style.height = (chat_input.scrollHeight + 10) + 'px';
+            chat_panel.style.height = chat_input.scrollHeight + 'px';
         }
         auto_scroll();
     });
 
     chat_input.addEventListener('focusout', function() {
-        message_panel.style.height = 'calc(100% - 70px)';
-        chat_panel.style.height = '80px';
-        chat_input.style.height = '70px';
+        message_panel.style.height = 'calc(100% - 110px)';
+        chat_panel.style.height = '100px';
+        chat_input.style.height = '80px';
     });
 
     chat_send_button.addEventListener('click', () => {

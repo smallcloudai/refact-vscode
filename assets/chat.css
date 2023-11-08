@@ -53,14 +53,14 @@ body.vscode-dark {
 }
 
 .refactcss-chat__content {
-    max-height: calc(100% - 70px);
+    max-height: calc(100% - 110px);
     min-height: 15vh;
     overflow-y: auto;
     transition: all 0.23s ease-in;
 }
 
 .refactcss-chat__panel {
-    height: 65px;
+    height: 100px;
     display: flex;
     flex-direction: column;
     padding: 0 10px 0px;
@@ -68,7 +68,7 @@ body.vscode-dark {
     align-items: flex-start;
     transition: all 0.23s ease-in;
     max-height: 80vh;
-    min-height: 80px !important;
+    min-height: 100px !important;
 }
 
 .refactcss-chat__controls {
@@ -480,6 +480,10 @@ body.vscode-dark {
     padding: 4px;
     font-size: 12px;
     width: 100%;
+}
+#chat-error-message {
+    height: 16px;
+    margin-bottom: 3px;
 }
 
 .refactcss-chat__model span {
