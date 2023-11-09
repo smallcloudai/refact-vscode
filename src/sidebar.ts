@@ -27,7 +27,7 @@ export async function open_chat_tab(
             return;
         }
         global.side_panel.goto_chat(chat);
-        await ChatTab.activate_from_outside(
+        await ChatTab.clear_and_repopulate_chat(
             question,
             editor,
             attach_default,
@@ -144,215 +144,205 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
-            case "focus_back_to_editor": {
-                vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
-                break;
+        case "focus_back_to_editor": {
+            vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+            break;
+        }
+        case "open_new_chat": {
+            let question = data.question;
+            if (!question) {
+                question = "";
             }
-            case "open_new_chat": {
-                let question = data.question;
-                if (!question) {
-                    question = "";
-                }
-                let editor = vscode.window.activeTextEditor;
-                let attach_default = !!vscode.window.activeTextEditor;
-                await open_chat_tab(
-                    question,
-                    editor,
-                    attach_default,
-                    data.chat_model,
-                    [],      // messages
-                    "",      // chat id
-                );
-                break;
-            }
-            case "delete_chat": {
-                const chat_id = data.chat_id;
-                await this.make_sure_have_chat_history_provider().deleteChatEntry(chat_id);
-                break;
-            }
-            case "button_hf_open_tokens": {
-                vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
-                break;
-            }
-            case "button_hf_save": {
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
-                break;
-            }
-            case "button_refact_save": {
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-                break;
-            }
-            case "button_refact_open_streamlined": {
-                vscode.commands.executeCommand('refactaicmd.login');
-                break;
-            }
-            case "button_refact_save": {
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.addressURL', "SMC", vscode.ConfigurationTarget.Global);
-                break;
-            }
-            case "save_enterprise": {
-                await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
-                break;
-            }
-            case "save_selfhosted": {
-                await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', 'aaa', vscode.ConfigurationTarget.Global);
-                break;
-            }
-            case "privacy": {
-                vscode.commands.executeCommand("refactaicmd.privacySettings");
-                break;
-            }
-            case "js2ts_report_bug": {
-                vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/refact-vscode/issues`));
-                break;
-            }
-            case "js2ts_discord": {
-                vscode.env.openExternal(vscode.Uri.parse(`https://www.smallcloud.ai/discord`));
-                break;
-            }
-            case "js2ts_logout": {
-                vscode.commands.executeCommand("refactaicmd.logout");
-                break;
-            }
-            case "js2ts_goto_profile": {
-                vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
-                break;
-            }
-            case "js2ts_refresh_login": {
-                global.user_logged_in = "";
-                global.user_active_plan = "";
-                this.update_webview();
-                await userLogin.inference_login();
-                break;
-            }
-            case "openSettings": {
-                vscode.commands.executeCommand("refactaicmd.openSettings");
-                break;
-            }
-            case "openKeys": {
-                vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.refact');
-                break;
-            }
-            case "open-new-file": {
-                vscode.workspace.openTextDocument().then((document) => {
-                    vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
-                        .then((editor) => {
-                            editor.edit((editBuilder) => {
-                            editBuilder.insert(new vscode.Position(0, 0), data.value);
-                        });
+            let editor = vscode.window.activeTextEditor;
+            let attach_default = !!vscode.window.activeTextEditor;
+            await open_chat_tab(
+                question,
+                editor,
+                attach_default,
+                data.chat_model,
+                [],      // messages
+                "",      // chat id
+            );
+            break;
+        }
+        case "delete_chat": {
+            const chat_id = data.chat_id;
+            await this.make_sure_have_chat_history_provider().deleteChatEntry(chat_id);
+            break;
+        }
+        case "button_hf_open_tokens": {
+            vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
+            break;
+        }
+        case "button_hf_save": {
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
+            break;
+        }
+        case "button_refact_save": {
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
+            break;
+        }
+        case "button_refact_open_streamlined": {
+            vscode.commands.executeCommand('refactaicmd.login');
+            break;
+        }
+        case "button_refact_save": {
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', "SMC", vscode.ConfigurationTarget.Global);
+            break;
+        }
+        case "save_enterprise": {
+            await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
+            break;
+        }
+        case "save_selfhosted": {
+            await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', 'aaa', vscode.ConfigurationTarget.Global);
+            break;
+        }
+        case "privacy": {
+            vscode.commands.executeCommand("refactaicmd.privacySettings");
+            break;
+        }
+        case "js2ts_report_bug": {
+            vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/refact-vscode/issues`));
+            break;
+        }
+        case "js2ts_discord": {
+            vscode.env.openExternal(vscode.Uri.parse(`https://www.smallcloud.ai/discord`));
+            break;
+        }
+        case "js2ts_logout": {
+            vscode.commands.executeCommand("refactaicmd.logout");
+            break;
+        }
+        case "js2ts_goto_profile": {
+            vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
+            break;
+        }
+        case "js2ts_refresh_login": {
+            global.user_logged_in = "";
+            global.user_active_plan = "";
+            this.update_webview();
+            await userLogin.inference_login();
+            break;
+        }
+        case "openSettings": {
+            vscode.commands.executeCommand("refactaicmd.openSettings");
+            break;
+        }
+        case "openKeys": {
+            vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.refact');
+            break;
+        }
+        case "open-new-file": {
+            vscode.workspace.openTextDocument().then((document) => {
+                vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+                    .then((editor) => {
+                        editor.edit((editBuilder) => {
+                        editBuilder.insert(new vscode.Position(0, 0), data.value);
                     });
                 });
+            });
+            break;
+        }
+        case "diff-paste-back": {
+            if (!this.chat?.working_on_snippet_editor) {
+                return;
+            }
+            await vscode.window.showTextDocument(
+                this.chat?.working_on_snippet_editor.document,
+                this.chat?.working_on_snippet_column
+            );
+            let state = estate.state_of_document(
+            this.chat?.working_on_snippet_editor.document
+            );
+            if (!state) {
+                return;
+            }
+            let editor = state.editor;
+            if (state.get_mode() !== estate.Mode.Normal) {
+                return;
+            }
+            if (!this.chat?.working_on_snippet_range) {
+                return;
+            }
+            let verify_snippet = editor.document.getText(
+                this.chat?.working_on_snippet_range!
+            );
+            if (verify_snippet !== this.chat?.working_on_snippet_code) {
+                return;
+            }
+            let text = editor.document.getText();
+            let snippet_ofs0 = editor.document.offsetAt(
+                this.chat?.working_on_snippet_range.start
+            );
+            let snippet_ofs1 = editor.document.offsetAt(
+                this.chat?.working_on_snippet_range.end
+            );
+            let modif_doc: string = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
+            [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
+            state.showing_diff_modif_doc = modif_doc;
+            state.showing_diff_move_cursor = true;
+            estate.switch_mode(state, estate.Mode.Diff);
+            break;
+        }
+        case "chat-question-enter-hit": {
+            if (!this.chat) {
                 break;
             }
-            case "diff-paste-back": {
-                if (!this.chat?.working_on_snippet_editor) {
-                    return;
-                }
-                await vscode.window.showTextDocument(
-                    this.chat?.working_on_snippet_editor.document,
-                    this.chat?.working_on_snippet_column
-                );
-                let state = estate.state_of_document(
-                this.chat?.working_on_snippet_editor.document
-                );
-                if (!state) {
-                    return;
-                }
-                let editor = state.editor;
-                if (state.get_mode() !== estate.Mode.Normal) {
-                    return;
-                }
-                if (!this.chat?.working_on_snippet_range) {
-                    return;
-                }
-                let verify_snippet = editor.document.getText(
-                    this.chat?.working_on_snippet_range!
-                );
-                if (verify_snippet !== this.chat?.working_on_snippet_code) {
-                    return;
-                }
-                let text = editor.document.getText();
-                let snippet_ofs0 = editor.document.offsetAt(
-                    this.chat?.working_on_snippet_range.start
-                );
-                let snippet_ofs1 = editor.document.offsetAt(
-                    this.chat?.working_on_snippet_range.end
-                );
-                let modif_doc: string = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
-                [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
-                state.showing_diff_modif_doc = modif_doc;
-                state.showing_diff_move_cursor = true;
-                estate.switch_mode(state, estate.Mode.Diff);
-                break;
-            }
-            case "chat-question-enter-hit": {
-                if (!this.chat) {
-                    break;
-                }
-                if (this.chat && data.chat_messages_backup.length < this.chat.get_messages().length) {
-                    console.log(`oops, we need ${data.chat_messages_backup.length} messages, in chat that already added ${this.chat.get_messages().length}`);
-                    await ChatTab.activate_from_outside(
-                        data.chat_question,
-                        undefined,
-                        data.chat_attach_file,
-                        data.chat_model,
-                        data.chat_messages_backup,
-                    );
-                }
-                await this.chat.chat_post_question(
+            if (this.chat && data.chat_messages_backup.length < this.chat.get_messages().length) {
+                console.log(`oops, we need ${data.chat_messages_backup.length} messages, in chat that already added ${this.chat.get_messages().length}`);
+                await ChatTab.clear_and_repopulate_chat(
                     data.chat_question,
-                    data.chat_model,
-                    "",
+                    undefined,
                     data.chat_attach_file,
-                    data.chat_messages_backup,
-                    );
-                break;
-            }
-            case "restore_chat": {
-                const chat_id = data.chat_id;
-                if (!chat_id) {
-                    break;
-                }
-                let editor = vscode.window.activeTextEditor;
-                let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
-                if (!chat) {
-                    console.log(`Chat ${chat_id} not found, cannot restore`);
-                    break;
-                }
-                // FIXME: use ChatTab.activate_from_outside directly?
-                await open_chat_tab(
-                    "",
-                    editor,
-                    true,
                     data.chat_model,
-                    chat.messages,
-                    chat_id,
+                    data.chat_messages_backup,
                 );
+            }
+            await this.chat.post_question_and_communicate_answer(
+                data.chat_question,
+                data.chat_model,
+                "",
+                data.chat_attach_file,
+                data.chat_messages_backup,
+                );
+            break;
+        }
+        case "restore_chat": {
+            const chat_id = data.chat_id;
+            if (!chat_id) {
                 break;
             }
-            case "stop-clicked": {
-                this.chat?.cancellationTokenSource.cancel();
+            let editor = vscode.window.activeTextEditor;
+            let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
+            if (!chat) {
+                console.log(`Chat ${chat_id} not found, cannot restore`);
                 break;
             }
-            // case "reset-messages": {
-            //     if (this.chat?.messages) {
-            //         this.chat.messages = data.messages_backup;
-            //         this.make_sure_have_chat_history_provider().assign_messages_backup(
-            //             this.chat?.chat_id,
-            //             this.chat.messages,
-            //         );
-            //     }
-            //     break;
-            // }
-            case "back-from-chat": {
-                this.goto_main();
-                this.chat = null;
-            }
+            await open_chat_tab(
+                "",
+                editor,
+                true,
+                data.chat_model,
+                chat.messages,
+                chat_id,
+            );
+            break;
+        }
+        case "stop-clicked": {
+            this.chat?.cancellationTokenSource.cancel();
+            break;
+        }
+        case "back-from-chat": {
+            this.goto_main();
+            this.chat = null;
+            break;
+        }
         }
     }
 
@@ -554,34 +544,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 </body>
                 </html>`;
     }
-
-    // private _getHtmlForHistoryWebview(webview: vscode.Webview) {
-    //     const scriptUri = webview.asWebviewUri(
-    //       vscode.Uri.joinPath(
-    //         this._context.extensionUri,
-    //         "assets",
-    //         "chat_history.js"
-    //       )
-    //     );
-    //     const nonce = this.getNonce();
-    //     return `<!DOCTYPE html>
-    //       <html lang="en">
-    //       <head>
-    //       <meta charset="UTF-8">
-    //       <!--
-    //           Use a content security policy to only allow loading images from https or from our extension directory,
-    //           and only allow scripts that have a specific nonce.
-    //       -->
-    //       <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
-    //       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    //       <title>Presets</title>
-    //       <link href="${styleMainUri}" rel="stylesheet">
-    //   </head>
-    //   <body>
-    //       </body>
-    //       </html>`;
-    // }
 
     getNonce() {
         let text = "";

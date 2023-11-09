@@ -32,7 +32,7 @@ export class ChatTab {
         this.chat_id = chat_id;
     }
 
-    public static async activate_from_outside(
+    public static async clear_and_repopulate_chat(
         question: string,
         editor: vscode.TextEditor | undefined,
         attach_default: boolean,
@@ -229,7 +229,7 @@ export class ChatTab {
         }
     }
 
-    async chat_post_question(   // User presses Enter
+    async post_question_and_communicate_answer(   // User presses Enter
         question: string,
         model: string,
         model_function: string,
@@ -249,7 +249,7 @@ export class ChatTab {
         //     });
         //     return;
         // }
-        console.log(`chat_post_question saved messages backup: ${restore_messages_backup.length}`);
+        console.log(`post_question_and_communicate_answer saved messages backup: ${restore_messages_backup.length}`);
         this.messages = restore_messages_backup;
 
         await chat_model_set(model, model_function);  // successfully used model, save it
@@ -336,31 +336,6 @@ export class ChatTab {
                     stack_this._answer_to_div(role0, answer, messages_backup);  // send message inside
                     answer_role = role0;
                 }
-                // if (delta) {
-                //     answer += delta;
-                //     let valid_html = false;
-                //     let html = "";
-                //     try {
-                //         let raw_html = answer;
-                //         let backtick_backtick_backtick_count = (answer.match(/```/g) || []).length;
-                //         if (backtick_backtick_backtick_count % 2 === 1) {
-                //             raw_html = answer + "\n```";
-                //         }
-                //         html = marked.parse(raw_html);
-                //         valid_html = true;
-                //     } catch (e) {
-                //         valid_html = false;
-                //     }
-                //     if (valid_html) {
-                //         global.side_panel?._view?.webview.postMessage({
-                //             command: "chat-post-answer",
-                //             answer_html: html,
-                //             answer_raw: answer,
-                //             have_editor: Boolean(stack_this.working_on_snippet_editor),
-                //             messages_backup: messages_backup,
-                //         });
-                //     }
-                // }
                 if (json["metering_balance"]) {
                     global.user_metering_balance = json["metering_balance"];
                     if (global.side_panel) {
