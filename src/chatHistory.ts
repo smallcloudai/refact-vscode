@@ -90,10 +90,10 @@ export default class ChatHistoryProvider {
             //     time: new Date(),
             //     chatModel,
             // });
+        } else {
+            existingChat.messages = messages;
+            existingChat.chatModel = chatModel;
         }
-        // const chatToUpdate = existingChat || userChatData[userChatData.length - 1];
-        // chatToUpdate.messages.push([role, content]);
-        // chatToUpdate.time = new Date();
         this.chatHistory[this.currentUser] = userChatData;
         await this.saveChatHistoryToGlobalState();
         return true;
@@ -137,25 +137,25 @@ export default class ChatHistoryProvider {
         return true;
     }
 
-    public assign_messages_backup(
-        chat_id: string,
-        messages: [string, string][]
-    ): boolean {
-        const userChatData = this.chatHistory[this.currentUser];
-        if (!userChatData) {
-            return false;
-        }
-        const chatToUpdate = userChatData.find((chat) => chat.chat_id === chat_id);
-        if (!chatToUpdate) {
-            console.log(`Chat with id ${chat_id} not found, cannot reset history`);
-            return false;
-        }
-        chatToUpdate.messages = messages;
-        chatToUpdate.time = new Date();
-        this.chatHistory[this.currentUser] = userChatData;
-        this.saveChatHistoryToGlobalState();
-        return true;
-    }
+    // public assign_messages_backup(
+    //     chat_id: string,
+    //     messages: [string, string][]
+    // ): boolean {
+    //     const userChatData = this.chatHistory[this.currentUser];
+    //     if (!userChatData) {
+    //         return false;
+    //     }
+    //     const chatToUpdate = userChatData.find((chat) => chat.chat_id === chat_id);
+    //     if (!chatToUpdate) {
+    //         console.log(`Chat with id ${chat_id} not found, cannot reset history`);
+    //         return false;
+    //     }
+    //     chatToUpdate.messages = messages;
+    //     chatToUpdate.time = new Date();
+    //     this.chatHistory[this.currentUser] = userChatData;
+    //     this.saveChatHistoryToGlobalState();
+    //     return true;
+    // }
 
     private async saveChatHistoryToGlobalState()
     {

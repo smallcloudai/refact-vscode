@@ -6,6 +6,7 @@ import { ChatTab } from './chatTab';
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
+import { v4 as uuidv4 } from "uuid";
 
 
 export async function open_chat_tab(
@@ -21,7 +22,6 @@ export async function open_chat_tab(
     }
     if (global.side_panel && global.side_panel._view) {
         let chat: ChatTab = global.side_panel.new_chat(chat_id);
-
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
@@ -66,6 +66,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public new_chat(chat_id: string)
     {
+        if (chat_id === "" || chat_id === undefined) {
+            chat_id = uuidv4();
+        }
         this.chat = new ChatTab(this.make_sure_have_chat_history_provider(), chat_id);
         this.address = chat_id;
         return this.chat;
@@ -293,7 +296,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 }
                 // if (this.chat && data.chat_messages_backup.length !== this.chat.get_messages().length) {
                     // oops, we need less messages that already added
-                console.log(`oops, we need ${data.chat_messages_backup.length} messages that already added ${this.chat.get_messages().length}`);
+                console.log(`oops, we need ${data.chat_messages_backup.length} messages, in chat that already added ${this.chat.get_messages().length}`);
                 await ChatTab.activate_from_outside(
                     data.chat_question,
                     undefined,
@@ -350,15 +353,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 this.goto_main();
                 this.chat = null;
             }
-
-            // case "checkSelection": {
-            //     this.check_selection();
-            //     break;
-            // }
-            // case "checkSelectionDefault": {
-            //     this.check_selection_default(data.intent);
-            //     break;
-            // }
         }
     }
 

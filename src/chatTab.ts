@@ -4,7 +4,6 @@ import * as fetchAPI from "./fetchAPI";
 // import * as userLogin from "./userLogin";
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 import ChatHistoryProvider from "./chatHistory";
-import { v4 as uuidv4 } from "uuid";
 
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
@@ -30,9 +29,7 @@ export class ChatTab {
         this.model_to_thirdparty = {};
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         this.chatHistoryProvider = chatHistoryProvider;
-        if (chat_id === "" || chat_id === undefined) {
-            this.chat_id = uuidv4();
-        }
+        this.chat_id = chat_id;
     }
 
     public static async activate_from_outside(
@@ -115,13 +112,13 @@ export class ChatTab {
             if (role === "user" && !is_it_last_message) {
                 free_floating_tab._question_to_div(content, messages_backup);  // send message inside
             }
+            messages_backup.push([role, content]); // answers should have itselves in the backup
             if (role === "context_file") {
                 free_floating_tab._answer_to_div(role, content, messages_backup);  // send message inside
             }
             if (role === "assistant") {
                 free_floating_tab._answer_to_div(role, content, messages_backup);  // send message inside
             }
-            messages_backup.push([role, content]);
         }
 
         if (messages.length > 0) {
@@ -277,8 +274,8 @@ export class ChatTab {
             this.messages.length -= 1;
         }
 
-        let messages_backup = this.messages.slice();
         this.messages.push(["user", question]);
+        let messages_backup = this.messages.slice();
         // TODO: save history, not add
         await this.chatHistoryProvider.save_messages_list(
             this.chat_id,
@@ -401,6 +398,7 @@ export class ChatTab {
                     stack_this.messages,
                     model,
                 );
+                stack_this._answer_to_div(answer_role, answer, stack_this.messages);
                 global.side_panel?._view?.webview.postMessage({ command: "chat-end-streaming" });
             }
         }
