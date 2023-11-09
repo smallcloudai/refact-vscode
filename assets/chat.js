@@ -179,7 +179,7 @@
                 message_edit_textarea.focus();
                 message_edit_textarea.value = question_div.dataset.question_backup;
                 answer_counter = parseInt(message_pair_div.dataset.answer_counter);
-                delete_up_to_answer_counter(answer_counter);
+                // delete_up_to_answer_counter(answer_counter);
             });
 
             message_edit_cancel.addEventListener('click', () => {
@@ -208,7 +208,6 @@
                     type: "chat-question-enter-hit",
                     chat_question: message,
                     chat_model: chat_model,
-                    chat_model_function: chat_model_function,
                     chat_attach_file: chat_attach_file.checked,
                     chat_messages_backup: JSON.parse(question_div?.dataset.messages_backup)
                 });
@@ -467,7 +466,6 @@
                 input_care();
                 break;
             case "chat-clear":
-                console.log("CHAT CLEAR");
                 delete_up_to_answer_counter(-1);
                 break;
             case "nop":

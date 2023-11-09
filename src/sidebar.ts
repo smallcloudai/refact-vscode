@@ -294,16 +294,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 if (!this.chat) {
                     break;
                 }
-                // if (this.chat && data.chat_messages_backup.length !== this.chat.get_messages().length) {
-                    // oops, we need less messages that already added
-                console.log(`oops, we need ${data.chat_messages_backup.length} messages, in chat that already added ${this.chat.get_messages().length}`);
-                await ChatTab.activate_from_outside(
-                    data.chat_question,
-                    undefined,
-                    data.chat_attach_file,
-                    data.chat_model,
-                    data.chat_messages_backup,
-                );
+                if (this.chat && data.chat_messages_backup.length < this.chat.get_messages().length) {
+                    console.log(`oops, we need ${data.chat_messages_backup.length} messages, in chat that already added ${this.chat.get_messages().length}`);
+                    await ChatTab.activate_from_outside(
+                        data.chat_question,
+                        undefined,
+                        data.chat_attach_file,
+                        data.chat_model,
+                        data.chat_messages_backup,
+                    );
+                }
                 await this.chat.chat_post_question(
                     data.chat_question,
                     data.chat_model,
