@@ -12,6 +12,9 @@
 body {
     box-sizing: border-box;
     padding: 0;
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
 }
 
 body.vscode-light {
@@ -526,7 +529,6 @@ body.vscode-dark {
     background-color: var(--vscode-editorError-foreground);
     color: var(--vscode-editor-foreground);
     text-overflow: ellipsis;
-    white-space: nowrap;
     display: none;
     border-radius: 6px;
 }
