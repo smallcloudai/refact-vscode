@@ -7,6 +7,13 @@
     const stop_button = document.querySelector('#chat-stop');
     let chat_controls_moved = false;
     const back_button = document.querySelector('.back-button');
+    const regenerate_button = document.querySelector('.refactcss-chat__regenerate');
+    const error_message = document.querySelector('#chat-error-message');
+    const welcome_message = document.querySelector('.refactcss-chat__welcome');
+    const chat_controls = document.querySelector('.refactcss-chat__controls');
+
+    let is_error = false;
+    let is_scrolled = false;
 
     back_button.addEventListener('click', () => {
         vscode.postMessage({ type: "back-from-chat" });
@@ -47,10 +54,37 @@
     chat_input.addEventListener('focusout', function() {
         message_panel.style.height = 'calc(100% - 110px)';
         chat_panel.style.height = '100px';
-        chat_input.style.height = '80px';
+        chat_input.style.height = '70px';
+    });
+
+    regenerate_button.addEventListener('click',() => {
+        const message = chat_input.value;
+        let chat_model_combo = document.getElementById("chat-model-combo");
+        console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
+        chat_model = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
+        let chat_attach_file = document.getElementById("chat-attach");
+        chat_input.value = '';
+        regenerate_button.style.display = 'none';
+        stop_button.style.display = 'flex';
+        is_error = false;
+        error_message.style.display = 'none';
+        console.log(`last_answer_div ${last_answer_div}`);
+        if (last_answer_div) {
+            console.log(`last_answer_div messages_backup ${last_answer_div.dataset.messages_backup}`);
+        }
+        vscode.postMessage({
+            type: "chat-question-enter-hit",
+            chat_question: message,
+            chat_model: chat_model,
+            chat_attach_file: chat_attach_file.checked,
+            chat_messages_backup: last_answer_div ? JSON.parse(last_answer_div.dataset.messages_backup) : [],
+        });
     });
 
     chat_send_button.addEventListener('click', () => {
+        welcome_message.style.display = 'none';
+        chat_controls.style.display = 'none';
+        chat_input.style.marginTop = '43px';
         const message = chat_input.value;
         let chat_model_combo = document.getElementById("chat-model-combo");
         console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
@@ -100,6 +134,7 @@
     let answer_counter = 0;
 
     function chat_render(data) {
+        welcome_message.remove();
         // question_html: html,
         // question_raw: question
         // answer_html: html,
@@ -434,13 +469,17 @@
                 // isStreaming = false;
                 break;
             case "chat-error-streaming":
-                input_should_be_visible = true;
+                is_error = true;
                 chat_input.value = message.backup_user_phrase;
                 let chat_error_message = document.getElementById("chat-error-message");
                 chat_error_message.innerText = message.error_message;
+                document.querySelector('.refactcss-chat__regenerate').style.display = 'flex';
+                chat_error_message.style.display = 'flex';
+                chat_error_message.title = message.error_message;
                 if (last_answer_div) {
                     last_answer_div.style.opacity = 0.5;
                 }
+                input_should_be_visible = false;
                 // isStreaming = false;
                 break;
             case "chat-post-question":
@@ -487,6 +526,13 @@
             stop_button.style.display = 'flex';
             chat_input.style.display = 'none';
             chat_send_button.style.display = 'none';
+        }
+        if(is_error) {
+            stop_button.style.display = 'none';
+            chat_input.style.display = 'none';
+            chat_send_button.style.display = 'none';
+            error_message.style.display = 'flex';
+            regenerate_button.style.display = 'flex';
         }
         auto_scroll();
     }

@@ -429,14 +429,18 @@ export class ChatTab {
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
                             <div class="refactcss-chat__content">
-                                <div class="refactcss-chat__controls">
-                                    <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                                    <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model-combo"></select></div>
+                                <div class="refactcss-chat__welcome">
+                                    Welcome to Refact chat! How can I assist you today? Please type question below.
                                 </div>
                             </div>
                             <div class="refactcss-chat__panel">
                                 <div class="refactcss-chat__commands">
+                                    <div class="refactcss-chat__controls">
+                                        <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
+                                        <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model-combo"></select></div>
+                                    </div>
                                     <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
+                                    <button id="chat-regenerate" class="refactcss-chat__regenerate"><svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M6.19306266,7 L10,7 L10,9 L3,9 L3,2 L5,2 L5,5.27034886 C6.72510698,3.18251178 9.19576641,2 12,2 C17.5228475,2 22,6.4771525 22,12 C20,12 22,12 20,12 C20,7.581722 16.418278,4 12,4 C9.60637619,4 7.55353989,5.07869636 6.19306266,7 Z M17.8069373,17 L14,17 L14,15 L21,15 L21,22 L19,22 L19,18.7296511 C17.274893,20.8174882 14.8042336,22 12,22 C6.4771525,22 2,17.5228475 2,12 C2,12 4,12 4,12 C4,16.418278 7.581722,20 12,20 C14.3936238,20 16.4464601,18.9213036 17.8069373,17 Z" fill-rule="evenodd"/></svg>Regenerate</button>
                                     <div id="chat-error-message"><span></span></div>
                                     <textarea id="chat-input" class="refactcss-chat__input"></textarea>
                                     <button id="chat-send" class="refactcss-chat__button"><span></span></button>

@@ -53,14 +53,19 @@ body.vscode-dark {
 }
 
 .refactcss-chat__content {
-    max-height: calc(100% - 110px);
+    max-height: calc(100% - 130px);
     min-height: 15vh;
     overflow-y: auto;
     transition: all 0.23s ease-in;
 }
 
+.refactcss-chat__welcome {
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
 .refactcss-chat__panel {
-    height: 100px;
+    height: 130px;
     display: flex;
     flex-direction: column;
     padding: 0 10px 0px;
@@ -68,20 +73,18 @@ body.vscode-dark {
     align-items: flex-start;
     transition: all 0.23s ease-in;
     max-height: 80vh;
-    min-height: 100px !important;
+    min-height: 130px !important;
 }
 
 .refactcss-chat__controls {
     width: 100%;
-    padding: 0 10px;
-    margin-bottom: 15px;
     white-space: nowrap;
+    margin-bottom: 7px;
 }
 
 .refactcss-chat__controls>div {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
 }
 
 .refactcss-chat__controls label {
@@ -90,6 +93,10 @@ body.vscode-dark {
 
 .refactcss-chat__controls select {
     margin-left: 5px;
+    width: 100%;
+    background-color: transparent;
+    color: var(--color);
+    border-radius: 4px;
 }
 
 .refactcss-chat__controls input {
@@ -338,6 +345,33 @@ body.vscode-dark {
     text-align: right;
 }
 
+.refactcss-chat__regenerate {
+    margin-left: auto;
+    background: transparent !important;
+    border: 1px solid var(--secondary) !important;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 34px;
+    color: var(--secondary) !important;
+    font-size: 12px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    display: none;
+}
+
+.refactcss-chat__regenerate svg {
+    height: 14px;
+    width: 14px;
+    margin-right: 5px;
+}
+.refactcss-chat__regenerate svg path {
+    fill: var(--secondary);
+}
+
 .refactcss-chat__stop {
     margin-left: auto;
     background: transparent !important;
@@ -350,6 +384,7 @@ body.vscode-dark {
     font-size: 12px;
     cursor: pointer;
     display: none;
+    border-radius: 6px;
 }
 
 .refactcss-chat__stop span {
@@ -391,10 +426,10 @@ body.vscode-dark {
     background-color: transparent;
     border: 1px solid var(--secondary);
     color: var(--secondary);
-    padding: 5px 20px;
+    padding: 8px 6px;
     cursor: pointer;
-    font-size: 12px;
-    border-radius: 8px;
+    font-size: 13px;
+    border-radius: 6px;
     margin-bottom: 5px;
     margin-left: 10px;
 }
@@ -483,8 +518,15 @@ body.vscode-dark {
     width: 100%;
 }
 #chat-error-message {
-    height: 16px;
-    margin-bottom: 3px;
+    height: 70px;
+    padding: 10px;
+    overflow: hidden;
+    background-color: var(--vscode-editorError-foreground);
+    color: var(--vscode-editor-foreground);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: none;
+    border-radius: 6px;
 }
 
 .refactcss-chat__model span {

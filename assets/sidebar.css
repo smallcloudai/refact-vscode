@@ -344,6 +344,15 @@ body.vscode-light #login {
     display: none;
 	border-radius: 6px;
 }
+#chat-new svg {
+	margin-top: 2px;
+	width: 14px;
+	height: 14px;
+	margin-right: 5px;
+}
+#chat-new svg {
+	fill: var(--secondary);
+}
 .vscode-high-contrast #chat {
     border: 1px solid var(--vscode-textSeparator-foreground);
 }
