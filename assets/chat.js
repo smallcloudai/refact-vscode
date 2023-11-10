@@ -539,5 +539,5 @@
         auto_scroll();
     }
 
-    // chat_input.focus();
+    chat_input.focus();
 })();
