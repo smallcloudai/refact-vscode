@@ -135,6 +135,8 @@
 
     function chat_render(data) {
         welcome_message.remove();
+        chat_controls.style.display = 'none';
+        chat_input.style.marginTop = '43px';
         // question_html: html,
         // question_raw: question
         // answer_html: html,
