@@ -473,6 +473,7 @@ body.vscode-dark {
     font-family: sans-serif !important;
     font-size: 14px;
     overflow-x: auto;
+    border-radius: 6px;
 }
 
 .refactcss-chat__cancel-button,
@@ -484,6 +485,7 @@ body.vscode-dark {
     padding: 5px 10px;
     cursor: pointer;
     margin: 5px 5px;
+    border-radius: 6px;
 }
 
 .refactcss-chat__submit-button {
