@@ -97,37 +97,37 @@ async function pressed_tab()
 }
 
 
-// async function code_lens_clicked(arg0: any)
-// {
-//     let editor = vscode.window.activeTextEditor;
-//     if (editor) {
-//         let state = estate.state_of_editor(editor, "code_lens_clicked");
-//         if (!state) {
-//             return;
-//         }
-//         if (arg0 === "APPROVE") {
-//             await interactiveDiff.like_and_accept(editor);
-//         } else if (arg0 === "REJECT") {
-//             await pressed_escape();  // might return to highlight
-//         } else if (arg0 === "RERUN") {
-//             await rollback_and_regen(editor);
-//         } else if (arg0 === "COMP_APPROVE") {
-//             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
-//             codeLens.quick_refresh();
-//             await vscode.commands.executeCommand('editor.action.inlineSuggest.commit');
-//         } else if (arg0 === "COMP_REJECT") {
-//             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
-//             codeLens.quick_refresh();
-//             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
-//         } else if (arg0 === "COMP_THINK_LONGER") {
-//             state.completion_longthink = 1;
-//             await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
-//             await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
-//         } else {
-//             console.log(["code_lens_clicked: can't do", arg0]);
-//         }
-//     }
-// }
+async function code_lens_clicked(arg0: any)
+{
+    let editor = vscode.window.activeTextEditor;
+    if (editor) {
+        let state = estate.state_of_editor(editor, "code_lens_clicked");
+        if (!state) {
+            return;
+        }
+        if (arg0 === "APPROVE") {
+            await interactiveDiff.like_and_accept(editor);
+        } else if (arg0 === "REJECT") {
+            await pressed_escape();  // might return to highlight
+        } else if (arg0 === "RERUN") {
+            await rollback_and_regen(editor);
+        // } else if (arg0 === "COMP_APPROVE") {
+        //     state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+        //     codeLens.quick_refresh();
+        //     await vscode.commands.executeCommand('editor.action.inlineSuggest.commit');
+        // } else if (arg0 === "COMP_REJECT") {
+        //     state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
+        //     codeLens.quick_refresh();
+        //     await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
+        // } else if (arg0 === "COMP_THINK_LONGER") {
+        //     state.completion_longthink = 1;
+        //     await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
+        //     await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
+        } else {
+            console.log(["code_lens_clicked: can't do", arg0]);
+        }
+    }
+}
 
 
 let global_autologin_timer: NodeJS.Timeout|undefined = undefined;
@@ -201,7 +201,7 @@ export function activate(context: vscode.ExtensionContext)
     global.user_logged_in = "";
     global.user_active_plan = "";
     let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
-    // let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
+    let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();
     global.status_bar.createStatusBarBlock(context);
 

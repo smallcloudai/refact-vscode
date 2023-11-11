@@ -344,12 +344,10 @@
             new_button.addEventListener('click', () => {
                 vscode.postMessage({ type: "open-new-file", value: code });
             });
-            // console.log("HAVE EDITOR", answer_div.dataset.have_editor, typeof answer_div.dataset.have_editor);
-            // it's a string for some reason
             if (answer_div.dataset.have_editor === 'true') {
                 const diff_button = document.createElement('button');
                 diff_button.addEventListener('click', () => {
-                    vscode.postMessage({ type: "diff-paste-back", value: code });
+                    vscode.postMessage({ type: "diff-paste-back", code_block: code });
                     diff_button.style.display = 'none';
                 });
                 diff_button.innerText = 'Diff';

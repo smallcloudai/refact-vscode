@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
-// import * as userLogin from "./userLogin";
-import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 import ChatHistoryProvider from "./chatHistory";
+// import * as userLogin from "./userLogin";
+const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
+import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
+
 
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
@@ -223,7 +225,7 @@ export class ChatTab {
                 command: command,
                 answer_html: html,
                 answer_raw: content,
-                // have_editor: Boolean(stack_this.working_on_snippet_editor),
+                have_editor: Boolean(this.working_on_snippet_editor),
                 messages_backup: messages_backup,
             });
         }
@@ -507,4 +509,45 @@ export async function chat_model_set(chat_model: string, model_function: string)
     await context.globalState.update("chat_model_function", model_function);
 }
 
-export default ChatTab;
+export function backquote_backquote_backquote_remove_language_spec(code: string): string
+{
+    // this removes ```python or ```json or similar, assuming ``` itself is already not there
+    while (1) {
+        let first_char = code[0];
+        if (first_char === "\n") {
+            return code.substring(1);
+        }
+        if (first_char >= 'a' && first_char <= 'z' || first_char >= '0' && first_char <= '9') {
+            code = code.substring(1);
+            continue;
+        } else {
+            break;
+        }
+    }
+    return code;
+}
+
+export function indent_so_diff_is_minimized(orig_code: string, code_block: string): string
+{
+    let least_bad = 1000000;
+    let least_bad_block = "";
+    let code_block_lines = code_block.split(/\r?\n/);
+    for (const indent of ["", "    ", "        ", "            ", "                ", "                    ", "\t", "\t\t", "\t\t\t", "\t\t\t\t", "\t\t\t\t\t", "\t\t\t\t\t"]) {
+        let code_block_indented = code_block_lines.map(line => indent + line).join('\n');
+        const diff = Diff.diffWordsWithSpace(orig_code, code_block_indented);
+        let how_bad = 0;
+        for (const part of diff) {
+            if (part.added) {
+                how_bad += part.value.length;
+            }
+            if (part.removed) {
+                how_bad += part.value.length;
+            }
+        }
+        if (how_bad < least_bad) {
+            least_bad = how_bad;
+            least_bad_block = code_block_indented;
+        }
+    }
+    return least_bad_block;
+}

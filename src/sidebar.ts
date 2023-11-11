@@ -2,7 +2,7 @@
 import * as vscode from "vscode";
 import * as estate from "./estate";
 import * as userLogin from "./userLogin";
-import { ChatTab } from './chatTab';
+import * as chatTab from './chatTab';
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
@@ -21,13 +21,13 @@ export async function open_chat_tab(
         global.side_panel.chat = null;
     }
     if (global.side_panel && global.side_panel._view) {
-        let chat: ChatTab = global.side_panel.new_chat(chat_id);
+        let chat: chatTab.ChatTab = global.side_panel.new_chat(chat_id);
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
         }
         global.side_panel.goto_chat(chat);
-        await ChatTab.clear_and_repopulate_chat(
+        await chatTab.ChatTab.clear_and_repopulate_chat(
             question,
             editor,
             attach_default,
@@ -45,7 +45,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     cancel_token: vscode.CancellationToken | undefined = undefined;
     public address: string;
 
-    public chat: ChatTab | null = null;
+    public chat: chatTab.ChatTab | null = null;
     public chatHistoryProvider: ChatHistoryProvider|undefined;
 
     constructor(private readonly _context: any) {
@@ -69,7 +69,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (chat_id === "" || chat_id === undefined) {
             chat_id = uuidv4();
         }
-        this.chat = new ChatTab(this.make_sure_have_chat_history_provider(), chat_id);
+        this.chat = new chatTab.ChatTab(this.make_sure_have_chat_history_provider(), chat_id);
         this.address = chat_id;
         return this.chat;
     }
@@ -113,7 +113,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this.update_webview();
     }
 
-    public goto_chat(chat: ChatTab)
+    public goto_chat(chat: chatTab.ChatTab)
     {
         this.address = chat.chat_id;
         if (!this._view) {
@@ -250,15 +250,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "diff-paste-back": {
-            if (!this.chat?.working_on_snippet_editor) {
+            let chat = this.chat;
+            if (!chat) {
+                break;
+            }
+            if (!chat.working_on_snippet_editor) {
                 return;
             }
             await vscode.window.showTextDocument(
-                this.chat?.working_on_snippet_editor.document,
-                this.chat?.working_on_snippet_column
+                chat.working_on_snippet_editor.document,
+                chat.working_on_snippet_column
             );
             let state = estate.state_of_document(
-            this.chat?.working_on_snippet_editor.document
+                chat.working_on_snippet_editor.document
             );
             if (!state) {
                 return;
@@ -267,23 +271,31 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if (state.get_mode() !== estate.Mode.Normal) {
                 return;
             }
-            if (!this.chat?.working_on_snippet_range) {
+            if (!chat.working_on_snippet_range) {
                 return;
             }
             let verify_snippet = editor.document.getText(
-                this.chat?.working_on_snippet_range!
+                chat.working_on_snippet_range!
             );
-            if (verify_snippet !== this.chat?.working_on_snippet_code) {
+            if (verify_snippet !== chat.working_on_snippet_code) {
                 return;
             }
-            let text = editor.document.getText();
             let snippet_ofs0 = editor.document.offsetAt(
-                this.chat?.working_on_snippet_range.start
+                chat.working_on_snippet_range.start
             );
             let snippet_ofs1 = editor.document.offsetAt(
-                this.chat?.working_on_snippet_range.end
+                chat.working_on_snippet_range.end
             );
-            let modif_doc: string = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
+            let code_block = data.code_block;
+            code_block = chatTab.backquote_backquote_backquote_remove_language_spec(code_block);
+            let text = editor.document.getText();
+            let orig_text0 = text.substring(0, snippet_ofs0);
+            let orig_text1 = text.substring(snippet_ofs1);
+            let orig_code = text.substring(snippet_ofs0, snippet_ofs1);
+            [orig_code] = crlf.cleanup_cr_lf(orig_code, []);
+            [code_block] = crlf.cleanup_cr_lf(code_block, []);
+            code_block = chatTab.indent_so_diff_is_minimized(orig_code, code_block);
+            let modif_doc: string = orig_text0 + code_block + orig_text1;
             [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
             state.showing_diff_modif_doc = modif_doc;
             state.showing_diff_move_cursor = true;
@@ -296,7 +308,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
             if (this.chat && data.chat_messages_backup.length < this.chat.get_messages().length) {
                 console.log(`oops, we need ${data.chat_messages_backup.length} messages, in chat that already added ${this.chat.get_messages().length}`);
-                await ChatTab.clear_and_repopulate_chat(
+                await chatTab.ChatTab.clear_and_repopulate_chat(
                     data.chat_question,
                     undefined,
                     data.chat_attach_file,
