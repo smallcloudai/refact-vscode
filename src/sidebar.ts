@@ -436,7 +436,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <label class="refact-welcome__select" data-type="personal">
                                     <div class="refact-welcome__content">
                                         <input type="radio" class="refact-welcome__radio" value="personal" name="account-type" />
-                                        <span>Personal</span>
+                                        <span>Cloud</span>
                                         <div class="refact-welcome__desc">
                                             <ul>
                                                 <li>Easy to start</li>
@@ -466,7 +466,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                     <div class="refact-welcome__desc">
                                         <ul>
                                             <li>Doesn't connect to public cloud ever</li>
-                                            <li>Uses your private endpoint only</li>
+                                            <li>Uses your private server only</li>
                                             <li>Sends telemetry to your private server</li>
                                         </ul>
                                     </div>
@@ -495,15 +495,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         </div>
 
                         <div class="refact-welcome__personal refact-welcome__subscreen">
-                            <h2>Refact Cloud</h2>
-                            <div>
-                                <label class="refact-welcome__label">API Key</label>
-                                <input class="refact-welcome__apikey_refact refact-welcome__input" type="text" name="api_key" value="${api_key}">
-                            </div>
-                            <div class="refact-welcome__or">or</div>
+                            <h2>Cloud Inference</h2>
+                            <div class="refact-welcome__or">Quick login via website:</div>
                             <button class="refact-welcome__refact">
                                 Login / Create Account
                             </button>
+                            <!--div class="refact-welcome__or">or</div-->
+                            <div>
+                                <label class="refact-welcome__label">Alternatively, paste an existing Refact API Key here:</label>
+                                <input class="refact-welcome__apikey_refact refact-welcome__input" type="text" name="api_key" value="${api_key}">
+                            </div>
                             <div class="refact-welcome__actions">
                                 <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
                                 <button class="refact-welcome__next refact-welcome__next_refact">Next&nbsp;&nbsp;&rsaquo;</button>
