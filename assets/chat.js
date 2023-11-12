@@ -40,11 +40,11 @@
 
     chat_input.addEventListener('focusin', function() {
         if(chat_input.value.length === 0) {
+            message_panel.style.height = `calc(100% - 30vh)`;
             chat_input.style.height = '30vh';
             chat_panel.style.height = 'calc(30vh + 10px)';
-            message_panel.style.height = `calc(100% - 30vh)`;
         } else {
-            message_panel.style.setProperty('height', 'calc(100% - ' + chat_input.scrollHeight + 'px)');
+            message_panel.style.setProperty('height', 'calc(100% - ' + (chat_input.scrollHeight + 100) + 'px)');
             chat_input.style.height = chat_input.scrollHeight + 'px';
             chat_panel.style.height = chat_input.scrollHeight + 'px';
         }
@@ -84,7 +84,7 @@
     chat_send_button.addEventListener('click', () => {
         welcome_message.style.display = 'none';
         chat_controls.style.display = 'none';
-        chat_input.style.marginTop = '43px';
+        // chat_input.style.marginTop = '43px';
         const message = chat_input.value;
         let chat_model_combo = document.getElementById("chat-model-combo");
         console.log(chat_model_combo.options[chat_model_combo.selectedIndex].value);
@@ -136,7 +136,7 @@
     function chat_render(data) {
         welcome_message.remove();
         chat_controls.style.display = 'none';
-        chat_input.style.marginTop = '43px';
+        // chat_input.style.marginTop = '43px';
         // question_html: html,
         // question_raw: question
         // answer_html: html,

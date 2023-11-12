@@ -60,6 +60,7 @@ body.vscode-dark {
     min-height: 15vh;
     overflow-y: auto;
     transition: all 0.23s ease-in;
+    background-color: bisque;
 }
 
 .refactcss-chat__welcome {
@@ -77,6 +78,7 @@ body.vscode-dark {
     transition: all 0.23s ease-in;
     max-height: 80vh;
     min-height: 130px !important;
+    background-color: lightblue;
 }
 
 .refactcss-chat__controls {
@@ -161,7 +163,8 @@ body.vscode-dark {
 
 .refactcss-chat__commands {
     position: relative;
-    display: block;
+    display: flex;
+    flex-direction: column;
     width: 100%;
 }
 
@@ -170,7 +173,7 @@ body.vscode-dark {
     border-radius: 6px;
     border: 1px solid var(--secondary);
     padding: 15px;
-    background: transparent !important;
+    /* background: transparent !important; */
     color: var(--secodary) !important;
     font-family: sans-serif !important;
     font-size: 14px;
@@ -179,6 +182,7 @@ body.vscode-dark {
     max-height: 80vh;
     resize: none;
     min-height: 70px !important;
+    background-color: lime;
 }
 
 .refactcss-chat__button {
@@ -468,7 +472,7 @@ body.vscode-dark {
 
 .refactcss-chat__input-field {
     width: 100%;
-
+    margin-top: auto;
     border: 1px solid var(--secondary);
     padding: 10px;
     background: transparent !important;
