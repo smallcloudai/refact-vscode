@@ -2,7 +2,6 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
-import * as usageStats from "./usageStats";
 import * as usabilityHints from "./usabilityHints";
 import * as statusBar from "./statusBar";
 

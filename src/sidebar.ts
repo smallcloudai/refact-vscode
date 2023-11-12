@@ -55,10 +55,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public make_sure_have_chat_history_provider()
     {
-        if (!this.chatHistoryProvider || this.chatHistoryProvider.currentUser !== global.user_logged_in) {
+        if (!this.chatHistoryProvider) {
             this.chatHistoryProvider = new ChatHistoryProvider(
                 this._context,
-                global.user_logged_in
             );
         }
         return this.chatHistoryProvider;
@@ -167,7 +166,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         case "delete_chat": {
             const chat_id = data.chat_id;
-            await this.make_sure_have_chat_history_provider().deleteChatEntry(chat_id);
+            await this.make_sure_have_chat_history_provider().delete_chat(chat_id);
             break;
         }
         case "button_hf_open_tokens": {

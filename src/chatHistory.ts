@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import { v4 as uuidv4 } from "uuid";
 
 export type Chat = {
     chat_id: string; // Unique identifier for each chat
@@ -10,57 +9,50 @@ export type Chat = {
     chatModel: string;
 };
 
-export type ChatHistory = {
-    [user: string]: Chat[];
-};
-
 export default class ChatHistoryProvider {
-    private chatHistory: ChatHistory = {};
-    public currentUser: string;
+    private _history: Chat[];
 
     constructor(
         private context: vscode.ExtensionContext,
-        private user: string
     ) {
-        this.currentUser = user;
-        this.chatHistory = this.loadChatHistoryFromGlobalState();
+        this._history = this.load_history_from_global_state();
     }
 
     public chats_sorted_by_time():
         { chat_id: string; chat_title: string; time: Date; totalQuestions: number }[]
     {
-        const userChatData = this.chatHistory[this.currentUser];
-        if (!userChatData) {
+        const h = this._history;
+        if (!h) {
             return [];
         }
 
-        const chatNamesWithTime: {
+        const h_with_question_n: {
             chat_id: string;
             chat_title: string;
             time: Date;
             totalQuestions: number;
-        }[] = userChatData.map((chat) => ({
+        }[] = h.map((chat) => ({
             chat_id: chat.chat_id,
             chat_title: chat.chat_title,
             time: chat.time,
             totalQuestions: chat.messages.length,
         }));
 
-        chatNamesWithTime.sort((a, b) => {
+        h_with_question_n.sort((a, b) => {
             const aTime = a.time instanceof Date ? a.time.getTime() : 0;
             const bTime = b.time instanceof Date ? b.time.getTime() : 0;
             return bTime - aTime;
         });
 
-        return chatNamesWithTime;
+        return h_with_question_n;
     }
 
     public async lookup_chat(chat_id: string): Promise<Chat | undefined> {
-        const userChatData = this.chatHistory[this.currentUser];
-        if (!userChatData) {
+        const h = this._history;
+        if (!h) {
             return undefined;
         }
-        return userChatData.find((chat) => chat.chat_id === chat_id);
+        return h.find((chat) => chat.chat_id === chat_id);
     }
 
     public async save_messages_list(
@@ -68,11 +60,11 @@ export default class ChatHistoryProvider {
         messages: [string, string][],
         chatModel: string,
     ) {
-        let userChatData = this.chatHistory[this.currentUser];
-        if (!userChatData) {
-            userChatData = [];
+        let h = this._history;
+        if (!h) {
+            h = [];
         }
-        const existingChat = userChatData.find((chat) => chat.chat_id === chat_id);
+        const existingChat = h.find((chat) => chat.chat_id === chat_id);
         if (!existingChat) {
             let chat: Chat = {
                 chat_id,
@@ -82,20 +74,13 @@ export default class ChatHistoryProvider {
                 chatModel,
             };
             chat.chat_title = this.title(chat);
-            userChatData.push(chat);
-            //     userChatData.push({
-            //         chat_id,
-            //     chat_title: this.title
-            //     messages: messages,
-            //     time: new Date(),
-            //     chatModel,
-            // });
+            h.push(chat);
         } else {
             existingChat.messages = messages;
             existingChat.chatModel = chatModel;
         }
-        this.chatHistory[this.currentUser] = userChatData;
-        await this.saveChatHistoryToGlobalState();
+        this._history = h;
+        await this.save_history_to_global_state();
         return true;
     }
 
@@ -118,85 +103,39 @@ export default class ChatHistoryProvider {
         return first_40_characters;
     }
 
-    public async deleteChatEntry(chat_id: string): Promise<boolean> {
-        let userChatData = this.chatHistory[this.currentUser];
-        if (!userChatData) {
+    public async delete_chat(chat_id: string): Promise<boolean> {
+        let h = this._history;
+        if (!h) {
             return false;
         }
 
-        const chatIndex = userChatData.findIndex((chat) => chat.chat_id === chat_id);
+        const chatIndex = h.findIndex((chat) => chat.chat_id === chat_id);
         if (chatIndex === -1) {
             return false;
         }
 
-        userChatData.splice(chatIndex, 1);
-        this.chatHistory[this.currentUser] = userChatData;
+        h.splice(chatIndex, 1);
+        this._history = h;
 
-        await this.saveChatHistoryToGlobalState();
+        await this.save_history_to_global_state();
 
         return true;
     }
 
-    // public assign_messages_backup(
-    //     chat_id: string,
-    //     messages: [string, string][]
-    // ): boolean {
-    //     const userChatData = this.chatHistory[this.currentUser];
-    //     if (!userChatData) {
-    //         return false;
-    //     }
-    //     const chatToUpdate = userChatData.find((chat) => chat.chat_id === chat_id);
-    //     if (!chatToUpdate) {
-    //         console.log(`Chat with id ${chat_id} not found, cannot reset history`);
-    //         return false;
-    //     }
-    //     chatToUpdate.messages = messages;
-    //     chatToUpdate.time = new Date();
-    //     this.chatHistory[this.currentUser] = userChatData;
-    //     this.saveChatHistoryToGlobalState();
-    //     return true;
-    // }
-
-    private async saveChatHistoryToGlobalState()
+    private async save_history_to_global_state()
     {
-        let validated_dict: ChatHistory = {};
-        for (const user in this.chatHistory) {
-            if (typeof user !== "string") {
-                continue;
-            }
-            if (this.chatHistory[user].length > 0) {
-                validated_dict[user] = this.chatHistory[user];
-            }
-        }
         await this.context?.globalState.update(
             "refact_chat_history",
-            validated_dict
+            this._history,
         );
     }
 
-    private loadChatHistoryFromGlobalState(): ChatHistory
+    private load_history_from_global_state(): Chat[]
     {
-        let maybe_history = this.context.globalState.get<ChatHistory>("refact_chat_history");
-        if (maybe_history) {
-            let validated_dict: ChatHistory = {};
-            for (const user in maybe_history) {
-                if (typeof user !== "string") {
-                    continue;
-                }
-                if (maybe_history[user].length > 0) {
-                    let validated_chats = maybe_history[user].filter((chat) => {
-                        return (
-                            chat.chat_id &&
-                            chat.chat_title &&
-                            chat.messages &&
-                            chat.time
-                        );
-                    });
-                    validated_dict[user] = validated_chats;
-                }
-            }
-            return validated_dict;
+        let maybe_history = this.context.globalState.get<Chat[]>("refact_chat_history");
+        if (Array.isArray(maybe_history)) {
+            return maybe_history;
         }
-        return {};
+        return [];
     }
 }
