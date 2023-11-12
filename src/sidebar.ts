@@ -538,8 +538,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
                             </div>
                             <div class="sidebar-inline">
-                                <button tabindex="-1" id="profile"><span></span>Your&nbsp;Account</button>
-                                <button tabindex="-1" id="report_bugs"><span></span>Report&nbsp;Bug</button>
+                                <button tabindex="-1" id="profile"><span></span>Your Account</button>
+                                <button tabindex="-1" id="report_bugs"><span></span>Report Bug</button>
                                 <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
                             </div>
                         </div>

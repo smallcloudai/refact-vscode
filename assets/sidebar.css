@@ -90,8 +90,10 @@ body.vscode-dark {
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
+	margin-right: 10px;
 	line-height: 14px;
-    display: none;
+	display: none;
+	white-space: nowrap;
 }
 #profile span::before {
 	content: "\e80A";
@@ -124,7 +126,9 @@ body.vscode-light #profile {
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
+	margin-right: 10px;
 	line-height: 14px;
+	white-space: nowrap;
 }
 #report_bugs span::before {
 	content: "\e80A";
@@ -153,7 +157,9 @@ body.vscode-light #profile {
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
+	margin-right: 10px;
 	line-height: 14px;
+	white-space: nowrap;
 }
 #discord span::before {
 	content: "\e80F";
