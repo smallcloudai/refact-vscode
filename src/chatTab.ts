@@ -241,16 +241,6 @@ export class ChatTab {
         if (!global.side_panel?._view) {
             return;
         }
-        // let login = await userLogin.inference_login();
-        // if (!login) {
-        //     this.web_panel.webview.postMessage({
-        //         command: "chat-post-answer",
-        //         answer_html: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
-        //         answer_raw: "",
-        //         have_editor: false,
-        //     });
-        //     return;
-        // }
         console.log(`post_question_and_communicate_answer saved messages backup: ${restore_messages_backup.length}`);
         this.messages = restore_messages_backup;
 

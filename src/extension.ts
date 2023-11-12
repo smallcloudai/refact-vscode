@@ -200,6 +200,7 @@ export function activate(context: vscode.ExtensionContext)
     global.have_caps = false;
     global.user_logged_in = "";
     global.user_active_plan = "";
+    global.user_metering_balance = 0;
     let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();
@@ -251,7 +252,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
     context.subscriptions.push(disposable1);
-    // context.subscriptions.push(disposable2);
+    context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable9);
     context.subscriptions.push(disposable10);
     context.subscriptions.push(disposable11);
@@ -311,6 +312,7 @@ export function activate(context: vscode.ExtensionContext)
                 if (global.rust_binary_blob) {
                     global.rust_binary_blob.settings_changed();
                 }
+                userLogin.inference_login();
             }, 1000);
         }
         if (e.affectsConfiguration("refactai.apiKey")) {
@@ -319,6 +321,9 @@ export function activate(context: vscode.ExtensionContext)
     });
 
     first_run_message(context);
+
+    // async function, don't wait for it
+    userLogin.inference_login();
 }
 
 

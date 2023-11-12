@@ -224,9 +224,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "js2ts_refresh_login": {
-            global.user_logged_in = "";
-            global.user_active_plan = "";
-            this.update_webview();
+            userLogin.inference_login_force_retry();
             await userLogin.inference_login();
             break;
         }

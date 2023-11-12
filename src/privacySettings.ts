@@ -65,7 +65,6 @@ export class PrivacySettings {
 
         PrivacySettings.currentPanel = new PrivacySettings(panel, context.extensionUri, context);
 
-
         panel.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {
 				case "globalDefault": {

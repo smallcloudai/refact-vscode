@@ -298,11 +298,11 @@ export function rust_url(addthis: string)
 
 export function inference_context(third_party: boolean)
 {
-    let modified_url = vscode.workspace.getConfiguration().get('refactai.infurl');
-    if (!modified_url) {
-        // Backward compatibility: codify is the old name
-        modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
-    }
+    // let modified_url = vscode.workspace.getConfiguration().get('refactai.infurl');
+    // if (!modified_url) {
+    //     // Backward compatibility: codify is the old name
+    //     modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    // }
     // in previous versions, it was possible to skip certificate verification
     return {
         disconnect: fetchH2.disconnect,

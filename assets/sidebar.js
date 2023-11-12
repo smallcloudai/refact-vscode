@@ -436,9 +436,9 @@ function sidebar_general_script(vscode) {
                 coins.style.display = message.ts2js_user ? 'flex' : 'none';
                 logout.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 privacy.style.display = message.ts2js_havekey ? 'flex' : 'none';
-                // if (message.ts2js_metering_balance) {
-                //     document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
-                // }
+                if (message.ts2js_metering_balance) {
+                    document.querySelector('.sidebar-coins span').innerHTML = Math.floor(message.ts2js_metering_balance / 100);
+                }
                 discord.style.display = 'inline-flex';
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 settings.style.display = 'flex';
