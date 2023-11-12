@@ -7,7 +7,6 @@ import * as codeLens from "./codeLens";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 import * as fetchAPI from "./fetchAPI";
-import * as usageStats from "./usageStats";
 import * as userLogin from "./userLogin";
 import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
@@ -18,7 +17,6 @@ import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
 import { fileURLToPath } from 'url';
-import ChatHistoryProvider from './chatHistory';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -219,7 +217,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
     let disposable3 = vscode.commands.registerCommand('refactaicmd.activateToolbox', f1_pressed);
-    let disposable9  = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride0', (uri:vscode.Uri) => {
+    let disposable9 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride0', (uri:vscode.Uri) => {
         if (!uri || !uri.fsPath) {
             return;
         }

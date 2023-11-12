@@ -78,7 +78,7 @@ export async function streamlined_login()
                 apiKey = json.secret_key;
                 global.streamlined_login_ticket = "";
                 await vscode.workspace.getConfiguration().update('refactai.apiKey', apiKey, vscode.ConfigurationTarget.Global);
-                await usageStats.send_network_problems_to_status_bar(true, "recall", recall_url, "", "");
+                await statusBar.send_network_problems_to_status_bar(true, "recall", recall_url, "", "");
                 // fall through
             } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("The API key") && global.streamlined_login_countdown !== -1) {
                 // expected: do nothing
@@ -90,11 +90,11 @@ export async function streamlined_login()
                 }
                 return "";
             } else {
-                await usageStats.send_network_problems_to_status_bar(false, "recall (1)", recall_url, json, "");
+                await statusBar.send_network_problems_to_status_bar(false, "recall (1)", recall_url, json, "");
                 // fall through, maybe normal login will work
             }
         } catch (error) {
-            await usageStats.send_network_problems_to_status_bar(false, "recall (2)", recall_url, error, "");
+            await statusBar.send_network_problems_to_status_bar(false, "recall (2)", recall_url, error, "");
             return "";
         }
     }
@@ -192,7 +192,7 @@ export async function inference_login(): Promise<boolean>
         let json: any = await result.json();
         if (result.status === 401) { // Unauthorized
             _last_inference_login_cached_result = false;
-            await usageStats.send_network_problems_to_status_bar(false, "inference_login(2)", _last_inference_login_infurl, json.detail, "");
+            await statusBar.send_network_problems_to_status_bar(false, "inference_login(2)", _last_inference_login_infurl, json.detail, "");
         } else if (json.retcode === "OK") {
             // Success here
             if (json.login_message) {
@@ -206,18 +206,18 @@ export async function inference_login(): Promise<boolean>
             global.user_active_plan = json.inference;
             global.user_metering_balance = json.metering_balance;
             _last_inference_login_cached_result = true;
-            await usageStats.send_network_problems_to_status_bar(true, "inference_login", _last_inference_login_infurl, "", "");
+            await statusBar.send_network_problems_to_status_bar(true, "inference_login", _last_inference_login_infurl, "", "");
         } else if (json.detail) {
             _last_inference_login_cached_result = false;
-            await usageStats.send_network_problems_to_status_bar(false, "inference_login(2)", _last_inference_login_infurl, json.detail, "");
+            await statusBar.send_network_problems_to_status_bar(false, "inference_login(2)", _last_inference_login_infurl, json.detail, "");
         } else {
             _last_inference_login_cached_result = false;
-            await usageStats.send_network_problems_to_status_bar(false, "inference_login(3)", _last_inference_login_infurl, json, "");
+            await statusBar.send_network_problems_to_status_bar(false, "inference_login(3)", _last_inference_login_infurl, json, "");
         }
     } catch (error) {
         _last_inference_login_cached_result = false;
         _last_inference_login_ts = 0;
-        await usageStats.send_network_problems_to_status_bar(false, "inference_login(4)", _last_inference_login_infurl, error, "");
+        await statusBar.send_network_problems_to_status_bar(false, "inference_login(4)", _last_inference_login_infurl, error, "");
     } finally {
         _inference_login_in_progress = false;
     }

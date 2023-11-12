@@ -2,9 +2,9 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
-import * as usageStats from "./usageStats";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
+import * as statusBar from "./statusBar";
 
 
 let globalSeq = 100;
@@ -82,7 +82,7 @@ export class PendingRequest {
             let aborted = error && error.message && error.message.includes("aborted");
             if (!aborted) {
                 console.log(["h2stream error (1)", error]);
-                usageStats.send_network_problems_to_status_bar(false, scope, url, error, "");
+                statusBar.send_network_problems_to_status_bar(false, scope, url, error, "");
             } else {
                 // Normal, user cancelled the request.
             }
@@ -130,11 +130,11 @@ export class PendingRequest {
                                 error_message = this.streaming_buf; // as a string
                             }
                             this.streaming_error = error_message;
-                            // usageStats.send_network_problems_to_status_bar(false, scope, url, this.streaming_buf, "");
+                            // statusBar.send_network_problems_to_status_bar(false, scope, url, this.streaming_buf, "");
                         } else if (this.streaming_error) {
-                            // usageStats.send_network_problems_to_status_bar(false, scope, url, "streaming_error", "");
+                            // statusBar.send_network_problems_to_status_bar(false, scope, url, "streaming_error", "");
                         } else {
-                            // usageStats.send_network_problems_to_status_bar(true, scope, url, "", "");
+                            // statusBar.send_network_problems_to_status_bar(true, scope, url, "", "");
                         }
                         // Normally [DONE] produces a callback, but it's possible there's no [DONE] sent by the server.
                         // Wait 500ms because inside VS Code "readable" and "end"/"close" are sometimes called in the wrong order.
@@ -162,14 +162,14 @@ export class PendingRequest {
                     if (typeof json_arrived === "object" && json_arrived.length !== undefined) {
                         model_name = json_arrived[0]["model"];
                     }
-                    usageStats.send_network_problems_to_status_bar(true, scope, url, "", model_name);
+                    statusBar.send_network_problems_to_status_bar(true, scope, url, "", model_name);
                     resolve(json_arrived);
                 }
             }).catch(async (error) => {
                 let aborted = error && error.message && error.message.includes("aborted");
                 if (!aborted) {
                     console.log(["h2stream error (2)", error]);
-                    usageStats.send_network_problems_to_status_bar(false, scope, url, error, "");
+                    statusBar.send_network_problems_to_status_bar(false, scope, url, error, "");
                 }
                 if (this.streaming_end_callback) {
                     let my_cb = this.streaming_end_callback;
@@ -194,7 +194,7 @@ export class PendingRequest {
                 return;
             } else if (!aborted) {
                 console.log(["h2stream error (3)", error]);
-                usageStats.send_network_problems_to_status_bar(false, scope, url, error, "");
+                statusBar.send_network_problems_to_status_bar(false, scope, url, error, "");
             }
         });
         _global_reqs.push(this);
@@ -548,18 +548,18 @@ export function look_for_common_errors(json: any, scope: string, url: string): b
         return true;
     }
     if (json.detail) {
-        usageStats.send_network_problems_to_status_bar(false, scope, url, json.detail, "");
+        statusBar.send_network_problems_to_status_bar(false, scope, url, json.detail, "");
         return true;
     }
     if (json.retcode && json.retcode !== "OK") {
-        usageStats.send_network_problems_to_status_bar(false, scope, url, json.human_readable_message, "");
+        statusBar.send_network_problems_to_status_bar(false, scope, url, json.human_readable_message, "");
         return true;
     }
     if (json.error) {
         if (typeof json.error === "string") {
-            usageStats.send_network_problems_to_status_bar(false, scope, url, json.error, "");
+            statusBar.send_network_problems_to_status_bar(false, scope, url, json.error, "");
         } else {
-            usageStats.send_network_problems_to_status_bar(false, scope, url, json.error.message, "");
+            statusBar.send_network_problems_to_status_bar(false, scope, url, json.error.message, "");
         }
     }
     return false;
