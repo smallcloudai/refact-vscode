@@ -130,3 +130,10 @@ body.vscode-dark {
   font-size: 11px;
   width: 100%;
 }
+.chat-history-today,
+.chat-history-week,
+.chat-history-later {
+  opacity: 0.6;
+  margin-bottom: 5px;
+  margin-top: 0;
+}
