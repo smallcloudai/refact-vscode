@@ -522,12 +522,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                     <div class="sidebar-controls">
                         <div class="sidebar-controls-inner">
-                            <div class="sidebar-buttons">
-                                <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
-                                <button tabindex="-1" id="privacy"><span></span></button>
-                                <button tabindex="-1" id="settings"><i></i><span></span></button>
-                                <button tabindex="-1" id="keys"><span></span></button>
-                            </div>
                             <div class="sidebar-inline sidebar-account">
                                 <div class="sidebar-logged"><b><span></span></b></div>
                                 <div class="sidebar-coins">
@@ -535,6 +529,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             </div>
                             <div class="sidebar-inline">
                                 <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
+                            </div>
+                            <div class="sidebar-buttons">
+                                <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
+                                <button tabindex="-1" id="privacy"><span></span></button>
+                                <button tabindex="-1" id="settings"><i></i><span></span></button>
+                                <button tabindex="-1" id="keys"><span></span></button>
                             </div>
                             <div class="sidebar-inline">
                                 <button tabindex="-1" id="profile"><span></span>Your Account</button>
