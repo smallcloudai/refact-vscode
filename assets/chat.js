@@ -4,6 +4,7 @@
     const chat_input = document.querySelector('#chat-input');
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.refactcss-chat__content');
+    const chat_panel = document.querySelector('.refactcss-chat__panel');
     const stop_button = document.querySelector('#chat-stop');
     let chat_controls_moved = false;
     const back_button = document.querySelector('.back-button');
@@ -19,11 +20,16 @@
         vscode.postMessage({ type: "back-from-chat" });
     });
 
+    let initial_chat_height = chat_input.scrollHeight;
+    let initial_panel_height = chat_panel.offsetHeight;
+    let initial_message_height = chat_content.offsetHeight;
+
     function input_care() {
-        let current_scroll = chat_input.scrollHeight + 2;
-        message_panel.style.setProperty('height', 'calc(100% - ' + current_scroll + 'px)');
-        chat_input.style.height = current_scroll + 'px';
-        chat_panel.style.height = (current_scroll + 10) + 'px';
+        let current_chat_height = chat_input.scrollHeight;
+        let difference = current_chat_height - initial_chat_height;
+    
+        // chat_content.style.setProperty('height', (initial_message_height + difference) + 'px');
+        chat_panel.style.height = current_chat_height + 'px';
 
         const message = chat_input.value;
         let bad = message.trim() === '' || message.length >= 4000;
@@ -35,26 +41,24 @@
         input_care();
     });
 
-    const message_panel = document.querySelector('.refactcss-chat__content');
-    const chat_panel = document.querySelector('.refactcss-chat__panel');
-
     chat_input.addEventListener('focusin', function() {
         if(chat_input.value.length === 0) {
-            message_panel.style.height = `calc(100% - 30vh)`;
-            chat_input.style.height = '30vh';
-            chat_panel.style.height = 'calc(30vh + 10px)';
+            chat_content.style.height = `calc(100% - 130px)`;
+            chat_panel.style.height = '130px';
         } else {
-            message_panel.style.setProperty('height', 'calc(100% - ' + (chat_input.scrollHeight + 100) + 'px)');
-            chat_input.style.height = chat_input.scrollHeight + 'px';
-            chat_panel.style.height = chat_input.scrollHeight + 'px';
+            // message_panel.style.setProperty('height', 'calc(100% - ' + (chat_input.scrollHeight + 100) + 'px)');
+            // chat_input.style.height = chat_input.scrollHeight + 'px';
+            // chat_panel.style.height = chat_input.scrollHeight + 'px';
+            let command_bar_height = chat_panel.offsetHeight - chat_input.offsetHeight;
+            let calc_height = command_bar_height + chat_input.scrollHeight;
+            chat_content.style.setProperty('height', 'calc(100% - ' + calc_height + 'px)');
         }
         auto_scroll();
     });
 
     chat_input.addEventListener('focusout', function() {
-        message_panel.style.height = 'calc(100% - 110px)';
-        chat_panel.style.height = '100px';
-        chat_input.style.height = '70px';
+        chat_content.style.height = `calc(100% - 130px)`;
+        chat_panel.style.height = '130px';
     });
 
     regenerate_button.addEventListener('click',() => {
