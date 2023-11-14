@@ -467,6 +467,7 @@
     window.addEventListener("message", (event) => {
         const message = event.data;
         console.log("CHATMESSAGE", message.command);
+        let input_should_be_visible = true;
         // let isStreaming = false;
         switch (message.command) {
             case "chat-set-fireup-options":
