@@ -466,7 +466,6 @@
     
     window.addEventListener("message", (event) => {
         const message = event.data;
-        let input_should_be_visible = false;
         console.log("CHATMESSAGE", message.command);
         // let isStreaming = false;
         switch (message.command) {
