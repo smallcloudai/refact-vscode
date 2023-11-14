@@ -195,6 +195,7 @@
                 if (event.key === 'Enter' && event.shiftKey === false) {
                     event.preventDefault();
                     message_edit_submit.click();
+                    isAutoScrollPaused = false;
                     return true;
                 }
                 auto_scroll();
@@ -275,6 +276,8 @@
                 const chats = document.querySelectorAll('.refactcss-chat__item');
                 const last = chats[chats.length - 1];
                 last.remove();
+                isAutoScrollPaused = false;
+                auto_scroll();
             });
 
             visibility_control(true);
