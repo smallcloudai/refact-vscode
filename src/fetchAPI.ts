@@ -251,35 +251,35 @@ export function save_url_from_login(url: string)
 }
 
 
-export function inference_url(addthis: string, third_party: boolean)
-{
-    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
-    let url: string;
-    if (!manual_infurl) {
-        // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
-        let url_ = vscode.workspace.getConfiguration().get(third_party ? 'refactai.infurl3rd' : 'refactai.infurl');
-        if (!url_) {
-            // Backward compatibility: codify is the old name
-            url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
-        }
-        if (typeof url_ !== 'string' || url_ === '' || !url_) {
-            url = global_inference_url_from_login;
-        } else {
-            url = `${url_}`;
-        }
-    } else {
-        // If manual, then only the specified manual
-        url = `${manual_infurl}`;
-    }
-    if (!url) {
-        return url;
-    }
-    while (url.endsWith("/")) {
-        url = url.slice(0, -1);
-    }
-    url += addthis;
-    return url;
-}
+// export function inference_url(addthis: string, third_party: boolean)
+// {
+//     let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+//     let url: string;
+//     if (!manual_infurl) {
+//         // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
+//         let url_ = vscode.workspace.getConfiguration().get(third_party ? 'refactai.infurl3rd' : 'refactai.infurl');
+//         if (!url_) {
+//             // Backward compatibility: codify is the old name
+//             url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
+//         }
+//         if (typeof url_ !== 'string' || url_ === '' || !url_) {
+//             url = global_inference_url_from_login;
+//         } else {
+//             url = `${url_}`;
+//         }
+//     } else {
+//         // If manual, then only the specified manual
+//         url = `${manual_infurl}`;
+//     }
+//     if (!url) {
+//         return url;
+//     }
+//     while (url.endsWith("/")) {
+//         url = url.slice(0, -1);
+//     }
+//     url += addthis;
+//     return url;
+// }
 
 
 export function rust_url(addthis: string)
