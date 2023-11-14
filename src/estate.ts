@@ -38,7 +38,6 @@ export class ApiFields {
     public serial_number: number = 0;
     public accepted: boolean = false;
     public rejected_reason: string = "";
-    public unchanged_percentage: number = 0;
 };
 
 
