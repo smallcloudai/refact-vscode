@@ -77,6 +77,7 @@ export async function streamlined_login()
                 apiKey = json.secret_key;
                 global.streamlined_login_ticket = "";
                 await vscode.workspace.getConfiguration().update('refactai.apiKey', apiKey, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
                 await statusBar.send_network_problems_to_status_bar(true, "recall", recall_url, "", "");
                 // fall through
             } else if (json.retcode === 'FAILED' && json.human_readable_message.includes("The API key") && global.streamlined_login_countdown !== -1) {
