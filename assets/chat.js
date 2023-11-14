@@ -415,25 +415,55 @@
         }
     });
 
+    // old scroll
+    // function auto_scroll() {
+    //     input_care();
+    //     if (!isAutoScrollPaused) {
+    //         var currentScroll = chatContent.scrollTop;
+    //         var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
+    //         var duration = 300;
+    //         var startTime = null;
+
+    //         function scrollAnimation(timestamp) {
+    //             if (!startTime) startTime = timestamp;
+    //             var progress = (timestamp - startTime) / duration;
+    //             chatContent.scrollTop = currentScroll + progress * distanceToScroll;
+    //             if (progress < 1) requestAnimationFrame(scrollAnimation);
+    //             else chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+    //         }
+
+    //         requestAnimationFrame(scrollAnimation);
+    //     }
+    // }
+
+
+    // new scroll to test
     function auto_scroll() {
-        input_care();
+        input_care();  
         if (!isAutoScrollPaused) {
             var currentScroll = chatContent.scrollTop;
             var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
             var duration = 300;
-            var startTime = null;
-
+            var startTime = null; 
             function scrollAnimation(timestamp) {
-                if (!startTime) startTime = timestamp;
-                var progress = (timestamp - startTime) / duration;
-                chatContent.scrollTop = currentScroll + progress * distanceToScroll;
-                if (progress < 1) requestAnimationFrame(scrollAnimation);
-                else chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+                if (!startTime) startTime = timestamp;  
+                var elapsed = timestamp - startTime;
+                var progress = Math.min(1, elapsed / duration);
+                var easedProgress = easeInOutQuad(progress);
+                chatContent.scrollTop = currentScroll + easedProgress * distanceToScroll;
+                if (progress < 1) {
+                    requestAnimationFrame(scrollAnimation);
+                } else {
+                    chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+                }
+            }  
+            requestAnimationFrame(scrollAnimation); 
+            function easeInOutQuad(t) {
+                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
             }
-
-            requestAnimationFrame(scrollAnimation);
         }
-    }
+    }    
+    
     window.addEventListener("message", (event) => {
         const message = event.data;
         let input_should_be_visible = false;
