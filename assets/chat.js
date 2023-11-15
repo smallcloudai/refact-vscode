@@ -404,7 +404,7 @@
     let isAutoScrollPaused = false;
 
     function isScrolledToBottom() {
-        return chatContent.scrollHeight - chatContent.clientHeight <= chatContent.scrollTop + 1;
+        return chatContent.scrollHeight - chatContent.clientHeight <= chatContent.scrollTop + 5;
     }
 
     chatContent.addEventListener('scroll', function() {
@@ -440,6 +440,7 @@
     // new scroll to test
     function auto_scroll() {
         input_care();  
+        console.log('isAutoScrollPaused',isAutoScrollPaused);
         if (!isAutoScrollPaused) {
             var currentScroll = chatContent.scrollTop;
             var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
