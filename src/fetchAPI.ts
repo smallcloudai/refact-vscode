@@ -425,7 +425,7 @@ export function fetch_code_completion(
     //     return Promise.reject("No API key");
     // }
     let temp = 0.2;
-    let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
+    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     // api_fields.scope = "code-completion";
     // api_fields.url = url;
     // api_fields.model = model;

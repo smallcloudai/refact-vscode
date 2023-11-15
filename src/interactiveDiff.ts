@@ -416,7 +416,7 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
         //     color: ghost_text_color,
         //     isWholeLine: true,
         // });
-        let extension_path = vscode.extensions.getExtension('smallcloud.refact')!.extensionPath;
+        let extension_path = vscode.extensions.getExtension('smallcloud.codify')!.extensionPath;
         let green_type = vscode.window.createTextEditorDecorationType({
             backgroundColor: 'rgba(0, 255, 0, 0.1)',
             color: norm_fg,
