@@ -45,7 +45,7 @@ export class ChatTab {
         if (!context) {
             return;
         }
-
+        // Okay the ceck here is for a selected chat
         let free_floating_tab = global.side_panel?.chat;
         if (!free_floating_tab) {
             console.log("no chat found!");
@@ -335,7 +335,7 @@ export class ChatTab {
                     }
                 }
             }
-        }
+        } 
 
         async function _streaming_end_callback(error_message: string)
         {
@@ -419,10 +419,10 @@ export class ChatTab {
             <body>
                 <div class="refactcss-chat">
 
-                    ${isTab === false ? `
+                    ${isTab === false ? `<div class="chat-button-group">
                     <button class="back-button">← Back</button>
-                    <button tabindex="-1" id="open_chat" data-chat-id="${this.chat_id}"><span></span>Open Chat</button>
-                    `: ""}
+                    <button tabindex="-1" id="open_chat" class="open-tab-button">Open Chat</button>
+                    </div>`: ""}
 
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
