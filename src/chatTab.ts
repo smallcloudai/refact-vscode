@@ -7,9 +7,6 @@ const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsd
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 
 
-// TODO: See if both chats can be kept in sync
-// TODO: it could look better when resizing the window
-// TBD: should we disble chats that are open in a window?
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
     // private _disposables: vscode.Disposable[] = [];
@@ -47,7 +44,7 @@ export class ChatTab {
 
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab", 
-            "Refact.ai Chat", // a better name would be good
+            "Refact.ai Chat", // TBD: a more relative name to the chat would be good
             vscode.ViewColumn.Two,
             {
                 enableScripts: true,
@@ -57,7 +54,6 @@ export class ChatTab {
 
         const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
         
-        // loads assets/chat.js in to the new tab
         panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
 
         panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
@@ -76,7 +72,6 @@ export class ChatTab {
             }
         });
 
-        // Populated the caht with data,
         await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
     }
 
@@ -99,13 +94,13 @@ export class ChatTab {
         }
         await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages);
     }
-    // This might need a better name
+    
     async _clear_and_repopulate_chat(
         question: string,
-        editor: vscode.TextEditor | undefined, // What's this used for?
+        editor: vscode.TextEditor | undefined,
         attach_default: boolean,
-        use_model: string, // could have more defined typing
-        messages: [string, string][], // could have more defined typing, role = user | context_file | assistant 
+        use_model: string, 
+        messages: [string, string][],
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -117,14 +112,13 @@ export class ChatTab {
         this.working_on_snippet_editor = undefined;
         this.working_on_snippet_column = undefined;
 
-        // sent to assets/chat.js
         let fireup_message = {
             command: "chat-set-fireup-options",
             chat_attach_file: "",
             chat_attach_default: false,
         };
 
-        // by the looks of it, this could be removed?
+
         if (editor) {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
@@ -166,7 +160,7 @@ export class ChatTab {
             this.working_on_attach_filename = short_fn;
         }
         this.working_on_snippet_code = code_snippet;
-        this.messages = messages; // bit odd 
+        this.messages = messages;
 
         // This refills the chat
         this.web_panel.webview.postMessage({
@@ -304,10 +298,11 @@ export class ChatTab {
         attach_file: boolean,
         restore_messages_backup: [string, string][],
     ) {
+        // TBD:  could "if (!this)" happen?
         // if (!global.side_panel?._view) {
         //     return;
         // }
-        // TBD:  could "if (!this)" happen?
+
         console.log(`post_question_and_communicate_answer saved messages backup: ${restore_messages_backup.length}`);
         this.messages = restore_messages_backup;
 

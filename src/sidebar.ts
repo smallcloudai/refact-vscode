@@ -147,7 +147,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if(this.chat === null) { return; }
             if(!this.chatHistoryProvider) { return; }
             await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, this.chat.chat_id, this._context.extensionUri);
-            // TODO: figure out how to keep both chats in sync. for now we'll just close the chat in the side pannle
             this.chat = null;
             return this.goto_main();
         }
