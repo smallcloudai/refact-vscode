@@ -6,7 +6,6 @@ import * as chatTab from './chatTab';
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
-import {ChatInWindowTab} from './chatTabInNewTab';
 import { v4 as uuidv4 } from "uuid";
 
 
@@ -22,7 +21,7 @@ export async function open_chat_tab(
         global.side_panel.chat = null;
     }
     if (global.side_panel && global.side_panel._view) {
-        let chat: chatTab.ChatTab = global.side_panel.new_chat(chat_id);
+        let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
@@ -64,12 +63,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return this.chatHistoryProvider;
     }
 
-    public new_chat(chat_id: string)
+    public new_chat(view: vscode.WebviewView, chat_id: string)
     {
         if (chat_id === "" || chat_id === undefined) {
             chat_id = uuidv4();
         }
-        this.chat = new chatTab.ChatTab(this.make_sure_have_chat_history_provider(), chat_id);
+        this.chat = new chatTab.ChatTab(view, this.make_sure_have_chat_history_provider(), chat_id);
         this.address = chat_id;
         return this.chat;
     }
@@ -147,7 +146,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         case "open_chat_in_new_tab": {
             if(this.chat === null) { return; }
             if(!this.chatHistoryProvider) { return; }
-            await ChatInWindowTab.open_chat_in_new_tab(this.chatHistoryProvider, this.chat.chat_id, this._context.extensionUri);
+            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, this.chat.chat_id, this._context.extensionUri);
             // TODO: figure out how to keep both chats in sync. for now we'll just close the chat in the side pannle
             this.chat = null;
             return this.goto_main();
