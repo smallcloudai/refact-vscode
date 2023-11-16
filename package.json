@@ -1,7 +1,7 @@
 {
 	"name": "codify",
-	"displayName": "Refact Experimental",
-	"description": "Refact Experimental AI Assistant for Code Writing and Refactoring",
+	"displayName": "Refact",
+	"description": "Refact AI Assistant for Code Writing and Refactoring",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
 	"galleryBanner": {
@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "1.0.1023",
+	"version": "1.0.1024",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
