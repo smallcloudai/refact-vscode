@@ -442,6 +442,24 @@ body.vscode-dark {
     margin-left: 10px;
 }
 
+.open-tab-button {
+    /* .back-button selector maybe used else where, but the styles are the same */
+    background-color: transparent;
+    border: 1px solid var(--secondary);
+    color: var(--secondary);
+    padding: 8px 6px;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    margin-left: 10px;
+}
+
+.chat-button-group {
+    width: 100%;
+    padding-bottom: 4px;
+}
+
 .vscode-high-contrast .back-button {
     border: 1px solid var(--vscode-textSeparator-foreground);
 }

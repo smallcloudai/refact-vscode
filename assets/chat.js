@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-(function () {
+
+// import {open_chat_tab} from '../src/sidebar'
+
+(function () { 
+    // this is inside of the chat
     const vscode = acquireVsCodeApi();
     const chat_input = document.querySelector('#chat-input');
+    // this one opens the tab
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.refactcss-chat__content');
     const chat_panel = document.querySelector('.refactcss-chat__panel');
@@ -12,11 +17,19 @@
     const error_message = document.querySelector('#chat-error-message');
     const welcome_message = document.querySelector('.refactcss-chat__welcome');
     const chat_controls = document.querySelector('.refactcss-chat__controls');
+    const open_chat = document.querySelector("#open_chat");
 
+    // this won't be in the chat tab window, for now
+    open_chat && open_chat.addEventListener("click", () => {
+        vscode.postMessage({type: "open_chat_in_new_tab"});
+    });
+
+ 
     let is_error = false;
     let is_scrolled = false;
 
-    back_button.addEventListener('click', () => {
+    // this won't be in the chat tab window, for now
+    back_button && back_button.addEventListener('click', () => {
         vscode.postMessage({ type: "back-from-chat" });
     });
 

@@ -6,6 +6,7 @@ import * as chatTab from './chatTab';
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
+import {ChatInWindowTab} from './chatTabInNewTab';
 import { v4 as uuidv4 } from "uuid";
 
 
@@ -143,6 +144,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
+        case "open_chat_in_new_tab": {
+            if(this.chat === null) { return; }
+            if(!this.chatHistoryProvider) { return; }
+            await ChatInWindowTab.open_chat_in_new_tab(this.chatHistoryProvider, this.chat.chat_id, this._context.extensionUri);
+        }
         case "focus_back_to_editor": {
             vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
             break;

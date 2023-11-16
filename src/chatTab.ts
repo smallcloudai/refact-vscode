@@ -387,6 +387,7 @@ export class ChatTab {
     public get_html_for_chat(
         webview: vscode.Webview,
         extensionUri: any,
+        isTab = false,
     ): string
     {
         const scriptUri = webview.asWebviewUri(
@@ -417,7 +418,12 @@ export class ChatTab {
             </head>
             <body>
                 <div class="refactcss-chat">
+
+                    ${isTab === false ? `
                     <button class="back-button">← Back</button>
+                    <button tabindex="-1" id="open_chat" data-chat-id="${this.chat_id}"><span></span>Open Chat</button>
+                    `: ""}
+
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
                             <div class="refactcss-chat__content">
