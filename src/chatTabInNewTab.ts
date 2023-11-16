@@ -8,9 +8,8 @@ import { marked } from 'marked'; // Markdown parser documentation: https://marke
 import { ChatTab, chat_model_set } from "./chatTab";
 
 // TODO: the name needs to be improved
-// TDOD: it'll need to be able to send a recive messages
 // TDOD: remove duplicated code between this and chatTab.ts
-// TODO: figure out how to get the iframe to send and recvive chat messages
+// TODO: See if both chats can be kept in sync
 // TODO: it could look better when resizing the window
 
 export class ChatInWindowTab {
@@ -46,7 +45,7 @@ export class ChatInWindowTab {
             chatModel,
             messages
         } = history;
-        
+
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab", 
             "Refact.ai Chat", // a better name would be good
