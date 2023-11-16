@@ -148,6 +148,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         called_manually: boolean
     ): Promise<[string, number]>
     {
+        if (!global.have_caps) {
+            await global.rust_binary_blob?.read_caps();
+        }
         // if (debounce_if_not_cached) {
         //     let drop = await this.slowdown(cancelToken);
         //     if (drop) { return ["", -1]; }
