@@ -56,10 +56,11 @@ body.vscode-dark {
 }
 
 .refactcss-chat__content {
-    max-height: calc(100% - 130px);
-    min-height: 15vh;
+    /* max-height: calc(100% - 130px); */
+    height: calc(100% - 150px);
+    /* min-height: 15vh; */
     overflow-y: auto;
-    transition: all 0.23s ease-in;
+    /* transition: all 0.23s ease-in; */
 }
 
 .refactcss-chat__welcome {
@@ -68,15 +69,16 @@ body.vscode-dark {
 }
 
 .refactcss-chat__panel {
-    height: 130px;
+    /* height: 130px; */
     display: flex;
     flex-direction: column;
     padding: 0 10px 0px;
     overflow: hidden;
     align-items: flex-start;
-    transition: all 0.23s ease-in;
-    max-height: 80vh;
-    min-height: 130px !important;
+    /* transition: all 0.23s ease-in; */
+    /* max-height: 80vh; */
+    /* min-height: 130px !important; */
+    flex-grow: 1;
 }
 
 .refactcss-chat__controls {

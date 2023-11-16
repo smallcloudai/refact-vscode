@@ -25,11 +25,6 @@
     let initial_message_height = chat_content.offsetHeight;
 
     function input_care() {
-        let current_chat_height = chat_input.scrollHeight;
-        let difference = current_chat_height - initial_chat_height;
-    
-        // chat_content.style.setProperty('height', (initial_message_height + difference) + 'px');
-        chat_panel.style.height = current_chat_height + 'px';
 
         const message = chat_input.value;
         let bad = message.trim() === '' || message.length >= 4000;
@@ -42,23 +37,16 @@
     });
 
     chat_input.addEventListener('focusin', function() {
-        if(chat_input.value.length === 0) {
-            chat_content.style.height = `calc(100% - 130px)`;
-            chat_panel.style.height = '130px';
-        } else {
-            // message_panel.style.setProperty('height', 'calc(100% - ' + (chat_input.scrollHeight + 100) + 'px)');
-            // chat_input.style.height = chat_input.scrollHeight + 'px';
-            // chat_panel.style.height = chat_input.scrollHeight + 'px';
-            let command_bar_height = chat_panel.offsetHeight - chat_input.offsetHeight;
-            let calc_height = command_bar_height + chat_input.scrollHeight;
-            chat_content.style.setProperty('height', 'calc(100% - ' + calc_height + 'px)');
-        }
-        auto_scroll();
+        chat_content.style.height = `calc(100% - 450px)`;
+        setTimeout(() => {
+            chat_content.scrollTop = chat_content.scrollHeight;
+        }, 100);
     });
 
     chat_input.addEventListener('focusout', function() {
-        chat_content.style.height = `calc(100% - 130px)`;
-        chat_panel.style.height = '130px';
+        chat_content.style.height = `calc(100% - 150px)`;
+        chat_content.scrollTop = chat_content.scrollHeight;
+        // chat_panel.style.height = '130px';
     });
 
     regenerate_button.addEventListener('click',() => {
