@@ -29,11 +29,6 @@ export async function open_chat_tab(
             return;
         }
 
-        const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
-        if(openTab) {
-            return openTab.focus();
-        }
-
         global.side_panel.goto_chat(chat);
         await chatTab.ChatTab.clear_and_repopulate_chat(
             question,
@@ -348,14 +343,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 console.log(`Chat ${chat_id} not found, cannot restore`);
                 break;
             }
-            await open_chat_tab(
-                "",
-                editor,
-                true,
-                data.chat_model,
-                chat.messages,
-                chat_id,
-            );
+            
+            const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
+            if(openTab) {
+                return openTab.focus();
+            } else {
+                await open_chat_tab(
+                    "",
+                    editor,
+                    true,
+                    data.chat_model,
+                    chat.messages,
+                    chat_id,
+                );
+            }
             break;
         }
         case "stop-clicked": {
