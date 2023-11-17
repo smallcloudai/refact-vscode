@@ -17,6 +17,7 @@ import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
 import { fileURLToPath } from 'url';
+import { ChatTab } from './chatTab';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -32,6 +33,7 @@ declare global {
     var last_positive_result: number;
     var chat_models: string[];
     var have_caps: boolean;
+    var open_chat_tabs: ChatTab[];
 }
 
 async function pressed_call_chat() {
@@ -203,6 +205,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
     global.status_bar = new statusBar.StatusBarMenu();
     global.status_bar.createStatusBarBlock(context);
+    global.open_chat_tabs = [];
 
     context.subscriptions.push(vscode.commands.registerCommand(global.status_bar.command, status_bar_clicked));
 

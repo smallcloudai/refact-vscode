@@ -20,12 +20,20 @@ export async function open_chat_tab(
     if (global.side_panel?.chat) {
         global.side_panel.chat = null;
     }
+        
     if (global.side_panel && global.side_panel._view) {
         let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
+        
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
         }
+
+        const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
+        if(openTab) {
+            return openTab.focus();
+        }
+
         global.side_panel.goto_chat(chat);
         await chatTab.ChatTab.clear_and_repopulate_chat(
             question,

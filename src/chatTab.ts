@@ -32,6 +32,10 @@ export class ChatTab {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
     }
 
+    focus() {
+        this.web_panel.webview.postMessage({command: "focus"});
+    }
+
     static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string) {
 
         const history = await chatHistoryProvider.lookup_chat(chat_id);
@@ -39,13 +43,17 @@ export class ChatTab {
 
         const {
             chatModel,
-            messages
+            messages,
+            chat_title
         } = history;
+    
+
+        // note: creating a new column helps the focus, but we can only have two columns open at a time, so tabs get put into the last one :/
 
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab", 
-            "Refact.ai Chat", // TBD: a more relative name to the chat would be good
-            vscode.ViewColumn.Two,
+            `Refact.ai ${chat_title}`, 
+            vscode.ViewColumn.Beside,
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
@@ -54,11 +62,20 @@ export class ChatTab {
 
         const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
         
+        if(global.open_chat_tabs === undefined) { // TODO: find out how this gets unset :/
+            global.open_chat_tabs = [tab];
+        } else {
+            global.open_chat_tabs.push(tab);
+        }
+
+        panel.onDidDispose(() => {
+            const otherTabs = global.open_chat_tabs.filter(openTab => openTab === tab);
+            global.open_chat_tabs = otherTabs;
+        });
+        
         panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
 
         panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
-            console.log("web-veiw message")
-            console.log({type, data})
             switch(type) {
                 case "chat-question-enter-hit": {
                     return await tab.post_question_and_communicate_answer(
