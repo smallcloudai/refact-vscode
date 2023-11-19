@@ -16,7 +16,7 @@ export async function open_chat_tab(
     model: string,
     messages: [string, string][],
     chat_id: string,
-) {
+): Promise<chatTab.ChatTab|undefined> {
     if (global.side_panel?.chat) {
         global.side_panel.chat = null;
     }
@@ -26,7 +26,7 @@ export async function open_chat_tab(
         if (!context) {
             return;
         }
-        global.side_panel.goto_chat(chat);
+        global.side_panel.goto_chat(chat);  // changes html
         await chatTab.ChatTab.clear_and_repopulate_chat(
             question,
             editor,
@@ -34,7 +34,9 @@ export async function open_chat_tab(
             model,
             messages,
         );
+        return chat;
     }
+    return;
 }
 
 export class PanelWebview implements vscode.WebviewViewProvider {
