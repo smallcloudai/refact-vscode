@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as estate from "./estate";
-import * as rconsoleHints from "./rconsoleHints";
+import * as rconsoleCommands from "./rconsoleCommands";
 import * as sidebar from "./sidebar";
 import * as chatTab from "./chatTab";
 
@@ -85,15 +84,10 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     global.comment_disposables.push(thread);
     global.comment_disposables.push(cc);
 
-    let messages: [string, string][] = [];
-    let single_file_json = JSON.stringify([{
-        "file_name": working_on_attach_filename,
-        "file_content": working_on_attach_code,
-    }]);
-    messages.push(["context_file", single_file_json]);
+    let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
     let hint_debounce: NodeJS.Timeout|undefined;
-    vscode.workspace.onDidChangeTextDocument(async e => {
+    let did1 = vscode.workspace.onDidChangeTextDocument(async e => {
         if (e.document.uri.scheme !== "comment") {
             return;
         }
@@ -103,7 +97,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         let text = e.document.getText();
         console.log("onDidChangeTextDocument", text);
         // let y = e.document.fileName;  // "/commentinput-8d64259c-9607-4048-a9dc-a73f621e750d-1.md"
-        let [hint, author] = rconsoleHints.get_hints(messages, text, official_selection);
+        let [hint, author] = rconsoleCommands.get_hints(messages, text, official_selection);
         my_comments[0] = new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
         await vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
         if (hint_debounce) {
@@ -116,9 +110,9 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         if (text.includes("\n")) {
             let first_line = text.split("\n")[0];
             if (first_line.startsWith("/")) {
-                for (let cmd in rconsoleHints.commands_available) {
+                for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
-                        activate_cmd(cmd);
+                        activate_cmd(cmd, editor);
                         return;
                     }
                 }
@@ -128,39 +122,37 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             }
         }
     });
-    vscode.workspace.onDidCloseTextDocument(e => {
+    let did2 = vscode.workspace.onDidCloseTextDocument(e => {
         if (e.uri.scheme !== "comment") {
             return;
         }
         refact_console_close();
     });
+    global.comment_disposables.push(did1);
+    global.comment_disposables.push(did2);
     await vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
-    await new Promise(resolve => setTimeout(resolve, 100));
     function initial_message()
     {
-        let [hint, author] = rconsoleHints.get_hints(messages, "", official_selection);
+        let [hint, author] = rconsoleCommands.get_hints(messages, "", official_selection);
         my_comments.push(new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author)));
         thread.comments = my_comments;
     }
+    // This trick puts cursor into the input box, possibly VS thinks the only use for
+    // the thread is to ask user if there are no messages. But then we add a message.
+    await new Promise(resolve => setTimeout(resolve, 100));
     initial_message();
 }
 
-function activate_cmd(cmd: string)
+function activate_cmd(cmd: string, editor: vscode.TextEditor)
 {
     console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
-    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd);
+    refact_console_close();
+    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString());
 }
 
 async function activate_chat(messages: [string, string][], question: string, editor: vscode.TextEditor)
 {
     console.log(`activate_chat question.length=${question.length}`);
-    // question: string,
-    // editor: vscode.TextEditor | undefined,
-    // attach_default: boolean,   // checkbox set on start, means attach the current file
-    // model: string,
-    // messages: [string, string][],
-    // chat_id: string,
-    // messages = [
     refact_console_close();
     await vscode.commands.executeCommand("refactai-toolbox.focus");
     for (let i = 0; i < 10; i++) {
