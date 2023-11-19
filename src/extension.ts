@@ -12,7 +12,7 @@ import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
-import * as testInlineChat from "./testInlineChat";
+import * as rconsoleProvider from "./rconsoleProvider";
 
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
@@ -60,6 +60,10 @@ async function pressed_escape()
     console.log(["pressed_escape"]);
     completionProvider.on_esc_pressed();
     let editor = vscode.window.activeTextEditor;
+    if (global.comment_disposables) {
+        rconsoleProvider.refact_console_close();
+        return;
+    }
     if (editor) {
         let state = estate.state_of_editor(editor, "pressed_escape");
         if (state) {
@@ -179,7 +183,7 @@ async function f1_pressed()
             return;
         }
         if (state) {
-            testInlineChat.super_test(editor);
+            rconsoleProvider.open_refact_console_between_lines(editor);
         }
     }
     // await vscode.commands.executeCommand("refactai-toolbox.focus");
