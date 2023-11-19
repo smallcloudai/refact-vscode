@@ -16,20 +16,19 @@ export async function open_chat_tab(
     model: string,
     messages: [string, string][],
     chat_id: string,
-) {
+): Promise<chatTab.ChatTab|undefined> {
     if (global.side_panel?.chat) {
         global.side_panel.chat = null;
     }
-        
+
     if (global.side_panel && global.side_panel._view) {
         let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
-        
+
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
         }
-
-        global.side_panel.goto_chat(chat);
+        global.side_panel.goto_chat(chat);  // changes html
         await chatTab.ChatTab.clear_and_repopulate_chat(
             question,
             editor,
@@ -37,7 +36,9 @@ export async function open_chat_tab(
             model,
             messages,
         );
+        return chat;
     }
+    return;
 }
 
 export class PanelWebview implements vscode.WebviewViewProvider {
@@ -343,7 +344,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 console.log(`Chat ${chat_id} not found, cannot restore`);
                 break;
             }
-            
+
             const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
             if(openTab) {
                 return openTab.focus();

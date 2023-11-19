@@ -7,6 +7,44 @@ const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsd
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 
 
+export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Range, string, string, string]
+{
+    let selection = editor.selection;
+    let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
+    let code_snippet = "";
+    if (!empty) {
+        let last_line_empty = selection.end.character === 0;
+        selection = new vscode.Selection(selection.start.line, 0, selection.end.line, last_line_empty ? 0 : 999999);
+        code_snippet = editor.document.getText(selection);
+    }
+    let fn = editor.document.fileName;
+    let short_fn = fn.replace(/.*[\/\\]/, "");
+    let pos0 = selection.start;
+    let pos1 = selection.end;
+    let attach = "";
+    while (1) {
+        let attach_test = editor.document.getText(new vscode.Range(pos0, pos1));
+        if (attach_test.length > 2000) {
+            break;
+        }
+        attach = attach_test;
+        let moved = false;
+        if (pos0.line > 0) {
+            pos0 = new vscode.Position(pos0.line - 1, 0);
+            moved = true;
+        }
+        if (pos1.line < editor.document.lineCount - 1) {
+            pos1 = new vscode.Position(pos1.line + 1, 999999);
+            moved = true;
+        }
+        if (!moved) {
+            break;
+        }
+    }
+    return [selection, attach, short_fn, code_snippet];
+}
+
+
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
     // private _disposables: vscode.Disposable[] = [];
@@ -59,11 +97,11 @@ export class ChatTab {
             messages,
             chat_title
         } = history;
-    
+
 
         const panel = vscode.window.createWebviewPanel(
-            "refact-chat-tab", 
-            `Refact.ai ${chat_title}`, 
+            "refact-chat-tab",
+            `Refact.ai ${chat_title}`,
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -72,7 +110,7 @@ export class ChatTab {
         );
 
         const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
-        
+
         if(global.open_chat_tabs === undefined) { // TODO: find out how this gets unset :/
             global.open_chat_tabs = [tab];
         } else {
@@ -80,7 +118,7 @@ export class ChatTab {
         }
 
         panel.onDidDispose(tab.dispose);
-        
+
         panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
 
         panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
@@ -119,12 +157,12 @@ export class ChatTab {
         }
         await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages);
     }
-    
+
     async _clear_and_repopulate_chat(
         question: string,
         editor: vscode.TextEditor | undefined,
         attach_default: boolean,
-        use_model: string, 
+        use_model: string,
         messages: [string, string][],
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
@@ -143,46 +181,16 @@ export class ChatTab {
             chat_attach_default: false,
         };
 
-
         if (editor) {
-            let selection = editor.selection;
-            let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
-            if (!empty) {
-                let last_line_empty = selection.end.character === 0;
-                selection = new vscode.Selection(selection.start.line, 0, selection.end.line, last_line_empty ? 0 : 999999);
-                code_snippet = editor.document.getText(selection);
-                this.working_on_snippet_range = selection;
-                this.working_on_snippet_editor = editor;
-                this.working_on_snippet_column = editor.viewColumn;
+            let selection: vscode.Range;
+            [selection, free_floating_tab.working_on_attach_code, free_floating_tab.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor);
+            if (!selection.isEmpty) {
+                free_floating_tab.working_on_snippet_range = selection;
+                free_floating_tab.working_on_snippet_editor = editor;
+                free_floating_tab.working_on_snippet_column = editor.viewColumn;
             }
-            let fn = editor.document.fileName;
-            let short_fn = fn.replace(/.*[\/\\]/, "");
-            fireup_message["chat_attach_file"] = short_fn;
+            fireup_message["chat_attach_file"] = free_floating_tab.working_on_attach_filename;
             fireup_message["chat_attach_default"] = attach_default;
-            let pos0 = selection.start;
-            let pos1 = selection.end;
-            let attach = "";
-            while (1) {
-                let attach_test = editor.document.getText(new vscode.Range(pos0, pos1));
-                if (attach_test.length > 2000) {
-                    break;
-                }
-                attach = attach_test;
-                let moved = false;
-                if (pos0.line > 0) {
-                    pos0 = new vscode.Position(pos0.line - 1, 0);
-                    moved = true;
-                }
-                if (pos1.line < editor.document.lineCount - 1) {
-                    pos1 = new vscode.Position(pos1.line + 1, 999999);
-                    moved = true;
-                }
-                if (!moved) {
-                    break;
-                }
-            }
-            this.working_on_attach_code = attach;
-            this.working_on_attach_filename = short_fn;
         }
         this.working_on_snippet_code = code_snippet;
         this.messages = messages;
@@ -214,7 +222,7 @@ export class ChatTab {
             if (last_role === "user") {
                 let pass_dict = { command: "chat-set-question-text", value: {question: last_content} };
                 this.web_panel.webview.postMessage(pass_dict);
-            } 
+            }
         } else {
             // fresh new chat, post code snippet if any
             let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
@@ -331,7 +339,9 @@ export class ChatTab {
         console.log(`post_question_and_communicate_answer saved messages backup: ${restore_messages_backup.length}`);
         this.messages = restore_messages_backup;
 
-        await chat_model_set(model, model_function);  // successfully used model, save it
+        if (model) {
+            await chat_model_set(model, model_function);  // successfully used model, save it
+        }
 
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         let cancelToken = this.cancellationTokenSource.token;
@@ -343,7 +353,7 @@ export class ChatTab {
                     "file_content": this.working_on_attach_code,
                 }]);
                 this.messages.push(["context_file", single_file_json]);
-                // this.messages.push(["assistant", "Thanks for context, what's your question?"]);
+                // this.messages.push(["assistant", "Thanks for context, what's your question?"]); -- not nessessary
             }
         }
 
@@ -422,7 +432,7 @@ export class ChatTab {
                     }
                 }
             }
-        } 
+        }
 
         async function _streaming_end_callback(error_message: string)
         {

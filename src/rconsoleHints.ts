@@ -65,7 +65,7 @@ export function get_hints(
         let cmd_score: { [key: string]: number } = {};
         for (let cmd in commands_available) {
             let text = commands_available[cmd] || "";
-            let score = similarity_score(unfinished_text, text);
+            let score = similarity_score(unfinished_text, "/" + cmd + " " + text);
             cmd_score[cmd] = score;
         }
         let sorted_cmd_score = Object.entries(cmd_score).sort((a, b) => b[1] - a[1]);
@@ -80,11 +80,9 @@ export function get_hints(
     } else {
         if (!selected_range.isEmpty) {
             let lines_n = selected_range.end.line - selected_range.start.line + 1;
-            return [`How to change these ${lines_n} lines?`, "🪄 Selected text"];
+            return [`How to change these ${lines_n} lines? Also try "explain this" or commands starting with \"/\".`, "🪄 Selected text"];
         } else {
             return [`What would you like to generate? Also try commands starting with \"/\".`, "🪄 New Code"];
         }
     }
 }
-
-
