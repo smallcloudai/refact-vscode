@@ -12,6 +12,7 @@ import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
+import * as testInlineChat from "./testInlineChat";
 
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
@@ -33,7 +34,11 @@ declare global {
     var last_positive_result: number;
     var chat_models: string[];
     var have_caps: boolean;
+<<<<<<< HEAD
     var open_chat_tabs: ChatTab[];
+=======
+    var comment_disposables: vscode.Disposable[];
+>>>>>>> 9c534a3 (initial)
 }
 
 async function pressed_call_chat() {
@@ -173,9 +178,12 @@ async function f1_pressed()
             rollback_and_regen(editor);
             return;
         }
+        if (state) {
+            testInlineChat.super_test(editor);
+        }
     }
-    await vscode.commands.executeCommand("refactai-toolbox.focus");
-    await vscode.commands.executeCommand("workbench.action.focusSideBar");
+    // await vscode.commands.executeCommand("refactai-toolbox.focus");
+    // await vscode.commands.executeCommand("workbench.action.focusSideBar");
 }
 
 
