@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
+import * as crlf from "./crlf";
+import * as estate from "./estate";
 import ChatHistoryProvider from "./chatHistory";
 // import * as userLogin from "./userLogin";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
@@ -415,7 +417,7 @@ export class ChatTab {
                         file_content = escape(file_content);
                         delta += `<span title="${file_content}">📎 ${file_dict["file_name"]}</span><br/>\n`;
                     } else {
-                        delta = choice0["delta"]["content"];
+                        delta = content0;
                     }
                 }
                 if (delta) {
@@ -645,4 +647,39 @@ export function indent_so_diff_is_minimized(orig_code: string, code_block: strin
         }
     }
     return least_bad_block;
+}
+
+export function diff_paste_back(
+    editor: vscode.TextEditor,
+    dest_range: vscode.Range,
+    new_code_block: string,
+) {
+    let state = estate.state_of_document(editor.document);
+    if (!state) {
+        console.log("diff_paste_back: no state");
+        return;
+    }
+    if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.DiffWait) {
+        console.log("diff_paste_back: not in normal mode");
+        return;
+    }
+    if (dest_range.isEmpty) {
+        console.log("diff_paste_back: dest_range is empty");
+        return;
+    }
+    let snippet_ofs0 = editor.document.offsetAt(dest_range.start);
+    let snippet_ofs1 = editor.document.offsetAt(dest_range.end);
+    let code_block_clean = backquote_backquote_backquote_remove_language_spec(new_code_block);
+    let text = editor.document.getText();
+    let orig_text0 = text.substring(0, snippet_ofs0);
+    let orig_text1 = text.substring(snippet_ofs1);
+    let orig_code = text.substring(snippet_ofs0, snippet_ofs1);
+    [orig_code] = crlf.cleanup_cr_lf(orig_code, []);
+    [code_block_clean] = crlf.cleanup_cr_lf(code_block_clean, []);
+    code_block_clean = indent_so_diff_is_minimized(orig_code, code_block_clean);
+    let modif_doc: string = orig_text0 + code_block_clean + orig_text1;
+    [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
+    state.showing_diff_modif_doc = modif_doc;
+    state.showing_diff_move_cursor = true;
+    estate.switch_mode(state, estate.Mode.Diff);
 }

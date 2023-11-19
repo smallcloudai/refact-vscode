@@ -13,6 +13,7 @@ import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
 import * as rconsoleProvider from "./rconsoleProvider";
+import * as rconsoleCommands from "./rconsoleCommands";
 
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
@@ -260,6 +261,9 @@ export function activate(context: vscode.ExtensionContext)
         await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
     });
     let disposable6 = vscode.commands.registerCommand('refactaicmd.callChat', pressed_call_chat);
+
+    let dlist = rconsoleCommands.register_commands();
+    context.subscriptions.push(...dlist);
 
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);

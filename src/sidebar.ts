@@ -275,39 +275,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if (!state) {
                 return;
             }
-            let editor = state.editor;
-            if (state.get_mode() !== estate.Mode.Normal) {
-                return;
-            }
             if (!chat.working_on_snippet_range) {
                 return;
             }
-            let verify_snippet = editor.document.getText(
-                chat.working_on_snippet_range!
+            let editor = state.editor;
+            chatTab.diff_paste_back(
+                editor,
+                chat.working_on_snippet_range,
+                data.code_block,
             );
-            if (verify_snippet !== chat.working_on_snippet_code) {
-                return;
-            }
-            let snippet_ofs0 = editor.document.offsetAt(
-                chat.working_on_snippet_range.start
-            );
-            let snippet_ofs1 = editor.document.offsetAt(
-                chat.working_on_snippet_range.end
-            );
-            let code_block = data.code_block;
-            code_block = chatTab.backquote_backquote_backquote_remove_language_spec(code_block);
-            let text = editor.document.getText();
-            let orig_text0 = text.substring(0, snippet_ofs0);
-            let orig_text1 = text.substring(snippet_ofs1);
-            let orig_code = text.substring(snippet_ofs0, snippet_ofs1);
-            [orig_code] = crlf.cleanup_cr_lf(orig_code, []);
-            [code_block] = crlf.cleanup_cr_lf(code_block, []);
-            code_block = chatTab.indent_so_diff_is_minimized(orig_code, code_block);
-            let modif_doc: string = orig_text0 + code_block + orig_text1;
-            [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
-            state.showing_diff_modif_doc = modif_doc;
-            state.showing_diff_move_cursor = true;
-            estate.switch_mode(state, estate.Mode.Diff);
             break;
         }
         case "chat-question-enter-hit": {
