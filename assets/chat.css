@@ -177,7 +177,7 @@ body.vscode-dark {
     display:block;
     resize: none;
     max-height: 75vh;
-    min-height: 128px;
+    min-height: 32px;
 }
 .refactcss-chat__input:focus {
     outline: 0;
