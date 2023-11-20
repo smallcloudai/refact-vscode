@@ -20,12 +20,15 @@ export async function open_chat_tab(
     if (global.side_panel?.chat) {
         global.side_panel.chat = null;
     }
+        
     if (global.side_panel && global.side_panel._view) {
-        let chat: chatTab.ChatTab = global.side_panel.new_chat(chat_id);
+        let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
+        
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
         }
+
         global.side_panel.goto_chat(chat);
         await chatTab.ChatTab.clear_and_repopulate_chat(
             question,
@@ -63,12 +66,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return this.chatHistoryProvider;
     }
 
-    public new_chat(chat_id: string)
+    public new_chat(view: vscode.WebviewView, chat_id: string)
     {
         if (chat_id === "" || chat_id === undefined) {
             chat_id = uuidv4();
         }
-        this.chat = new chatTab.ChatTab(this.make_sure_have_chat_history_provider(), chat_id);
+        this.chat = new chatTab.ChatTab(view, this.make_sure_have_chat_history_provider(), chat_id);
         this.address = chat_id;
         return this.chat;
     }
@@ -143,6 +146,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
+        case "open_chat_in_new_tab": {
+            if(this.chat === null) { return; }
+            if(!this.chatHistoryProvider) { return; }
+            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, this.chat.chat_id, this._context.extensionUri);
+            this.chat = null;
+            return this.goto_main();
+        }
         case "focus_back_to_editor": {
             vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
             break;
@@ -333,14 +343,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 console.log(`Chat ${chat_id} not found, cannot restore`);
                 break;
             }
-            await open_chat_tab(
-                "",
-                editor,
-                true,
-                data.chat_model,
-                chat.messages,
-                chat_id,
-            );
+            
+            const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
+            if(openTab) {
+                return openTab.focus();
+            } else {
+                await open_chat_tab(
+                    "",
+                    editor,
+                    true,
+                    data.chat_model,
+                    chat.messages,
+                    chat_id,
+                );
+            }
             break;
         }
         case "stop-clicked": {

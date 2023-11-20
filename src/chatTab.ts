@@ -10,7 +10,7 @@ import { marked } from 'marked'; // Markdown parser documentation: https://marke
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
     // private _disposables: vscode.Disposable[] = [];
-    public messages: [string, string][];
+    public messages: [string, string][] = [];
     public cancellationTokenSource: vscode.CancellationTokenSource;
     public working_on_attach_filename: string = "";
     public working_on_attach_code: string = "";
@@ -18,20 +18,86 @@ export class ChatTab {
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
-    public model_to_thirdparty: {[key: string]: boolean};
-    public chatHistoryProvider: ChatHistoryProvider;
-    public chat_id: string = "";
+    public model_to_thirdparty: {[key: string]: boolean} = {};
 
     public get_messages(): [string, string][] {
         return this.messages;
     }
 
-    public constructor(chatHistoryProvider: ChatHistoryProvider, chat_id: string) {
-        this.messages = [];
-        this.model_to_thirdparty = {};
+    public constructor(
+        public web_panel: vscode.WebviewPanel | vscode.WebviewView,
+        public chatHistoryProvider: ChatHistoryProvider,
+        public chat_id = ""
+    ) {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
-        this.chatHistoryProvider = chatHistoryProvider;
-        this.chat_id = chat_id;
+    }
+
+    async focus() {
+        if("reveal" in this.web_panel) {
+            this.web_panel.reveal();
+        }
+    }
+
+    dispose() {
+        const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id === this.chat_id);
+        global.open_chat_tabs = otherTabs;
+    }
+
+    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string) {
+
+        const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
+
+        const history = {
+            chatModel: "",
+            messages: [],
+            chat_title: "",
+            ...(savedHistory || {})
+        };
+
+        const {
+            chatModel,
+            messages,
+            chat_title
+        } = history;
+    
+
+        const panel = vscode.window.createWebviewPanel(
+            "refact-chat-tab", 
+            `Refact.ai ${chat_title}`, 
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true,
+                retainContextWhenHidden: true,
+            }
+        );
+
+        const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
+        
+        if(global.open_chat_tabs === undefined) { // TODO: find out how this gets unset :/
+            global.open_chat_tabs = [tab];
+        } else {
+            global.open_chat_tabs.push(tab);
+        }
+
+        panel.onDidDispose(tab.dispose);
+        
+        panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
+
+        panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
+            switch(type) {
+                case "chat-question-enter-hit": {
+                    return await tab.post_question_and_communicate_answer(
+                        data.chat_question,
+                        data.chat_model,
+                        "",
+                        data.chat_attach_file,
+                        data.chat_messages_backup,
+                    );
+                }
+            }
+        });
+
+        await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
     }
 
     public static async clear_and_repopulate_chat(
@@ -45,21 +111,39 @@ export class ChatTab {
         if (!context) {
             return;
         }
-
+        // Okay the ceck here is for a selected chat
         let free_floating_tab = global.side_panel?.chat;
         if (!free_floating_tab) {
             console.log("no chat found!");
             return;
         }
+        await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages);
+    }
+    
+    async _clear_and_repopulate_chat(
+        question: string,
+        editor: vscode.TextEditor | undefined,
+        attach_default: boolean,
+        use_model: string, 
+        messages: [string, string][],
+    ) {
+        let context: vscode.ExtensionContext | undefined = global.global_context;
+        if (!context) {
+            return;
+        }
+
         let code_snippet = "";
-        free_floating_tab.working_on_snippet_range = undefined;
-        free_floating_tab.working_on_snippet_editor = undefined;
-        free_floating_tab.working_on_snippet_column = undefined;
+        this.working_on_snippet_range = undefined;
+        this.working_on_snippet_editor = undefined;
+        this.working_on_snippet_column = undefined;
+
         let fireup_message = {
             command: "chat-set-fireup-options",
             chat_attach_file: "",
             chat_attach_default: false,
         };
+
+
         if (editor) {
             let selection = editor.selection;
             let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
@@ -67,9 +151,9 @@ export class ChatTab {
                 let last_line_empty = selection.end.character === 0;
                 selection = new vscode.Selection(selection.start.line, 0, selection.end.line, last_line_empty ? 0 : 999999);
                 code_snippet = editor.document.getText(selection);
-                free_floating_tab.working_on_snippet_range = selection;
-                free_floating_tab.working_on_snippet_editor = editor;
-                free_floating_tab.working_on_snippet_column = editor.viewColumn;
+                this.working_on_snippet_range = selection;
+                this.working_on_snippet_editor = editor;
+                this.working_on_snippet_column = editor.viewColumn;
             }
             let fn = editor.document.fileName;
             let short_fn = fn.replace(/.*[\/\\]/, "");
@@ -97,29 +181,30 @@ export class ChatTab {
                     break;
                 }
             }
-            free_floating_tab.working_on_attach_code = attach;
-            free_floating_tab.working_on_attach_filename = short_fn;
+            this.working_on_attach_code = attach;
+            this.working_on_attach_filename = short_fn;
         }
-        free_floating_tab.working_on_snippet_code = code_snippet;
-        free_floating_tab.messages = messages;
+        this.working_on_snippet_code = code_snippet;
+        this.messages = messages;
 
         // This refills the chat
-        global.side_panel?._view?.webview.postMessage({
+        this.web_panel.webview.postMessage({
             command: "chat-clear",
         });
+
         let messages_backup: [string, string][] = [];
         for (let i = 0; i < messages.length; i++) {
             let [role, content] = messages[i];
             let is_it_last_message = i === messages.length - 1;  // otherwise, put user message into the input box
             if (role === "user" && !is_it_last_message) {
-                free_floating_tab._question_to_div(content, messages_backup);  // send message inside
+                this._question_to_div(content, messages_backup);  // send message inside
             }
             messages_backup.push([role, content]); // answers should have itselves in the backup
             if (role === "context_file") {
-                free_floating_tab._answer_to_div(role, content, messages_backup);  // send message inside
+                this._answer_to_div(role, content, messages_backup);  // send message inside
             }
             if (role === "assistant") {
-                free_floating_tab._answer_to_div(role, content, messages_backup);  // send message inside
+                this._answer_to_div(role, content, messages_backup);  // send message inside
             }
         }
 
@@ -128,8 +213,8 @@ export class ChatTab {
             let [last_role, last_content] = last_message;
             if (last_role === "user") {
                 let pass_dict = { command: "chat-set-question-text", value: {question: last_content} };
-                global.side_panel?._view?.webview.postMessage(pass_dict);
-            }
+                this.web_panel.webview.postMessage(pass_dict);
+            } 
         } else {
             // fresh new chat, post code snippet if any
             let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
@@ -139,23 +224,23 @@ export class ChatTab {
             if (question) {
                 pass_dict["value"]["question"] += question;
             }
-            global.side_panel?._view?.webview.postMessage(pass_dict);
+            this.web_panel.webview.postMessage(pass_dict);
         }
-        global.side_panel?._view?.webview.postMessage(fireup_message);
+        this.web_panel.webview.postMessage(fireup_message);
 
         if (!use_model) {
-            [use_model, ] = await chat_model_get();
+            [use_model, ] = await chat_model_get(); // model is infered from the history
         }
         let combo_populate_message = {
             command: "chat-models-populate",
             chat_models: [] as string[],
             chat_use_model: use_model,
         };
-        await global.rust_binary_blob?.read_caps();
+        await global.rust_binary_blob?.read_caps(); // can this throw ?
         for (let x of global.chat_models) {
             combo_populate_message["chat_models"].push(x);
         }
-        global.side_panel?._view?.webview.postMessage(combo_populate_message);
+        this.web_panel.webview.postMessage(combo_populate_message);
     }
 
     // public dispose()
@@ -183,7 +268,7 @@ export class ChatTab {
         if (!valid_html) {
             html = question;
         }
-        global.side_panel?._view?.webview.postMessage({
+        this.web_panel.webview.postMessage({
             command: "chat-post-question",
             question_html: html,
             question_raw: question,
@@ -221,7 +306,7 @@ export class ChatTab {
             valid_html = false;
         }
         if (valid_html) {
-            global.side_panel?._view?.webview.postMessage({
+            this.web_panel.webview.postMessage({
                 command: command,
                 answer_html: html,
                 answer_raw: content,
@@ -238,9 +323,11 @@ export class ChatTab {
         attach_file: boolean,
         restore_messages_backup: [string, string][],
     ) {
-        if (!global.side_panel?._view) {
-            return;
-        }
+        // TBD:  could "if (!this)" happen?
+        // if (!global.side_panel?._view) {
+        //     return;
+        // }
+
         console.log(`post_question_and_communicate_answer saved messages backup: ${restore_messages_backup.length}`);
         this.messages = restore_messages_backup;
 
@@ -279,7 +366,7 @@ export class ChatTab {
             this.messages.shift(); // so it always starts with a user
         }
         this._question_to_div(question, messages_backup);
-        global.side_panel?._view?.webview.postMessage({
+        this.web_panel.webview.postMessage({
             command: "chat-post-answer",
             answer_html: "⏳",
             answer_raw: "",
@@ -335,7 +422,7 @@ export class ChatTab {
                     }
                 }
             }
-        }
+        } 
 
         async function _streaming_end_callback(error_message: string)
         {
@@ -353,7 +440,7 @@ export class ChatTab {
                     }
                 }
                 console.log("backup_user_phrase:" + backup_user_phrase);
-                global.side_panel?._view?.webview.postMessage({
+                stack_this.web_panel.webview.postMessage({
                     command: "chat-error-streaming",
                     backup_user_phrase: backup_user_phrase,
                     error_message: error_message,
@@ -366,7 +453,7 @@ export class ChatTab {
                     model,
                 );
                 stack_this._answer_to_div(answer_role, answer, stack_this.messages);
-                global.side_panel?._view?.webview.postMessage({ command: "chat-end-streaming" });
+                stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
             }
         }
 
@@ -387,6 +474,7 @@ export class ChatTab {
     public get_html_for_chat(
         webview: vscode.Webview,
         extensionUri: any,
+        isTab = false,
     ): string
     {
         const scriptUri = webview.asWebviewUri(
@@ -417,7 +505,12 @@ export class ChatTab {
             </head>
             <body>
                 <div class="refactcss-chat">
+
+                    ${isTab === false ? `<div class="chat__button-group">
                     <button class="back-button">← Back</button>
+                    <button id="open_chat" class="chat__open-tab-button">Open Chat</button>
+                    </div>`: ""}
+
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
                             <div class="refactcss-chat__content">

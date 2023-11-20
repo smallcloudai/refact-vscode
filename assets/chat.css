@@ -112,7 +112,7 @@ body.vscode-dark {
 .refactcss-chat__question {
     padding: 10px;
     width: calc(100%);
-    max-width: 600px;
+    /* max-width: 600px; */
     overflow: hidden;
     border-radius: 6px;
     border: 1px solid var(--light);
@@ -138,7 +138,7 @@ body.vscode-dark {
 .refactcss-chat__answer {
     margin-top: 10px;
     width: 100%;
-    max-width: 600px;
+    /* max-width: 600px; */
     /* margin-right: auto; */
     padding: 5px 0;
     /* padding-left: 25px; */
@@ -439,7 +439,31 @@ body.vscode-dark {
     margin-left: 10px;
 }
 
-.vscode-high-contrast .back-button {
+.chat__open-tab-button {
+    /* .back-button selector maybe used else where, but the styles are the same */
+    background-color: transparent;
+    border: 1px solid var(--secondary);
+    color: var(--secondary);
+    padding: 8px 6px;
+    cursor: pointer;
+    font-size: 13px;
+    border-radius: 6px;
+    margin-bottom: 5px;
+    margin-left: 10px;
+}
+
+.chat__open-tab-button:disabled {
+    opacity: 0.6;
+    cursor: none;
+}
+
+
+.chat__button-group {
+    width: 100%;
+    padding-bottom: 4px;
+}
+
+.vscode-high-contrast .back-button, .vscode-high-contrast .chat__open-tab-button {
     border: 1px solid var(--vscode-textSeparator-foreground);
 }
 

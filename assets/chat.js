@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-(function () {
+
+(function () { 
+
     const vscode = acquireVsCodeApi();
     const chat_input = document.querySelector('#chat-input');
     const chat_decoration = document.querySelector('.refactcss-chat__decoration');
@@ -12,11 +14,19 @@
     const error_message = document.querySelector('#chat-error-message');
     const welcome_message = document.querySelector('.refactcss-chat__welcome');
     const chat_controls = document.querySelector('.refactcss-chat__controls');
+    const open_chat = document.querySelector("#open_chat");
 
+    // this won't be in the chat tab window
+    open_chat && open_chat.addEventListener("click", () => {
+        vscode.postMessage({type: "open_chat_in_new_tab"});
+    });
+
+ 
     let is_error = false;
     let is_scrolled = false;
 
-    back_button.addEventListener('click', () => {
+    // TODO this won't be in the chat tab window, for now
+    back_button && back_button.addEventListener('click', () => {
         vscode.postMessage({ type: "back-from-chat" });
     });
 
@@ -493,9 +503,15 @@
                     chat_model_combo.appendChild(option);
                 }
                 input_should_be_visible = true;
+                if(open_chat) {
+                    open_chat.disabled = false;
+                }
                 break;
             case "chat-end-streaming":
                 input_should_be_visible = true;
+                if(open_chat) {
+                    open_chat.disabled = false;
+                }
                 // isStreaming = false;
                 break;
             case "chat-error-streaming":
@@ -516,6 +532,9 @@
                 chat_render(message);
                 // isStreaming = false;
                 input_should_be_visible = false;
+                if(open_chat) {
+                    open_chat.disabled = true;
+                }
                 break;
             case "chat-post-decoration":
                 last_answer_div = undefined;
