@@ -45,8 +45,14 @@ export class ChatTab {
 
     static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string) {
 
-        const history = await chatHistoryProvider.lookup_chat(chat_id);
-        if(history === undefined) { return; }
+        const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
+
+        const history = {
+            chatModel: "",
+            messages: [],
+            chat_title: "",
+            ...(savedHistory || {})
+        };
 
         const {
             chatModel,
@@ -54,8 +60,6 @@ export class ChatTab {
             chat_title
         } = history;
     
-
-        // note: creating a new column helps the focus, but we can only have two columns open at a time, so tabs get put into the last one :/
 
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab", 
