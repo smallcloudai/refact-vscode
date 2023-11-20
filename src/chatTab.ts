@@ -508,7 +508,7 @@ export class ChatTab {
 
                     ${isTab === false ? `<div class="chat-button-group">
                     <button class="back-button">← Back</button>
-                    <button tabindex="-1" id="open_chat" class="open-tab-button">Open Chat</button>
+                    <button id="open_chat" class="open-tab-button">Open Chat</button>
                     </div>`: ""}
 
                     <div class="refactcss-chat__wrapper">
