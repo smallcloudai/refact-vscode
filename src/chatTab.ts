@@ -64,7 +64,7 @@ export class ChatTab {
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab", 
             `Refact.ai ${chat_title}`, 
-            vscode.ViewColumn.Beside,
+            vscode.ViewColumn.One,
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
