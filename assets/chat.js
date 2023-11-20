@@ -477,9 +477,15 @@
                     chat_model_combo.appendChild(option);
                 }
                 input_should_be_visible = true;
+                if(open_chat) {
+                    open_chat.disabled = false;
+                }
                 break;
             case "chat-end-streaming":
                 input_should_be_visible = true;
+                if(open_chat) {
+                    open_chat.disabled = false;
+                }
                 // isStreaming = false;
                 break;
             case "chat-error-streaming":
@@ -500,6 +506,9 @@
                 chat_render(message);
                 // isStreaming = false;
                 input_should_be_visible = false;
+                if(open_chat) {
+                    open_chat.disabled = true;
+                }
                 break;
             case "chat-post-decoration":
                 last_answer_div = undefined;

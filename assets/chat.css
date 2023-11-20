@@ -455,6 +455,12 @@ body.vscode-dark {
     margin-left: 10px;
 }
 
+.open-tab-button:disabled {
+    opacity: 0.6;
+    cursor: none;
+}
+
+
 .chat-button-group {
     width: 100%;
     padding-bottom: 4px;
