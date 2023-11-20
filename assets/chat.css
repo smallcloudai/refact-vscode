@@ -466,7 +466,7 @@ body.vscode-dark {
     padding-bottom: 4px;
 }
 
-.vscode-high-contrast .back-button {
+.vscode-high-contrast .back-button, .open-tab-button {
     border: 1px solid var(--vscode-textSeparator-foreground);
 }
 
