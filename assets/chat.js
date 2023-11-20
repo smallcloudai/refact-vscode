@@ -2,9 +2,9 @@
 (function () {
     const vscode = acquireVsCodeApi();
     const chat_input = document.querySelector('#chat-input');
+    const chat_decoration = document.querySelector('.refactcss-chat__decoration');
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.refactcss-chat__content');
-    const chat_panel = document.querySelector('.refactcss-chat__panel');
     const stop_button = document.querySelector('#chat-stop');
     let chat_controls_moved = false;
     const back_button = document.querySelector('.back-button');
@@ -20,34 +20,39 @@
         vscode.postMessage({ type: "back-from-chat" });
     });
 
-    let initial_chat_height = chat_input.scrollHeight;
-    let initial_panel_height = chat_panel.offsetHeight;
-    let initial_message_height = chat_content.offsetHeight;
-
+    function updateTextareaHeight() {
+        chat_input.style.height = 'auto';
+        chat_input.style.height = chat_input.scrollHeight + 'px';
+    }
+    
     function input_care() {
-
+        const lines = Math.round(chat_input.scrollHeight / 16);
+        console.log('textarea lines',lines);
+        console.log('chat_input.scrollHeight',chat_input.scrollHeight);
+        updateTextareaHeight();
+        
         const message = chat_input.value;
         let bad = message.trim() === '' || message.length >= 4000;
         chat_send_button.disabled = bad;
         chat_send_button.style.opacity = bad ? 0.5 : 1;
     }
-
+    
     chat_input.addEventListener('input', function () {
         input_care();
     });
 
-    chat_input.addEventListener('focusin', function() {
-        chat_content.style.height = `calc(100% - 450px)`;
-        setTimeout(() => {
-            chat_content.scrollTop = chat_content.scrollHeight;
-        }, 100);
-    });
+    // chat_input.addEventListener('focusin', function() {
+    //     chat_content.style.height = `calc(100% - 350px)`;
+    //     setTimeout(() => {
+    //         chat_content.scrollTop = chat_content.scrollHeight;
+    //     }, 100);
+    // });
 
-    chat_input.addEventListener('focusout', function() {
-        chat_content.style.height = `calc(100% - 150px)`;
-        chat_content.scrollTop = chat_content.scrollHeight;
-        // chat_panel.style.height = '130px';
-    });
+    // chat_input.addEventListener('focusout', function() {
+    //     chat_content.style.height = `calc(100% - 150px)`;
+    //     chat_content.scrollTop = chat_content.scrollHeight;
+    //     // chat_panel.style.height = '130px';
+    // });
 
     regenerate_button.addEventListener('click',() => {
         const message = chat_input.value;
@@ -428,7 +433,6 @@
     // new scroll to test
     function auto_scroll() {
         input_care();  
-        console.log('isAutoScrollPaused',isAutoScrollPaused);
         if (!isAutoScrollPaused) {
             var currentScroll = chatContent.scrollTop;
             var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
@@ -547,15 +551,18 @@
         if (input_should_be_visible) {
             stop_button.style.display = 'none';
             chat_input.style.display = 'block';
+            chat_decoration.style.display = 'block';
             chat_send_button.style.display = 'block';
         } else {
             stop_button.style.display = 'flex';
             chat_input.style.display = 'none';
+            chat_decoration.style.display = 'none';
             chat_send_button.style.display = 'none';
         }
         if(is_error) {
             stop_button.style.display = 'none';
             chat_input.style.display = 'none';
+            chat_decoration.style.display = 'none';
             chat_send_button.style.display = 'none';
             error_message.style.display = 'flex';
             regenerate_button.style.display = 'flex';
