@@ -439,7 +439,7 @@ body.vscode-dark {
     margin-left: 10px;
 }
 
-.open-tab-button {
+.chat__open-tab-button {
     /* .back-button selector maybe used else where, but the styles are the same */
     background-color: transparent;
     border: 1px solid var(--secondary);
@@ -452,18 +452,18 @@ body.vscode-dark {
     margin-left: 10px;
 }
 
-.open-tab-button:disabled {
+.chat__open-tab-button:disabled {
     opacity: 0.6;
     cursor: none;
 }
 
 
-.chat-button-group {
+.chat__button-group {
     width: 100%;
     padding-bottom: 4px;
 }
 
-.vscode-high-contrast .back-button, .open-tab-button {
+.vscode-high-contrast .back-button, .vscode-high-contrast .chat__open-tab-button {
     border: 1px solid var(--vscode-textSeparator-foreground);
 }
 
