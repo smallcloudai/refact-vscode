@@ -5,42 +5,87 @@ on:
     inputs:
       branch:
         description: "Branch name to publish"
-        default: "experimental_hf1"
+        default: "main"
+      pre_release:
+        description: "Publish pre-release version"
+        default: false
+        type: boolean
 
 jobs:
   publish:
-    name: Publish in marketplace (VSCE)
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            code-target: win32-x64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            code-target: win32-arm64
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+            code-target: linux-x64
+          - os: ubuntu-20.04
+            target: aarch64-unknown-linux-gnu
+            code-target: linux-arm64
+          - os: ubuntu-20.04
+            target: arm-unknown-linux-gnueabihf
+            code-target: linux-armhf
+          - os: macos-11
+            target: x86_64-apple-darwin
+            code-target: darwin-x64
+          - os: macos-11
+            target: aarch64-apple-darwin
+            code-target: darwin-arm64
+
+    env:
+      LLM_LS_TARGET: ${{ matrix.target }}
+    
+    name: Publish in marketplace (VSCE) (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+
     steps: 
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+
+      - name: Install VSCE
+        run: |
+          npm install
+          npm install -g @vscode/vsce
+          
       - name: Download artifact
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
         with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
-          branch: ${{ inputs.branch }}
-          path: ./downloads
+          repo: smallcloudai/refact-lsp
+          branch: ${{ inputs.branch }} 
+          path: ./assets
+          name: dist-${{ matrix.target }}
 
-      - name: COPY to dist
+      - name: Package VSCE extension
+        shell: bash
         run: |
-          mkdir dist
-          find ./downloads -name "*.vsix" -exec cp '{}' dist \;
-          ls -la ./dist
+          chmod +x ./assets/refact-lsp*
+          if [[ ${{ inputs.pre_release }}  == "true" ]]; then
+            export PRERELEASE=--pre-release
+          fi
+          vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
 
-      - name: Install VSCE
-        run: |
-          npm install -g @vscode/vsce
-      
       - name: Publish VSCE extension
+        shell: bash
         run: |
-          vsce publish --pat ${{secrets.VSCE_PAT}} --packagePath ./dist/*
+          if [[ ${{ inputs.pre_release }}  == "true" ]]; then
+            export PRERELEASE=--pre-release
+          fi
+          vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
 
-      # # - name: Pakckage VSCE extension
-      #   run: |
-      #     chmod +x ./assets/refact-lsp*
-      #     vsce package --target ${{ matrix.code-target }}
-
-      # # - name: Upload artifacts
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: vscode-plugin-${{ matrix.target }}
-      #     path: ./*.vsix
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: vscode-plugin-${{ matrix.target }}
+          path: ./*.vsix

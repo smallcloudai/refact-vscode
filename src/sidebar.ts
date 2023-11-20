@@ -203,12 +203,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "save_enterprise": {
-            await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
             break;
         }
         case "save_selfhosted": {
-            await vscode.workspace.getConfiguration().update('refactai.infurl', data.endpoint, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.apiKey', 'aaa', vscode.ConfigurationTarget.Global);
             break;
         }
@@ -242,7 +242,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "openKeys": {
-            vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.refact');
+            vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
             break;
         }
         case "open-new-file": {
@@ -415,8 +415,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             );
         const nonce = this.getNonce();
         const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
-        let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
-
+        let existing_address = vscode.workspace.getConfiguration().get("refactai.addressURL");
+        if (typeof existing_address !== "string" || (typeof existing_address === "string" && !existing_address.match(/^https?:\/\//))) {
+            existing_address = "";
+        }
         return `<!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -495,7 +497,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             <div classs="refact-welcome__note">You should have corporate endpoint URL and personal API key. Please contact your system administrator.</div>
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__enterendpoint refact-welcome__input" placeholder="http://127.0.X.X:8008/" type="text" name="endpoint_address" value="${manual_infurl}">
+                                <input class="refact-welcome__enterendpoint refact-welcome__input" placeholder="http://x.x.x.x:8008/" type="text" name="endpoint_address" value="${existing_address}">
                             </div>
                             <div>
                                 <label class="refact-welcome__label">API Key</label>
@@ -527,7 +529,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <div class="refact-welcome__selfhosted refact-welcome__subscreen">
                             <div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" placeholder="http://127.0.X.X:8008/" name="endpoint_address" value="${manual_infurl}">
+                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" placeholder="http://127.0.0.1:8008/" name="endpoint_address" value="${existing_address}">
                             </div>
                             <div class="refact-welcome__actions">
                                 <button data-target="selfhosted" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>

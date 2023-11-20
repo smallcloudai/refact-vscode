@@ -148,10 +148,16 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         called_manually: boolean
     ): Promise<[string, number]>
     {
+        if (!global.have_caps) {
+            await global.rust_binary_blob?.read_caps();
+        }
         // if (debounce_if_not_cached) {
         //     let drop = await this.slowdown(cancelToken);
         //     if (drop) { return ["", -1]; }
         // }
+        if (cancelToken.isCancellationRequested) {
+            return ["", -1];
+        }
 
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);
         let max_tokens = 50;
@@ -160,6 +166,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
 
         let t0 = Date.now();
         let promise: any;
+        let no_cache = called_manually;
         promise = fetchAPI.fetch_code_completion(
             cancelToken,
             sources,
@@ -168,6 +175,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             cursor_line,
             cursor_character,
             max_tokens,
+            no_cache,
         );
         request.supply_stream(promise, "completion", "");
         let json: any;
@@ -186,7 +194,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         let de_facto_model = json["model"];
         let serial_number = json["snippet_telemetry_id"];
-        global.status_bar.completion_model_worked(de_facto_model)
+        global.status_bar.completion_model_worked(de_facto_model);
         return [completion, serial_number];
     }
 }

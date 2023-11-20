@@ -4,9 +4,9 @@
 
     const vscode = acquireVsCodeApi();
     const chat_input = document.querySelector('#chat-input');
+    const chat_decoration = document.querySelector('.refactcss-chat__decoration');
     const chat_send_button = document.querySelector('#chat-send');
     const chat_content = document.querySelector('.refactcss-chat__content');
-    const chat_panel = document.querySelector('.refactcss-chat__panel');
     const stop_button = document.querySelector('#chat-stop');
     let chat_controls_moved = false;
     const back_button = document.querySelector('.back-button');
@@ -30,46 +30,39 @@
         vscode.postMessage({ type: "back-from-chat" });
     });
 
-    let initial_chat_height = chat_input.scrollHeight;
-    let initial_panel_height = chat_panel.offsetHeight;
-    let initial_message_height = chat_content.offsetHeight;
-
-    function input_care() {
-        let current_chat_height = chat_input.scrollHeight;
-        let difference = current_chat_height - initial_chat_height;
+    function updateTextareaHeight() {
+        chat_input.style.height = 'auto';
+        chat_input.style.height = chat_input.scrollHeight + 'px';
+    }
     
-        // chat_content.style.setProperty('height', (initial_message_height + difference) + 'px');
-        chat_panel.style.height = current_chat_height + 'px';
-
+    function input_care() {
+        const lines = Math.round(chat_input.scrollHeight / 16);
+        console.log('textarea lines',lines);
+        console.log('chat_input.scrollHeight',chat_input.scrollHeight);
+        updateTextareaHeight();
+        
         const message = chat_input.value;
         let bad = message.trim() === '' || message.length >= 4000;
         chat_send_button.disabled = bad;
         chat_send_button.style.opacity = bad ? 0.5 : 1;
     }
-
+    
     chat_input.addEventListener('input', function () {
         input_care();
     });
 
-    chat_input.addEventListener('focusin', function() {
-        if(chat_input.value.length === 0) {
-            chat_content.style.height = `calc(100% - 130px)`;
-            chat_panel.style.height = '130px';
-        } else {
-            // message_panel.style.setProperty('height', 'calc(100% - ' + (chat_input.scrollHeight + 100) + 'px)');
-            // chat_input.style.height = chat_input.scrollHeight + 'px';
-            // chat_panel.style.height = chat_input.scrollHeight + 'px';
-            let command_bar_height = chat_panel.offsetHeight - chat_input.offsetHeight;
-            let calc_height = command_bar_height + chat_input.scrollHeight;
-            chat_content.style.setProperty('height', 'calc(100% - ' + calc_height + 'px)');
-        }
-        auto_scroll();
-    });
+    // chat_input.addEventListener('focusin', function() {
+    //     chat_content.style.height = `calc(100% - 350px)`;
+    //     setTimeout(() => {
+    //         chat_content.scrollTop = chat_content.scrollHeight;
+    //     }, 100);
+    // });
 
-    chat_input.addEventListener('focusout', function() {
-        chat_content.style.height = `calc(100% - 130px)`;
-        chat_panel.style.height = '130px';
-    });
+    // chat_input.addEventListener('focusout', function() {
+    //     chat_content.style.height = `calc(100% - 150px)`;
+    //     chat_content.scrollTop = chat_content.scrollHeight;
+    //     // chat_panel.style.height = '130px';
+    // });
 
     regenerate_button.addEventListener('click',() => {
         const message = chat_input.value;
@@ -205,6 +198,7 @@
                 if (event.key === 'Enter' && event.shiftKey === false) {
                     event.preventDefault();
                     message_edit_submit.click();
+                    isAutoScrollPaused = false;
                     return true;
                 }
                 auto_scroll();
@@ -285,6 +279,8 @@
                 const chats = document.querySelectorAll('.refactcss-chat__item');
                 const last = chats[chats.length - 1];
                 last.remove();
+                isAutoScrollPaused = false;
+                auto_scroll();
             });
 
             visibility_control(true);
@@ -411,7 +407,7 @@
     let isAutoScrollPaused = false;
 
     function isScrolledToBottom() {
-        return chatContent.scrollHeight - chatContent.clientHeight <= chatContent.scrollTop + 1;
+        return chatContent.scrollHeight - chatContent.clientHeight <= chatContent.scrollTop + 5;
     }
 
     chatContent.addEventListener('scroll', function() {
@@ -422,29 +418,59 @@
         }
     });
 
+    // old scroll
+    // function auto_scroll() {
+    //     input_care();
+    //     if (!isAutoScrollPaused) {
+    //         var currentScroll = chatContent.scrollTop;
+    //         var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
+    //         var duration = 300;
+    //         var startTime = null;
+
+    //         function scrollAnimation(timestamp) {
+    //             if (!startTime) startTime = timestamp;
+    //             var progress = (timestamp - startTime) / duration;
+    //             chatContent.scrollTop = currentScroll + progress * distanceToScroll;
+    //             if (progress < 1) requestAnimationFrame(scrollAnimation);
+    //             else chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+    //         }
+
+    //         requestAnimationFrame(scrollAnimation);
+    //     }
+    // }
+
+
+    // new scroll to test
     function auto_scroll() {
-        input_care();
+        input_care();  
         if (!isAutoScrollPaused) {
             var currentScroll = chatContent.scrollTop;
             var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
             var duration = 300;
-            var startTime = null;
-
+            var startTime = null; 
             function scrollAnimation(timestamp) {
-                if (!startTime) startTime = timestamp;
-                var progress = (timestamp - startTime) / duration;
-                chatContent.scrollTop = currentScroll + progress * distanceToScroll;
-                if (progress < 1) requestAnimationFrame(scrollAnimation);
-                else chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+                if (!startTime) startTime = timestamp;  
+                var elapsed = timestamp - startTime;
+                var progress = Math.min(1, elapsed / duration);
+                var easedProgress = easeInOutQuad(progress);
+                chatContent.scrollTop = currentScroll + easedProgress * distanceToScroll;
+                if (progress < 1) {
+                    requestAnimationFrame(scrollAnimation);
+                } else {
+                    chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
+                }
+            }  
+            requestAnimationFrame(scrollAnimation); 
+            function easeInOutQuad(t) {
+                return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
             }
-
-            requestAnimationFrame(scrollAnimation);
         }
-    }
+    }    
+    
     window.addEventListener("message", (event) => {
         const message = event.data;
-        let input_should_be_visible = false;
         console.log("CHATMESSAGE", message.command);
+        let input_should_be_visible = true;
         // let isStreaming = false;
         switch (message.command) {
             case "chat-set-fireup-options":
@@ -544,15 +570,18 @@
         if (input_should_be_visible) {
             stop_button.style.display = 'none';
             chat_input.style.display = 'block';
+            chat_decoration.style.display = 'block';
             chat_send_button.style.display = 'block';
         } else {
             stop_button.style.display = 'flex';
             chat_input.style.display = 'none';
+            chat_decoration.style.display = 'none';
             chat_send_button.style.display = 'none';
         }
         if(is_error) {
             stop_button.style.display = 'none';
             chat_input.style.display = 'none';
+            chat_decoration.style.display = 'none';
             chat_send_button.style.display = 'none';
             error_message.style.display = 'flex';
             regenerate_button.style.display = 'flex';
