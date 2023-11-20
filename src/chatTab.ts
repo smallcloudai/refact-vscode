@@ -33,18 +33,9 @@ export class ChatTab {
     }
 
     async focus() {
-        const history = await this.chatHistoryProvider.lookup_chat(this.chat_id);
-        if(history === undefined) { return; }
-
-        const {
-            chatModel,
-            messages,
-            chat_title
-        } = history;
-
-        this.web_panel.webview.postMessage({command: "focus"});
-        // with out this it will default to the "generating" state
-        await this._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
+        if("reveal" in this.web_panel) {
+            this.web_panel.reveal();
+        }
     }
 
     dispose() {

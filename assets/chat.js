@@ -521,10 +521,6 @@
             case "chat-clear":
                 delete_up_to_answer_counter(-1);
                 break;
-            case "focus": {
-                window.focus({preventScroll: false, focusVisable: true});
-                break;
-            }
             case "nop":
                 break;
         }
