@@ -63,7 +63,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     refact_console_close();
     let [official_selection, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
     let cc = vscode.comments.createCommentController("refactai-test", "RefactAI Test Comments");
-    cc.commentingRangeProvider = {
+    cc.commentingRangeProvider = { 
         provideCommentingRanges: (document: vscode.TextDocument) => {
             return [official_selection];
         },
@@ -109,18 +109,18 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         }, 200);
         if (text.includes("\n")) {
             let first_line = text.split("\n")[0];
+            let question = "```\n" + code_snippet + "\n```\n\n" + text;
             if (first_line.startsWith("/")) {
                 for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
-                        activate_cmd(cmd, editor);
+                        activate_cmd_or_open_chat(cmd, editor, messages, question);
                         return;
                     }
                 }
             } else {
-                let question = "```\n" + code_snippet + "\n```\n\n" + text;
                 activate_chat(messages, question, editor);
             }
-        }
+        } 
     });
     let did2 = vscode.workspace.onDidCloseTextDocument(e => {
         if (e.uri.scheme !== "comment") {
@@ -141,6 +141,14 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     // the thread is to ask user if there are no messages. But then we add a message.
     await new Promise(resolve => setTimeout(resolve, 100));
     initial_message();
+}
+
+function activate_cmd_or_open_chat(cmd: string, editor: vscode.TextEditor, messages: [string, string][], question: string) {
+    if(cmd === "sidebar") {
+        return activate_chat(messages, question, editor);  
+    } else {
+        return activate_cmd(cmd, editor);
+    }
 }
 
 function activate_cmd(cmd: string, editor: vscode.TextEditor)
