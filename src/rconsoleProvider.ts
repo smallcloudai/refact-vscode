@@ -109,15 +109,16 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         }, 200);
         if (text.includes("\n")) {
             let first_line = text.split("\n")[0];
-            let question = "```\n" + code_snippet + "\n```\n\n" + text;
             if (first_line.startsWith("/")) {
                 for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
+                        let question = cmd === "sidebar" ? "```\n" + code_snippet + "\n```\n" : "```\n" + code_snippet + "\n```\n\n" + text;
                         activate_cmd_or_open_chat(cmd, editor, messages, question);
                         return;
                     }
                 }
             } else {
+                let question = "```\n" + code_snippet + "\n```\n\n" + text;
                 activate_chat(messages, question, editor);
             }
         } 
