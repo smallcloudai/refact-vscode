@@ -58,6 +58,14 @@ export function refact_console_close()
     global.comment_disposables = [];
 }
 
+function format_messages_for_console(messages: [string, string][]): MyComment[] {
+    return messages.filter(([author, _text]) => {
+        return author !== "context_file";
+    }).map(([author, text]) => {
+        return new MyComment(text, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
+    });
+};
+
 export async function open_refact_console_between_lines(editor: vscode.TextEditor)
 {
     refact_console_close();
@@ -91,13 +99,8 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
     const thread_callback: rconsoleCommands.ThreadCallback = (messages_from_chat) => {
-        // const formated_messages = rconsoleCommands.format_messages(messages_from_chat);
-        const formated_messages = messages_from_chat.map(([author, text]) => {
-            return new MyComment(text, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author))
-        });
-
-        thread.comments = formated_messages
-    }
+        thread.comments = format_messages_for_console(messages_from_chat);
+    };
 
     let hint_debounce: NodeJS.Timeout|undefined;
     let did1 = vscode.workspace.onDidChangeTextDocument(async e => {
