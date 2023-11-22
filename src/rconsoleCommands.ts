@@ -7,7 +7,7 @@ import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 
 
-export type ThreadCallback = (messages: [string, string][]) => void;
+export type ThreadCallback = (role: string, answer: string) => void;
 
 
 export let commands_available: { [key: string]: string } = {
@@ -149,6 +149,9 @@ export async function stream_chat_without_visible_chat(
             if (role0) {
                 answer_role = role0;
             }
+            if(answer_role && answer) {
+                thread_callback(answer_role, answer)
+            }
         }
     }
 
@@ -168,9 +171,6 @@ export async function stream_chat_without_visible_chat(
                     largest_block = block;
                 }
             }
-            
-            // update the thread
-            thread_callback(messages);
             
             chatTab.diff_paste_back(
                 editor,
