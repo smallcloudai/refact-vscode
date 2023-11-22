@@ -90,6 +90,15 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
+    const thread_callback: rconsoleCommands.ThreadCallback = (messages_from_chat) => {
+        // const formated_messages = rconsoleCommands.format_messages(messages_from_chat);
+        const formated_messages = messages_from_chat.map(([author, text]) => {
+            return new MyComment(text, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author))
+        });
+
+        thread.comments = formated_messages
+    }
+
     let hint_debounce: NodeJS.Timeout|undefined;
     let did1 = vscode.workspace.onDidChangeTextDocument(async e => {
         if (e.document.uri.scheme !== "comment") {
@@ -116,7 +125,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             if (first_line.startsWith("/")) {
                 for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
-                        activate_cmd(cmd, editor, thread);
+                        activate_cmd(cmd, editor, thread_callback);
                         return;
                     }
                 }
@@ -147,11 +156,11 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     initial_message();
 }
 
-function activate_cmd(cmd: string, editor: vscode.TextEditor, thread: vscode.CommentThread)
+function activate_cmd(cmd: string, editor: vscode.TextEditor, thread_callback: rconsoleCommands.ThreadCallback)
 {
     console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
     // refact_console_close();
-    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), thread);
+    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), thread_callback);
 }
 
 async function activate_chat(messages: [string, string][], question: string, editor: vscode.TextEditor)
