@@ -81,9 +81,6 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         return Promise.resolve();
     };
     let my_comments: vscode.Comment[] = [];
-    // thread.comments can be updated
-    // https://github.com/microsoft/vscode-extension-samples/blob/main/comment-sample/src/extension.ts
-    // spass this through exicuteCommand/RegisterCommand
 
     let thread: vscode.CommentThread = cc.createCommentThread(
         editor.document.uri,
