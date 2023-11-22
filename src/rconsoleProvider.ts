@@ -95,9 +95,23 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
-    const thread_callback: rconsoleCommands.ThreadCallback = (messages_from_chat) => {
-        thread.comments = format_messages_for_console(messages_from_chat);
-    };
+    const thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
+
+        const lastPost = thread.comments.length > 0 ? thread.comments[thread.comments.length - 1] : null;
+
+        if(lastPost && lastPost.author.name === author_role && lastPost instanceof MyComment) {
+            const bodyLength = lastPost.body.value.length;
+            const nextChars = answer.substring(bodyLength)
+            lastPost.body.appendMarkdown(nextChars);
+            thread.comments = [...thread.comments];
+        } else {
+            const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
+            thread.comments = [
+                ...thread.comments,
+                comment,
+            ];
+        }
+    }
 
     let hint_debounce: NodeJS.Timeout|undefined;
     let did1 = vscode.workspace.onDidChangeTextDocument(async e => {
