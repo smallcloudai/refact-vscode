@@ -58,14 +58,6 @@ export function refact_console_close()
     global.comment_disposables = [];
 }
 
-function format_messages_for_console(messages: [string, string][]): MyComment[] {
-    return messages.filter(([author, _text]) => {
-        return author !== "context_file";
-    }).map(([author, text]) => {
-        return new MyComment(text, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
-    });
-};
-
 export async function open_refact_console_between_lines(editor: vscode.TextEditor)
 {
     refact_console_close();
@@ -98,14 +90,15 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     const thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
 
         const lastPost = thread.comments.length > 0 ? thread.comments[thread.comments.length - 1] : null;
+        const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
 
         if(lastPost && lastPost.author.name === author_role && lastPost instanceof MyComment) {
-            const bodyLength = lastPost.body.value.length;
-            const nextChars = answer.substring(bodyLength)
-            lastPost.body.appendMarkdown(nextChars);
-            thread.comments = [...thread.comments];
+            const previouseComments = thread.comments.slice(0, -1)
+            thread.comments = [
+                ...previouseComments,
+                comment
+            ];
         } else {
-            const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
             thread.comments = [
                 ...thread.comments,
                 comment,
