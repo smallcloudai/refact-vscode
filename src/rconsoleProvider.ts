@@ -5,7 +5,7 @@ import * as sidebar from "./sidebar";
 import * as chatTab from "./chatTab";
 
 
-class MyCommentAuthorInformation implements vscode.CommentAuthorInformation {
+export class MyCommentAuthorInformation implements vscode.CommentAuthorInformation {
     name: string;
     iconPath?: vscode.Uri;
     constructor(name: string, iconPath?: vscode.Uri) {
@@ -14,7 +14,7 @@ class MyCommentAuthorInformation implements vscode.CommentAuthorInformation {
     }
 }
 
-class MyComment implements vscode.Comment {
+export class MyComment implements vscode.Comment {
     body: vscode.MarkdownString;
     mode: vscode.CommentMode;
     author: vscode.CommentAuthorInformation;
@@ -73,6 +73,10 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         return Promise.resolve();
     };
     let my_comments: vscode.Comment[] = [];
+    // thread.comments can be updated
+    // https://github.com/microsoft/vscode-extension-samples/blob/main/comment-sample/src/extension.ts
+    // spass this through exicuteCommand/RegisterCommand
+
     let thread: vscode.CommentThread = cc.createCommentThread(
         editor.document.uri,
         new vscode.Range(official_selection.start.line, 0, official_selection.end.line, 0),
@@ -112,7 +116,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             if (first_line.startsWith("/")) {
                 for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
-                        activate_cmd(cmd, editor);
+                        activate_cmd(cmd, editor, thread);
                         return;
                     }
                 }
@@ -143,11 +147,11 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     initial_message();
 }
 
-function activate_cmd(cmd: string, editor: vscode.TextEditor)
+function activate_cmd(cmd: string, editor: vscode.TextEditor, thread: vscode.CommentThread)
 {
     console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
-    refact_console_close();
-    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString());
+    // refact_console_close();
+    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), thread);
 }
 
 async function activate_chat(messages: [string, string][], question: string, editor: vscode.TextEditor)
