@@ -5,7 +5,10 @@ import * as chatTab from "./chatTab";
 import * as rconsoleCommands from "./rconsoleCommands";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
-import { MyComment, MyCommentAuthorInformation } from './rconsoleProvider';
+
+
+export type ThreadCallback = (messages: [string, string][]) => void;
+
 
 export let commands_available: { [key: string]: string } = {
 "shorter": "Make code shorter",
@@ -99,7 +102,7 @@ export async function stream_chat_without_visible_chat(
     editor: vscode.TextEditor,
     selected_range: vscode.Range,
     cancelToken: vscode.CancellationToken,
-    thread: vscode.CommentThread,
+    thread_callback: ThreadCallback,
 ) {
     let state = estate.state_of_editor(editor, "invisible_chat");
     if (!state) {
@@ -166,14 +169,8 @@ export async function stream_chat_without_visible_chat(
                 }
             }
             
-            // TODO: change threads to a callback to handle updating the thread
-            const comments = messages.map(([author, text]) => {
-                const a = new MyCommentAuthorInformation(author)
-                const t = new MyComment(text, vscode.CommentMode.Preview, a)
-                return t;
-            })
-
-            thread.comments = comments
+            // update the thread
+            thread_callback(messages);
             
             chatTab.diff_paste_back(
                 editor,
@@ -200,7 +197,8 @@ export async function stream_chat_without_visible_chat(
     ));
 }
 
-function _run_command(cmd: string, doc_uri: string, thread: vscode.CommentThread)
+
+function _run_command(cmd: string, doc_uri: string, thread_callback: ThreadCallback)
 {
     let text = commands_available[cmd] || "";
     let editor = vscode.window.visibleTextEditors.find((editor) => {
@@ -220,7 +218,7 @@ function _run_command(cmd: string, doc_uri: string, thread: vscode.CommentThread
         editor,
         official_selection,
         cancellationToken,
-        thread
+        thread_callback,
     );
 }
  
@@ -228,8 +226,8 @@ export function register_commands(): vscode.Disposable[]
 {
     let dispos = [];
     for (let cmd in commands_available) {
-        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd, (doc_uri, thread: vscode.CommentThread) => {
-            _run_command(cmd, doc_uri, thread);
+        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd, (doc_uri, thread_callback: ThreadCallback) => {
+            _run_command(cmd, doc_uri, thread_callback);
         });
         dispos.push(d);
     }
