@@ -39,7 +39,11 @@ declare global {
     var open_chat_tabs: ChatTab[];
 =======
     var comment_disposables: vscode.Disposable[];
+<<<<<<< HEAD
 >>>>>>> 9c534a3 (initial)
+=======
+    var comment_file_uri: vscode.Uri|undefined;
+>>>>>>> 99b87b5 (Esc in thread works)
 }
 
 async function pressed_call_chat() {
@@ -62,8 +66,17 @@ async function pressed_escape()
     completionProvider.on_esc_pressed();
     let editor = vscode.window.activeTextEditor;
     if (global.comment_disposables) {
-        rconsoleProvider.refact_console_close();
-        return;
+        let original_editor_uri = rconsoleProvider.refact_console_close();
+        if (original_editor_uri !== undefined) {
+            // find editor
+            let original_editor = vscode.window.visibleTextEditors.find((e) => {
+                return e.document.uri === original_editor_uri;
+            });
+            if (original_editor) {
+                editor = original_editor;
+            }
+        }
+        // don't return, remove all other things too -- we are here because Esc in the comment thread
     }
     if (editor) {
         let state = estate.state_of_editor(editor, "pressed_escape");
