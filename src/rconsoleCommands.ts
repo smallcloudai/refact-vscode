@@ -113,7 +113,7 @@ export async function stream_chat_without_visible_chat(
     state.showing_diff_for_range = selected_range;
     await estate.switch_mode(state, estate.Mode.DiffWait);
     interactiveDiff.animation_start(editor, state); // this is an async function, active until the state is still DiffWait
-    
+
     let answer = "";
     let answer_role = "";
     async function _streaming_callback(json: any)
@@ -174,12 +174,14 @@ export async function stream_chat_without_visible_chat(
             }
 
             end_thread_callback();
-            
-            chatTab.diff_paste_back(
-                editor,
-                selected_range,
-                largest_block,
-            );
+
+            if (largest_block) {
+                chatTab.diff_paste_back(
+                    editor,
+                    selected_range,
+                    largest_block,
+                );
+            }
         } else {
             let state = estate.state_of_editor(editor, "streaming_end_callback");
             if (state) {
@@ -225,7 +227,7 @@ function _run_command(cmd: string, doc_uri: string, update_thread_callback: Thre
         end_thread_callback
     );
 }
- 
+
 export function register_commands(): vscode.Disposable[]
 {
     let dispos = [];
