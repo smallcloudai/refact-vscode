@@ -113,6 +113,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     };
 
     const end_thread_callback = () => {
+        thread.canReply = true;
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
     };
     let text = "";
@@ -127,7 +128,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         text = e.document.getText();
         console.log("onDidChangeTextDocument", text);
         // let y = e.document.fileName;  // "/commentinput-8d64259c-9607-4048-a9dc-a73f621e750d-1.md"
-        let [hint, author] = rconsoleCommands.get_hints(messages, text, official_selection);
+        let [hint, author, top1] = rconsoleCommands.get_hints(messages, text, official_selection);
         my_comments[0] = new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
         await vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
         if (hint_debounce) {
@@ -137,6 +138,21 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             // this is a heavy operation, changes the layout and lags the UI
             thread.comments = my_comments;
         }, 200);
+
+        // command completion
+        if (text.match(/\/[a-zA-Z0-9_]+[\t ]$/)) {
+            let comment_editor = vscode.window.visibleTextEditors.find((e1) => {
+                return e1.document.uri === e.document.uri;
+            });
+            if (comment_editor) {
+                await comment_editor.edit(edit => {
+                    edit.delete(new vscode.Range(0, 0, 1000, 0));
+                    edit.insert(new vscode.Position(0, 0), "/" + top1);
+                });
+            }
+            return;
+        }
+
         if (text.includes("\n")) {
             let comment_editor = vscode.window.visibleTextEditors.find((e1) => {
                 return e1.document.uri === e.document.uri;
@@ -172,7 +188,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     await vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
     function initial_message()
     {
-        let [hint, author] = rconsoleCommands.get_hints(messages, "", official_selection);
+        let [hint, author, _top1] = rconsoleCommands.get_hints(messages, "", official_selection);
         my_comments.push(new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author)));
         thread.comments = my_comments;
     }
