@@ -8,6 +8,7 @@ import * as estate from "./estate";
 
 
 export type ThreadCallback = (role: string, answer: string) => void;
+export type ThreadEndCallback = (messages: [string, string][]) => void;
 
 
 export let commands_available: { [key: string]: string } = {
@@ -103,7 +104,7 @@ export async function stream_chat_without_visible_chat(
     selected_range: vscode.Range,
     cancelToken: vscode.CancellationToken,
     thread_callback: ThreadCallback,
-    end_thread_callback: () => void,
+    end_thread_callback: ThreadEndCallback,
 ) {
     let state = estate.state_of_editor(editor, "invisible_chat");
     if (!state) {
@@ -160,7 +161,7 @@ export async function stream_chat_without_visible_chat(
     {
         console.log("streaming end callback, error: " + error_message);
         if (!error_message) {
-            // messages.push([answer_role, answer]);
+            messages.push([answer_role, answer]);
             let answer_by_backquote = answer.split("```");
             let code_blocks = [];
             for (let i=1; i<answer_by_backquote.length; i+=2) {
@@ -173,7 +174,7 @@ export async function stream_chat_without_visible_chat(
                 }
             }
 
-            end_thread_callback();
+            end_thread_callback(messages);
 
             if (largest_block) {
                 chatTab.diff_paste_back(
