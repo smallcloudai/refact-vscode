@@ -59,7 +59,7 @@ export function get_hints(
     msgs: [string, string][],
     unfinished_text: string,
     selected_range: vscode.Range
-): [string, string] {
+): [string, string, string] {
     if (unfinished_text.startsWith("/")) {
         let cmd_score: { [key: string]: number } = {};
         for (let cmd in commands_available) {
@@ -75,13 +75,13 @@ export function get_hints(
             let text = commands_available[cmd] || "";
             result += `<a href=\"x\"><b>/${cmd}</b> ${text}</a><br>\n`;
         }
-        return [result, "Available commands:"];
+        return [result, "Available commands:", top3[0][0]];
     } else {
         if (!selected_range.isEmpty) {
             let lines_n = selected_range.end.line - selected_range.start.line + 1;
-            return [`How to change these ${lines_n} lines? Also try "explain this" or commands starting with \"/\".`, "🪄 Selected text"];
+            return [`How to change these ${lines_n} lines? Also try "explain this" or commands starting with \"/\".`, "🪄 Selected text", ""];
         } else {
-            return [`What would you like to generate? Also try commands starting with \"/\".`, "🪄 New Code"];
+            return [`What would you like to generate? Also try commands starting with \"/\".`, "🪄 New Code", ""];
         }
     }
 }
@@ -151,7 +151,7 @@ export async function stream_chat_without_visible_chat(
                 answer_role = role0;
             }
             if(answer_role && answer) {
-                thread_callback(answer_role, answer)
+                thread_callback(answer_role, answer);
             }
         }
     }
