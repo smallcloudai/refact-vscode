@@ -140,6 +140,44 @@ export class ChatTab {
                 case ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
                     return tab.handleEnterHit(data);
                 }
+                case "open-new-file": {
+                    return vscode.workspace.openTextDocument().then((document) => {
+                        vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+                            .then((editor) => {
+                                editor.edit((editBuilder) => {
+                                editBuilder.insert(new vscode.Position(0, 0), data.value);
+                            });
+                        });
+                    });
+                }
+                case "stop-clicked": {
+                    tab.cancellationTokenSource.cancel();
+                    return;
+                }
+                case "diff-paste-back": {
+                    if (!tab.working_on_snippet_editor) {
+                        return;
+                    }
+                    await vscode.window.showTextDocument(
+                        tab.working_on_snippet_editor.document,
+                        tab.working_on_snippet_column
+                    );
+                    let state = estate.state_of_document(
+                        tab.working_on_snippet_editor.document
+                    );
+                    if (!state) {
+                        return;
+                    }
+                    if (!tab.working_on_snippet_range) {
+                        return;
+                    }
+                    return diff_paste_back(
+                        state.editor,
+                        tab.working_on_snippet_range,
+                        data.code_block,
+                    );
+                }
+
             }
         });
 
