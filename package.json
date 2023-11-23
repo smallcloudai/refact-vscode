@@ -144,7 +144,8 @@
 		"commands": [
 			{
 				"command": "refactaicmd.sendChatToSidebar",
-				"title": "Open in Sidebar"
+				"title": "Open in Sidebar",
+				"enablement": "refactaicmd.openSidebarButtonEnabled"
 			},
 			{
 				"command": "refactaicmd.closeInlineChat",
@@ -236,8 +237,7 @@
 			"comments/commentThread/additionalActions": [
 				{
 					"command": "refactaicmd.sendChatToSidebar",
-					"group": "inline@1",
-					"when": "refactaicmd.openSidebarButtonEnabled"
+					"group": "inline@1"
 				},
 				{
 					"command": "refactaicmd.closeInlineChat",
