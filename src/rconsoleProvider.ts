@@ -91,12 +91,10 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     global.comment_disposables.push(cc);
 
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
-    let disableOpenChatButton = false;
 
     const update_thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
         if(thread.canReply) { thread.canReply = false; } 
   
-
         const lastPost = thread.comments.length > 0 ? thread.comments[thread.comments.length - 1] : null;
         const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
     
@@ -116,7 +114,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     };
 
     const end_thread_callback = () => {
-        disableOpenChatButton = false;
+        vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
     };
     let text = "";
     let hint_debounce: NodeJS.Timeout|undefined;
@@ -145,7 +143,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             if (first_line.startsWith("/")) {
                 for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
-                        disableOpenChatButton = true;
+                        vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", false);
                         activate_cmd(cmd, editor, update_thread_callback, end_thread_callback);
                         return;
                     }
@@ -179,8 +177,6 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
 
     global.comment_disposables.push(vscode.commands.registerCommand("refactaicmd.sendChatToSidebar", async (e) => {
-
-        if(disableOpenChatButton === true) { return ;}
         let question = "```\n" + code_snippet + "\n```\n\n" + text;
         activate_chat(messages, question, editor);
     }));

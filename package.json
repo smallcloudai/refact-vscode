@@ -236,7 +236,8 @@
 			"comments/commentThread/additionalActions": [
 				{
 					"command": "refactaicmd.sendChatToSidebar",
-					"group": "inline@1"
+					"group": "inline@1",
+					"when": "refactaicmd.openSidebarButtonEnabled"
 				},
 				{
 					"command": "refactaicmd.closeInlineChat",
