@@ -82,18 +82,23 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     thread.canReply = true;
     thread.label = "Refact Console (F1)";
     thread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
+    
     global.comment_disposables.push(thread);
     global.comment_disposables.push(cc);
 
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
+    let disableOpenChatButton = false;
 
-    const thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
+    const update_thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
+        if(thread.canReply) { thread.canReply = false; } 
+  
 
         const lastPost = thread.comments.length > 0 ? thread.comments[thread.comments.length - 1] : null;
         const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
-
+    
         if(lastPost && lastPost.author.name === author_role && lastPost instanceof MyComment) {
-            const previouseComments = thread.comments.slice(0, -1)
+    
+            const previouseComments = thread.comments.slice(0, -1);
             thread.comments = [
                 ...previouseComments,
                 comment
@@ -104,8 +109,12 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                 comment,
             ];
         }
-    }
+    };
 
+    const end_thread_callback = () => {
+        disableOpenChatButton = false;
+    };
+    let text = "";
     let hint_debounce: NodeJS.Timeout|undefined;
     let did1 = vscode.workspace.onDidChangeTextDocument(async e => {
         if (e.document.uri.scheme !== "comment") {
@@ -114,7 +123,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         if (my_comments.length === 0) {
             return;
         }
-        let text = e.document.getText();
+        text = e.document.getText();
         console.log("onDidChangeTextDocument", text);
         // let y = e.document.fileName;  // "/commentinput-8d64259c-9607-4048-a9dc-a73f621e750d-1.md"
         let [hint, author] = rconsoleCommands.get_hints(messages, text, official_selection);
@@ -132,7 +141,8 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             if (first_line.startsWith("/")) {
                 for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
-                        activate_cmd(cmd, editor, thread_callback);
+                        disableOpenChatButton = true;
+                        activate_cmd(cmd, editor, update_thread_callback, end_thread_callback);
                         return;
                     }
                 }
@@ -161,13 +171,28 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     // the thread is to ask user if there are no messages. But then we add a message.
     await new Promise(resolve => setTimeout(resolve, 100));
     initial_message();
+
+    global.global_context.subscriptions.push(vscode.commands.registerCommand("refactaicmd.sendChatToSidebar", async (e) => {
+
+        if(disableOpenChatButton === true) { return ;}
+        let question = "```\n" + code_snippet + "\n```\n\n" + text;
+        activate_chat(messages, question, editor);
+    }));
+
+    global.global_context.subscriptions.push(vscode.commands.registerCommand("refactaicmd.closeInlineChat", (...args) => {
+        global.comment_disposables.forEach(disposable => {
+            disposable.dispose();
+        });
+        global.comment_disposables = [];
+    }));
 }
 
-function activate_cmd(cmd: string, editor: vscode.TextEditor, thread_callback: rconsoleCommands.ThreadCallback)
+function activate_cmd(cmd: string, editor: vscode.TextEditor, update_thread_callback: rconsoleCommands.ThreadCallback, end_thread_callback: () => void)
 {
     console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
-    // refact_console_close();
-    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), thread_callback);
+
+    vscode.commands.executeCommand("setContext", "refactaicmd.runningChat", true);
+    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), update_thread_callback, end_thread_callback);
 }
 
 async function activate_chat(messages: [string, string][], question: string, editor: vscode.TextEditor)
