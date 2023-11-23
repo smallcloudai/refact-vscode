@@ -160,7 +160,7 @@ export async function stream_chat_without_visible_chat(
     {
         console.log("streaming end callback, error: " + error_message);
         if (!error_message) {
-            messages.push([answer_role, answer]);
+            // messages.push([answer_role, answer]);
             let answer_by_backquote = answer.split("```");
             let code_blocks = [];
             for (let i=1; i<answer_by_backquote.length; i+=2) {

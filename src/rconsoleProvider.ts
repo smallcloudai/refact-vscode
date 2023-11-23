@@ -92,8 +92,13 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
+    // TODO:
+    // * always operate on messages
+    // * write a function that translates messages to comments, call it often
+    // * split this function
+
     const update_thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
-        if (thread.canReply) { thread.canReply = false; }
+        // if (thread.canReply) { thread.canReply = false; }
         const lastPost = thread.comments.length > 0 ? thread.comments[thread.comments.length - 1] : null;
         const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
 
@@ -114,6 +119,8 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     const end_thread_callback = () => {
         thread.canReply = true;
+        // thread.canReply = true;
+        // messages.push([role, answer]);
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
     };
     let text = "";
@@ -128,19 +135,21 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         text = e.document.getText();
         console.log("onDidChangeTextDocument", text);
         // let y = e.document.fileName;  // "/commentinput-8d64259c-9607-4048-a9dc-a73f621e750d-1.md"
-        let [hint, author, top1] = rconsoleCommands.get_hints(messages, text, official_selection);
-        my_comments[0] = new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
-        await vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
-        if (hint_debounce) {
-            clearTimeout(hint_debounce);
+        let top1 = "";
+        if (messages.length === 1) {
+            let hint, author;
+            [hint, author, top1] = rconsoleCommands.get_hints(messages, text, official_selection);
+            my_comments[0] = new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
+            if (hint_debounce) {
+                clearTimeout(hint_debounce);
+            }
+            hint_debounce = setTimeout(async () => {
+                // this is a heavy operation, changes the layout and lags the UI
+                thread.comments = my_comments;
+            }, 200);
         }
-        hint_debounce = setTimeout(async () => {
-            // this is a heavy operation, changes the layout and lags the UI
-            thread.comments = my_comments;
-        }, 200);
-
-        // command completion
-        if (text.match(/\/[a-zA-Z0-9_]+[\t ]$/)) {
+        await vscode.commands.executeCommand('setContext', 'refactcx.runEsc', true);
+        if (top1 && text.match(/\/[a-zA-Z0-9_]+[\t ]$/)) {
             let comment_editor = vscode.window.visibleTextEditors.find((e1) => {
                 return e1.document.uri === e.document.uri;
             });
