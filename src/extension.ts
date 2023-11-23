@@ -122,6 +122,7 @@ async function code_lens_clicked(arg0: any)
         }
         if (arg0 === "APPROVE") {
             await interactiveDiff.like_and_accept(editor);
+            rconsoleProvider.refact_console_close();
         } else if (arg0 === "REJECT") {
             await pressed_escape();  // might return to highlight
         } else if (arg0 === "RERUN") {
