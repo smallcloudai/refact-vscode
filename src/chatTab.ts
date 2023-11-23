@@ -536,7 +536,7 @@ export function indent_so_diff_is_minimized(orig_code: string, code_block: strin
     let least_bad_block = "";
     let code_block_lines = code_block.split(/\r?\n/);
     for (const indent of ["", "    ", "        ", "            ", "                ", "                    ", "\t", "\t\t", "\t\t\t", "\t\t\t\t", "\t\t\t\t\t", "\t\t\t\t\t"]) {
-        let code_block_indented = code_block_lines.map(line => indent + line).join('\n');
+        let code_block_indented = code_block_lines.map(line => (line !== "" ? (indent + line) : "")).join('\n');
         const diff = Diff.diffWordsWithSpace(orig_code, code_block_indented);
         let how_bad = 0;
         for (const part of diff) {
