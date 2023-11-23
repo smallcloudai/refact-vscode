@@ -48,6 +48,14 @@ export class MyComment implements vscode.Comment {
 //     }
 // }
 
+function format_messages(messages: [string, string][]) {
+    return messages.filter(([role, _]) => {
+        return role !== "context_file";
+    }).map(([author, text]) => {
+        return new MyComment(text, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
+    });
+}
+
 export function refact_console_close(): vscode.Uri|undefined
 {
     if (global.comment_disposables) {
@@ -93,7 +101,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
     // TODO:
-    // * always operate on messages
+    // * always operate on messages (done)
     // * write a function that translates messages to comments, call it often
     // * split this function
 
@@ -118,13 +126,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     };
 
     const end_thread_callback = (response_messages: [string, string][]) => {
-        const mainContextFile = messages[0];
-        const responseContextFile = response_messages[0];
-        if(mainContextFile[1] === responseContextFile[1]) {
-            messages = [...messages, ...response_messages.slice(1)];
-        } else {
-            messages = [...messages, ...response_messages];
-        }
+        messages = response_messages;
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
     };
     let text = "";
@@ -180,7 +182,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                                 edit.delete(new vscode.Range(0, 0, 1000, 0));
                             });
                         }
-                        activate_cmd(cmd, editor, update_thread_callback, end_thread_callback);
+                        activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
                         return;
                     }
                 }
@@ -225,12 +227,12 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     }));
 }
 
-function activate_cmd(cmd: string, editor: vscode.TextEditor, update_thread_callback: rconsoleCommands.ThreadCallback, end_thread_callback: rconsoleCommands.ThreadEndCallback)
+function activate_cmd(cmd: string, editor: vscode.TextEditor, messages: rconsoleCommands.Messages, update_thread_callback: rconsoleCommands.ThreadCallback, end_thread_callback: rconsoleCommands.ThreadEndCallback)
 {
     console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
 
     vscode.commands.executeCommand("setContext", "refactaicmd.runningChat", true);
-    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), update_thread_callback, end_thread_callback);
+    vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), messages, update_thread_callback, end_thread_callback);
 }
 
 async function activate_chat(messages: [string, string][], question: string, editor: vscode.TextEditor, new_question = true)
