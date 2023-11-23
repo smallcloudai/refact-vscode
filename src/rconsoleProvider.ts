@@ -176,14 +176,16 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     await new Promise(resolve => setTimeout(resolve, 100));
     initial_message();
 
-    global.global_context.subscriptions.push(vscode.commands.registerCommand("refactaicmd.sendChatToSidebar", async (e) => {
+
+
+    global.comment_disposables.push(vscode.commands.registerCommand("refactaicmd.sendChatToSidebar", async (e) => {
 
         if(disableOpenChatButton === true) { return ;}
         let question = "```\n" + code_snippet + "\n```\n\n" + text;
         activate_chat(messages, question, editor);
     }));
 
-    global.global_context.subscriptions.push(vscode.commands.registerCommand("refactaicmd.closeInlineChat", (...args) => {
+    global.comment_disposables.push(vscode.commands.registerCommand("refactaicmd.closeInlineChat", (...args) => {
         global.comment_disposables.forEach(disposable => {
             disposable.dispose();
         });
