@@ -6,7 +6,6 @@ import * as rconsoleCommands from "./rconsoleCommands";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 
-
 export let commands_available: { [key: string]: string } = {
 "shorter": "Make code shorter",
 "bugs": "Find and fix bugs",
@@ -15,6 +14,7 @@ export let commands_available: { [key: string]: string } = {
 "typehints": "Add type hints",
 "naming": "Improve variable names",
 "explain": "Explain code",
+"sidebar": "move to chat to sidebar"
 };
 
 
