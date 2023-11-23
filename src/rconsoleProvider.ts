@@ -118,7 +118,13 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     };
 
     const end_thread_callback = (response_messages: [string, string][]) => {
-        messages = response_messages;
+        const mainContextFile = messages[0];
+        const responseContextFile = response_messages[0];
+        if(mainContextFile[1] === responseContextFile[1]) {
+            messages = [...messages, ...response_messages.slice(1)];
+        } else {
+            messages = [...messages, ...response_messages];
+        }
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
     };
     let text = "";
