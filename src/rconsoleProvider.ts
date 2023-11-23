@@ -48,7 +48,7 @@ export class MyComment implements vscode.Comment {
 //     }
 // }
 
-export function refact_console_close()
+export function refact_console_close(): vscode.Uri|undefined
 {
     if (global.comment_disposables) {
         for (let d of global.comment_disposables) {
@@ -56,11 +56,15 @@ export function refact_console_close()
         }
     }
     global.comment_disposables = [];
+    let ret = global.comment_file_uri;
+    global.comment_file_uri = undefined;
+    return ret;
 }
 
 export async function open_refact_console_between_lines(editor: vscode.TextEditor)
 {
     refact_console_close();
+    global.comment_file_uri = editor.document.uri;
     let [official_selection, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
     let cc = vscode.comments.createCommentController("refactai-test", "RefactAI Test Comments");
     cc.commentingRangeProvider = {
