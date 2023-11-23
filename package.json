@@ -22,6 +22,9 @@
 	"engines": {
 		"vscode": "^1.69.0"
 	},
+	"enabledApiProposals": [
+		"contribCommentThreadAdditionalMenu"
+	],
 	"categories": [
 		"Programming Languages",
 		"Snippets",
@@ -140,6 +143,15 @@
 		"properties": [],
 		"commands": [
 			{
+				"command": "refactaicmd.sendChatToSidebar",
+				"title": "Open in Sidebar",
+				"enablement": "refactaicmd.openSidebarButtonEnabled"
+			},
+			{
+				"command": "refactaicmd.closeInlineChat",
+				"title": "Close"
+			},
+			{
 				"command": "refactaicmd.activateToolbox",
 				"title": "Activate",
 				"category": "Refact.ai"
@@ -220,6 +232,16 @@
 				{
 					"submenu": "refact-access-menu",
 					"group": "z_commands"
+				}
+			],
+			"comments/commentThread/additionalActions": [
+				{
+					"command": "refactaicmd.sendChatToSidebar",
+					"group": "inline@1"
+				},
+				{
+					"command": "refactaicmd.closeInlineChat",
+					"group": "inline@2"
 				}
 			]
 		},
