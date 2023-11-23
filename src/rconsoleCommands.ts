@@ -8,7 +8,9 @@ import * as estate from "./estate";
 
 
 export type ThreadCallback = (role: string, answer: string) => void;
-export type ThreadEndCallback = (messages: [string, string][]) => void;
+export type Messages = [string, string][];
+export type ThreadEndCallback = (messages: Messages) => void;
+
 
 
 export let commands_available: { [key: string]: string } = {
@@ -57,7 +59,7 @@ function get_chars(str: string): Set<string>
 }
 
 export function get_hints(
-    msgs: [string, string][],
+    msgs: Messages,
     unfinished_text: string,
     selected_range: vscode.Range
 ): [string, string, string] {
@@ -89,7 +91,7 @@ export function get_hints(
 
 export function initial_messages(working_on_attach_filename: string, working_on_attach_code: string)
 {
-    let messages: [string, string][] = [];
+    let messages: Messages = [];
     let single_file_json = JSON.stringify([{
         "file_name": working_on_attach_filename,
         "file_content": working_on_attach_code,
@@ -99,7 +101,7 @@ export function initial_messages(working_on_attach_filename: string, working_on_
 }
 
 export async function stream_chat_without_visible_chat(
-    messages: [string, string][],
+    messages: Messages,
     editor: vscode.TextEditor,
     selected_range: vscode.Range,
     cancelToken: vscode.CancellationToken,
@@ -208,8 +210,7 @@ export async function stream_chat_without_visible_chat(
     ));
 }
 
-
-function _run_command(cmd: string, doc_uri: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
+function _run_command(cmd: string, doc_uri: string, messages: Messages, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
 {
     let text = commands_available[cmd] || "";
     let editor = vscode.window.visibleTextEditors.find((editor) => {
@@ -220,12 +221,15 @@ function _run_command(cmd: string, doc_uri: string, update_thread_callback: Thre
         return;
     }
     let [official_selection, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
-    let messages: [string, string][] = initial_messages(working_on_attach_filename, working_on_attach_code);
-    messages.push(["user", "```\n" + code_snippet + "\n```\n\n" + text + "\n"]);
+    // let messages: [string, string][] = initial_messages(working_on_attach_filename, working_on_attach_code);
+    const messageWithUserInput = [
+        ...messages
+    ];
+    messageWithUserInput.push(["user", "```\n" + code_snippet + "\n```\n\n" + text + "\n"]);
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancellationToken = cancellationTokenSource.token;
     rconsoleCommands.stream_chat_without_visible_chat(
-        messages,
+        messageWithUserInput,
         editor,
         official_selection,
         cancellationToken,
@@ -239,8 +243,8 @@ export function register_commands(): vscode.Disposable[]
     let dispos = [];
 
     for (let cmd in commands_available) {
-        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd, (doc_uri, update_thread_callback: ThreadCallback, end_thread_callback) => {
-            _run_command(cmd, doc_uri, update_thread_callback, end_thread_callback);
+        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd, (doc_uri, messages: Messages, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
+            _run_command(cmd, doc_uri, messages, update_thread_callback, end_thread_callback);
         });
         dispos.push(d);
     }
