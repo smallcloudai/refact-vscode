@@ -261,6 +261,7 @@ async function activate_chat(messages: [string, string][], question: string, edi
     if (!chat) {
         return;
     }
+
     if(new_question) {
         await chat.post_question_and_communicate_answer(
             question,
@@ -269,6 +270,8 @@ async function activate_chat(messages: [string, string][], question: string, edi
             false,
             messages,
             );
+    } else {
+        await chat.chatHistoryProvider.save_messages_list(chat.chat_id, messages, "");
     }
 
 }
