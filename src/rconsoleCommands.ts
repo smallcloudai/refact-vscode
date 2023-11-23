@@ -103,6 +103,7 @@ export async function stream_chat_without_visible_chat(
     selected_range: vscode.Range,
     cancelToken: vscode.CancellationToken,
     thread_callback: ThreadCallback,
+    end_thread_callback: () => void,
 ) {
     let state = estate.state_of_editor(editor, "invisible_chat");
     if (!state) {
@@ -112,7 +113,7 @@ export async function stream_chat_without_visible_chat(
     state.showing_diff_for_range = selected_range;
     await estate.switch_mode(state, estate.Mode.DiffWait);
     interactiveDiff.animation_start(editor, state); // this is an async function, active until the state is still DiffWait
-
+    
     let answer = "";
     let answer_role = "";
     async function _streaming_callback(json: any)
@@ -171,6 +172,8 @@ export async function stream_chat_without_visible_chat(
                     largest_block = block;
                 }
             }
+
+            end_thread_callback();
             
             chatTab.diff_paste_back(
                 editor,
@@ -198,7 +201,7 @@ export async function stream_chat_without_visible_chat(
 }
 
 
-function _run_command(cmd: string, doc_uri: string, thread_callback: ThreadCallback)
+function _run_command(cmd: string, doc_uri: string, update_thread_callback: ThreadCallback, end_thread_callback: () => void)
 {
     let text = commands_available[cmd] || "";
     let editor = vscode.window.visibleTextEditors.find((editor) => {
@@ -218,16 +221,18 @@ function _run_command(cmd: string, doc_uri: string, thread_callback: ThreadCallb
         editor,
         official_selection,
         cancellationToken,
-        thread_callback,
+        update_thread_callback,
+        end_thread_callback
     );
 }
  
 export function register_commands(): vscode.Disposable[]
 {
     let dispos = [];
+
     for (let cmd in commands_available) {
-        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd, (doc_uri, thread_callback: ThreadCallback) => {
-            _run_command(cmd, doc_uri, thread_callback);
+        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd, (doc_uri, update_thread_callback: ThreadCallback, end_thread_callback) => {
+            _run_command(cmd, doc_uri, update_thread_callback, end_thread_callback);
         });
         dispos.push(d);
     }
