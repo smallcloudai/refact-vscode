@@ -185,23 +185,22 @@ export class ChatTab {
 
         if (editor) {
             let selection: vscode.Range;
-            [selection, free_floating_tab.working_on_attach_code, free_floating_tab.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor);
+            [selection, this.working_on_attach_code, this.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor);
             if (!selection.isEmpty) {
-                free_floating_tab.working_on_snippet_range = selection;
-                free_floating_tab.working_on_snippet_editor = editor;
-                free_floating_tab.working_on_snippet_column = editor.viewColumn;
+                this.working_on_snippet_range = selection;
+                this.working_on_snippet_editor = editor;
+                this.working_on_snippet_column = editor.viewColumn;
             }
-            fireup_message["chat_attach_file"] = free_floating_tab.working_on_attach_filename;
+            fireup_message["chat_attach_file"] = this.working_on_attach_filename;
             fireup_message["chat_attach_default"] = attach_default;
         }
         this.working_on_snippet_code = code_snippet;
         this.messages = messages;
 
         // This refills the chat
-        this.web_panel.webview.postMessage({
+        global.side_panel?._view?.webview.postMessage({
             command: "chat-clear",
         });
-
         let messages_backup: [string, string][] = [];
         for (let i = 0; i < messages.length; i++) {
             let [role, content] = messages[i];
