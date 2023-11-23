@@ -35,15 +35,9 @@ declare global {
     var last_positive_result: number;
     var chat_models: string[];
     var have_caps: boolean;
-<<<<<<< HEAD
     var open_chat_tabs: ChatTab[];
-=======
     var comment_disposables: vscode.Disposable[];
-<<<<<<< HEAD
->>>>>>> 9c534a3 (initial)
-=======
     var comment_file_uri: vscode.Uri|undefined;
->>>>>>> 99b87b5 (Esc in thread works)
 }
 
 async function pressed_call_chat() {
