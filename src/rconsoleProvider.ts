@@ -86,20 +86,19 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     thread.canReply = true;
     thread.label = "Refact Console (F1)";
     thread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
-    
+
     global.comment_disposables.push(thread);
     global.comment_disposables.push(cc);
 
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
     const update_thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
-        if(thread.canReply) { thread.canReply = false; } 
-  
+        if (thread.canReply) { thread.canReply = false; }
         const lastPost = thread.comments.length > 0 ? thread.comments[thread.comments.length - 1] : null;
         const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
-    
+
         if(lastPost && lastPost.author.name === author_role && lastPost instanceof MyComment) {
-    
+
             const previouseComments = thread.comments.slice(0, -1);
             thread.comments = [
                 ...previouseComments,
@@ -139,11 +138,19 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             thread.comments = my_comments;
         }, 200);
         if (text.includes("\n")) {
+            let comment_editor = vscode.window.visibleTextEditors.find((e1) => {
+                return e1.document.uri === e.document.uri;
+            });
             let first_line = text.split("\n")[0];
             if (first_line.startsWith("/")) {
                 for (let cmd in rconsoleCommands.commands_available) {
                     if (first_line.startsWith("/" + cmd)) {
                         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", false);
+                        if (comment_editor) {
+                            await comment_editor.edit(edit => {
+                                edit.delete(new vscode.Range(0, 0, 1000, 0));
+                            });
+                        }
                         activate_cmd(cmd, editor, update_thread_callback, end_thread_callback);
                         return;
                     }
