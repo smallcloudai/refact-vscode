@@ -48,13 +48,17 @@ export class MyComment implements vscode.Comment {
 //     }
 // }
 
-function format_messages(messages: [string, string][]) {
-    return messages.filter(([role, _]) => {
-        return role !== "context_file";
-    }).map(([author, text]) => {
-        return new MyComment(text, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
-    });
+function message_to_comment(author: string, text: string) {
+    return new MyComment(text, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
 }
+
+// function format_messages(messages: rconsoleCommands.Messages) {
+//     return messages.filter(([role, _]) => {
+//         return role !== "context_file";
+//     }).map(([author, text]) => {
+//         return message_to_comment(author, text);
+//     });
+// }
 
 export function refact_console_close(): vscode.Uri|undefined
 {
@@ -102,13 +106,13 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     // TODO:
     // * always operate on messages (done)
-    // * write a function that translates messages to comments, call it often
+    // * write a function that translates messages to comments, call it often (done)
     // * split this function
 
     const update_thread_callback: rconsoleCommands.ThreadCallback = (author_role, answer) => {
         // if (thread.canReply) { thread.canReply = false; }
         const lastPost = thread.comments.length > 0 ? thread.comments[thread.comments.length - 1] : null;
-        const comment = new MyComment(answer, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author_role));
+        const comment = message_to_comment(author_role, answer);
 
         if(lastPost && lastPost.author.name === author_role && lastPost instanceof MyComment) {
 
@@ -145,7 +149,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         if (messages.length === 1) {
             let hint, author;
             [hint, author, top1] = rconsoleCommands.get_hints(messages, text, official_selection);
-            my_comments[0] = new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author));
+            my_comments[0] = message_to_comment(author, text);
             if (hint_debounce) {
                 clearTimeout(hint_debounce);
             }
@@ -204,7 +208,8 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     function initial_message()
     {
         let [hint, author, _top1] = rconsoleCommands.get_hints(messages, "", official_selection);
-        my_comments.push(new MyComment(hint, vscode.CommentMode.Preview, new MyCommentAuthorInformation(author)));
+        const hint_comment = message_to_comment(author, hint);
+        my_comments.push(hint_comment);
         thread.comments = my_comments;
     }
     // This trick puts cursor into the input box, possibly VS thinks the only use for
