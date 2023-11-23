@@ -117,10 +117,8 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         }
     };
 
-    const end_thread_callback = () => {
-        thread.canReply = true;
-        // thread.canReply = true;
-        // messages.push([role, answer]);
+    const end_thread_callback = (response_messages: [string, string][]) => {
+        messages = response_messages;
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
     };
     let text = "";
@@ -210,7 +208,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     global.comment_disposables.push(vscode.commands.registerCommand("refactaicmd.sendChatToSidebar", async (e) => {
         let question = "```\n" + code_snippet + "\n```\n\n" + text;
-        activate_chat(messages, question, editor);
+        activate_chat(messages, question, editor, false);
     }));
 
     global.comment_disposables.push(vscode.commands.registerCommand("refactaicmd.closeInlineChat", (...args) => {
@@ -221,7 +219,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     }));
 }
 
-function activate_cmd(cmd: string, editor: vscode.TextEditor, update_thread_callback: rconsoleCommands.ThreadCallback, end_thread_callback: () => void)
+function activate_cmd(cmd: string, editor: vscode.TextEditor, update_thread_callback: rconsoleCommands.ThreadCallback, end_thread_callback: rconsoleCommands.ThreadEndCallback)
 {
     console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
 
@@ -229,7 +227,7 @@ function activate_cmd(cmd: string, editor: vscode.TextEditor, update_thread_call
     vscode.commands.executeCommand("refactaicmd.cmd_" + cmd, editor.document.uri.toString(), update_thread_callback, end_thread_callback);
 }
 
-async function activate_chat(messages: [string, string][], question: string, editor: vscode.TextEditor)
+async function activate_chat(messages: [string, string][], question: string, editor: vscode.TextEditor, new_question = true)
 {
     console.log(`activate_chat question.length=${question.length}`);
     refact_console_close();
@@ -250,11 +248,14 @@ async function activate_chat(messages: [string, string][], question: string, edi
     if (!chat) {
         return;
     }
-    await chat.post_question_and_communicate_answer(
-        question,
-        "",
-        "",
-        false,
-        messages,
-        );
+    if(new_question) {
+        await chat.post_question_and_communicate_answer(
+            question,
+            "",
+            "",
+            false,
+            messages,
+            );
+    }
+
 }
