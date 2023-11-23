@@ -209,7 +209,7 @@ export async function stream_chat_without_visible_chat(
 }
 
 
-function _run_command(cmd: string, doc_uri: string, update_thread_callback: ThreadCallback, end_thread_callback: () => void)
+function _run_command(cmd: string, doc_uri: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
 {
     let text = commands_available[cmd] || "";
     let editor = vscode.window.visibleTextEditors.find((editor) => {
