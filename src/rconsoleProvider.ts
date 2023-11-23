@@ -149,7 +149,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         if (messages.length === 1) {
             let hint, author;
             [hint, author, top1] = rconsoleCommands.get_hints(messages, text, official_selection);
-            my_comments[0] = message_to_comment(author, text);
+            my_comments[0] = message_to_comment(author, hint);
             if (hint_debounce) {
                 clearTimeout(hint_debounce);
             }
