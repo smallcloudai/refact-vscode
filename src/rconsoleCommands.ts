@@ -181,6 +181,11 @@ export async function stream_chat_without_visible_chat(
                     selected_range,
                     largest_block,
                 );
+            } else {
+                let state = estate.state_of_document(editor.document);
+                if (state) {
+                    await estate.switch_mode(state, estate.Mode.Normal);
+                }
             }
         } else {
             let state = estate.state_of_editor(editor, "streaming_end_callback");
