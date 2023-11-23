@@ -35,6 +35,7 @@ declare global {
     var chat_models: string[];
     var have_caps: boolean;
     var comment_disposables: vscode.Disposable[];
+    var comment_file_uri: vscode.Uri|undefined;
 }
 
 async function pressed_call_chat() {
@@ -57,8 +58,17 @@ async function pressed_escape()
     completionProvider.on_esc_pressed();
     let editor = vscode.window.activeTextEditor;
     if (global.comment_disposables) {
-        rconsoleProvider.refact_console_close();
-        return;
+        let original_editor_uri = rconsoleProvider.refact_console_close();
+        if (original_editor_uri !== undefined) {
+            // find editor
+            let original_editor = vscode.window.visibleTextEditors.find((e) => {
+                return e.document.uri === original_editor_uri;
+            });
+            if (original_editor) {
+                editor = original_editor;
+            }
+        }
+        // don't return, remove all other things too -- we are here because Esc in the comment thread
     }
     if (editor) {
         let state = estate.state_of_editor(editor, "pressed_escape");
@@ -112,6 +122,7 @@ async function code_lens_clicked(arg0: any)
         }
         if (arg0 === "APPROVE") {
             await interactiveDiff.like_and_accept(editor);
+            rconsoleProvider.refact_console_close();
         } else if (arg0 === "REJECT") {
             await pressed_escape();  // might return to highlight
         } else if (arg0 === "RERUN") {
