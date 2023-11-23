@@ -36,10 +36,18 @@ function sidebar_general_script(vscode) {
     const next_button_refact = document.querySelector('.refact-welcome__next_refact');
     next_button_refact.addEventListener("click", () => {
         const enter_apikey = document.querySelector('.refact-welcome__apikey_refact');
-        vscode.postMessage({
-            type: "button_refact_save",
-            refact_api_key: enter_apikey.value,
-        });
+        const error_message = document.querySelector('.refact-welcome__error-refact');
+        if(enter_apikey.value && enter_apikey.value != '') {
+            enter_apikey.style.borderColor = 'var(--secondary)';
+            error_message.style.display = 'none';
+            vscode.postMessage({
+                type: "button_refact_save",
+                refact_api_key: enter_apikey.value,
+            });
+        } else {
+            enter_apikey.style.borderColor = 'var(--vscode-editorError-foreground)';
+            error_message.style.display = 'block';
+        }
     });
 
     const selfhosting_input = document.querySelector('.refact-welcome__endpoint');
@@ -102,11 +110,19 @@ function sidebar_general_script(vscode) {
     save_enterprise.addEventListener("click", () => {
         const enter_endpoint = document.querySelector('.refact-welcome__enterendpoint');
         const enter_apikey = document.querySelector('.refact-welcome__apikey_enterprise');
-        vscode.postMessage({
-            type: "save_enterprise",
-            endpoint: enter_endpoint.value,
-            apikey: enter_apikey.value,
-        });
+        const error_message = document.querySelector('.refact-welcome__error-enterprise');
+        if(enter_apikey.value && enter_apikey.value != '') {
+            enter_apikey.style.borderColor = 'var(--secondary)';
+            error_message.style.display = 'none';
+            vscode.postMessage({
+                type: "save_enterprise",
+                endpoint: enter_endpoint.value,
+                apikey: enter_apikey.value,
+            });
+        } else {
+            enter_apikey.style.borderColor = 'var(--vscode-editorError-foreground)';
+            error_message.style.display = 'block';
+        }
     });
 
     const button_refact = document.querySelector('.refact-welcome__refact');

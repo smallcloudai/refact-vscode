@@ -464,7 +464,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                     </div>
                                 </div>
                                 </label>
-
+                                <div class="refact-welcome__telemetry">
+                                    <label><input class="refact-welcome__telemetryinput" type="checkbox" id="telemetry" name="telemetry" value="true" checked>Send service telemetry to Refact</label>
+                                    <div class="refact-welcome__telemetrynotice">Only suggestion quality metrics will be sent, no real data.</div>
+                                </div>
                                 <div class="refact-welcome__actions">
                                     <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
                                 </div>
@@ -480,6 +483,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <label class="refact-welcome__label">API Key</label>
                                 <input class="refact-welcome__apikey_enterprise refact-welcome__input" type="text" name="api_key" value="${api_key}">
                             </div>
+                            <div class="refact-welcome__error-enterprise">Please enter API key</div>
                             <div class="refact-welcome__actions">
                                 <button data-target="enterprise" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
                                 <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
@@ -497,6 +501,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <label class="refact-welcome__label">Alternatively, paste an existing Refact API Key here:</label>
                                 <input class="refact-welcome__apikey_refact refact-welcome__input" type="text" name="api_key" value="${api_key}">
                             </div>
+                            <div class="refact-welcome__error-refact">Please Login / Create Account or enter API key</div>
                             <div class="refact-welcome__actions">
                                 <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
                                 <button class="refact-welcome__next refact-welcome__next_refact">Next&nbsp;&nbsp;&rsaquo;</button>
