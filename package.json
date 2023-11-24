@@ -233,16 +233,6 @@
 					"submenu": "refact-access-menu",
 					"group": "z_commands"
 				}
-			],
-			"comments/commentThread/additionalActions": [
-				{
-					"command": "refactaicmd.sendChatToSidebar",
-					"group": "inline@1"
-				},
-				{
-					"command": "refactaicmd.closeInlineChat",
-					"group": "inline@2"
-				}
 			]
 		},
 		"submenus": [

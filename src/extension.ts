@@ -62,7 +62,6 @@ async function pressed_escape()
     if (global.comment_disposables) {
         let original_editor_uri = rconsoleProvider.refact_console_close();
         if (original_editor_uri !== undefined) {
-            // find editor
             let original_editor = vscode.window.visibleTextEditors.find((e) => {
                 return e.document.uri === original_editor_uri;
             });
@@ -103,6 +102,18 @@ async function pressed_escape()
 async function pressed_tab()
 {
     let editor = vscode.window.activeTextEditor;
+    if (global.comment_disposables) {
+        let original_editor_uri = rconsoleProvider.refact_console_close();
+        if (original_editor_uri !== undefined) {
+            let original_editor = vscode.window.visibleTextEditors.find((e) => {
+                return e.document.uri === original_editor_uri;
+            });
+            if (original_editor) {
+                editor = original_editor;
+            }
+        }
+        // fall through, accept the diff
+    }
     if (editor) {
         let state = estate.state_of_editor(editor, "pressed_tab");
         if (state && state.get_mode() === Mode.Diff) {

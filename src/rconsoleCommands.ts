@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import * as fetchAPI from "./fetchAPI";
 import * as chatTab from "./chatTab";
 import * as rconsoleCommands from "./rconsoleCommands";
-import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 
 
@@ -115,7 +114,8 @@ export async function stream_chat_without_visible_chat(
     }
     state.showing_diff_for_range = selected_range;
     await estate.switch_mode(state, estate.Mode.DiffWait);
-    interactiveDiff.animation_start(editor, state); // this is an async function, active until the state is still DiffWait
+    // Don't need anymore: user is already entertained
+    // interactiveDiff.animation_start(editor, state); // this is an async function, active until the state is still DiffWait
 
     let answer = "";
     let answer_role = "";
@@ -213,11 +213,15 @@ export async function stream_chat_without_visible_chat(
 function _run_command(cmd: string, doc_uri: string, messages: Messages, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
 {
     let text = commands_available[cmd] || "";
-    let editor = vscode.window.visibleTextEditors.find((editor) => {
-        return editor.document.uri.toString() === doc_uri && !editor.selection.isEmpty;
+    let editor = vscode.window.visibleTextEditors.find((e) => {
+        return e.document.uri.toString() === doc_uri;
     });
     if (!editor) {
         console.log("_run_command: no editor found for " + doc_uri);
+        let editor2 = vscode.window.visibleTextEditors.find((e) => {
+            return e.document.uri.toString() === doc_uri;
+        });
+        console.log("_run_command: editor2", editor2);
         return;
     }
     let [official_selection, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
@@ -228,6 +232,7 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, update_t
     messageWithUserInput.push(["user", "```\n" + code_snippet + "\n```\n\n" + text + "\n"]);
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancellationToken = cancellationTokenSource.token;
+    editor.selection = new vscode.Selection(editor.selection.start, editor.selection.start);
     rconsoleCommands.stream_chat_without_visible_chat(
         messageWithUserInput,
         editor,
@@ -250,7 +255,3 @@ export function register_commands(): vscode.Disposable[]
     }
     return dispos;
 }
-
-// export let commands_available: { [key: string]: string } = {
-//     "mcs": "Make Code Shorter",
-
