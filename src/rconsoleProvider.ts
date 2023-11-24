@@ -184,7 +184,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                             });
                         }
                         // messages = [["Command", cmd]];
-                        messages = [];
+                        // messages = [];
                         messages_to_comments();
                         activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
                         return;
