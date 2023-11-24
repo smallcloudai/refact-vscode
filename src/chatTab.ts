@@ -606,7 +606,7 @@ export class ChatTab {
 
                     <div class="refactcss-chat__wrapper">
                         <div class="refactcss-chat__inner">
-                            <div class="refactcss-chat__content">
+                            <div class="refactcss-chat__content" ${isTab ? "data-state=\"tab\"": ""}>
                                 <div class="refactcss-chat__welcome">
                                     Welcome to Refact chat! How can I assist you today? Please type question below.
                                 </div>
