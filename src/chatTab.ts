@@ -136,6 +136,16 @@ export class ChatTab {
         panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
             switch(type) {
                 case "chat-question-enter-hit": {
+                    // handle retries here
+                    if(data.chat_messages_backup.length < tab.get_messages().length) {
+                        await tab._clear_and_repopulate_chat(
+                            data.chat_question,
+                            undefined,
+                            data.chat_attach_file,
+                            data.chat_model,
+                            data.chat_messages_backup,
+                        );
+                    }
                     return await tab.post_question_and_communicate_answer(
                         data.chat_question,
                         data.chat_model,
@@ -208,9 +218,10 @@ export class ChatTab {
         this.messages = messages;
 
         // This refills the chat
-        global.side_panel?._view?.webview.postMessage({
+        this.web_panel.webview.postMessage({
             command: "chat-clear",
         });
+
         let messages_backup: [string, string][] = [];
         for (let i = 0; i < messages.length; i++) {
             let [role, content] = messages[i];
