@@ -25,7 +25,14 @@ export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Rang
     let pos1 = selection.end;
     let attach = "";
     while (1) {
-        let attach_test = editor.document.getText(new vscode.Range(pos0, pos1));
+        let attach_before = editor.document.getText(new vscode.Range(pos0, selection.start));
+        let attach_after = editor.document.getText(new vscode.Range(selection.start, pos1));
+        let attach_test;
+        if (code_snippet.length > 0) {
+            attach_test = attach_before + attach_after;
+        } else {
+            attach_test = attach_before + "\n|INSERT-HERE|\n" + attach_after;
+        }
         if (attach_test.length > 2000) {
             break;
         }
@@ -43,6 +50,7 @@ export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Rang
             break;
         }
     }
+    [attach] = crlf.cleanup_cr_lf(attach, []);
     return [selection, attach, short_fn, code_snippet];
 }
 
@@ -296,10 +304,12 @@ export class ChatTab {
         } else if (role === "context_file") {
             command = "chat-post-decoration";
             let files = JSON.parse(content);
-            // let file_content = file_dict["file_content"];
-            // file_content = escape(file_content);
             for (let file_dict of files) {
-                md += `<span title="hren">📎 ${file_dict["file_name"]}</span><br/>\n`;
+                let file_content = file_dict["file_content"];
+                // FIXME
+                // file_content = file_content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+                file_content = "line1\nline2";
+                md += `<span title="${file_content}">📎 ${file_dict["file_name"]}</span><br/>\n`;
             }
         }
 

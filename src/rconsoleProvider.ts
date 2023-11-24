@@ -187,7 +187,12 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                 }
             } else {
                 hint_mode = false;
-                let question = "```\n" + code_snippet + "\n```\n\n" + text;
+                let question;
+                if (code_snippet === "") {
+                    question = "Replace |INSERT-HERE| with the following:\n\n" + text;
+                } else {
+                    question = "```\n" + code_snippet + "\n```\n\n" + text;
+                }
                 activate_chat(messages, question, editor);
             }
         }
