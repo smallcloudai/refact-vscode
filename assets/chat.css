@@ -59,6 +59,10 @@ body.vscode-dark {
     overflow-y: auto;
 }
 
+.refactcss-chat__content[data-state="tab"] {
+    padding-top: 10px;
+}
+
 .refactcss-chat__welcome {
     padding: 10px;
     margin-bottom: 10px;
