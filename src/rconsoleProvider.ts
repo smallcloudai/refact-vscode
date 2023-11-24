@@ -108,19 +108,6 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
     function messages_to_comments() {
-        // use this to show all of the messages from the ai
-        // let new_comments = [];
-        // for (let [author, text] of messages) {
-        //     if (author === "context_file") {
-        //         continue;
-        //     }
-        //     if (author === "user") {
-        //         continue;
-        //     }
-        //     new_comments.push(message_to_comment(author, text));
-        // }
-
-        // use this to only show the most recent message from the ai
         const assistant_messages = messages.filter(message => message[0] !== "context_file" && message[0] !== "user");
         const last_message = assistant_messages.slice(-1);
         const new_comments = last_message.map(([author, message]) => message_to_comment(author, message));
