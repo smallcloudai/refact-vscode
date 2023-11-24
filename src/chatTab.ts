@@ -382,6 +382,12 @@ export class ChatTab {
             this.messages,
             model,
         );
+
+        // update side panel if this is a new question and no other chat is active
+        if("reveal" in this.web_panel && this.messages.length === 1 && global.side_panel && global.side_panel.chat === null) {
+            global.side_panel.goto_main();
+        }
+
         if (this.messages.length > 10) {
             this.messages.shift();
             this.messages.shift(); // so it always starts with a user
