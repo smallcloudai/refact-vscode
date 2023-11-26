@@ -1210,19 +1210,18 @@ body.vscode-light .refact-welcome__subpanel {
 	display: none;
 	color: var(--vscode-editorError-foreground);
 }
-
 .refact-welcome__telemetry label {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	padding-left: 0;
+	margin-bottom: 7px;
+	font-size: 12px;
+	line-height: 12px;
 }
-.refact-welcome__telemetryinput {
-	margin-left: 0 !important;
-	padding-left: 0 !important;
- }
-.refact-welcome__telemetrynotice {
-	font-size: 11px;
-	opacity: 0.7;
-	margin-top: 4px;
-	margin-bottom: 4px;
- }
+.refact-welcome__telemetrybasic,
+.refact-welcome__telemetrycode {
+	padding: 0 !important;
+	margin: 0 !important;
+	margin-right: 4px !important;
+	margin-top: -1px !important;
+}

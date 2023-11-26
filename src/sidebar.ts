@@ -336,6 +336,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
             break;
         }
+        case "save_telemetry_settings": {
+            await vscode.workspace.getConfiguration().update('refactai.telemetryBasic', data.basic, vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
+        }
         case "stop-clicked": {
             this.chat?.cancellationTokenSource.cancel();
             break;
@@ -392,6 +396,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             );
         const nonce = this.getNonce();
         const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
+        let telemetry_basic = '';
+        if(vscode.workspace.getConfiguration().get('refactai.telemetryBasic')) {
+            telemetry_basic = 'checked';
+        }
+        let telemetry_code = '';
+        if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
+            telemetry_code = 'checked';
+        }
         let existing_address = vscode.workspace.getConfiguration().get("refactai.addressURL");
         if (typeof existing_address !== "string" || (typeof existing_address === "string" && !existing_address.match(/^https?:\/\//))) {
             existing_address = "";
@@ -465,8 +477,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 </div>
                                 </label>
                                 <div class="refact-welcome__telemetry">
-                                    <label><input class="refact-welcome__telemetryinput" type="checkbox" id="telemetry" name="telemetry" value="true" checked>Send service telemetry to Refact</label>
-                                    <div class="refact-welcome__telemetrynotice">Only suggestion quality metrics will be sent, no real data.</div>
+                                    <label><input class="refact-welcome__telemetrybasic" type="checkbox" id="telemetry" name="telemetrybasic" value="true" ${telemetry_basic}>Send errors for debugging, human/robot charater counters.</label>
+                                    <label><input class="refact-welcome__telemetrycode" type="checkbox" id="telemetrycode" name="telemetrycode" value="true" ${telemetry_code}>Send corrected code snippets.</label>
                                 </div>
                                 <div class="refact-welcome__actions">
                                     <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
