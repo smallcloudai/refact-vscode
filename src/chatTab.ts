@@ -8,14 +8,6 @@ import ChatHistoryProvider from "./chatHistory";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 
-
-export enum ChatEventNames {
-    CHAT_QUESTION_ENTER_HIT = "chat-question-enter-hit",
-    OPEN_NEW_FILE = "open-new-file",
-    STOP_CLICKED = "stop-clicked",
-    DIFF_PASTE_BACK = "diff-paste-back"
-}
-
 export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Range, string, string, string]
 {
     let selection = editor.selection;
@@ -146,16 +138,16 @@ export class ChatTab {
 
     async handleEvents({type, ...data}: any) {
         switch(type) {
-            case ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
+            case "chat-question-enter-hit": {
                 return this.handleEnterHit(data);
             }
-            case ChatEventNames.OPEN_NEW_FILE: {
+            case "open-new-file": {
                 return ChatTab.handleOpenNewFile(data);
             }
-            case ChatEventNames.STOP_CLICKED: {
+            case "stop-clicked": {
                 return this.handleStopClicked();
             }
-            case ChatEventNames.DIFF_PASTE_BACK: {
+            case "diff-paste-back": {
                 return this.handleDiffPasteBack(data);
             }
         }
