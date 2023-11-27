@@ -246,44 +246,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
             break;
         }
-        case "open-new-file": {
-            vscode.workspace.openTextDocument().then((document) => {
-                vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
-                    .then((editor) => {
-                        editor.edit((editBuilder) => {
-                        editBuilder.insert(new vscode.Position(0, 0), data.value);
-                    });
-                });
-            });
+        case chatTab.ChatEventNames.OPEN_NEW_FILE: {
+            chatTab.ChatTab.handleOpenNewFile(data);
             break;
         }
-        case "diff-paste-back": {
+        case chatTab.ChatEventNames.DIFF_PASTE_BACK: {
             let chat = this.chat;
             if (!chat) {
                 break;
             }
-            if (!chat.working_on_snippet_editor) {
-                return;
-            }
-            await vscode.window.showTextDocument(
-                chat.working_on_snippet_editor.document,
-                chat.working_on_snippet_column
-            );
-            let state = estate.state_of_document(
-                chat.working_on_snippet_editor.document
-            );
-            if (!state) {
-                return;
-            }
-            if (!chat.working_on_snippet_range) {
-                return;
-            }
-            let editor = state.editor;
-            chatTab.diff_paste_back(
-                editor,
-                chat.working_on_snippet_range,
-                data.code_block,
-            );
+            chat.handleDiffPasteBack(data);
             break;
         }
         case chatTab.ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
@@ -320,12 +292,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
             break;
         }
+        case chatTab.ChatEventNames.STOP_CLICKED: {
+            this.chat?.handleStopClicked();
+            break;
+        }
         case "save_telemetry_settings": {
             await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
-        }
-        case "stop-clicked": {
-            this.chat?.cancellationTokenSource.cancel();
-            break;
         }
         case "back-from-chat": {
             this.goto_main();
