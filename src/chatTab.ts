@@ -85,6 +85,7 @@ export class ChatTab {
         public chat_id = ""
     ) {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
+        this.handleEvents = this.handleEvents.bind(this);
     }
 
     async focus() {
@@ -138,28 +139,29 @@ export class ChatTab {
 
         panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
 
-        panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
-            switch(type) {
-                case ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
-                    return tab.handleEnterHit(data);
-                }
-                case ChatEventNames.OPEN_NEW_FILE: {
-                    return ChatTab.handleOpenNewFile(data);
-                }
-                case ChatEventNames.STOP_CLICKED: {
-                    return tab.handleStopClicked();
-                }
-                case ChatEventNames.DIFF_PASTE_BACK: {
-                    return tab.handleDiffPasteBack(data);
-                }
-
-            }
-        });
+        panel.webview.onDidReceiveMessage(tab.handleEvents);
 
         await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
     }
 
-    async handleDiffPasteBack(data: {code_block: string}) {
+    async handleEvents({type, ...data}: any) {
+        switch(type) {
+            case ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
+                return this.handleEnterHit(data);
+            }
+            case ChatEventNames.OPEN_NEW_FILE: {
+                return ChatTab.handleOpenNewFile(data);
+            }
+            case ChatEventNames.STOP_CLICKED: {
+                return this.handleStopClicked();
+            }
+            case ChatEventNames.DIFF_PASTE_BACK: {
+                return this.handleDiffPasteBack(data);
+            }
+        }
+    }
+
+    private async handleDiffPasteBack(data: {code_block: string}) {
         if (!this.working_on_snippet_editor) {
             return;
         }
@@ -183,11 +185,11 @@ export class ChatTab {
         );
     }
 
-    handleStopClicked() {
+    private handleStopClicked() {
         return this.cancellationTokenSource.cancel();
     }
 
-    static async handleOpenNewFile(data : {value: string}) {
+    private static async handleOpenNewFile(data : {value: string}) {
         vscode.workspace.openTextDocument().then((document) => {
             vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
                 .then((editor) => {
@@ -198,7 +200,7 @@ export class ChatTab {
         });
     }
 
-    async handleEnterHit({
+    private async handleEnterHit({
         chat_question = "",
         chat_model = "",
         chat_attach_file = false,
