@@ -434,8 +434,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                                 <label class="refact-welcome__select" data-type="personal">
                                     <div class="refact-welcome__content">
-                                        <input type="radio" class="refact-welcome__radio" value="personal" name="account-type" />
-                                        <span>Cloud</span>
+                                        <div class="refact-welcome__inlinewrap">
+                                            <input type="radio" class="refact-welcome__radio" value="personal" name="account-type" />
+                                            <span>Cloud</span>
+                                        </div>
                                         <div class="refact-welcome__desc">
                                             <ul>
                                                 <li>Easy to start</li>
@@ -448,8 +450,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                                 <label class="refact-welcome__select" data-type="self-hosting">
                                     <div class="refact-welcome__content">
-                                        <input type="radio" class="refact-welcome__radio" value="self-hosting" name="account-type" />
-                                        <span>Self-hosting</span>
+                                        <div class="refact-welcome__inlinewrap">
+                                            <input type="radio" class="refact-welcome__radio" value="self-hosting" name="account-type" />
+                                            <span>Self-hosting</span>
+                                        </div>
                                         <div class="refact-welcome__desc">
                                             <ul>
                                                 <li>Uses your own server</li>
@@ -461,8 +465,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                                 <label class="refact-welcome__select" data-type="enterprise">
                                 <div class="refact-welcome__content">
-                                    <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />
-                                    <span>Enterprise</span>
+                                    <div class="refact-welcome__inlinewrap">
+                                        <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />
+                                        <span>Enterprise</span>
+                                    </div>
                                     <div class="refact-welcome__desc">
                                         <ul>
                                             <li>Doesn't connect to a public cloud</li>
@@ -507,6 +513,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             </div>
                             <div class="refact-welcome__error-refact">Please Login / Create Account or enter API key</div>
                             <div class="refact-welcome__telemetry">
+                                <p>Refact plugin will send corrected by you code snippets. This will help to make model better. <a href="https://github.com/smallcloudai/refact-lsp/blob/main/README.md#telemetry">Read more</a></p>
                                 <label><input class="refact-welcome__telemetrycode" type="checkbox" id="telemetrycode" name="telemetrycode" value="true" ${telemetry_code}>Send corrected code snippets.</label>
                             </div>
                             <div class="refact-welcome__actions">

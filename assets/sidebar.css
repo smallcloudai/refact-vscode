@@ -984,8 +984,7 @@ body.vscode-light #logout {
 	box-sizing: border-box;
 }
 .refact-welcome__whole {
-	padding: 0 10px;
-	margin-top: 10px;
+	padding: 10px 10px 0;
 }
 .refact-welcome__menu { }
 .refact-welcome__lead {
@@ -1017,13 +1016,17 @@ body.vscode-light .refact-welcome__provider:hover {
 .refact-welcome__select input {
 	/* display: none; */
 }
+.refact-welcome__inlinewrap {
+	display: flex;
+	align-items: center;	
+}
 .refact-welcome__select ul {
-	padding-left: 30px;
+	padding-left: 13px;
 	margin-top: 5px;
 	list-style-type: '- ';
 }
 .refact-welcome__select span {
-	margin-left: 8px;
+	margin-left: 5px;
 	font-size: 14px;
 }
 .refact-welcome__select--selected {
@@ -1209,6 +1212,9 @@ body.vscode-light .refact-welcome__subpanel {
 .refact-welcome__error-enterprise {
 	display: none;
 	color: var(--vscode-editorError-foreground);
+}
+.refact-welcome__telemetry {
+	margin-top: 25px;
 }
 .refact-welcome__telemetry label {
 	display: flex;
