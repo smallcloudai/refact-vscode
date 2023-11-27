@@ -286,27 +286,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             );
             break;
         }
-        case "chat-question-enter-hit": {
+        case chatTab.ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
             if (!this.chat) {
                 break;
             }
-            if (this.chat && data.chat_messages_backup.length < this.chat.get_messages().length) {
-                console.log(`oops, we need ${data.chat_messages_backup.length} messages, in chat that already added ${this.chat.get_messages().length}`);
-                await chatTab.ChatTab.clear_and_repopulate_chat(
-                    data.chat_question,
-                    undefined,
-                    data.chat_attach_file,
-                    data.chat_model,
-                    data.chat_messages_backup,
-                );
-            }
-            await this.chat.post_question_and_communicate_answer(
-                data.chat_question,
-                data.chat_model,
-                "",
-                data.chat_attach_file,
-                data.chat_messages_backup,
-                );
+            this.chat.handleEnterHit(data);
             break;
         }
         case "restore_chat": {
