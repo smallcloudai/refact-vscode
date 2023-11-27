@@ -439,7 +439,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                         <div class="refact-welcome__desc">
                                             <ul>
                                                 <li>Easy to start</li>
-                                                <li>Opt-in telemetry to help this open source project</li>
+                                                <li>Free tier</li>
+                                                <li>You can opt-in for data snippets collection, off by default</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -452,7 +453,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                         <div class="refact-welcome__desc">
                                             <ul>
                                                 <li>Uses your own server</li>
-                                                <li>Opt-in telemetry to help this open source project</li>
+                                                <li>Your code never leaves your control</li>
                                             </ul>
                                         </div>
                                     </div>
@@ -464,9 +465,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                     <span>Enterprise</span>
                                     <div class="refact-welcome__desc">
                                         <ul>
-                                            <li>Doesn't connect to public cloud ever</li>
+                                            <li>Doesn't connect to a public cloud</li>
                                             <li>Uses your private server only</li>
-                                            <li>Sends telemetry to your private server</li>
+                                            <li>Sends telemetry and code snippets to your private server</li>
                                         </ul>
                                     </div>
                                 </div>
