@@ -9,6 +9,10 @@ const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsd
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 
 
+export enum ChatEventNames {
+    CHAT_QUESTION_ENTER_HIT = "chat-question-enter-hit",
+}
+
 export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Range, string, string, string]
 {
     let selection = editor.selection;
@@ -135,29 +139,40 @@ export class ChatTab {
 
         panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
             switch(type) {
-                case "chat-question-enter-hit": {
+                case ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
                     // handle retries here
-                    if(data.chat_messages_backup.length < tab.get_messages().length) {
-                        await tab._clear_and_repopulate_chat(
-                            data.chat_question,
-                            undefined,
-                            data.chat_attach_file,
-                            data.chat_model,
-                            data.chat_messages_backup,
-                        );
-                    }
-                    return await tab.post_question_and_communicate_answer(
-                        data.chat_question,
-                        data.chat_model,
-                        "",
-                        data.chat_attach_file,
-                        data.chat_messages_backup,
-                    );
+                    return tab.handleEnterHit(data);
                 }
             }
         });
 
         await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
+    }
+
+    async handleEnterHit({
+        chat_question = "",
+        chat_model = "",
+        chat_attach_file = false,
+        chat_messages_backup = []
+    }) {
+        if(chat_messages_backup.length < this.get_messages().length) {
+            console.log(`oops, we need ${chat_messages_backup.length} messages, in chat that already added ${this.get_messages().length}`);
+            await this._clear_and_repopulate_chat(
+                chat_question,
+                undefined,
+                chat_attach_file,
+                chat_model,
+                chat_messages_backup,
+            );
+        }
+        return await this.post_question_and_communicate_answer(
+            chat_question,
+            chat_model,
+            "",
+            chat_attach_file,
+            chat_messages_backup,
+        );
+
     }
 
     public static async clear_and_repopulate_chat(
