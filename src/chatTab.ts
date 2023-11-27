@@ -138,7 +138,6 @@ export class ChatTab {
         panel.webview.onDidReceiveMessage(async ({type, ...data}) => {
             switch(type) {
                 case ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
-                    // handle retries here
                     return tab.handleEnterHit(data);
                 }
             }
@@ -154,6 +153,7 @@ export class ChatTab {
         chat_messages_backup = []
     }) {
         if(chat_messages_backup.length < this.get_messages().length) {
+            // handle retries
             console.log(`oops, we need ${chat_messages_backup.length} messages, in chat that already added ${this.get_messages().length}`);
             await this._clear_and_repopulate_chat(
                 chat_question,
