@@ -440,7 +440,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                             <ul>
                                                 <li>Easy to start</li>
                                                 <li>Free tier</li>
-                                                <li>You can opt-in for data snippets collection, off by default</li>
+                                                <li>You can opt-in for code snippets collection to help this open source project, off by default</li>
                                             </ul>
                                         </div>
                                     </div>
