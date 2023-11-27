@@ -8,6 +8,10 @@ import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
 
+type Handler = ((data: any) => void) | undefined;
+function composeHandlers(...eventHandlers: Handler[]) {
+    return (data: any) => eventHandlers.forEach(fn => fn && fn(data));
+}
 
 export async function open_chat_tab(
     question: string,
@@ -55,6 +59,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     constructor(private readonly _context: any) {
         this.chatHistoryProvider = undefined;
         this.address = "";
+        this.js2ts_message = this.js2ts_message.bind(this);
+    }
+
+    handleEvents(data: any) {
+        if(!this._view) { return; }
+        return composeHandlers(this.chat?.handleEvents, this.js2ts_message)(data);
     }
 
     public make_sure_have_chat_history_provider()
@@ -102,7 +112,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
 
         webviewView.webview.onDidReceiveMessage(async (data) => {
-            this.js2ts_message(data);
+            this.handleEvents(data);
         });
     }
 
@@ -246,25 +256,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
             break;
         }
-        case chatTab.ChatEventNames.OPEN_NEW_FILE: {
-            chatTab.ChatTab.handleOpenNewFile(data);
-            break;
-        }
-        case chatTab.ChatEventNames.DIFF_PASTE_BACK: {
-            let chat = this.chat;
-            if (!chat) {
-                break;
-            }
-            chat.handleDiffPasteBack(data);
-            break;
-        }
-        case chatTab.ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
-            if (!this.chat) {
-                break;
-            }
-            this.chat.handleEnterHit(data);
-            break;
-        }
         case "restore_chat": {
             const chat_id = data.chat_id;
             if (!chat_id) {
@@ -290,10 +281,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     chat_id,
                 );
             }
-            break;
-        }
-        case chatTab.ChatEventNames.STOP_CLICKED: {
-            this.chat?.handleStopClicked();
             break;
         }
         case "back-from-chat": {
