@@ -11,6 +11,9 @@ import { marked } from 'marked'; // Markdown parser documentation: https://marke
 
 export enum ChatEventNames {
     CHAT_QUESTION_ENTER_HIT = "chat-question-enter-hit",
+    OPEN_NEW_FILE = "open-new-file",
+    STOP_CLICKED = "stop-clicked",
+    DIFF_PASTE_BACK = "diff-paste-back"
 }
 
 export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Range, string, string, string]
@@ -140,48 +143,59 @@ export class ChatTab {
                 case ChatEventNames.CHAT_QUESTION_ENTER_HIT: {
                     return tab.handleEnterHit(data);
                 }
-                case "open-new-file": {
-                    return vscode.workspace.openTextDocument().then((document) => {
-                        vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
-                            .then((editor) => {
-                                editor.edit((editBuilder) => {
-                                editBuilder.insert(new vscode.Position(0, 0), data.value);
-                            });
-                        });
-                    });
+                case ChatEventNames.OPEN_NEW_FILE: {
+                    return ChatTab.handleOpenNewFile(data);
                 }
-                case "stop-clicked": {
-                    tab.cancellationTokenSource.cancel();
-                    return;
+                case ChatEventNames.STOP_CLICKED: {
+                    return tab.handleStopClicked();
                 }
-                case "diff-paste-back": {
-                    if (!tab.working_on_snippet_editor) {
-                        return;
-                    }
-                    await vscode.window.showTextDocument(
-                        tab.working_on_snippet_editor.document,
-                        tab.working_on_snippet_column
-                    );
-                    let state = estate.state_of_document(
-                        tab.working_on_snippet_editor.document
-                    );
-                    if (!state) {
-                        return;
-                    }
-                    if (!tab.working_on_snippet_range) {
-                        return;
-                    }
-                    return diff_paste_back(
-                        state.editor,
-                        tab.working_on_snippet_range,
-                        data.code_block,
-                    );
+                case ChatEventNames.DIFF_PASTE_BACK: {
+                    return tab.handleDiffPasteBack(data);
                 }
 
             }
         });
 
         await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
+    }
+
+    async handleDiffPasteBack(data: {code_block: string}) {
+        if (!this.working_on_snippet_editor) {
+            return;
+        }
+        await vscode.window.showTextDocument(
+            this.working_on_snippet_editor.document,
+            this.working_on_snippet_column
+        );
+        let state = estate.state_of_document(
+            this.working_on_snippet_editor.document
+        );
+        if (!state) {
+            return;
+        }
+        if (!this.working_on_snippet_range) {
+            return;
+        }
+        return diff_paste_back(
+            state.editor,
+            this.working_on_snippet_range,
+            data.code_block,
+        );
+    }
+
+    handleStopClicked() {
+        return this.cancellationTokenSource.cancel();
+    }
+
+    static async handleOpenNewFile(data : {value: string}) {
+        vscode.workspace.openTextDocument().then((document) => {
+            vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+                .then((editor) => {
+                    editor.edit((editBuilder) => {
+                    editBuilder.insert(new vscode.Position(0, 0), data.value);
+                });
+            });
+        });
     }
 
     async handleEnterHit({
