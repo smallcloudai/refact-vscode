@@ -337,7 +337,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "save_telemetry_settings": {
-            await vscode.workspace.getConfiguration().update('refactai.telemetryBasic', data.basic, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
         }
         case "stop-clicked": {
@@ -396,10 +395,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             );
         const nonce = this.getNonce();
         const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
-        let telemetry_basic = '';
-        if(vscode.workspace.getConfiguration().get('refactai.telemetryBasic')) {
-            telemetry_basic = 'checked';
-        }
         let telemetry_code = '';
         if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
             telemetry_code = 'checked';
@@ -476,10 +471,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                     </div>
                                 </div>
                                 </label>
-                                <div class="refact-welcome__telemetry">
-                                    <label><input class="refact-welcome__telemetrybasic" type="checkbox" id="telemetry" name="telemetrybasic" value="true" ${telemetry_basic}>Send errors for debugging, human/robot charater counters.</label>
-                                    <label><input class="refact-welcome__telemetrycode" type="checkbox" id="telemetrycode" name="telemetrycode" value="true" ${telemetry_code}>Send corrected code snippets.</label>
-                                </div>
                                 <div class="refact-welcome__actions">
                                     <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
                                 </div>
@@ -514,6 +505,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                                 <input class="refact-welcome__apikey_refact refact-welcome__input" type="text" name="api_key" value="${api_key}">
                             </div>
                             <div class="refact-welcome__error-refact">Please Login / Create Account or enter API key</div>
+                            <div class="refact-welcome__telemetry">
+                                <label><input class="refact-welcome__telemetrycode" type="checkbox" id="telemetrycode" name="telemetrycode" value="true" ${telemetry_code}>Send corrected code snippets.</label>
+                            </div>
                             <div class="refact-welcome__actions">
                                 <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
                                 <button class="refact-welcome__next refact-welcome__next_refact">Next&nbsp;&nbsp;&rsaquo;</button>

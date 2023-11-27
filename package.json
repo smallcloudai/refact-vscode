@@ -121,11 +121,6 @@
 					"description": "Pause automatic code suggestions. Manual activation still works.",
 					"default": false
 				},
-				"refactai.telemetryBasic": {
-					"type": "boolean",
-					"description": "Send errors for debugging, human/robot charater counters.",
-					"default": false
-				},
 				"refactai.telemetryCodeSnippets": {
 					"type": "boolean",
 					"description": "Send corrected code snippets.",

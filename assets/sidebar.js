@@ -31,13 +31,16 @@ function sidebar_general_script(vscode) {
     welcome_next_button.addEventListener("click", () => {
         const selection_type = document.querySelector('.refact-welcome__select--selected').querySelector('.refact-welcome__radio').value;
         change_welcome_subscreen(selection_type);
-        vscode.postMessage({
-            type: "save_telemetry_settings",
-            basic: document.querySelector('.refact-welcome__telemetrybasic').checked,
-            code: document.querySelector('.refact-welcome__telemetrybasic').checked
-        });
     });
 
+    const telemetry_optin = document.querySelector('#telemetrycode');
+    telemetry_optin.addEventListener('change',()=> {
+        vscode.postMessage({
+            type: "save_telemetry_settings",
+            code: document.querySelector('.refact-welcome__telemetrycode').checked
+        });
+    });
+    
     const next_button_refact = document.querySelector('.refact-welcome__next_refact');
     next_button_refact.addEventListener("click", () => {
         const enter_apikey = document.querySelector('.refact-welcome__apikey_refact');
