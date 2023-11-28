@@ -120,13 +120,15 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
 
-    function messages_to_comments() {
+    function messages_to_comments(clear = false) {
         const assistant_messages = messages.filter(message => message[0] !== "context_file" && message[0] !== "user");
         const last_message = assistant_messages.slice(-1);
-        const new_comments = last_message.map(([author, message]) => message_to_comment(author, message));
+        let new_comments = last_message.map(([author, message]) => message_to_comment(author, message));
 
-        if (new_comments.length === 0) {
-            new_comments.push(message_to_comment(embelish_author("assistant"), "Thinking..."));
+        if (new_comments.length === 0 || clear) {
+            new_comments = [
+                message_to_comment(embelish_author("assistant"), "Thinking...")
+            ];
         }
         thread.comments = new_comments;
     }
@@ -218,7 +220,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                         }
                         // messages = [["Command", cmd]];
                         // messages = [];
-                        messages_to_comments();
+                        messages_to_comments(true); // use this to remove chat
                         activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
                         return;
                     }
