@@ -22,6 +22,9 @@ export class MyComment implements vscode.Comment {
 
     constructor(body: string, mode: vscode.CommentMode, author: vscode.CommentAuthorInformation) {
         this.body = new vscode.MarkdownString();
+        this.body.isTrusted = {
+            enabledCommands: Object.keys(rconsoleCommands.commands_available).map(cmd => rconsoleCommands.createCommandName(cmd))
+        };
         this.body.appendMarkdown(body);
         this.body.isTrusted = true;
         this.body.supportHtml = true;
@@ -147,6 +150,27 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     };
     let text = "";
     let hint_debounce: NodeJS.Timeout|undefined;
+    const disposable_commands: vscode.Disposable[] = [];
+    const disposeCommands = () => {
+        disposable_commands.forEach(command => command.dispose());
+    };
+
+    const addCommand = (cmd: string) => {
+        const commandName = rconsoleCommands.createCommandName(cmd);
+        disposable_commands.push(
+            vscode.commands.registerCommand(commandName, () =>  {
+                activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
+            })
+        );
+    };
+
+    const registerCommands = () => {
+        disposeCommands();
+        Object.keys(rconsoleCommands.commands_available).forEach(cmd => {
+            addCommand(cmd);
+        });
+    };
+
     let did1 = vscode.workspace.onDidChangeTextDocument(async e => {
         console.log("onDidChangeTextDocument", e.document.uri, messages.length);
         if (e.document.uri.scheme !== "comment") {
@@ -156,6 +180,11 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             return;
         }
         text = e.document.getText();
+        if(text.startsWith("/")) {
+            registerCommands();
+        } else {
+            disposeCommands();
+        }
 
         if (text.includes("\n")) {
             let comment_editor = vscode.window.visibleTextEditors.find((e1) => {
@@ -222,6 +251,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         if (e.uri.scheme !== "comment") {
             return;
         }
+        disposeCommands();
         refact_console_close();
     });
     global.comment_disposables.push(did1);
