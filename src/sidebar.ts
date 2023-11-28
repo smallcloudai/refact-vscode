@@ -513,8 +513,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             </div>
                             <div class="refact-welcome__error-refact">Please Login / Create Account or enter API key</div>
                             <div class="refact-welcome__telemetry">
-                                <p>Refact plugin will send corrected by you code snippets. This will help to make model better. <a href="https://github.com/smallcloudai/refact-lsp/blob/main/README.md#telemetry">Read more</a></p>
+                                <p>Help Refact collect a dataset of corrected code completions!
+                                This will help to improve code suggestions more to your preferences, and it also will improve code suggestions for everyone else.
+                                Hey, we're not an evil corporation!</p>
                                 <label><input class="refact-welcome__telemetrycode" type="checkbox" id="telemetrycode" name="telemetrycode" value="true" ${telemetry_code}>Send corrected code snippets.</label>
+                                <p>Basic telemetry is always on when using cloud inference, but it only sends errors and counters.
+                                <a href="https://github.com/smallcloudai/refact-lsp/blob/main/README.md#telemetry">How telemetry works in open source refact-lsp</a></p>
                             </div>
                             <div class="refact-welcome__actions">
                                 <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
