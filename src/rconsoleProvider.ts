@@ -74,6 +74,16 @@ export function refact_console_close(): vscode.Uri|undefined
     return ret;
 }
 
+function update_context_file_with_insert_tag(messages: rconsoleCommands.Messages, editor: vscode.TextEditor): rconsoleCommands.Messages {
+    return messages.map(([type, text]) => {
+        if(type === "context_file") {
+            const [_official_selection, working_on_attach_code, working_on_attach_filename, _code_snippet] = chatTab.attach_code_from_editor(editor, true);
+            return rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code)[0];
+        }
+        return [type, text];
+    });
+}
+
 export async function open_refact_console_between_lines(editor: vscode.TextEditor)
 {
     refact_console_close();
@@ -216,12 +226,13 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
             } else {
                 hint_mode = false;
                 let question;
+                const messages_with_insert_tag = update_context_file_with_insert_tag(messages, editor);
                 if (code_snippet === "") {
                     question = "Replace |INSERT-HERE| with the following:\n\n" + text;
                 } else {
                     question = "```\n" + code_snippet + "\n```\n\n" + text;
                 }
-                activate_chat(messages, question, editor);
+                activate_chat(messages_with_insert_tag, question, editor);
             }
         }
 

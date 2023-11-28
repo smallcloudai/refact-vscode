@@ -8,7 +8,8 @@ import ChatHistoryProvider from "./chatHistory";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 
-export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Range, string, string, string]
+
+export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = false): [vscode.Range, string, string, string]
 {
     let selection = editor.selection;
     let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
@@ -28,13 +29,8 @@ export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Rang
     while (1) {
         let attach_before = editor.document.getText(new vscode.Range(pos0, selection.start));
         let attach_after = editor.document.getText(new vscode.Range(selection.start, pos1));
-        let attach_test;
-        if (code_snippet.length > 0) {
-            attach_test = attach_before + attach_after;
-        } else {
-            attach_test = attach_before + "\n|INSERT-HERE|\n" + attach_after;
-        }
-        if (attach_test.length > 2000) {
+        let attach_test = attach_before + `${insert_tag ? "\n|INSERT-HERE|\n" : ""}` + attach_after;
+        if (attach_test && attach_test.length > 2000) {
             break;
         }
         attach = attach_test;
