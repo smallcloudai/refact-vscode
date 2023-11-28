@@ -30,6 +30,7 @@ declare global {
     var user_logged_in: string;
     var user_active_plan: string;
     var user_metering_balance: number;
+    var api_key: string;
     var global_context: vscode.ExtensionContext;
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
@@ -232,6 +233,7 @@ export function activate(context: vscode.ExtensionContext)
     global.have_caps = false;
     global.user_logged_in = "";
     global.user_active_plan = "";
+    global.api_key = "";
     global.user_metering_balance = 0;
     let disposable1 = vscode.commands.registerCommand('refactaicmd.inlineAccepted', inline_accepted);
     let disposable2 = vscode.commands.registerCommand('refactaicmd.codeLensClicked', code_lens_clicked);
@@ -321,6 +323,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(login);
     let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
         context.globalState.update('codifyFirstRun', false);
+        global.api_key = '';
         await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);

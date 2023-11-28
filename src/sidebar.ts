@@ -368,11 +368,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         } else if (plan_msg) {
             plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
         }
-
         this._view!.webview.postMessage({
             command: "ts2js",
             ts2js_user: global.user_logged_in,
             ts2js_havekey: have_key,
+            ts2js_apikey: global.api_key,
             ts2js_plan: plan_msg,
             ts2js_metering_balance: global.user_metering_balance,
             ts2js_staging: vscode.workspace.getConfiguration().get('refactai.staging'),

@@ -74,9 +74,9 @@ export async function streamlined_login()
             let result = await fetchH2.fetch(req);
             let json: any = await result.json();
             if (json.retcode === "OK") {
-                apiKey = json.secret_key;
+                global.api_key = json.secret_key;
                 global.streamlined_login_ticket = "";
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', apiKey, vscode.ConfigurationTarget.Global);
+                // await vscode.workspace.getConfiguration().update('refactai.apiKey', apiKey, vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
                 await statusBar.send_network_problems_to_status_bar(true, "recall", recall_url, "", "");
                 // fall through

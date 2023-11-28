@@ -1,3 +1,5 @@
+const { glob } = require("glob");
+
 /* eslint-disable @typescript-eslint/naming-convention */
 function sidebar_general_script(vscode) {
     // let presets = document.querySelectorAll(".presets li");
@@ -248,6 +250,7 @@ function sidebar_general_script(vscode) {
 
     const logoutButton = document.querySelector("#logout");
     logoutButton.addEventListener("click", () => {
+        document.querySelector('.refact-welcome__apikey_refact').value = '';
         vscode.postMessage({ type: "js2ts_logout" });
     });
 
@@ -467,6 +470,9 @@ function sidebar_general_script(vscode) {
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 settings.style.display = 'flex';
                 hotkeys.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                if(message.ts2js_apikey) {
+                    document.querySelector('.refact-welcome__apikey_refact').value = message.ts2js_apikey;
+                }
                 break;
             default:
                 break;
