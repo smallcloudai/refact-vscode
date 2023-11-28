@@ -229,7 +229,8 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, update_t
     const messageWithUserInput = [
         ...messages
     ];
-    messageWithUserInput.push(["user", "```\n" + code_snippet + "\n```\n\n" + text + "\n"]);
+    const formatted_question = code_snippet ?  "```\n" + code_snippet + "\n```\n\n" + text + "\n" : `\n${text}\n`;
+    messageWithUserInput.push(["user", formatted_question]);
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancellationToken = cancellationTokenSource.token;
     editor.selection = new vscode.Selection(editor.selection.start, editor.selection.start);
