@@ -23,6 +23,10 @@ export let commands_available: { [key: string]: string } = {
 };
 
 
+export function createCommandName(command: string): string {
+    return `run_rconsole_command_${command}`;
+}
+
 function similarity_score(a: string, b: string): number {
     let score = 0;
     let digrams1 = get_digrams(a);
@@ -74,8 +78,9 @@ export function get_hints(
         let result = "";
         for (let i = 0; i < top3.length; i++) {
             let cmd = top3[i][0];
+            const cmd_name = createCommandName(cmd);
             let text = commands_available[cmd] || "";
-            result += `<a href=\"x\"><b>/${cmd}</b> ${text}</a><br>\n`;
+            result += `[**/${cmd}** ${text}](command:${cmd_name})<br />\n`;
         }
         return [result, "Available commands:", top3[0][0]];
     } else {
