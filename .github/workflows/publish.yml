@@ -74,7 +74,7 @@ jobs:
           if [[ ${{ inputs.stable_release }}  != "true" ]]; then
             export PRERELEASE=--pre-release
           fi
-          echo "PRERELEASE=${{ PRERELEASE }}"
+          echo "PRERELEASE=${PRERELEASE}"
           #vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
 
       - name: Publish VSCE extension
@@ -83,7 +83,7 @@ jobs:
           if [[ ${{ inputs.stable_release }}  != "true" ]]; then
             export PRERELEASE=--pre-release
           fi
-          echo "PRERELEASE=${{ PRERELEASE }}"
+          echo "PRERELEASE=${PRERELEASE}"
           #vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
 
       - name: Upload artifacts
