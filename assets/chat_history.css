@@ -21,16 +21,20 @@ body.vscode-dark {
   --dark: rgba(255, 255, 255, 0.7);
 }
 
-.delete-button {
+.top-right-buttons {
   position: absolute;
   top: 5px;
   right: 5px;
+  display: flex;
+  gap: 4px;
+  padding: 4px 5px;
+}
+
+.delete-button {
   color: var(--color);
   border: none;
   cursor: pointer;
-  padding: 4px 5px;
-  font-size: 18px;
-  border-radius: 50%;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,12 +43,34 @@ body.vscode-dark {
   opacity: 0.4;
   transition: 0.23s all ease-in;
   background-color: transparent;
-
 }
+
 .delete-button:hover {
   opacity: 0.7;
   transition: 0.23s all ease-in;
 }
+
+.move-to-tab-button {
+  color: var(--color);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  opacity: 0.4;
+  transition: 0.23s all ease-in;
+  background-color: transparent;
+}
+
+.move-to-tab-button:hover {
+  opacity: 0.7;
+  transition: 0.23s all ease-in;
+}
+
+
 
 /* #back_button {
   border: var(--secondary);
