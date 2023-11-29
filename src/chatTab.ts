@@ -605,7 +605,7 @@ export class ChatTab {
 
                     ${isTab === false ? `<div class="chat__button-group">
                     <button class="back-button">← Back</button>
-                    <button id="open_chat" class="chat__open-tab-button">🔼 Open In Tab</button>
+                    <button id="open_chat" class="chat__open-tab-button"><svg height="16px" id="icon" style="enable-background:new 0 0 16 16;" version="1.1" viewBox="0 0 16 16" width="16px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><style type="text/css">.st0{fill:none;}</style><title/><path d="M13,13H3V3h5V2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V8h-1V13z"/><polygon points="13,3 13,1 12,1 12,3 10,3 10,4 12,4 12,6 13,6 13,4 15,4 15,3 "/></svg>Open In Tab</button>
                     </div>`: ""}
 
                     <div class="refactcss-chat__wrapper">

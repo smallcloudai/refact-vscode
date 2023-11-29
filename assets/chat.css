@@ -438,6 +438,7 @@ body.vscode-dark {
     border-radius: 6px;
     margin-bottom: 5px;
     margin-left: 10px;
+    height: 34px;
 }
 
 .chat__open-tab-button {
@@ -450,7 +451,19 @@ body.vscode-dark {
     font-size: 13px;
     border-radius: 6px;
     margin-bottom: 5px;
-    margin-left: 10px;
+    margin-left: 5px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+}
+.chat__open-tab-button svg {
+    height: 14px;
+    width: 14px;
+    margin-right: 4px;
+}
+.chat__open-tab-button svg path,
+.chat__open-tab-button svg polygon {
+    fill: var(--secondary);
 }
 
 .chat__open-tab-button:disabled {
@@ -461,7 +474,9 @@ body.vscode-dark {
 
 .chat__button-group {
     width: 100%;
-    padding-bottom: 4px;
+    display: flex;
+    height: 40px;
+    align-items: center;
 }
 
 .vscode-high-contrast .back-button, .vscode-high-contrast .chat__open-tab-button {
