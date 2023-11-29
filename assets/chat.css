@@ -332,25 +332,22 @@ body.vscode-dark {
 }
 
 .refactcss-chat__item ol {
-    padding: 0;
-    counter-reset: mycounter;
+    padding: 0 0 0 25px;
+    /* counter-reset: mycounter; */
 }
 
 .refactcss-chat__item ol li {
-    /* margin: 5px 0; */
-    margin-left: 16px;
-    /* padding-left: 0.5em; */
     margin-top: 5px;
     margin-bottom: 5px;
 }
 
 .refactcss-chat__item ol li:before {
-    content: counter(mycounter) ".";
-    counter-increment: mycounter;
-    position: absolute;
-    left: -2em;
-    width: 1.5em;
-    text-align: right;
+    /* content: counter(mycounter, decimal-leading-zero) ".";
+    counter-increment: mycounter; */
+    /* position: absolute; */
+    /* left: -2em; */
+    /* width: 1.5em; */
+    /* text-align: right; */
 }
 
 .refactcss-chat__regenerate {
