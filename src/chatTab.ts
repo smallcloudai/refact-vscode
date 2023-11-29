@@ -759,6 +759,11 @@ export function diff_paste_back(
     let orig_text0 = text.substring(0, snippet_ofs0);
     let orig_text1 = text.substring(snippet_ofs1);
     let orig_code = text.substring(snippet_ofs0, snippet_ofs1);
+    if (orig_text1.startsWith("\n")) {
+        orig_text1 = orig_text1.substring(1);
+    } else if (orig_text1.startsWith("\r\n")) {
+        orig_text1 = orig_text1.substring(2);
+    }
     [orig_code] = crlf.cleanup_cr_lf(orig_code, []);
     [code_block_clean] = crlf.cleanup_cr_lf(code_block_clean, []);
     code_block_clean = indent_so_diff_is_minimized(orig_code, code_block_clean);
