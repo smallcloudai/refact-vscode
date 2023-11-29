@@ -75,7 +75,7 @@ jobs:
             export PRERELEASE=--pre-release
           fi
           echo "PRERELEASE=${PRERELEASE}"
-          #vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
+          vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
 
       - name: Publish VSCE extension
         shell: bash
@@ -84,7 +84,7 @@ jobs:
             export PRERELEASE=--pre-release
           fi
           echo "PRERELEASE=${PRERELEASE}"
-          #vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
+          vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
