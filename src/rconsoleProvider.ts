@@ -77,9 +77,14 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     global.comment_file_uri = editor.document.uri;
     let [official_selection, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
     let cc = vscode.comments.createCommentController("refactai-test", "RefactAI Test Comments");
+    let next_line = Math.min(official_selection.end.line + 1, editor.document.lineCount - 1);
+    if (official_selection.isEmpty) {
+        next_line = official_selection.end.line;
+    }
+    let comment_thread_range = new vscode.Range(next_line, 0, next_line, 0);
     cc.commentingRangeProvider = {
         provideCommentingRanges: (document: vscode.TextDocument) => {
-            return [official_selection];
+            return [comment_thread_range];
         },
     };
     cc.reactionHandler = (comment: vscode.Comment, reaction: vscode.CommentReaction): Thenable<void> => {
@@ -89,7 +94,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 
     let thread: vscode.CommentThread = cc.createCommentThread(
         editor.document.uri,
-        new vscode.Range(official_selection.start.line, 0, official_selection.end.line, 0),
+        comment_thread_range,
         [],
     );
     let hint_mode = true;

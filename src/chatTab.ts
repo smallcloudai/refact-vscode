@@ -16,7 +16,9 @@ export function attach_code_from_editor(editor: vscode.TextEditor): [vscode.Rang
     let code_snippet = "";
     if (!empty) {
         let last_line_empty = selection.end.character === 0;
-        selection = new vscode.Selection(selection.start.line, 0, selection.end.line, last_line_empty ? 0 : 999999);
+        let last_line_n = Math.max(selection.end.line - (last_line_empty ? 1 : 0), selection.start.line);
+        let last_line_maxpos = editor.document.lineAt(last_line_n).range.end.character;
+        selection = new vscode.Selection(selection.start.line, 0, last_line_n, last_line_maxpos);
         code_snippet = editor.document.getText(selection);
     }
     let fn = editor.document.fileName;
@@ -662,19 +664,19 @@ export function diff_paste_back(
     editor: vscode.TextEditor,
     dest_range: vscode.Range,
     new_code_block: string,
-) {
+): number {
     let state = estate.state_of_document(editor.document);
     if (!state) {
         console.log("diff_paste_back: no state");
-        return;
+        return -1;
     }
     if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.DiffWait) {
         console.log("diff_paste_back: not in normal mode");
-        return;
+        return -1;
     }
     if (dest_range.isEmpty) {
         console.log("diff_paste_back: dest_range is empty");
-        return;
+        return -1;
     }
     let snippet_ofs0 = editor.document.offsetAt(dest_range.start);
     let snippet_ofs1 = editor.document.offsetAt(dest_range.end);
@@ -691,4 +693,12 @@ export function diff_paste_back(
     state.showing_diff_modif_doc = modif_doc;
     state.showing_diff_move_cursor = true;
     estate.switch_mode(state, estate.Mode.Diff);
+    let last_affected_line = -1;
+    if (state.diffAddedLines.length > 0) {
+        last_affected_line = Math.max(...state.diffAddedLines);
+    }
+    if (state.diffDeletedLines.length > 0) {
+        last_affected_line = Math.max(...state.diffDeletedLines);
+    }
+    return last_affected_line;
 }
