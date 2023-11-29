@@ -3,7 +3,7 @@ name: Publish
 on:
   workflow_dispatch:
     inputs:
-      branch:
+      lsp_branch:
         description: "Branch name to publish"
         default: "main"
       stable_release:
@@ -63,7 +63,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
           repo: smallcloudai/refact-lsp
-          branch: ${{ inputs.branch }}
+          branch: ${{ inputs.lsp_branch }}
           path: ./assets
           name: dist-${{ matrix.target }}
 
@@ -74,7 +74,8 @@ jobs:
           if [[ ${{ inputs.stable_release }}  != "true" ]]; then
             export PRERELEASE=--pre-release
           fi
-          vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
+          echo "PRERELEASE=${{ PRERELEASE }}"
+          #vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
 
       - name: Publish VSCE extension
         shell: bash
@@ -82,7 +83,8 @@ jobs:
           if [[ ${{ inputs.stable_release }}  != "true" ]]; then
             export PRERELEASE=--pre-release
           fi
-          vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
+          echo "PRERELEASE=${{ PRERELEASE }}"
+          #vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3

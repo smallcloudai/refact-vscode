@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as mod_child_process from 'child_process';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from './userLogin';
 import { join } from 'path';
