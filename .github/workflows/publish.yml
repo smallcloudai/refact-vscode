@@ -6,8 +6,8 @@ on:
       branch:
         description: "Branch name to publish"
         default: "main"
-      pre_release:
-        description: "Publish pre-release version"
+      stable_release:
+        description: "Publish stable release version"
         default: false
         type: boolean
 
@@ -40,12 +40,12 @@ jobs:
 
     env:
       LLM_LS_TARGET: ${{ matrix.target }}
-    
+
     name: Publish in marketplace (VSCE) (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
 
-    steps: 
+    steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
@@ -55,7 +55,7 @@ jobs:
         run: |
           npm install
           npm install -g @vscode/vsce
-          
+
       - name: Download artifact
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
@@ -63,7 +63,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
           repo: smallcloudai/refact-lsp
-          branch: ${{ inputs.branch }} 
+          branch: ${{ inputs.branch }}
           path: ./assets
           name: dist-${{ matrix.target }}
 
@@ -71,7 +71,7 @@ jobs:
         shell: bash
         run: |
           chmod +x ./assets/refact-lsp*
-          if [[ ${{ inputs.pre_release }}  == "true" ]]; then
+          if [[ ${{ inputs.stable_release }}  != "true" ]]; then
             export PRERELEASE=--pre-release
           fi
           vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
@@ -79,7 +79,7 @@ jobs:
       - name: Publish VSCE extension
         shell: bash
         run: |
-          if [[ ${{ inputs.pre_release }}  == "true" ]]; then
+          if [[ ${{ inputs.stable_release }}  != "true" ]]; then
             export PRERELEASE=--pre-release
           fi
           vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
