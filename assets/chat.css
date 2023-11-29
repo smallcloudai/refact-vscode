@@ -332,7 +332,7 @@ body.vscode-dark {
 }
 
 .refactcss-chat__item ol {
-    padding: 0;
+    padding: 1em;
     counter-reset: mycounter;
 }
 
