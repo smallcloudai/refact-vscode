@@ -81,11 +81,35 @@ function chat_history_script(vscode) {
         const chatItem = document.createElement("div");
         chatItem.classList.add("chat-history-item");
         chatItem.dataset.chat_id = chat.chat_id;
-    
+
+        const topRightButtons = document.createElement("div");
+        topRightButtons.classList.add("top-right-buttons");
+
+        const openInTabButton = document.createElement("button");
+        openInTabButton.title = "Open in a new tab";
+        openInTabButton.classList.add("move-to-tab-button");
+        openInTabButton.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" stroke-width="1.5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"> <path d="M21 3L15 3M21 3L12 12M21 3V9" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/> <path d="M21 13V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3H11" stroke="currentColor" stroke-linecap="round"/> </svg>`;
+        openInTabButton.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            vscode.postMessage({type: "open_chat_in_new_tab", chat_id: chat.chat_id });
+        };
+
         const deleteButton = document.createElement("button");
         deleteButton.classList.add("delete-button");
-        deleteButton.textContent = "×";
-    
+        deleteButton.onclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            vscode.postMessage({ type: "delete_chat", chat_id: chat.chat_id });
+            chatItem.remove();
+        };
+        deleteButton.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"> <path d="M17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41L17.59 5Z" /> </svg>`;
+
+
+
+        topRightButtons.appendChild(openInTabButton);
+        topRightButtons.appendChild(deleteButton);
+
         // deleteButton.addEventListener("click", (event) => {
         //     event.stopPropagation();
         //     event.preventDefault();
@@ -108,8 +132,8 @@ function chat_history_script(vscode) {
         const lastQuestion = document.createElement("div");
         lastQuestion.classList.add("last-question");
         lastQuestion.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-chat-fill" viewBox="0 0 16 16"><path d="M8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6-.097 1.016-.417 2.13-.771 2.966-.079.186.074.394.273.362 2.256-.37 3.597-.938 4.18-1.234A9.06 9.06 0 0 0 8 15z"/></svg>${chat.totalQuestions}`;
-    
-        chatItem.appendChild(deleteButton);
+
+        chatItem.appendChild(topRightButtons);
         chatItem.appendChild(chat_title);
         chatInfo.appendChild(timestamp);
         chatInfo.appendChild(lastQuestion);
@@ -118,12 +142,7 @@ function chat_history_script(vscode) {
     
         chatItem.addEventListener("click", (evt) => {
             evt.preventDefault();
-            if(evt.target.classList.contains('delete-button')) {
-                vscode.postMessage({ type: "delete_chat", chat_id: chat.chat_id });
-                chatItem.remove();
-            } else {
-                vscode.postMessage({ type: "restore_chat", chat_id: chat.chat_id });
-            }
+            vscode.postMessage({ type: "restore_chat", chat_id: chat.chat_id });
         });
     
         chatHistoryList.appendChild(chatItem);

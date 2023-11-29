@@ -158,9 +158,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
         case "open_chat_in_new_tab": {
-            if(this.chat === null) { return; }
+            const chat_id = data?.chat_id || this.chat?.chat_id;
+            if(!chat_id || typeof chat_id !== "string") {return; }
             if(!this.chatHistoryProvider) { return; }
-            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, this.chat.chat_id, this._context.extensionUri);
+
+            const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
+            if(openTab) {
+                return openTab.focus();
+            }
+            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this._context.extensionUri);
             this.chat = null;
             return this.goto_main();
         }
