@@ -283,7 +283,6 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         if (e.uri.scheme !== "comment") {
             return;
         }
-        disposeCommands();
         refact_console_close();
     });
     global.comment_disposables.push(did1);
