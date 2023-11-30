@@ -14,7 +14,7 @@ export type ThreadEndCallback = (messages: Messages) => void;
 export let commands_available: { [key: string]: string } = {
 "shorter": "Make code shorter",
 "bugs": "Find and fix bugs",
-"improve": "Find ways to improve the code",
+"improve": "Rewrite this specific code block of code to improve it",
 "comment": "Comment each line",
 "typehints": "Add type hints",
 "naming": "Improve variable names",

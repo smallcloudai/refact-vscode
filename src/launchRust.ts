@@ -35,8 +35,8 @@ export class RustBinaryBlob
 
     public x_debug(): number
     {
-        let xdebug: number|undefined = vscode.workspace.getConfiguration().get("refactai.xDebug");
-        if (xdebug === undefined || xdebug === null) {
+        let xdebug = vscode.workspace.getConfiguration().get("refactai.xDebug");
+        if (xdebug === undefined || xdebug === null || xdebug === 0 || xdebug === "0" || xdebug === false || xdebug === "false") {
             return 0;
         }
         return 1;
