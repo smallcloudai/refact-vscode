@@ -95,9 +95,9 @@ export class ChatTab {
         return this.chatHistoryProvider.lookup_chat(this.chat_id);
     }
 
-    async saveToSidebar() {
-        const  history = await this.getHistory();
-        this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, history?.chatModel || "");;
+    async saveToSideBar() {
+        const history = await this.getHistory();
+        this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, history?.chatModel || "");
         if(!global.side_panel?.chat) {
             global.side_panel?.goto_main();
         }
@@ -139,8 +139,8 @@ export class ChatTab {
             global.open_chat_tabs.push(tab);
         }
 
-        panel.onDidDispose(async () =>{
-            tab.saveToSidebar();
+        panel.onDidDispose(async () => {
+            await tab.saveToSideBar();
             tab.dispose();
         });
 
