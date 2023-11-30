@@ -86,7 +86,9 @@ export class ChatTab {
         }
     }
 
-    dispose() {
+    async dispose() {
+        const  history = await this.getHistory();
+        if(history) {this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, history?.chatModel); }
         const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id === this.chat_id);
         global.open_chat_tabs = otherTabs;
     }
