@@ -39,6 +39,10 @@ body.vscode-dark {
     align-items: flex-start;
 }
 
+.refactcss-chat[data-state="tab"] {
+    max-width: none;
+}
+
 .refactcss-chat ::-webkit-scrollbar:horizontal {
     height: 6px !important;
 }
@@ -186,11 +190,25 @@ body.vscode-dark {
 .refactcss-chat__input:focus {
     outline: 0;
 }
-.refactcss-chat__button {
+
+.refactcss-chat__button-group {
     position: absolute;
     bottom: 12px;
     right: 0px;
-    width: 30px;
+    border: none;
+    background: transparent;
+    z-index: 999;
+    display: flex;
+    gap: 4px;
+    color: var(--secodary) !important;
+    padding: 1px 6px;
+}
+
+.refactcss-chat__button {
+    /* position: absolute;
+    bottom: 12px;
+    right: 0px; */
+    /* width: 30px; */
     height: 30px;
     border: none !important;
     cursor: pointer;
@@ -198,10 +216,17 @@ body.vscode-dark {
     color: var(--secodary) !important;
     background: transparent !important;
     z-index: 999 !important;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
+.refactcss-chat__button__icon {
+    transform: scaleX(-1);
+    margin-top: 2px;
+}
+
 .vscode-high-contrast .refactcss-chat__button {
     border: 1px solid var(--vscode-textSeparator-foreground);
 }

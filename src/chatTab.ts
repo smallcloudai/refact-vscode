@@ -3,11 +3,12 @@ import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
 import * as crlf from "./crlf";
 import * as estate from "./estate";
-import ChatHistoryProvider from "./chatHistory";
+import ChatHistoryProvider, { Chat } from "./chatHistory";
 // import * as userLogin from "./userLogin";
 const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
 import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
 
+const TAB_BUTTON_SVG = `<svg fill="currentColor" class="refactcss-chat__button__icon" xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16"><path d="M200-120q-33 0-56.5-23.5T120-200v-120h80v120h560v-480H200v120h-80v-200q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm260-140-56-56 83-84H120v-80h367l-83-84 56-56 180 180-180 180Z"/></svg>`;
 
 export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = false): [vscode.Range, string, string, string]
 {
@@ -50,7 +51,8 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = 
     [attach] = crlf.cleanup_cr_lf(attach, []);
     return [selection, attach, short_fn, code_snippet];
 }
-
+// circular dep
+import { open_chat_tab } from "./sidebar";
 
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
@@ -87,6 +89,10 @@ export class ChatTab {
     dispose() {
         const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id === this.chat_id);
         global.open_chat_tabs = otherTabs;
+    }
+
+    async getHistory(): Promise<Chat | undefined> {
+        return this.chatHistoryProvider.lookup_chat(this.chat_id);
     }
 
     static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string) {
@@ -148,7 +154,33 @@ export class ChatTab {
             case "diff-paste-back": {
                 return this.handleDiffPasteBack(data);
             }
+            case "send-chat-to-sidebar": {
+                return this.handleSendToSideBar();
+            }
         }
+    }
+
+    async handleSendToSideBar() {
+
+        await vscode.commands.executeCommand("refactai-toolbox.focus");
+
+        let editor = vscode.window.activeTextEditor;
+        const history = await this.getHistory();
+
+        if(!history) {
+            await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
+        }
+
+        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+
+        await open_chat_tab(
+            history?.chat_title || "",
+            editor,
+            false,
+            history?.chatModel || "",
+            this.messages,
+            this.chat_id,
+        );
     }
 
     private async handleDiffPasteBack(data: {code_block: string}) {
@@ -601,7 +633,7 @@ export class ChatTab {
                 <link href="${styleMainUri}" rel="stylesheet">
             </head>
             <body>
-                <div class="refactcss-chat">
+                <div class="refactcss-chat" ${isTab ? "data-state=\"tab\"" : ""}>
 
                     ${isTab === false ? `<div class="chat__button-group">
                     <button class="back-button">← Back</button>
@@ -626,7 +658,10 @@ export class ChatTab {
                                     <div id="chat-error-message"><span></span></div>
                                     <div class="refactcss-chat__decoration">
                                         <textarea id="chat-input" class="refactcss-chat__input"></textarea>
-                                        <button id="chat-send" class="refactcss-chat__button"><span></span></button>
+                                        <div class="refactcss-chat__button-group">
+                                            ${isTab ? `<button id="send-to-sidebar" class="refactcss-chat__button">${TAB_BUTTON_SVG}</button>` : ""}
+                                            <button id="chat-send" class="refactcss-chat__button"><span></span></button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

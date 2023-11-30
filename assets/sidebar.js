@@ -1,5 +1,3 @@
-const { glob } = require("glob");
-
 /* eslint-disable @typescript-eslint/naming-convention */
 function sidebar_general_script(vscode) {
     // let presets = document.querySelectorAll(".presets li");
@@ -42,7 +40,6 @@ function sidebar_general_script(vscode) {
             code: document.querySelector('.refact-welcome__telemetrycode').checked
         });
     });
-    
     const next_button_refact = document.querySelector('.refact-welcome__next_refact');
     next_button_refact.addEventListener("click", () => {
         const enter_apikey = document.querySelector('.refact-welcome__apikey_refact');
