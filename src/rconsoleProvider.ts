@@ -61,6 +61,39 @@ function message_to_comment(author: string, text: string) {
 //     });
 // }
 
+const disposable_commands: vscode.Disposable[] = [];
+const disposeCommands = () => {
+    disposable_commands.forEach(command => command.dispose());
+};
+const addCommand = (
+    cmd: string,
+    editor: vscode.TextEditor,
+    messages: rconsoleCommands.Messages,
+    update_thread_callback: rconsoleCommands.ThreadCallback,
+    end_thread_callback: rconsoleCommands.ThreadEndCallback
+) => {
+    const commandName = rconsoleCommands.createCommandName(cmd);
+    disposable_commands.push(
+        vscode.commands.registerCommand(commandName, () =>  {
+            activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
+        })
+    );
+};
+
+const registerCommands = (
+    editor: vscode.TextEditor,
+    messages: rconsoleCommands.Messages,
+    update_thread_callback: rconsoleCommands.ThreadCallback,
+    end_thread_callback: rconsoleCommands.ThreadEndCallback
+) => {
+    disposeCommands();
+    Object.keys(rconsoleCommands.commands_available).forEach(cmd => {
+        addCommand(cmd, editor, messages, update_thread_callback, end_thread_callback);
+    });
+};
+
+
+
 export function refact_console_close(): vscode.Uri|undefined
 {
     if (global.comment_disposables) {
@@ -68,6 +101,7 @@ export function refact_console_close(): vscode.Uri|undefined
             d.dispose();
         }
     }
+    disposeCommands();
     global.comment_disposables = [];
     let ret = global.comment_file_uri;
     global.comment_file_uri = undefined;
@@ -167,26 +201,6 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     };
     let text = "";
     let hint_debounce: NodeJS.Timeout|undefined;
-    const disposable_commands: vscode.Disposable[] = [];
-    const disposeCommands = () => {
-        disposable_commands.forEach(command => command.dispose());
-    };
-
-    const addCommand = (cmd: string) => {
-        const commandName = rconsoleCommands.createCommandName(cmd);
-        disposable_commands.push(
-            vscode.commands.registerCommand(commandName, () =>  {
-                activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
-            })
-        );
-    };
-
-    const registerCommands = () => {
-        disposeCommands();
-        Object.keys(rconsoleCommands.commands_available).forEach(cmd => {
-            addCommand(cmd);
-        });
-    };
 
     let did1 = vscode.workspace.onDidChangeTextDocument(async e => {
         console.log("onDidChangeTextDocument", e.document.uri, messages.length);
@@ -198,7 +212,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         }
         text = e.document.getText();
         if(text.startsWith("/")) {
-            registerCommands();
+            registerCommands(editor, messages, update_thread_callback, end_thread_callback);
         } else {
             disposeCommands();
         }
