@@ -87,14 +87,20 @@ export class ChatTab {
     }
 
     async dispose() {
-        const  history = await this.getHistory();
-        if(history) {this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, history?.chatModel); }
         const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id === this.chat_id);
         global.open_chat_tabs = otherTabs;
     }
 
     async getHistory(): Promise<Chat | undefined> {
         return this.chatHistoryProvider.lookup_chat(this.chat_id);
+    }
+
+    async saveToSidebar() {
+        const  history = await this.getHistory();
+        this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, history?.chatModel || "");;
+        if(!global.side_panel?.chat) {
+            global.side_panel?.goto_main();
+        }
     }
 
     static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string) {
@@ -133,7 +139,10 @@ export class ChatTab {
             global.open_chat_tabs.push(tab);
         }
 
-        panel.onDidDispose(tab.dispose);
+        panel.onDidDispose(async () =>{
+            tab.saveToSidebar();
+            tab.dispose();
+        });
 
         panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
 
