@@ -34,7 +34,7 @@ function sidebar_general_script(vscode) {
     });
 
     const telemetry_optin = document.querySelector('#telemetrycode');
-    telemetry_optin.addEventListener('change',()=> {
+    telemetry_optin && telemetry_optin.addEventListener('change',()=> {
         vscode.postMessage({
             type: "save_telemetry_settings",
             code: document.querySelector('.refact-welcome__telemetrycode').checked
