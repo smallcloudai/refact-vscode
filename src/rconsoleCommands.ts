@@ -2,7 +2,6 @@
 import * as vscode from 'vscode';
 import * as fetchAPI from "./fetchAPI";
 import * as chatTab from "./chatTab";
-import * as rconsoleCommands from "./rconsoleCommands";
 import * as estate from "./estate";
 
 
@@ -239,7 +238,7 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, update_t
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancellationToken = cancellationTokenSource.token;
     editor.selection = new vscode.Selection(editor.selection.start, editor.selection.start);
-    rconsoleCommands.stream_chat_without_visible_chat(
+    stream_chat_without_visible_chat(
         messageWithUserInput,
         editor,
         official_selection,
