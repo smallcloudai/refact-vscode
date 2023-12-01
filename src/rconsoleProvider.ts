@@ -235,7 +235,8 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                         // messages = [["Command", cmd]];
                         // messages = [];
                         messages_to_comments(true); // use this to remove chat
-                        activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
+                        const context_files = messages.filter(([type]) => type === "context_file");
+                        activate_cmd(cmd, editor, context_files, update_thread_callback, end_thread_callback);
                         return;
                     }
                 }
