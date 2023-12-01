@@ -353,12 +353,10 @@
             new_button.innerText = 'New File';
             new_button.classList.add('refactcss-chat__newbutton');
             copy_button.addEventListener('click', (event) => {
-                console.log(event);
                 const code_from_snippet = event.target.closest(".refactcss-chat__snippet").querySelector("code").textContent;
                 copy_to_clipboard(code_from_snippet);
             });
             new_button.addEventListener('click', (event) => {
-                console.log(event);
                 const code_from_snippet = event.target.closest(".refactcss-chat__snippet").querySelector("code").textContent;
                 vscode.postMessage({ type: "open-new-file", value: code_from_snippet });
             });
