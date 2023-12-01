@@ -419,10 +419,9 @@ export class ChatTab {
             let files = JSON.parse(content);
             for (let file_dict of files) {
                 let file_content = file_dict["file_content"];
-                // FIXME
-                // file_content = file_content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-                file_content = "line1\nline2";
-                md += `<span title="${file_content}">📎 ${file_dict["file_name"]}</span><br/>\n`;
+                file_content = file_content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+                md += `<pre><span title="${file_content}">📎 ${file_dict["file_name"]}</span></pre><br/>\n`;
+
             }
         }
 
@@ -455,10 +454,6 @@ export class ChatTab {
         attach_file: boolean,
         restore_messages_backup: [string, string][],
     ) {
-        // TBD:  could "if (!this)" happen?
-        // if (!global.side_panel?._view) {
-        //     return;
-        // }
 
         console.log(`post_question_and_communicate_answer saved messages backup: ${restore_messages_backup.length}`);
         this.messages = restore_messages_backup;
