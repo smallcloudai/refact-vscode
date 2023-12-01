@@ -111,8 +111,8 @@ export function refact_console_close(): vscode.Uri|undefined
 function update_context_file_with_insert_tag(messages: rconsoleCommands.Messages, editor: vscode.TextEditor): rconsoleCommands.Messages {
     return messages.map(([type, text]) => {
         if(type === "context_file") {
-            const [_official_selection, working_on_attach_code, working_on_attach_filename, _code_snippet] = chatTab.attach_code_from_editor(editor, true);
-            return rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code)[0];
+            const [_selection, attach_range, working_on_attach_code, working_on_attach_filename, _code_snippet] = chatTab.attach_code_from_editor(editor, true);
+            return rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code, attach_range)[0];
         }
         return [type, text];
     });
@@ -122,7 +122,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
 {
     refact_console_close();
     global.comment_file_uri = editor.document.uri;
-    let [official_selection, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
+    let [official_selection, attach_range, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
     let cc = vscode.comments.createCommentController("refactai-test", "RefactAI Test Comments");
     let next_line = Math.min(official_selection.end.line + 1, editor.document.lineCount - 1);
     if (official_selection.isEmpty) {
@@ -152,7 +152,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
     global.comment_disposables.push(thread);
     global.comment_disposables.push(cc);
 
-    let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code);
+    let messages: [string, string][] = rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code, attach_range);
 
     function messages_to_comments(clear = false) {
         const assistant_messages = messages.filter(message => message[0] !== "context_file" && message[0] !== "user");

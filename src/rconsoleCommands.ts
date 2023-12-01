@@ -92,12 +92,18 @@ export function get_hints(
     }
 }
 
-export function initial_messages(working_on_attach_filename: string, working_on_attach_code: string)
+export function initial_messages(working_on_attach_filename: string, working_on_attach_code: string, attached_range: vscode.Range)
 {
     let messages: Messages = [];
+    if (!working_on_attach_filename) {
+        // this should not happen, because we started from a file
+        return messages;
+    }
     let single_file_json = JSON.stringify([{
         "file_name": working_on_attach_filename,
         "file_content": working_on_attach_code,
+        "line1": attached_range.start.line,
+        "line2": attached_range.end.line,
     }]);
     messages.push(["context_file", single_file_json]);
     return messages;
@@ -228,8 +234,7 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, update_t
         console.log("_run_command: editor2", editor2);
         return;
     }
-    let [official_selection, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
-    // let messages: [string, string][] = initial_messages(working_on_attach_filename, working_on_attach_code);
+    let [official_selection, attach_range, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
     const messageWithUserInput = [
         ...messages
     ];

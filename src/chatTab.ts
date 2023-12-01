@@ -10,8 +10,11 @@ import { marked } from 'marked'; // Markdown parser documentation: https://marke
 
 const TAB_BUTTON_SVG = `<svg fill="currentColor" class="refactcss-chat__button__icon" xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16"><path d="M200-120q-33 0-56.5-23.5T120-200v-120h80v120h560v-480H200v120h-80v-200q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm260-140-56-56 83-84H120v-80h367l-83-84 56-56 180 180-180 180Z"/></svg>`;
 
-export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = false): [vscode.Range, string, string, string]
+export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = false): [vscode.Range, vscode.Range, string, string, string]
 {
+    if (editor.document.uri.scheme !== "file") {
+        return [new vscode.Range(0, 0, 0, 0), new vscode.Range(0, 0, 0, 0), "", "", ""];
+    }
     let selection = editor.selection;
     let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
     let code_snippet = "";
@@ -48,8 +51,9 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = 
             break;
         }
     }
+    let attach_range = new vscode.Range(pos0, pos1);
     [attach] = crlf.cleanup_cr_lf(attach, []);
-    return [selection, attach, short_fn, code_snippet];
+    return [selection, attach_range, attach, short_fn, code_snippet];
 }
 // circular dep
 import { open_chat_tab } from "./sidebar";
@@ -61,6 +65,7 @@ export class ChatTab {
     public cancellationTokenSource: vscode.CancellationTokenSource;
     public working_on_attach_filename: string = "";
     public working_on_attach_code: string = "";
+    public working_on_attach_range: vscode.Range | undefined = undefined;
     public working_on_snippet_code: string = "";
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
@@ -304,8 +309,9 @@ export class ChatTab {
         };
 
         if (editor) {
-            let selection: vscode.Range;
-            [selection, this.working_on_attach_code, this.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor);
+            let selection, attach_range: vscode.Range;
+            [selection, attach_range, this.working_on_attach_code, this.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor);
+            this.working_on_attach_range = attach_range;
             if (!selection.isEmpty) {
                 this.working_on_snippet_range = selection;
                 this.working_on_snippet_editor = editor;
@@ -419,9 +425,11 @@ export class ChatTab {
             let files = JSON.parse(content);
             for (let file_dict of files) {
                 let file_content = file_dict["file_content"];
+                let line1 = file_dict["line1"] || 0;
+                let line2 = file_dict["line2"] || 0;
+                let lines_range = `:${line1 + 1}-${line2 + 1}`;
                 file_content = file_content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-                md += `<pre><span title="${file_content}">📎 ${file_dict["file_name"]}</span></pre><br/>\n`;
-
+                md += `<pre><span title="${file_content}">📎 ${file_dict["file_name"]}${lines_range}</span></pre><br/>\n`;
             }
         }
 
@@ -454,7 +462,6 @@ export class ChatTab {
         attach_file: boolean,
         restore_messages_backup: [string, string][],
     ) {
-
         console.log(`post_question_and_communicate_answer saved messages backup: ${restore_messages_backup.length}`);
         this.messages = restore_messages_backup;
 
@@ -466,10 +473,12 @@ export class ChatTab {
         let cancelToken = this.cancellationTokenSource.token;
 
         if (this.messages.length === 0) {
-            if (attach_file) {
+            if (attach_file && this.working_on_attach_filename) {
                 let single_file_json = JSON.stringify([{
                     "file_name": this.working_on_attach_filename,
                     "file_content": this.working_on_attach_code,
+                    "line1": this.working_on_snippet_range?.start.line,
+                    "line2": this.working_on_snippet_range?.end.line,
                 }]);
                 this.messages.push(["context_file", single_file_json]);
                 // this.messages.push(["assistant", "Thanks for context, what's your question?"]); -- not nessessary
