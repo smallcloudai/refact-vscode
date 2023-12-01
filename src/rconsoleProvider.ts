@@ -246,6 +246,8 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                 const messages_with_insert_tag = update_context_file_with_insert_tag(messages, editor);
                 if (code_snippet === "") {
                     question = "Replace |INSERT-HERE| with the following:\n\n" + text;
+                } else if(messages.length > 1) {
+                    question = text;
                 } else {
                     question = "```\n" + code_snippet + "\n```\n\n" + text;
                 }
