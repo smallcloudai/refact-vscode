@@ -352,11 +352,15 @@
             copy_button.classList.add('refactcss-chat__copybutton');
             new_button.innerText = 'New File';
             new_button.classList.add('refactcss-chat__newbutton');
-            copy_button.addEventListener('click', () => {
-                copy_to_clipboard(code);
+            copy_button.addEventListener('click', (event) => {
+                console.log(event);
+                const code_from_snippet = event.target.closest(".refactcss-chat__snippet").querySelector("code").textContent;
+                copy_to_clipboard(code_from_snippet);
             });
-            new_button.addEventListener('click', () => {
-                vscode.postMessage({ type: "open-new-file", value: code });
+            new_button.addEventListener('click', (event) => {
+                console.log(event);
+                const code_from_snippet = event.target.closest(".refactcss-chat__snippet").querySelector("code").textContent;
+                vscode.postMessage({ type: "open-new-file", value: code_from_snippet });
             });
             if (answer_div.dataset.have_editor === 'true') {
                 const diff_button = document.createElement('button');
