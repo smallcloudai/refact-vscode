@@ -7,7 +7,7 @@ import * as estate from "./estate";
 
 export type ThreadCallback = (role: string, answer: string) => void;
 export type Messages = [string, string][];
-export type ThreadEndCallback = (messages: Messages) => void;
+export type ThreadEndCallback = (messages: Messages, largest_block: string) => void;
 
 
 
@@ -180,7 +180,7 @@ export async function stream_chat_without_visible_chat(
                 }
             }
 
-            end_thread_callback(messages);
+            end_thread_callback(messages, largest_block);
 
             if (largest_block) {
                 let last_affected_line = chatTab.diff_paste_back(

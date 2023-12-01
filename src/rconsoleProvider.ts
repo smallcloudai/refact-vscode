@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as rconsoleCommands from "./rconsoleCommands";
 import * as sidebar from "./sidebar";
 import * as chatTab from "./chatTab";
+import * as estate from './estate';
 
 
 export class MyCommentAuthorInformation implements vscode.CommentAuthorInformation {
@@ -91,6 +92,26 @@ const registerCommands = (
         addCommand(cmd, editor, messages, update_thread_callback, end_thread_callback);
     });
 };
+
+async function remove_diff_if_last_message_was_a_context_file(editor: vscode.TextEditor, official_selection: vscode.Range, messages: rconsoleCommands.Messages) {
+
+    if(messages.length === 0) { return; }
+
+    const last_message = messages.slice(-1)[0];
+
+    if(last_message[0] !== "context_file") { return; }
+
+    const state = estate.state_of_document(editor.document);
+
+    if(!state)  { return;}
+
+    await estate.back_to_normal(state);
+
+    const text = new vscode.Selection(official_selection.start, official_selection.end);
+
+    editor.selection = text;
+
+}
 
 
 
@@ -184,8 +205,20 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
         }
     };
 
-    const end_thread_callback = (response_messages: [string, string][]) => {
-        messages = response_messages;
+    const end_thread_callback: rconsoleCommands.ThreadEndCallback = (response_messages: [string, string][], largest_block: string) => {
+        // TODO: /shorter /shorter /explain loses the diff :/
+        if(!largest_block) {
+            messages = response_messages;
+        } else {
+            const updated_context_file = rconsoleCommands.initial_messages(working_on_attach_code, largest_block);
+            const messages_with_updated_context = [
+                ...response_messages,
+                ...updated_context_file
+            ];
+            console.log({messages_with_updated_context});
+            messages = messages_with_updated_context;
+        }
+
         messages_to_comments();
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
         // "comments/commentThread/additionalActions": [
@@ -235,6 +268,7 @@ export async function open_refact_console_between_lines(editor: vscode.TextEdito
                         // messages = [["Command", cmd]];
                         // messages = [];
                         messages_to_comments(true); // use this to remove chat
+                        await remove_diff_if_last_message_was_a_context_file(editor, official_selection, messages);
                         activate_cmd(cmd, editor, messages, update_thread_callback, end_thread_callback);
                         return;
                     }
