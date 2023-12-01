@@ -44,7 +44,7 @@ function sidebar_general_script(vscode) {
     next_button_refact.addEventListener("click", () => {
         const enter_apikey = document.querySelector('.refact-welcome__apikey_refact');
         const error_message = document.querySelector('.refact-welcome__error-refact');
-        if(enter_apikey.value && enter_apikey.value != '') {
+        if (enter_apikey.value && enter_apikey.value !== '') {
             enter_apikey.style.borderColor = 'var(--secondary)';
             error_message.style.display = 'none';
             vscode.postMessage({
@@ -118,7 +118,7 @@ function sidebar_general_script(vscode) {
         const enter_endpoint = document.querySelector('.refact-welcome__enterendpoint');
         const enter_apikey = document.querySelector('.refact-welcome__apikey_enterprise');
         const error_message = document.querySelector('.refact-welcome__error-enterprise');
-        if(enter_apikey.value && enter_apikey.value != '') {
+        if (enter_apikey.value && enter_apikey.value !== '') {
             enter_apikey.style.borderColor = 'var(--secondary)';
             error_message.style.display = 'none';
             vscode.postMessage({
