@@ -12,7 +12,7 @@ import * as sidebar from "./sidebar";
 import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
-import * as rconsoleProvider from "./rconsoleProvider";
+import { RefactConsoleProvider } from './rconsoleProvider';
 import * as rconsoleCommands from "./rconsoleCommands";
 
 import { PrivacySettings } from './privacySettings';
@@ -61,7 +61,8 @@ async function pressed_escape()
     completionProvider.on_esc_pressed();
     let editor = vscode.window.activeTextEditor;
     if (global.comment_disposables) {
-        let original_editor_uri = rconsoleProvider.refact_console_close();
+        // let original_editor_uri = rconsoleProvider.refact_console_close();
+        let original_editor_uri = RefactConsoleProvider.close_all_consoles();
         if (original_editor_uri !== undefined) {
             let original_editor = vscode.window.visibleTextEditors.find((e) => {
                 return e.document.uri === original_editor_uri;
@@ -104,7 +105,8 @@ async function pressed_tab()
 {
     let editor = vscode.window.activeTextEditor;
     if (global.comment_disposables) {
-        let original_editor_uri = rconsoleProvider.refact_console_close();
+        // let original_editor_uri = rconsoleProvider.refact_console_close();
+        let original_editor_uri = RefactConsoleProvider.close_all_consoles();
         if (original_editor_uri !== undefined) {
             let original_editor = vscode.window.visibleTextEditors.find((e) => {
                 return e.document.uri === original_editor_uri;
@@ -136,7 +138,8 @@ async function code_lens_clicked(arg0: any)
         }
         if (arg0 === "APPROVE") {
             await interactiveDiff.like_and_accept(editor);
-            rconsoleProvider.refact_console_close();
+            // rconsoleProvider.refact_console_close();
+            RefactConsoleProvider.close_all_consoles();
         } else if (arg0 === "REJECT") {
             await pressed_escape();  // might return to highlight
         } else if (arg0 === "RERUN") {
@@ -204,7 +207,8 @@ async function f1_pressed()
             return;
         }
         if (state) {
-            rconsoleProvider.open_refact_console_between_lines(editor);
+            // rconsoleProvider.open_refact_console_between_lines(editor);
+            RefactConsoleProvider.open_between_lines(editor);
         }
     }
     // await vscode.commands.executeCommand("refactai-toolbox.focus");
