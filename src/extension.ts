@@ -341,7 +341,8 @@ export function activate(context: vscode.ExtensionContext)
             e.affectsConfiguration("refactai.infurl") ||
             e.affectsConfiguration("refactai.addressURL") ||
             e.affectsConfiguration("refactai.xDebug") ||
-            e.affectsConfiguration("refactai.apiKey")
+            e.affectsConfiguration("refactai.apiKey") ||
+            e.affectsConfiguration("refactai.insecureSSL")
         ) {
             if (config_debounce) {
                 clearTimeout(config_debounce);

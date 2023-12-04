@@ -58,9 +58,16 @@ export class RustBinaryBlob
         if (xdebug) {
             return `debug rust binary on ports ${DEBUG_HTTP_PORT} and ${DEBUG_LSP_PORT}`;
         } else {
-            let addr = vscode.workspace.getConfiguration().get("refactai.addressURL");
+            let addr = this.get_address();
             return `${addr}`;
         }
+    }
+
+    public get_address(): string|undefined
+    {
+        let addr1: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
+        let addr2: string|undefined = vscode.workspace.getConfiguration().get("refactai.infurl");  // old name
+        return addr1 || addr2 || "";
     }
 
     public async settings_changed()
@@ -83,7 +90,7 @@ export class RustBinaryBlob
             await this.start_lsp_socket();
             return;
         }
-        let url: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
+        let url: string|undefined = this.get_address();
         if (url === undefined || url === null || url === "") {
             this.cmdline = [];
             await this.terminate();
@@ -102,6 +109,10 @@ export class RustBinaryBlob
             "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
             "--basic-telemetry"
         ];
+        let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");
+        if (insecureSSL) {
+            new_cmdline.push("--insecure");
+        }
         let cmdline_existing: string = this.cmdline.join(" ");
         let cmdline_new: string = new_cmdline.join(" ");
         if (cmdline_existing !== cmdline_new) {

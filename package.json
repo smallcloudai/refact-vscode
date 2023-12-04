@@ -88,6 +88,11 @@
 					"description": "For Enterprise, put there your company's server address. Your admin should have emailed that to you.\nFor self-hosted, use something like http://127.0.0.1:8008/\nFor inference in public cloud, use \"Refact\" or \"HF\".",
 					"default": ""
 				},
+				"refactai.insecureSSL": {
+					"type": "boolean",
+					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors.",
+					"default": false
+				},
 				"refactai.infurl": {
 					"type": "string",
 					"deprecationMessage": "The new field is called addressURL. It's about the same, but it has special values like \"HF\" and if it's empty, makes the plugin do nothing, which is better for Enterprise use case to prevent leaks."
@@ -106,11 +111,6 @@
 					"description": "Which model to use, for example \"bigcode/starcoder\". Leave blank if not sure.",
 					"default": ""
 				},
-				"refactai.codeCompletionModelWorksLikeModel": {
-					"type": "string",
-					"description": "If a model you want is not supported, and you feel adventurous, you can try to use it in the same way as another known model.",
-					"default": ""
-				},
 				"refactai.codeCompletionScratchpad": {
 					"type": "string",
 					"description": "Which scratchpad to use, for example \"FIM-PSM\". Leave blank if not sure.",
@@ -123,7 +123,7 @@
 				},
 				"refactai.telemetryCodeSnippets": {
 					"type": "boolean",
-					"description": "Send corrected code snippets.",
+					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
 					"default": false
 				},
 				"refactai.xDebug": {
