@@ -23,8 +23,8 @@ body.vscode-dark {
 
 .top-right-buttons {
   position: absolute;
-  top: 5px;
-  right: 5px;
+  top: 0px;
+  right: 0px;
   display: flex;
   gap: 4px;
   padding: 4px 5px;
@@ -114,6 +114,7 @@ body.vscode-dark {
   border-radius: 6px;
   opacity: 0.8;
   transition: 0.23s all ease-in;
+  font-size: 13px;
 }
 .vscode-high-contrast .chat-history-item {
   border: 1px solid var(--vscode-textSeparator-foreground) !important;
@@ -129,6 +130,11 @@ body.vscode-dark {
 .chat-name {
   font-weight: bold;
   text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: calc(100% - 40px);
+  display: block;
 }
 
 .last-question {
@@ -153,13 +159,12 @@ body.vscode-dark {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  font-size: 10px;
   width: 100%;
 }
 .chat-history-today,
 .chat-history-week,
 .chat-history-later {
   opacity: 0.6;
-  margin-bottom: 5px;
-  margin-top: 0;
+  margin-bottom: 15px;
+  margin-top: 10px;
 }
