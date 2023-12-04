@@ -128,7 +128,7 @@ body.vscode-dark {
   transform: translateX(0px);
 }
 .chat-name {
-  font-weight: bold;
+  /* font-weight: bold; */
   text-transform: capitalize;
   white-space: nowrap;
   overflow: hidden;
@@ -141,7 +141,9 @@ body.vscode-dark {
   color: var(--vscode-foreground);
   display: flex;
   align-items: center;
-  margin-left: 10px;
+  margin-left: 0px;
+  order: 1;
+  margin-right: 3px;
 }
 .last-question svg {
   margin-right: 3px;
@@ -150,9 +152,13 @@ body.vscode-dark {
   color: var(--vscode-foreground);
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
+  order: 2;
+  margin-left: 5px;
 }
 .chat-timestamp svg {
   margin-right: 3px;
+  display: none;
 }
 .chat-info {
   margin-top: 3px;
@@ -160,11 +166,13 @@ body.vscode-dark {
   align-items: center;
   justify-content: flex-start;
   width: 100%;
+  overflow: hidden;
+  flex-wrap: nowrap;
 }
 .chat-history-today,
 .chat-history-week,
 .chat-history-later {
   opacity: 0.6;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   margin-top: 10px;
 }
