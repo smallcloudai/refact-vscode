@@ -25,7 +25,7 @@ function chat_history_script(vscode) {
                 const lastSevenDays = new Date();
                 lastSevenDays.setDate(lastSevenDays.getDate() - 6); // Subtract 6 days to get the last 7 days
                 lastSevenDays.setHours(0, 0, 0, 0);
-                
+
                 const grouped_chat = {
                     today: [],
                     last_seven_days: [],
@@ -66,7 +66,7 @@ function chat_history_script(vscode) {
                 if(grouped_chat.later.length > 0) {
                     const today_heading = document.createElement('h4');
                     today_heading.classList.add('chat-history-later');
-                    today_heading.innerHTML = `More than week`;
+                    today_heading.innerHTML = `More than a week`;
                     chatHistoryList.appendChild(today_heading);
                     grouped_chat.later.forEach((chat) => {
                         render_history_item(chat);

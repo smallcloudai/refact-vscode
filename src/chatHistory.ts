@@ -95,12 +95,12 @@ export default class ChatHistoryProvider {
         }
         // find first 15 characters, non space, non newline, non special character
         let first_normal_char_index = first_question.search(/[^ \n\r\t`]/);
-        let first_40_characters = first_question.substring(first_normal_char_index, first_normal_char_index + 40);
-        let first_41_characters = first_question.substring(first_normal_char_index, first_normal_char_index + 41);
-        if (first_40_characters !== first_41_characters) {
-            first_40_characters += "…";
+        let first_80_characters = first_question.substring(first_normal_char_index, first_normal_char_index + 80);
+        let first_81_characters = first_question.substring(first_normal_char_index, first_normal_char_index + 81);
+        if (first_80_characters !== first_81_characters) {
+            first_80_characters += "…";
         }
-        return first_40_characters;
+        return first_80_characters;
     }
 
     public async delete_chat(chat_id: string): Promise<boolean> {

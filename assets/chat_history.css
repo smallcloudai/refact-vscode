@@ -129,7 +129,7 @@ body.vscode-dark {
 }
 .chat-name {
   /* font-weight: bold; */
-  text-transform: capitalize;
+  /* text-transform: capitalize; */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
