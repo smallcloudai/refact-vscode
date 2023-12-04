@@ -44,17 +44,6 @@ body.vscode-dark {
 	background-color: var(--vscode-sideBar-background) !important;
 	z-index: 998;
 }
-.sidebar-controls-inner::before {
-	content: '';
-	display: block;
-	position: absolute;
-	height: 10px;
-	left: 0;
-	top: -10px;
-	right: 0;
-	background: linear-gradient(0deg, var(--vscode-sideBar-background) 0%, rgba(0,0,0,0) 100%);
-	z-index: 999;
-}
 .sidebar-buttons {
 	width: 100%;
 	display: flex;

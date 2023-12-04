@@ -88,7 +88,7 @@ body.vscode-dark {
   background-color: #ddd;
 } */
 .chat-history {
-  height: calc(100vh - 150px);
+  height: calc(100vh - 180px);
   position: relative;
   padding: 0 0 0 10px;
   margin-top: 10px;
@@ -99,14 +99,14 @@ body.vscode-dark {
   box-sizing: border-box;
   margin-top: 0px;
   overflow-y: scroll;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 180px);
   width: 100%;
 }
 
 .chat-history-item {
   background-color: var(--vscode-editor-background);
-  padding: 15px;
-  margin: 0px 0 10px;
+  padding: 5px 7px 7px 7px;
+  margin: 0px 0 5px;
   height: auto;
   cursor: pointer;
   width: 100%;
@@ -149,11 +149,11 @@ body.vscode-dark {
   margin-right: 3px;
 }
 .chat-info {
-  margin-top: 5px;
+  margin-top: 3px;
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  font-size: 11px;
+  font-size: 10px;
   width: 100%;
 }
 .chat-history-today,

@@ -16,8 +16,8 @@ function chat_history_script(vscode) {
                 const chatHistory = message.history || [];
                 if(chatHistory.length > 0) {
                     document.querySelector('.chat-history').style.display = 'flex';
+                    chatHistory.sort((a, b) => new Date(b.time) - new Date(a.time));
                 }
-
 
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);

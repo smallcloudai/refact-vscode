@@ -291,6 +291,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         case "save_telemetry_settings": {
             await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
+            break;
         }
         case "back-from-chat": {
             this.goto_main();
