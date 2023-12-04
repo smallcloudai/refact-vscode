@@ -477,8 +477,8 @@ export class ChatTab {
                 let single_file_json = JSON.stringify([{
                     "file_name": this.working_on_attach_filename,
                     "file_content": this.working_on_attach_code,
-                    "line1": this.working_on_snippet_range?.start.line,
-                    "line2": this.working_on_snippet_range?.end.line,
+                    "line1": this.working_on_attach_range?.start.line,
+                    "line2": this.working_on_attach_range?.end.line,
                 }]);
                 this.messages.push(["context_file", single_file_json]);
                 // this.messages.push(["assistant", "Thanks for context, what's your question?"]); -- not nessessary

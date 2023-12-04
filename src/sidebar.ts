@@ -226,7 +226,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         case "save_selfhosted": {
             await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', 'aaa', vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
             break;
         }
         case "privacy": {
@@ -478,8 +478,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
                         <div class="refact-welcome__selfhosted refact-welcome__subscreen">
                             <div>
+                                <div classs="refact-welcome__note">A great option for self-hosting is <a href="https://github.com/smallcloudai/refact/">Refact docker</a>.
+                                It can serve completion and chat models, has graphical user interface to set it up, and it can fine-tune code on your codebase.
+                                A typical endpoint address is http://127.0.0.1:8008/<br/>
+                                But this plugin might work with a variety of servers, report your experience on discord!</div>
                                 <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" placeholder="http://127.0.0.1:8008/" name="endpoint_address" value="${existing_address}">
+                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" name="endpoint_address" value="${existing_address}">
                             </div>
                             <div class="refact-welcome__actions">
                                 <button data-target="selfhosted" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
