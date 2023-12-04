@@ -19,6 +19,7 @@ export let commands_available: { [key: string]: string } = {
 "typehints": "Add type hints",
 "naming": "Improve variable names",
 "explain": "Explain code",
+"typos": "Rewrite this specific code block to fix typos",
 };
 
 
