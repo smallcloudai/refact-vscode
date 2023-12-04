@@ -22,13 +22,13 @@ function chat_history_script(vscode) {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
-                const this_week = new Date();
-                this_week.setDate(this_week.getDate() - this_week.getDay());
-                this_week.setHours(0, 0, 0, 0);
-
+                const lastSevenDays = new Date();
+                lastSevenDays.setDate(lastSevenDays.getDate() - 6); // Subtract 6 days to get the last 7 days
+                lastSevenDays.setHours(0, 0, 0, 0);
+                
                 const grouped_chat = {
                     today: [],
-                    this_week: [],
+                    last_seven_days: [],
                     later: [],
                 };
 
@@ -36,8 +36,8 @@ function chat_history_script(vscode) {
                     const current_chat_date = new Date(chat.time);
                     if (current_chat_date >= today) {
                         grouped_chat.today.push(chat);
-                    } else if (current_chat_date >= this_week) {
-                        grouped_chat.this_week.push(chat);
+                    } else if (current_chat_date >= lastSevenDays) {
+                        grouped_chat.last_seven_days.push(chat);
                     } else {
                         grouped_chat.later.push(chat);
                     }
@@ -53,12 +53,12 @@ function chat_history_script(vscode) {
                     });
                 }
 
-                if(grouped_chat.this_week.length > 0) {
+                if(grouped_chat.last_seven_days.length > 0) {
                     const today_heading = document.createElement('h4');
                     today_heading.classList.add('chat-history-week');
-                    today_heading.innerHTML = `This week`;
+                    today_heading.innerHTML = `Last week`;
                     chatHistoryList.appendChild(today_heading);
-                    grouped_chat.this_week.forEach((chat) => {
+                    grouped_chat.last_seven_days.forEach((chat) => {
                         render_history_item(chat);
                     });
                 }
