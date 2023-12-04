@@ -35,7 +35,7 @@ export class RefactConsoleProvider {
     }
 
     static open_between_lines(editor: vscode.TextEditor) {
-
+        return new RefactConsoleProvider(editor);
     }
 
     constructor(editor: vscode.TextEditor) {
