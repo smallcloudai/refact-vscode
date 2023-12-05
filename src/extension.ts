@@ -35,6 +35,7 @@ declare global {
     var enable_longthink_completion: boolean;
     var last_positive_result: number;
     var chat_models: string[];
+    var chat_default_model: string;
     var have_caps: boolean;
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
@@ -235,6 +236,7 @@ export function activate(context: vscode.ExtensionContext)
     global.last_positive_result = 0;
     global.chat_models = [];
     global.have_caps = false;
+    global.chat_default_model = "";
     global.user_logged_in = "";
     global.user_active_plan = "";
     global.api_key = "";

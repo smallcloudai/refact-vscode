@@ -46,6 +46,7 @@ export class RefactConsoleProvider {
     working_on_attach_filename: string;
     code_snippet: string = "";
     editor: vscode.TextEditor;
+    model_name: string;
     thread: vscode.CommentThread;
     messages: rconsoleCommands.Messages;
 
@@ -67,14 +68,19 @@ export class RefactConsoleProvider {
         return ret;
     }
 
-    static open_between_lines(editor: vscode.TextEditor) {
-        return new RefactConsoleProvider(editor);
+    static async open_between_lines(editor: vscode.TextEditor) {
+        let [model_name, _] = await chatTab.chat_model_get();
+        return new RefactConsoleProvider(editor, model_name);
     }
 
-    constructor(editor: vscode.TextEditor) {
+    constructor(
+        editor: vscode.TextEditor,
+        model_name: string,
+    ) {
         RefactConsoleProvider.close_all_consoles();
 
         this.editor = editor;
+        this.model_name = model_name;
         this.comment_controller =  vscode.comments.createCommentController("refactai-test", "RefactAI Test Comments");
         global.comment_file_uri = editor.document.uri;
 
@@ -122,7 +128,7 @@ export class RefactConsoleProvider {
         // This trick puts cursor into the input box, possibly VS thinks the only use for
         // the thread is to ask user if there are no messages. But then we add a message.
         await new Promise(resolve => setTimeout(resolve, 100));
-        let [hint, author, _top1] = rconsoleCommands.get_hints(this.messages, "", this.official_selection);
+        let [hint, author, _top1] = rconsoleCommands.get_hints(this.messages, "", this.official_selection, this.model_name);
         const hint_comment = this.format_message(author, hint);
         this.thread.comments = [hint_comment];
     }
@@ -180,6 +186,9 @@ export class RefactConsoleProvider {
         }
         if (author === "assistant") {
             embellished_author = "🤖 Refact";
+        }
+        if (author === "error") {
+            embellished_author = "🤖 Snap!";
         }
         const comment_author_info = new MyCommentAuthorInformation(embellished_author);
         return new MyComment(text, vscode.CommentMode.Preview, comment_author_info);
@@ -322,7 +331,7 @@ export class RefactConsoleProvider {
     }
 
     async hints_and_magic_tabs(event: vscode.TextDocumentChangeEvent) {
-        const [hint, author, top1] = rconsoleCommands.get_hints(this.messages, this.input_text, this.official_selection);
+        const [hint, author, top1] = rconsoleCommands.get_hints(this.messages, this.input_text, this.official_selection, this.model_name);
 
         if (this.hint_mode) {
             if (this.hint_debounce) {
@@ -332,7 +341,7 @@ export class RefactConsoleProvider {
                 // this is a heavy operation, changes the layout and lags the UI
                 this.thread.comments = [
                     this.format_message(author, hint)
-                ]
+                ];
             }, 200);
         }
 
@@ -360,13 +369,13 @@ export class RefactConsoleProvider {
         }
 
         this.input_text = e.document.getText();
-        this.hint_mode = this.input_text.startsWith("/");
+        // this.hint_mode = this.input_text.startsWith("/");
 
-        if(this.hint_mode) {
-            this.add_click_handlers_for_commands();
-        } else {
-            this.remove_click_handlers_for_commands();
-        }
+        // if(this.hint_mode) {
+        //     this.add_click_handlers_for_commands();
+        // } else {
+        //     this.remove_click_handlers_for_commands();
+        // }
 
 
         if (this.input_text.includes("\n")) {
@@ -384,10 +393,13 @@ export class RefactConsoleProvider {
         console.log({messages: this.messages});
         const context_files = this.messages.filter(([type]) => type === "context_file");
         vscode.commands.executeCommand("setContext", "refactaicmd.runningChat", true);
-        vscode.commands.executeCommand(
+        // signature:
+        // async (doc_uri, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
+       vscode.commands.executeCommand(
             "refactaicmd.cmd_" + cmd,
             this.editor.document.uri.toString(),
             context_files,
+            this.model_name,
             this.handle_message_stream, // bind this
             this.handle_message_stream_end // bind this
         );
@@ -411,7 +423,7 @@ export class RefactConsoleProvider {
             question,
             this.editor,
             false,
-            "",
+            this.model_name,
             messages,
             "");
         if (!chat) {
@@ -421,13 +433,13 @@ export class RefactConsoleProvider {
         if(new_question) {
             await chat.post_question_and_communicate_answer(
                 question,
-                "",
+                this.model_name,
                 "",
                 false,
                 messages,
                 );
         } else {
-            await chat.chatHistoryProvider.save_messages_list(chat.chat_id, messages, "");
+            await chat.chatHistoryProvider.save_messages_list(chat.chat_id, messages, this.model_name);
         }
     }
 }

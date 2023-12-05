@@ -188,6 +188,7 @@ export class RustBinaryBlob
             let json = await resp.json();
             console.log(["successful read_caps", json]);
             global.chat_models = Object.keys(json["code_chat_models"]);
+            global.chat_default_model = json["code_chat_default_model"] || "";
             global.have_caps = true;
         } catch (e) {
             global.chat_models = [];

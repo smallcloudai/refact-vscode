@@ -64,7 +64,8 @@ function get_chars(str: string): Set<string>
 export function get_hints(
     msgs: Messages,
     unfinished_text: string,
-    selected_range: vscode.Range
+    selected_range: vscode.Range,
+    model_name: string,
 ): [string, string, string] {
     if (unfinished_text.startsWith("/")) {
         let cmd_score: { [key: string]: number } = {};
@@ -86,9 +87,15 @@ export function get_hints(
     } else {
         if (!selected_range.isEmpty) {
             let lines_n = selected_range.end.line - selected_range.start.line + 1;
-            return [`How to change these ${lines_n} lines? Also try "explain this" or commands starting with \"/\".`, "🪄 Selected text", ""];
+            return [
+                `How to change these ${lines_n} lines? Also try "explain this" or commands starting with \"/\".\n\n` +
+                `Model: ${model_name}\n`,
+                "🪄 Selected text", ""];
         } else {
-            return [`What would you like to generate? Also try commands starting with \"/\".`, "🪄 New Code", ""];
+            return [
+                `What would you like to generate? Also try commands starting with \"/\".\n\n` +
+                `Model: ${model_name}\n`,
+                "🪄 New Code", ""];
         }
     }
 }
@@ -112,6 +119,7 @@ export function initial_messages(working_on_attach_filename: string, working_on_
 
 export async function stream_chat_without_visible_chat(
     messages: Messages,
+    model_name: string,
     editor: vscode.TextEditor,
     selected_range: vscode.Range,
     cancelToken: vscode.CancellationToken,
@@ -202,6 +210,9 @@ export async function stream_chat_without_visible_chat(
                 }
             }
         } else {
+            let error_message_escaped = error_message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            messages.push(["error", "When sending the actual request, an error occurred:\n\n" + error_message_escaped]);
+            end_thread_callback(messages);
             let state = estate.state_of_editor(editor, "streaming_end_callback");
             if (state) {
                 await estate.switch_mode(state, estate.Mode.Normal);
@@ -216,12 +227,12 @@ export async function stream_chat_without_visible_chat(
         cancelToken,
         "chat-tab",
         messages,
-        "",
+        model_name,
         third_party,
     ));
 }
 
-function _run_command(cmd: string, doc_uri: string, messages: Messages, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
+function _run_command(cmd: string, doc_uri: string, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
 {
     let text = commands_available[cmd] || "";
     let editor = vscode.window.visibleTextEditors.find((e) => {
@@ -239,13 +250,15 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, update_t
     const messageWithUserInput = [
         ...messages
     ];
-    const formatted_question = code_snippet ?  "```\n" + code_snippet + "\n```\n\n" + text + "\n" : `\n${text}\n`;
+    // const formatted_question = code_snippet ?  "```\n" + code_snippet + "\n```\n\n" + text + "\n" : `\n${text}\n`;
+    const formatted_question = code_snippet ? text + "\n\n```\n" + code_snippet + "\n```\n" : text + "\n";
     messageWithUserInput.push(["user", formatted_question]);
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancellationToken = cancellationTokenSource.token;
     editor.selection = new vscode.Selection(editor.selection.start, editor.selection.start);
     stream_chat_without_visible_chat(
         messageWithUserInput,
+        model_name,
         editor,
         official_selection,
         cancellationToken,
@@ -257,11 +270,15 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, update_t
 export function register_commands(): vscode.Disposable[]
 {
     let dispos = [];
-
     for (let cmd in commands_available) {
-        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd, (doc_uri, messages: Messages, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
-            _run_command(cmd, doc_uri, messages, update_thread_callback, end_thread_callback);
-        });
+        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd,
+            async (doc_uri, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
+                if (!model_name) {
+                    [model_name,] = await chatTab.chat_model_get();
+                }
+                _run_command(cmd, doc_uri, messages, model_name, update_thread_callback, end_thread_callback);
+            }
+        );
         dispos.push(d);
     }
     return dispos;
