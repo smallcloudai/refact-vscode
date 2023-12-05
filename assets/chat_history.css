@@ -155,6 +155,7 @@ body.vscode-dark {
   flex-wrap: nowrap;
   order: 2;
   margin-left: 5px;
+  text-wrap: nowrap;
 }
 .chat-timestamp svg {
   margin-right: 3px;
