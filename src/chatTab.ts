@@ -725,7 +725,7 @@ export async function chat_model_get(): Promise<[string, string]>
     } else {
         chat_model_function = chat_model_function_;
     }
-    if (chat_model === "") {
+    if (chat_model === "" || !global.chat_models.includes(chat_model)) {
         chat_model = global.chat_default_model;
     }
     return [chat_model, chat_model_function];
