@@ -486,6 +486,7 @@
                 if (message.chat_attach_file) {
                     label.innerText = `Attach ${message.chat_attach_file}`;
                 } else {
+                    chat_attach_file.parentElement.style.display = 'none';
                     label.innerText = `Attach file`;
                     label.style.opacity = 0.5;
                     label.parentElement.style.opacity = 0.35;
