@@ -117,6 +117,8 @@ export class RefactConsoleProvider {
             vscode.commands.registerCommand("refactaicmd.closeInlineChat", this.handle_close_inline_chat)
         );
 
+        this.scroll_to_thread();
+
         this.initial_message();
 
     }
@@ -260,8 +262,28 @@ export class RefactConsoleProvider {
         }
     };
 
-    handle_message_stream_end(response_messages: rconsoleCommands.Messages) {
+    scroll_to_thread() {
+        const thread = this.thread.range.end.line
+        const range = new vscode.Range(thread, 0, thread + 10, 0);
+        this.editor.revealRange(range, vscode.TextEditorRevealType.AtTop);
+    }
+
+    send_thread_to_line(line: number) {
+        const thread_range = new vscode.Range(line, 0, line, 0);
+        this.thread.range = thread_range;
+        this.scroll_to_thread();
+    }
+
+    handle_message_stream_end(response_messages: rconsoleCommands.Messages, maybe_last_affected_line? : number) {
         this.messages = response_messages;
+        if(
+            maybe_last_affected_line !== undefined
+            && maybe_last_affected_line >= 0
+            && this.thread.range.start.line !== maybe_last_affected_line
+        ) {
+            this.send_thread_to_line(maybe_last_affected_line);
+        }
+
         this.send_messages_to_thread();
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
         // "comments/commentThread/additionalActions": [
