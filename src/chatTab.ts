@@ -667,23 +667,16 @@ export class ChatTab {
                     // add event handlers here for iframe, and window and vscode
                     window.addEventListener("message", (event) => {
                         console.log("window message");
-                        if(event.data.type === "user_submit_name") {
-                            console.log("data from iframe");
-                            vscode.postMessage(event.data);
-                        }
-                        if(event.data.type === "update_name") {
-                            console.log("data from vscode");
+                        const wasFromIframe = event.source === iframe.contentWindow;
 
-                            iframe.contentWindow.postMessage(event.data, "*");
+                        if(wasFromIframe) {
+                            vscode.postMessage(event.data)
+                        } else {
+                          iframe.contentWindow.postMessage(event.data, "*");
                         }
 
                         console.log({event});
                    }, false)
-
-                   iframe.addEventListener("message", (event) => {
-                    console.log("message on iframe")
-                    console.log({event});
-                   })
                 })()
                 </script>
             </html>
