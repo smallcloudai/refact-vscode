@@ -150,7 +150,6 @@ export class ChatTab {
         });
 
         panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
-
         panel.webview.onDidReceiveMessage(tab.handleEvents);
 
         await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
@@ -629,116 +628,84 @@ export class ChatTab {
         isTab = false,
     ): string
     {
-        const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "chat.js")
-        );
-        const styleMainUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
-        );
+        // const scriptUri = webview.asWebviewUri(
+        //     vscode.Uri.joinPath(extensionUri, "assets", "chat.js")
+        // );
+        // const styleMainUri = webview.asWebviewUri(
+        //     vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
+        // );
         const hlUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "assets", "hl.min.js")
         );
 
+        const rust_url = fetchAPI.rust_url("");
+
         const nonce = ChatTab.getNonce();
-        const http2_url_string = fetchAPI.rust_url("/webgui/chat.html");
-        const webguiUrl = http2_url_string.replace(/^http2/, "http");
+        const http2_url_string = fetchAPI.rust_url("/webgui/chat.js");
+        // fetchAPI.rust_url("")
+        // const webguiUrl = http2_url_string.replace(/^http2/, "http");
+
+        const scriptUri = http2_url_string.replace(/^http2/, "http");
+
+        const styleMainUri = fetchAPI.rust_url("/webgui/chat.css").replace(/^http2/, "http");
 
         return `<!DOCTYPE html>
             <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <!--
-                        Use a content security policy to only allow loading images from https or from our extension directory,
-                        and only allow scripts that have a specific nonce.
-                    -->
-                    <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <head>
+                <meta charset="UTF-8">
+                <!--
+                    Use a content security policy to only allow loading images from https or from our extension directory,
+                    and only allow scripts that have a specific nonce.
+                -->
+                <!-- <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource} ${rust_url}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';"> -->
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-                    <title>Refact.ai Chat</title>
-                </head>
-                <body>
-                  <iframe id="chat" src="${webguiUrl}"></iframe>
-                </body>
-                <script nonce="${nonce}">(function(){
-                    const vscode = acquireVsCodeApi();
-                    const iframe = document.getElementById("chat");
-                    console.log("Adding event listener")
-                    console.log(window);
-                    // add event handlers here for iframe, and window and vscode
-                    window.addEventListener("message", (event) => {
-                        console.log("window message");
-                        const wasFromIframe = event.source === iframe.contentWindow;
+                <title>Refact.ai Chat</title>
+                <link nonce=${nonce} href="${styleMainUri}" rel="stylesheet" type="text/css" >
+            </head>
+            <body>
+                <div class="refactcss-chat" ${isTab ? "data-state=\"tab\"" : ""}>
 
-                        if(wasFromIframe) {
-                            vscode.postMessage(event.data)
-                        } else {
-                          iframe.contentWindow.postMessage(event.data, "*");
-                        }
+                    ${isTab === false ? `<div class="chat__button-group">
+                    <button class="back-button">← Back</button>
+                    <button id="open_chat" class="chat__open-tab-button"><svg height="16px" id="icon" style="enable-background:new 0 0 16 16;" version="1.1" viewBox="0 0 16 16" width="16px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><style type="text/css">.st0{fill:none;}</style><title/><path d="M13,13H3V3h5V2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V8h-1V13z"/><polygon points="13,3 13,1 12,1 12,3 10,3 10,4 12,4 12,6 13,6 13,4 15,4 15,3 "/></svg>Open In Tab</button>
+                    </div>`: ""}
 
-                        console.log({event});
-                   }, false)
-                })()
+                    <div class="refactcss-chat__wrapper">
+                        <div class="refactcss-chat__inner">
+                            <div class="refactcss-chat__content" ${isTab ? "data-state=\"tab\"": ""}>
+                                <div class="refactcss-chat__welcome">
+                                    Welcome to Refact chat! How can I assist you today? Please type question below.
+                                </div>
+                            </div>
+                            <div class="refactcss-chat__panel">
+                                <div class="refactcss-chat__commands">
+                                    <div class="refactcss-chat__controls">
+                                        <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
+                                        <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model-combo"></select></div>
+                                    </div>
+                                    <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
+                                    <button id="chat-regenerate" class="refactcss-chat__regenerate"><svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M6.19306266,7 L10,7 L10,9 L3,9 L3,2 L5,2 L5,5.27034886 C6.72510698,3.18251178 9.19576641,2 12,2 C17.5228475,2 22,6.4771525 22,12 C20,12 22,12 20,12 C20,7.581722 16.418278,4 12,4 C9.60637619,4 7.55353989,5.07869636 6.19306266,7 Z M17.8069373,17 L14,17 L14,15 L21,15 L21,22 L19,22 L19,18.7296511 C17.274893,20.8174882 14.8042336,22 12,22 C6.4771525,22 2,17.5228475 2,12 C2,12 4,12 4,12 C4,16.418278 7.581722,20 12,20 C14.3936238,20 16.4464601,18.9213036 17.8069373,17 Z" fill-rule="evenodd"/></svg>Regenerate</button>
+                                    <div id="chat-error-message"><span></span></div>
+                                    <div class="refactcss-chat__decoration">
+                                        <textarea id="chat-input" class="refactcss-chat__input"></textarea>
+                                        <div class="refactcss-chat__button-group">
+                                            ${isTab ? `<button id="send-to-sidebar" class="refactcss-chat__button">${TAB_BUTTON_SVG}</button>` : ""}
+                                            <button id="chat-send" class="refactcss-chat__button"><span></span></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script nonce="${nonce}" src="${scriptUri}"></script>
+                <script nonce="${nonce}" src="${hlUri}"></script>
+                <script nonce="${nonce}">
                 </script>
-            </html>
-        `;
-
-        // return `<!DOCTYPE html>
-        //     <html lang="en">
-        //     <head>
-        //         <meta charset="UTF-8">
-        //         <!--
-        //             Use a content security policy to only allow loading images from https or from our extension directory,
-        //             and only allow scripts that have a specific nonce.
-        //         -->
-        //         <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
-        //         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-        //         <title>Refact.ai Chat</title>
-        //         <link href="${styleMainUri}" rel="stylesheet">
-        //     </head>
-        //     <body>
-        //         <div class="refactcss-chat" ${isTab ? "data-state=\"tab\"" : ""}>
-
-        //             ${isTab === false ? `<div class="chat__button-group">
-        //             <button class="back-button">← Back</button>
-        //             <button id="open_chat" class="chat__open-tab-button"><svg height="16px" id="icon" style="enable-background:new 0 0 16 16;" version="1.1" viewBox="0 0 16 16" width="16px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><style type="text/css">.st0{fill:none;}</style><title/><path d="M13,13H3V3h5V2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V8h-1V13z"/><polygon points="13,3 13,1 12,1 12,3 10,3 10,4 12,4 12,6 13,6 13,4 15,4 15,3 "/></svg>Open In Tab</button>
-        //             </div>`: ""}
-
-        //             <div class="refactcss-chat__wrapper">
-        //                 <div class="refactcss-chat__inner">
-        //                     <div class="refactcss-chat__content" ${isTab ? "data-state=\"tab\"": ""}>
-        //                         <div class="refactcss-chat__welcome">
-        //                             Welcome to Refact chat! How can I assist you today? Please type question below.
-        //                         </div>
-        //                     </div>
-        //                     <div class="refactcss-chat__panel">
-        //                         <div class="refactcss-chat__commands">
-        //                             <div class="refactcss-chat__controls">
-        //                                 <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-        //                                 <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model-combo"></select></div>
-        //                             </div>
-        //                             <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
-        //                             <button id="chat-regenerate" class="refactcss-chat__regenerate"><svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M6.19306266,7 L10,7 L10,9 L3,9 L3,2 L5,2 L5,5.27034886 C6.72510698,3.18251178 9.19576641,2 12,2 C17.5228475,2 22,6.4771525 22,12 C20,12 22,12 20,12 C20,7.581722 16.418278,4 12,4 C9.60637619,4 7.55353989,5.07869636 6.19306266,7 Z M17.8069373,17 L14,17 L14,15 L21,15 L21,22 L19,22 L19,18.7296511 C17.274893,20.8174882 14.8042336,22 12,22 C6.4771525,22 2,17.5228475 2,12 C2,12 4,12 4,12 C4,16.418278 7.581722,20 12,20 C14.3936238,20 16.4464601,18.9213036 17.8069373,17 Z" fill-rule="evenodd"/></svg>Regenerate</button>
-        //                             <div id="chat-error-message"><span></span></div>
-        //                             <div class="refactcss-chat__decoration">
-        //                                 <textarea id="chat-input" class="refactcss-chat__input"></textarea>
-        //                                 <div class="refactcss-chat__button-group">
-        //                                     ${isTab ? `<button id="send-to-sidebar" class="refactcss-chat__button">${TAB_BUTTON_SVG}</button>` : ""}
-        //                                     <button id="chat-send" class="refactcss-chat__button"><span></span></button>
-        //                                 </div>
-        //                             </div>
-        //                         </div>
-        //                     </div>
-        //                 </div>
-        //             </div>
-        //         </div>
-
-        //         <script nonce="${nonce}" src="${scriptUri}"></script>
-        //         <script nonce="${nonce}" src="${hlUri}"></script>
-        //         <script nonce="${nonce}">
-        //         </script>
-        //     </body>
-        //     </html>`;
+            </body>
+            </html>`;
     }
 
     static getNonce()
