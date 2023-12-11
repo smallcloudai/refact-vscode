@@ -83,6 +83,7 @@ export class ChatTab {
     ) {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         this.handleEvents = this.handleEvents.bind(this);
+        this.dispose  = this.dispose.bind(this);
     }
 
     async focus() {
@@ -92,8 +93,10 @@ export class ChatTab {
     }
 
     dispose() {
-        const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id === this.chat_id);
+        const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id !== this.chat_id);
         global.open_chat_tabs = otherTabs;
+        // causes flicker :/
+        // global.side_panel?.update_webview();
     }
 
     async getHistory(): Promise<Chat | undefined> {
@@ -173,12 +176,6 @@ export class ChatTab {
             }
             case "send-chat-to-sidebar": {
                 return this.handleSendToSideBar();
-            }
-            case "user_submit_name": {
-                return this.web_panel.webview.postMessage({
-                    type: "update_name",
-                    name: data.name,
-                });
             }
         }
     }
@@ -638,7 +635,7 @@ export class ChatTab {
             vscode.Uri.joinPath(extensionUri, "assets", "hl.min.js")
         );
 
-        const rust_url = fetchAPI.rust_url("");
+        const rust_url = fetchAPI.rust_url("").replace(/^http2/, "http");
 
         const nonce = ChatTab.getNonce();
         const http2_url_string = fetchAPI.rust_url("/webgui/chat.js");
