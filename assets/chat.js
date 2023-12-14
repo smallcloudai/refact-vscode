@@ -38,19 +38,17 @@
         chat_input.style.height = 'auto';
         chat_input.style.height = chat_input.scrollHeight + 'px';
     }
-    
+
     function input_care() {
         const lines = Math.round(chat_input.scrollHeight / 16);
-        console.log('textarea lines',lines);
-        console.log('chat_input.scrollHeight',chat_input.scrollHeight);
         updateTextareaHeight();
-        
+
         const message = chat_input.value;
         let bad = message.trim() === '' || message.length >= 4000;
         chat_send_button.disabled = bad;
         chat_send_button.style.opacity = bad ? 0.5 : 1;
     }
-    
+
     chat_input.addEventListener('input', function () {
         input_care();
     });
@@ -79,10 +77,6 @@
         stop_button.style.display = 'flex';
         is_error = false;
         error_message.style.display = 'none';
-        console.log(`last_answer_div ${last_answer_div}`);
-        if (last_answer_div) {
-            console.log(`last_answer_div messages_backup ${last_answer_div.dataset.messages_backup}`);
-        }
         vscode.postMessage({
             type: "chat-question-enter-hit",
             chat_question: message,
@@ -102,10 +96,6 @@
         chat_model = JSON.parse(chat_model_combo.options[chat_model_combo.selectedIndex].value);
         let chat_attach_file = document.getElementById("chat-attach");
         chat_input.value = '';
-        console.log(`last_answer_div ${last_answer_div}`);
-        if (last_answer_div) {
-            console.log(`last_answer_div messages_backup ${last_answer_div.dataset.messages_backup}`);
-        }
         vscode.postMessage({
             type: "chat-question-enter-hit",
             chat_question: message,
@@ -448,14 +438,14 @@
 
     // new scroll to test
     function auto_scroll() {
-        input_care();  
+        input_care();
         if (!isAutoScrollPaused) {
             var currentScroll = chatContent.scrollTop;
             var distanceToScroll = chatContent.scrollHeight - chatContent.clientHeight - currentScroll;
             var duration = 300;
-            var startTime = null; 
+            var startTime = null;
             function scrollAnimation(timestamp) {
-                if (!startTime) startTime = timestamp;  
+                if (!startTime) startTime = timestamp;
                 var elapsed = timestamp - startTime;
                 var progress = Math.min(1, elapsed / duration);
                 var easedProgress = easeInOutQuad(progress);
@@ -465,14 +455,14 @@
                 } else {
                     chatContent.scrollTop = chatContent.scrollHeight - chatContent.clientHeight;
                 }
-            }  
-            requestAnimationFrame(scrollAnimation); 
+            }
+            requestAnimationFrame(scrollAnimation);
             function easeInOutQuad(t) {
                 return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
             }
         }
-    }    
-    
+    }
+
     window.addEventListener("message", (event) => {
         const message = event.data;
         console.log("CHATMESSAGE", message.command);
