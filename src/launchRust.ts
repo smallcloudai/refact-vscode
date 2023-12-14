@@ -25,11 +25,11 @@ export class RustBinaryBlob
     {
         this.asset_path = asset_path;
         this.lsp_client_options = {
-            documentSelector: [{ scheme: 'file', language: 'python' }],
+            documentSelector: [{ scheme: 'file', language: '*' }],
             diagnosticCollectionName: 'RUST LSP',
             progressOnInitialization: true,
             traceOutputChannel: vscode.window.createOutputChannel('RUST LSP'),
-            revealOutputChannelOn: lspClient.RevealOutputChannelOn.Info,
+            revealOutputChannelOn: lspClient.RevealOutputChannelOn.Error,
         };
     }
 
