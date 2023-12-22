@@ -66,7 +66,9 @@ export class RustBinaryBlob
     public get_address(): string|undefined
     {
         let addr1: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
+        console.log("asdasdasd: addr1=", addr1);
         let addr2: string|undefined = vscode.workspace.getConfiguration().get("refactai.infurl");  // old name
+        console.log("asdasdasd: addr2=", addr2);
         return addr1 || addr2 || "";
     }
 
