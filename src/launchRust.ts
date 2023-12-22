@@ -72,6 +72,7 @@ export class RustBinaryBlob
 
     public async settings_changed()
     {
+        
         let xdebug = this.x_debug();
         let api_key: string = userLogin.secret_api_key();
         let port: number;
@@ -91,6 +92,7 @@ export class RustBinaryBlob
             return;
         }
         let url: string|undefined = this.get_address();
+        console.log("asdasdasd: url=", url);
         if (url === undefined || url === null || url === "") {
             this.cmdline = [];
             await this.terminate();
@@ -100,6 +102,7 @@ export class RustBinaryBlob
         if (!plugin_version) {
             plugin_version = "unknown";
         }
+        console.log("asdasdasd: plugin_version=", plugin_version);
         let new_cmdline: string[] = [
             join(this.asset_path, "refact-lsp"),
             "--address-url", url,
@@ -113,8 +116,11 @@ export class RustBinaryBlob
         if (insecureSSL) {
             new_cmdline.push("--insecure");
         }
+        console.log("asdasdasd: new_cmdline=", new_cmdline);
         let cmdline_existing: string = this.cmdline.join(" ");
+        console.log("asdasdasd: cmdline_existing=", cmdline_existing);
         let cmdline_new: string = new_cmdline.join(" ");
+        console.log("asdasdasd: cmdline_new=", cmdline_new);
         if (cmdline_existing !== cmdline_new) {
             this.cmdline = new_cmdline;
             this.port = port;
