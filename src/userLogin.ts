@@ -6,6 +6,14 @@ import * as usabilityHints from "./usabilityHints";
 import * as statusBar from "./statusBar";
 
 
+export function get_address(): string
+{
+    let addr1: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
+    let addr2: string|undefined = vscode.workspace.getConfiguration().get("refactai.infurl");  // old name
+    return addr1 || addr2 || "";
+}
+
+
 export async function login_message()
 {
     await vscode.commands.executeCommand('workbench.view.extension.refact-toolbox-pane');

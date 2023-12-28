@@ -58,16 +58,12 @@ export class RustBinaryBlob
         if (xdebug) {
             return `debug rust binary on ports ${DEBUG_HTTP_PORT} and ${DEBUG_LSP_PORT}`;
         } else {
-            let addr = this.get_address();
+            let addr = userLogin.get_address();
+            if (addr === "") {
+                return "<no-address-configured>";
+            }
             return `${addr}`;
         }
-    }
-
-    public get_address(): string|undefined
-    {
-        let addr1: string|undefined = vscode.workspace.getConfiguration().get("refactai.addressURL");
-        let addr2: string|undefined = vscode.workspace.getConfiguration().get("refactai.infurl");  // old name
-        return addr1 || addr2 || "";
     }
 
     public async settings_changed()
@@ -90,8 +86,8 @@ export class RustBinaryBlob
             await this.start_lsp_socket();
             return;
         }
-        let url: string|undefined = this.get_address();
-        if (url === undefined || url === null || url === "") {
+        let url: string = userLogin.get_address();
+        if (url === "") {
             this.cmdline = [];
             await this.terminate();
             return;

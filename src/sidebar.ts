@@ -150,6 +150,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
     }
 
+    public async delete_old_settings()
+    {
+        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
+        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
+        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+    }
+
     public async js2ts_message(data: any)
     {
         if (!this._view) {
@@ -201,30 +211,31 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "button_hf_save": {
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
+            await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
             break;
         }
         case "button_refact_save": {
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
+            await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
             break;
         }
         case "button_refact_open_streamlined": {
+            await this.delete_old_settings();
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
             vscode.commands.executeCommand('refactaicmd.login');
             break;
         }
-        case "button_refact_save": {
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "SMC", vscode.ConfigurationTarget.Global);
-            break;
-        }
         case "save_enterprise": {
+            await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
             break;
         }
         case "save_selfhosted": {
+            await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
             break;
@@ -306,12 +317,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
-
-        let have_key = !!userLogin.secret_api_key();
+        let have_key = !!userLogin.secret_api_key() && !!userLogin.get_address();
         if (have_key) {
             this.update_chat_history();
         }
-
         let plan_msg = global.user_active_plan;
         if (!plan_msg && global.streamlined_login_countdown > -1) {
             plan_msg = `Waiting for website login... ${global.streamlined_login_countdown}`;
