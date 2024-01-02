@@ -226,9 +226,9 @@ export async function send_network_problems_to_status_bar(
     //     global.status_bar.url_and_model_worked(related_url, model_name);
     // }
     global.status_bar.set_socket_error(!positive, error_message);
-    if (global.side_panel) {
-        global.side_panel.update_webview();
-    }
+    // if (global.side_panel) {
+    //     global.side_panel.update_webview();
+    // }
     // global.status_bar.url_and_model_worked("", "");
 }
 

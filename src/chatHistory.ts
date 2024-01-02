@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 
+const MAX_HISTORY_LENGTH = 150;
+
+
 export type Chat = {
     chat_id: string; // Unique identifier for each chat
     chat_title: string;
@@ -75,6 +78,9 @@ export default class ChatHistoryProvider {
             };
             chat.chat_title = this.title(chat);
             h.push(chat);
+            if (h.length > MAX_HISTORY_LENGTH) {
+                h = h.slice(h.length - MAX_HISTORY_LENGTH);
+            }
         } else {
             existingChat.messages = messages;
             existingChat.chatModel = chatModel;
