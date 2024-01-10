@@ -57,6 +57,7 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = 
 }
 // circular dep
 import { open_chat_tab } from "./sidebar";
+import { EVENT_NAMES_FROM_CHAT, EVENT_NAMES_TO_CHAT } from "./events";
 
 export class ChatTab {
     // public static current_tab: ChatTab | undefined;
@@ -156,25 +157,82 @@ export class ChatTab {
         await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
     }
 
-    async handleEvents({type, ...data}: any) {
-        switch(type) {
-            case "chat-question-enter-hit": {
-                return this.handleEnterHit(data);
-            }
-            case "open-new-file": {
-                return ChatTab.handleOpenNewFile(data);
-            }
-            case "stop-clicked": {
-                return this.handleStopClicked();
-            }
-            case "diff-paste-back": {
-                return this.handleDiffPasteBack(data);
-            }
-            case "send-chat-to-sidebar": {
-                return this.handleSendToSideBar();
-            }
+// restoreChat(chat: ChatHistoryItem) {
+  //   this.web_panel.webview.postMessage({
+  //     type: EVENT_NAMES_TO_CHAT.NEW_CHAT,
+  //     payload: chat
+  //   })
+  // }
+
+  // createNewChat() {
+  //   this.web_panel.webview.postMessage({ type: EVENT_NAMES_TO_CHAT.NEW_CHAT }, "*");
+  // }
+
+  async handleEvents({ type, ...data }: any) {
+    console.log("\nHandlering events", type, data);
+    // console.log({type, ...data})
+    switch (type) {
+      case "chat-question-enter-hit": {
+        return this.handleEnterHit(data);
+      }
+      case "open-new-file": {
+        return ChatTab.handleOpenNewFile(data);
+      }
+      case "stop-clicked": {
+        return this.handleStopClicked();
+      }
+      case "diff-paste-back": {
+        return this.handleDiffPasteBack(data);
+      }
+      case "send-chat-to-sidebar": {
+        return this.handleSendToSideBar();
+      }
+      // TODO: add events for shared chat lib
+
+      case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
+        // EVENT_NAMES_TO_CHAT.DONE_STREAMING;
+        // EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
+        // EVENT_NAMES_TO_CHAT.ERROR_STREAMING;
+      }
+      case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
+        console.log("Request caps")
+        return fetchAPI
+          .get_caps()
+          .then((caps) => {
+            console.log("Got Caps", caps)
+            return this.web_panel.webview.postMessage({
+              type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
+              payload: {
+                id: data.payload.id,
+                caps,
+              },
+            });
+          })
+          .catch((err) => {
+            return this.web_panel.webview.postMessage({
+              type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
+              payload: {
+                id: data.payload.id,
+                message: err.message
+              }
+            });
+          });
+      }
+
+      case EVENT_NAMES_FROM_CHAT.REQUEST_FILES: {
+        // EVENT_NAMES_TO_CHAT.RECEIVE_FILES;
+        // EVENT_NAMES_TO_CHAT.ERROR_STREAMING;
+      }
+      case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
+      }
+      case EVENT_NAMES_FROM_CHAT.STOP_STREAMING:
+        {
+          // abort
+          EVENT_NAMES_TO_CHAT.DONE_STREAMING;
         }
+        break;
     }
+  }
 
     async handleSendToSideBar() {
 

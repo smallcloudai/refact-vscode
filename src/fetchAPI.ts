@@ -5,6 +5,7 @@ import * as userLogin from "./userLogin";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
+import { CapsResponse } from './events';
 
 
 let globalSeq = 100;
@@ -566,4 +567,27 @@ export function look_for_common_errors(json: any, scope: string, url: string): b
         }
     }
     return false;
+}
+
+export async function get_caps(): Promise<CapsResponse> {
+  let url = rust_url("/v1/caps");
+  if (!url) {
+    return Promise.reject("read_caps no rust binary working, very strange");
+  }
+
+  let req = new fetchH2.Request(url, {
+    method: "GET",
+    redirect: "follow",
+    cache: "no-cache",
+    referrer: "no-referrer",
+  });
+
+  let resp = await fetchH2.fetch(req);
+  if (resp.status !== 200) {
+    console.log(["read_caps http status", resp.status]);
+    return Promise.reject("read_caps bad status");
+  }
+  let json = await resp.json();
+  console.log(["successful read_caps", json]);
+  return json as CapsResponse;
 }
