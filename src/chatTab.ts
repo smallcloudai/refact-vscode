@@ -114,6 +114,7 @@ export class ChatTab {
         const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
 
         const history = {
+            chat_id: "",
             chatModel: "",
             messages: [],
             chat_title: "",
@@ -154,85 +155,171 @@ export class ChatTab {
 
         panel.webview.onDidReceiveMessage(tab.handleEvents);
 
-        await tab._clear_and_repopulate_chat("", undefined, false, chatModel, messages);
+        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages);
     }
 
-// restoreChat(chat: ChatHistoryItem) {
-  //   this.web_panel.webview.postMessage({
-  //     type: EVENT_NAMES_TO_CHAT.NEW_CHAT,
-  //     payload: chat
-  //   })
-  // }
-
-  // createNewChat() {
-  //   this.web_panel.webview.postMessage({ type: EVENT_NAMES_TO_CHAT.NEW_CHAT }, "*");
-  // }
-
-  async handleEvents({ type, ...data }: any) {
-    console.log("\nHandlering events", type, data);
-    // console.log({type, ...data})
-    switch (type) {
-      case "chat-question-enter-hit": {
-        return this.handleEnterHit(data);
-      }
-      case "open-new-file": {
-        return ChatTab.handleOpenNewFile(data);
-      }
-      case "stop-clicked": {
-        return this.handleStopClicked();
-      }
-      case "diff-paste-back": {
-        return this.handleDiffPasteBack(data);
-      }
-      case "send-chat-to-sidebar": {
-        return this.handleSendToSideBar();
-      }
-      // TODO: add events for shared chat lib
-
-      case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
-        // EVENT_NAMES_TO_CHAT.DONE_STREAMING;
-        // EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
-        // EVENT_NAMES_TO_CHAT.ERROR_STREAMING;
-      }
-      case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
-        console.log("Request caps")
-        return fetchAPI
-          .get_caps()
-          .then((caps) => {
-            console.log("Got Caps", caps)
-            return this.web_panel.webview.postMessage({
-              type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
-              payload: {
-                id: data.payload.id,
-                caps,
-              },
+    restoreChat(chat: {
+        id: string;
+        messages: [string, string][];
+        title?: string;
+        model: string;
+    }) {
+        // this waits until the chat has been mounted
+        const disposables: vscode.Disposable[] = [];
+        const restore = () => {
+            this.web_panel.webview.postMessage({
+                type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
+                payload: chat,
             });
-          })
-          .catch((err) => {
-            return this.web_panel.webview.postMessage({
-              type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
-              payload: {
-                id: data.payload.id,
-                message: err.message
-              }
-            });
-          });
-      }
+            disposables.forEach((d) => d.dispose());
+        };
 
-      case EVENT_NAMES_FROM_CHAT.REQUEST_FILES: {
-        // EVENT_NAMES_TO_CHAT.RECEIVE_FILES;
-        // EVENT_NAMES_TO_CHAT.ERROR_STREAMING;
-      }
-      case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
-      }
-      case EVENT_NAMES_FROM_CHAT.STOP_STREAMING:
-        {
-          // abort
-          EVENT_NAMES_TO_CHAT.DONE_STREAMING;
+        this.web_panel.webview.onDidReceiveMessage(restore);
+
+    }
+
+    createNewChat() {
+        this.web_panel.webview.postMessage({ type: EVENT_NAMES_TO_CHAT.NEW_CHAT });
+    }
+
+    async handleEvents({ type, ...data }: any) {
+        console.log("\nHandling events", type, data);
+        // console.log({type, ...data})
+        switch (type) {
+            case "chat-question-enter-hit": {
+            return this.handleEnterHit(data);
+            }
+            case "open-new-file": {
+            return ChatTab.handleOpenNewFile(data);
+            }
+            case "stop-clicked": {
+            return this.handleStopClicked();
+            }
+            case "diff-paste-back": {
+            return this.handleDiffPasteBack(data);
+            }
+            case "send-chat-to-sidebar": {
+            return this.handleSendToSideBar();
+            }
+
+            case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
+            // TODO: add attach_file: boolean to payload
+            const { id, messages, _title, model } = data.payload;
+            this.chat_id = id;
+            this.messages = messages;
+            this.cancellationTokenSource = new vscode.CancellationTokenSource();
+            // let cancelToken = this.cancellationTokenSource.token;
+            if (model) {
+                await chat_model_set(model, ""); // successfully used model, save it
+            }
+
+            // TODO: chatHistoryProvider should also save the title
+            await this.chatHistoryProvider.save_messages_list(
+                this.chat_id,
+                this.messages,
+                model
+            );
+
+            await fetchAPI.wait_until_all_requests_finished();
+
+            const handle_response = (json: any) => {
+                console.log("stream_response", json);
+                if (typeof json !== "object") {
+                return;
+                }
+                const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
+                this.web_panel.webview.postMessage({
+                type,
+                payload: {
+                    id: this.chat_id,
+                    ...json,
+                },
+                });
+            };
+
+            const handle_stream_end = (maybe_error_message?: string) => {
+                if (maybe_error_message) {
+                this.web_panel.webview.postMessage({
+                    type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+                    payload: {
+                    id: this.chat_id,
+                    message: maybe_error_message,
+                    },
+                });
+                } else {
+                // TODO: save messages
+                this.web_panel.webview.postMessage({
+                    type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+                    payload: { id: this.chat_id },
+                });
+                }
+            };
+            const request = new fetchAPI.PendingRequest(
+                undefined,
+                this.cancellationTokenSource.token
+            );
+            request.set_streaming_callback(handle_response, handle_stream_end);
+            // What's this for?
+            const third_party = this.model_to_thirdparty[model];
+            const chat_promise = fetchAPI.fetch_chat_promise(
+                this.cancellationTokenSource.token,
+                "chat-tab",
+                this.messages,
+                model,
+                third_party
+            );
+            return request.supply_stream(...chat_promise);
+            }
+            case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
+            console.log("Request caps");
+            return fetchAPI
+                .get_caps()
+                .then((caps) => {
+                console.log("Got Caps", caps);
+                return this.web_panel.webview.postMessage({
+                    type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
+                    payload: {
+                    id: data.payload.id,
+                    caps,
+                    },
+                });
+                })
+                .catch((err) => {
+                return this.web_panel.webview.postMessage({
+                    type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
+                    payload: {
+                    id: data.payload.id,
+                    message: err.message,
+                    },
+                });
+                });
+            }
+
+            case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
+            const { id, model, messages, title } = data.payload;
+            console.log("saveing chat: ", data.payload);
+            // TODO: history should also save the title
+            return this.chatHistoryProvider.save_messages_list(id, messages, model);
+            }
+            case EVENT_NAMES_FROM_CHAT.STOP_STREAMING: {
+            return this.cancellationTokenSource.cancel();
+            }
+
+            // TODO: new case for attach current file?
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_FILES: {
+            // This could just attach the current file when in side-bar mode
+            // EVENT_NAMES_TO_CHAT.RECEIVE_FILES;
+            // EVENT_NAMES_TO_CHAT.ERROR_STREAMING;
+            }
+
+            // TODO: diff paste back, send_chat_to_side_bar, handle open new file,
+
+
         }
-        break;
     }
-  }
+
+
 
     async handleSendToSideBar() {
 
@@ -256,7 +343,7 @@ export class ChatTab {
             this.chat_id,
         );
     }
-
+    // TODO: handle this
     private async handleDiffPasteBack(data: {code_block: string}) {
         if (!this.working_on_snippet_editor) {
             return;
@@ -334,12 +421,13 @@ export class ChatTab {
         if (!context) {
             return;
         }
-        // Okay the ceck here is for a selected chat
+        // Okay the check here is for a selected chat
         let free_floating_tab = global.side_panel?.chat;
         if (!free_floating_tab) {
             console.log("no chat found!");
             return;
         }
+
         await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages);
     }
 
@@ -381,60 +469,69 @@ export class ChatTab {
         this.working_on_snippet_code = code_snippet;
         this.messages = messages;
 
-        // This refills the chat
-        this.web_panel.webview.postMessage({
-            command: "chat-clear",
+        this.restoreChat({
+            id: this.chat_id,
+            model: use_model,
+            messages,
+            title: question,
         });
 
-        let messages_backup: [string, string][] = [];
-        for (let i = 0; i < messages.length; i++) {
-            let [role, content] = messages[i];
-            let is_it_last_message = i === messages.length - 1;  // otherwise, put user message into the input box
-            if (role === "user" && !is_it_last_message) {
-                this._question_to_div(content, messages_backup);  // send message inside
-            }
-            messages_backup.push([role, content]); // answers should have itselves in the backup
-            if (role === "context_file") {
-                this._answer_to_div(role, content, messages_backup);  // send message inside
-            }
-            if (role === "assistant") {
-                this._answer_to_div(role, content, messages_backup);  // send message inside
-            }
-        }
 
-        if (messages.length > 0) {
-            let last_message = messages[messages.length - 1];
-            let [last_role, last_content] = last_message;
-            if (last_role === "user") {
-                let pass_dict = { command: "chat-set-question-text", value: {question: last_content} };
-                this.web_panel.webview.postMessage(pass_dict);
-            }
-        } else {
-            // fresh new chat, post code snippet if any
-            let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
-            if (code_snippet) {
-                pass_dict["value"]["question"] += "```\n" + code_snippet + "\n```\n";
-            }
-            if (question) {
-                pass_dict["value"]["question"] += question;
-            }
-            this.web_panel.webview.postMessage(pass_dict);
-        }
-        this.web_panel.webview.postMessage(fireup_message);
 
-        if (!use_model) {
-            [use_model, ] = await chat_model_get(); // model is infered from the history
-        }
-        let combo_populate_message = {
-            command: "chat-models-populate",
-            chat_models: [] as string[],
-            chat_use_model: use_model,
-        };
-        await global.rust_binary_blob?.read_caps(); // can this throw ?
-        for (let x of global.chat_models) {
-            combo_populate_message["chat_models"].push(x);
-        }
-        this.web_panel.webview.postMessage(combo_populate_message);
+        // This refills the chat
+        // this.web_panel.webview.postMessage({
+        //     command: "chat-clear",
+        // });
+
+        // let messages_backup: [string, string][] = [];
+        // for (let i = 0; i < messages.length; i++) {
+        //     let [role, content] = messages[i];
+        //     let is_it_last_message = i === messages.length - 1;  // otherwise, put user message into the input box
+        //     if (role === "user" && !is_it_last_message) {
+        //         this._question_to_div(content, messages_backup);  // send message inside
+        //     }
+        //     messages_backup.push([role, content]); // answers should have itselves in the backup
+        //     if (role === "context_file") {
+        //         this._answer_to_div(role, content, messages_backup);  // send message inside
+        //     }
+        //     if (role === "assistant") {
+        //         this._answer_to_div(role, content, messages_backup);  // send message inside
+        //     }
+        // }
+
+        // if (messages.length > 0) {
+        //     let last_message = messages[messages.length - 1];
+        //     let [last_role, last_content] = last_message;
+        //     if (last_role === "user") {
+        //         let pass_dict = { command: "chat-set-question-text", value: {question: last_content} };
+        //         this.web_panel.webview.postMessage(pass_dict);
+        //     }
+        // } else {
+        //     // fresh new chat, post code snippet if any
+        //     let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
+        //     if (code_snippet) {
+        //         pass_dict["value"]["question"] += "```\n" + code_snippet + "\n```\n";
+        //     }
+        //     if (question) {
+        //         pass_dict["value"]["question"] += question;
+        //     }
+        //     this.web_panel.webview.postMessage(pass_dict);
+        // }
+        // this.web_panel.webview.postMessage(fireup_message);
+
+        // if (!use_model) {
+        //     [use_model, ] = await chat_model_get(); // model is infered from the history
+        // }
+        // let combo_populate_message = {
+        //     command: "chat-models-populate",
+        //     chat_models: [] as string[],
+        //     chat_use_model: use_model,
+        // };
+        // await global.rust_binary_blob?.read_caps(); // can this throw ?
+        // for (let x of global.chat_models) {
+        //     combo_populate_message["chat_models"].push(x);
+        // }
+        // this.web_panel.webview.postMessage(combo_populate_message);
     }
 
     // public dispose()
@@ -674,6 +771,55 @@ export class ChatTab {
     }
 
     public get_html_for_chat(
+        webview: vscode.Webview,
+        extensionUri: any,
+        isTab = false,
+    ): string {
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "chat.umd.cjs")
+        );
+        const styleMainUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "style.css")
+        );
+
+        const styleOverride = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "custom-theme.css")
+        );
+
+        const nonce = ChatTab.getNonce();
+        return `<!DOCTYPE html>
+        <html lang="en" class="light">
+        <head>
+            <meta charset="UTF-8">
+            <!--
+                Use a content security policy to only allow loading images from https or from our extension directory,
+                and only allow scripts that have a specific nonce.
+                TODO: remove  unsafe-inline if posable
+            -->
+            <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource} 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+            <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+
+            <title>Refact.ai Chat</title>
+            <link href="${styleMainUri}" rel="stylesheet">
+            <link href="${styleOverride}" rel="stylesheet">
+        </head>
+        <body>
+            <div id="refact-chat">
+
+            <script nonce="${nonce}" src="${scriptUri}"></script>
+
+            <script nonce="${nonce}">
+              window.onload = function() {
+                const root = document.getElementById("refact-chat")
+                console.log({RefactChat, root})
+                RefactChat.render(root, {host: "vscode"})
+              }
+            </script>
+        </body>
+        </html>`;
+    }
+
+    public get_html_for_chat_old(
         webview: vscode.Webview,
         extensionUri: any,
         isTab = false,
