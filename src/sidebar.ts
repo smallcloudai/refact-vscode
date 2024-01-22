@@ -270,7 +270,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "openKeys": {
-            vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
+            vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "Refact.ai");
             break;
         }
         case "restore_chat": {
