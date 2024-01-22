@@ -62,6 +62,7 @@ export default class ChatHistoryProvider {
         chat_id: string,
         messages: [string, string][],
         chatModel: string,
+        title?: string
     ) {
         let h = this._history;
         if (!h) {
@@ -71,12 +72,12 @@ export default class ChatHistoryProvider {
         if (!existingChat) {
             let chat: Chat = {
                 chat_id,
-                chat_title: "",
+                chat_title: title || "",
                 messages: messages,
                 time: new Date(),
                 chatModel,
             };
-            chat.chat_title = this.title(chat);
+            if(!chat.chat_title) { chat.chat_title = this.title(chat); }
             h.push(chat);
             if (h.length > MAX_HISTORY_LENGTH) {
                 h = h.slice(h.length - MAX_HISTORY_LENGTH);

@@ -1,13 +1,14 @@
 .radix-themes {
   /** TODO: see if there are more theme-able variables */
-    color: var(--vscode-editor-foreground);
-    --color-background: var(--vscode-editor-background);
-    --color-page-background: var(--vscode-editor-background);
-    background-color: var(--color-background);
+    /* color: var(--vscode-editor-foreground); */
+    /* --color-background: var(--vscode-editor-background); */
+    /* --color-page-background: var(--vscode-editor-background); */
+   /*  --color-background: var(--vscode-tab-unfocusedInactiveBackground); */
+   /* background-color: var(--color-background); */
 }
 
 :root, .light, .light-theme, .dark, .dark-theme {
-    --color-page-background: var(--vscode-editor-background);
+    /* --color-page-background: var(--vscode-editor-background); */
 }
 
 body {
@@ -21,4 +22,8 @@ body {
 
 :where(.vscode-dark) {
     color-scheme: dark;
-  }
+}
+
+.hljs {
+  background: var(--vscode-textPreformat-background);
+}

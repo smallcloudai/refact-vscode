@@ -7,6 +7,7 @@ import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
+import { EVENT_NAMES_FROM_CHAT } from "./events";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -26,6 +27,7 @@ export async function open_chat_tab(
     }
 
     if (global.side_panel && global.side_panel._view) {
+        // TODO: check this
         let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
 
         let context: vscode.ExtensionContext | undefined = global.global_context;
@@ -165,10 +167,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
-        console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
+        // console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
+        case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
         case "open_chat_in_new_tab": {
             const chat_id = data?.chat_id || this.chat?.chat_id;
+            // const chat_id = data.payload.id;
             if(!chat_id || typeof chat_id !== "string") {return; }
             if(!this.chatHistoryProvider) { return; }
 
@@ -176,6 +180,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if(openTab) {
                 return openTab.focus();
             }
+            // is extensionUri defined anywhere?
             await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this._context.extensionUri);
             this.chat = null;
             return this.goto_main();
@@ -184,6 +189,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
             break;
         }
+
         case "open_new_chat": {
             let question = data.question;
             if (!question) {
@@ -304,6 +310,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
             break;
         }
+        case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
         case "back-from-chat": {
             this.goto_main();
             this.chat = null;

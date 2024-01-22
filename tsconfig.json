@@ -5,7 +5,8 @@
 		"outDir": "out",
 		"lib": [
 			"ES2020",
-			"ES2021.WeakRef"
+			"ES2021.WeakRef",
+			"DOM",
 		],
 		"sourceMap": true,
 		"rootDir": "src",

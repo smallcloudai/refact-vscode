@@ -5,7 +5,7 @@ import * as userLogin from "./userLogin";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
-import { CapsResponse } from './events';
+import type { CapsResponse } from 'refact-chat-js';
 
 
 let globalSeq = 100;

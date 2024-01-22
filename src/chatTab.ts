@@ -1,14 +1,24 @@
+
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
 import * as crlf from "./crlf";
 import * as estate from "./estate";
 import ChatHistoryProvider, { Chat } from "./chatHistory";
+import {basename} from "path";
 // import * as userLogin from "./userLogin";
-const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
-import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
+const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdiff/
+import { marked } from "marked"; // Markdown parser documentation: https://marked.js.org/
 
-const TAB_BUTTON_SVG = `<svg fill="currentColor" class="refactcss-chat__button__icon" xmlns="http://www.w3.org/2000/svg" height="16" viewBox="0 -960 960 960" width="16"><path d="M200-120q-33 0-56.5-23.5T120-200v-120h80v120h560v-480H200v120h-80v-200q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm260-140-56-56 83-84H120v-80h367l-83-84 56-56 180 180-180 180Z"/></svg>`;
+// circular dependency
+import { open_chat_tab } from "./sidebar";
+import {
+  EVENT_NAMES_FROM_CHAT,
+  EVENT_NAMES_TO_CHAT,
+} from "./events";
+
+
+
 
 export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = false): [vscode.Range, vscode.Range, string, string, string]
 {
@@ -55,13 +65,11 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = 
     [attach] = crlf.cleanup_cr_lf(attach, []);
     return [selection, attach_range, attach, short_fn, code_snippet];
 }
-// circular dep
-import { open_chat_tab } from "./sidebar";
-import { EVENT_NAMES_FROM_CHAT, EVENT_NAMES_TO_CHAT } from "./events";
+
 
 export class ChatTab {
-    // public static current_tab: ChatTab | undefined;
-    // private _disposables: vscode.Disposable[] = [];
+  // public static current_tab: ChatTab | undefined;
+    private _disposables: vscode.Disposable[] = [];
     public messages: [string, string][] = [];
     public cancellationTokenSource: vscode.CancellationTokenSource;
     public working_on_attach_filename: string = "";
@@ -71,7 +79,7 @@ export class ChatTab {
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
-    public model_to_thirdparty: {[key: string]: boolean} = {};
+    public model_to_thirdparty: { [key: string]: boolean } = {};
 
     public get_messages(): [string, string][] {
         return this.messages;
@@ -84,6 +92,15 @@ export class ChatTab {
     ) {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         this.handleEvents = this.handleEvents.bind(this);
+
+        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
+          this.postActiveFileInfo(this.chat_id);
+        }));
+
+        this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
+          this.postActiveFileInfo(this.chat_id);
+        }));
+
     }
 
     async focus() {
@@ -93,7 +110,10 @@ export class ChatTab {
     }
 
     dispose() {
-        const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id === this.chat_id);
+        this._disposables.forEach(d => d.dispose());
+        const otherTabs = global.open_chat_tabs.filter(
+          (openTab) => openTab.chat_id !== this.chat_id
+        );
         global.open_chat_tabs = otherTabs;
     }
 
@@ -103,9 +123,14 @@ export class ChatTab {
 
     async saveToSideBar() {
         const history = await this.getHistory();
-        this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, history?.chatModel || "");
-        if(!global.side_panel?.chat) {
-            global.side_panel?.goto_main();
+        this.chatHistoryProvider.save_messages_list(
+            this.chat_id,
+            this.messages,
+            history?.chatModel || "",
+            history?.chat_title
+        );
+        if (!global.side_panel?.chat) {
+          global.side_panel?.goto_main();
         }
     }
 
@@ -140,7 +165,8 @@ export class ChatTab {
 
         const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
 
-        if(global.open_chat_tabs === undefined) { // TODO: find out how this gets unset :/
+        if (global.open_chat_tabs === undefined) {
+            // TODO: find out how this gets unset :/
             global.open_chat_tabs = [tab];
         } else {
             global.open_chat_tabs.push(tab);
@@ -166,31 +192,83 @@ export class ChatTab {
     }) {
         // this waits until the chat has been mounted
         const disposables: vscode.Disposable[] = [];
-        const restore = () => {
-            this.web_panel.webview.postMessage({
-                type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                payload: chat,
-            });
-            disposables.forEach((d) => d.dispose());
+        const restore = (event: { type: string }) => {
+            if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
+                this.web_panel.webview.postMessage({
+                    type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
+                    payload: chat,
+                });
+                disposables.forEach((d) => d.dispose());
+            }
         };
 
-        this.web_panel.webview.onDidReceiveMessage(restore);
-
+        this.web_panel.webview.onDidReceiveMessage(restore, undefined, disposables);
     }
 
     createNewChat() {
         this.web_panel.webview.postMessage({ type: EVENT_NAMES_TO_CHAT.NEW_CHAT });
     }
 
+    postActiveFileInfo(id: string) {
+        const file = this.getActiveFileInfo();
+        const fileName = file.file_name;
+        const lineInfo = file.line1 !== undefined && file.line2 !== undefined ? `:${file.line1}-${file.line2}` : "";
+
+        const action = {
+            type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+            payload: {
+                id: id,
+                name: fileName + lineInfo,
+                can_paste: vscode.window.activeTextEditor && vscode.window.activeTextEditor.selection.isEmpty === false ? true : false,
+            },
+        };
+
+        this.web_panel.webview.postMessage(action);
+    }
+
+    sendFileToChat(id: string, file: {
+        file_name: string,
+        file_content: string,
+        line1?: number;
+        line2?: number
+    }) {
+        return this.web_panel.webview.postMessage({
+            type: EVENT_NAMES_TO_CHAT.RECEIVE_FILES,
+            payload: {
+                id,
+                files: [file]
+            }
+        });
+    }
+
+    getActiveFileInfo() {
+        const file_name = basename(
+        vscode.window.activeTextEditor?.document.fileName || ""
+        );
+        const file_content =
+        vscode.window.activeTextEditor?.document.getText() || "";
+        const start = vscode.window.activeTextEditor?.selection.start;
+        const end = vscode.window.activeTextEditor?.selection.end;
+        const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
+            ? { line1: start.line + 1, line2: end.line + 1 }
+            : {};
+        const file = {
+            file_name,
+            file_content,
+            ...maybeLineInfo,
+        };
+
+        return file;
+    }
+
     async handleEvents({ type, ...data }: any) {
-        console.log("\nHandling events", type, data);
         // console.log({type, ...data})
         switch (type) {
             case "chat-question-enter-hit": {
             return this.handleEnterHit(data);
             }
             case "open-new-file": {
-            return ChatTab.handleOpenNewFile(data);
+            return this.handleOpenNewFile(data);
             }
             case "stop-clicked": {
             return this.handleStopClicked();
@@ -203,126 +281,144 @@ export class ChatTab {
             }
 
             case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
-            // TODO: add attach_file: boolean to payload
-            const { id, messages, _title, model } = data.payload;
-            this.chat_id = id;
-            this.messages = messages;
-            this.cancellationTokenSource = new vscode.CancellationTokenSource();
-            // let cancelToken = this.cancellationTokenSource.token;
-            if (model) {
-                await chat_model_set(model, ""); // successfully used model, save it
+                const { id, messages, title, model, attach_file } = data.payload;
+                if (attach_file) {
+
+                    const file = this.getActiveFileInfo();
+                    this.sendFileToChat(id, file);
+                    const message = ["context_file", JSON.stringify([file])];
+                    messages.unshift(message);
+                }
+                this.chat_id = id;
+                this.messages = messages;
+                this.cancellationTokenSource = new vscode.CancellationTokenSource();
+                if (model) {
+                    await chat_model_set(model, ""); // successfully used model, save it
+                }
+
+                await this.chatHistoryProvider.save_messages_list(
+                    this.chat_id,
+                    this.messages,
+                    model,
+                    title
+                );
+
+                await fetchAPI.wait_until_all_requests_finished();
+                const handle_response = (json: any) => {
+                    if (typeof json !== "object") {
+                        return;
+                    }
+                    const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
+                    this.web_panel.webview.postMessage({
+                        type,
+                        payload: {
+                            id: this.chat_id,
+                            ...json,
+                        },
+                    });
+                };
+
+                const handle_stream_end = (maybe_error_message?: string) => {
+                    if (maybe_error_message) {
+                        this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+                            payload: {
+                                id: this.chat_id,
+                                message: maybe_error_message,
+                            },
+                        });
+                    } else {
+                        this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+                            payload: { id: this.chat_id },
+                        });
+                    }
+                };
+
+                const request = new fetchAPI.PendingRequest(
+                    undefined,
+                    this.cancellationTokenSource.token
+                );
+                request.set_streaming_callback(handle_response, handle_stream_end);
+                // What's this for?
+                const third_party = this.model_to_thirdparty[model];
+                const chat_promise = fetchAPI.fetch_chat_promise(
+                    this.cancellationTokenSource.token,
+                    "chat-tab",
+                    this.messages,
+                    model,
+                    third_party
+                );
+                return request.supply_stream(...chat_promise);
             }
 
-            // TODO: chatHistoryProvider should also save the title
-            await this.chatHistoryProvider.save_messages_list(
-                this.chat_id,
-                this.messages,
-                model
-            );
-
-            await fetchAPI.wait_until_all_requests_finished();
-
-            const handle_response = (json: any) => {
-                console.log("stream_response", json);
-                if (typeof json !== "object") {
-                return;
-                }
-                const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
-                this.web_panel.webview.postMessage({
-                type,
-                payload: {
-                    id: this.chat_id,
-                    ...json,
-                },
-                });
-            };
-
-            const handle_stream_end = (maybe_error_message?: string) => {
-                if (maybe_error_message) {
-                this.web_panel.webview.postMessage({
-                    type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
-                    payload: {
-                    id: this.chat_id,
-                    message: maybe_error_message,
-                    },
-                });
-                } else {
-                // TODO: save messages
-                this.web_panel.webview.postMessage({
-                    type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
-                    payload: { id: this.chat_id },
-                });
-                }
-            };
-            const request = new fetchAPI.PendingRequest(
-                undefined,
-                this.cancellationTokenSource.token
-            );
-            request.set_streaming_callback(handle_response, handle_stream_end);
-            // What's this for?
-            const third_party = this.model_to_thirdparty[model];
-            const chat_promise = fetchAPI.fetch_chat_promise(
-                this.cancellationTokenSource.token,
-                "chat-tab",
-                this.messages,
-                model,
-                third_party
-            );
-            return request.supply_stream(...chat_promise);
-            }
             case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
-            console.log("Request caps");
-            return fetchAPI
-                .get_caps()
-                .then((caps) => {
-                console.log("Got Caps", caps);
-                return this.web_panel.webview.postMessage({
-                    type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
-                    payload: {
-                    id: data.payload.id,
-                    caps,
-                    },
-                });
-                })
-                .catch((err) => {
-                return this.web_panel.webview.postMessage({
-                    type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
-                    payload: {
-                    id: data.payload.id,
-                    message: err.message,
-                    },
-                });
-                });
+                return fetchAPI
+                    .get_caps()
+                    .then((caps) => {
+                        return this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
+                            payload: {
+                                id: data.payload.id,
+                                caps,
+                            },
+                        });
+                    })
+                    .catch((err) => {
+                        return this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
+                            payload: {
+                                id: data.payload.id,
+                                message: err.message,
+                            },
+                        });
+                    });
             }
 
             case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
-            const { id, model, messages, title } = data.payload;
-            console.log("saveing chat: ", data.payload);
-            // TODO: history should also save the title
-            return this.chatHistoryProvider.save_messages_list(id, messages, model);
+                const { id, model, messages, title } = data.payload;
+                return this.chatHistoryProvider.save_messages_list(
+                    id,
+                    messages,
+                    model,
+                    title
+                );
             }
             case EVENT_NAMES_FROM_CHAT.STOP_STREAMING: {
-            return this.cancellationTokenSource.cancel();
+                return this.cancellationTokenSource.cancel();
             }
 
-            // TODO: new case for attach current file?
-
-            case EVENT_NAMES_FROM_CHAT.REQUEST_FILES: {
-            // This could just attach the current file when in side-bar mode
-            // EVENT_NAMES_TO_CHAT.RECEIVE_FILES;
-            // EVENT_NAMES_TO_CHAT.ERROR_STREAMING;
+            case EVENT_NAMES_FROM_CHAT.READY: {
+                const { id } = data.payload;
+                return this.postActiveFileInfo(id);
             }
 
-            // TODO: diff paste back, send_chat_to_side_bar, handle open new file,
+            case EVENT_NAMES_FROM_CHAT.SEND_TO_SIDE_BAR: {
+                return this.handleSendToSideBar();
+            }
 
+            case EVENT_NAMES_FROM_CHAT.NEW_FILE: {
+                const value = data.payload.content;
+                return this.handleOpenNewFile(value);
+            }
+
+            case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
+                const value = data.payload.content;
+                return this.handleDiffPasteBack({ code_block: value });
+            }
+
+        // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
+        // // handled in sidebar.ts
+        // }
+
+        // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB: {
+        //  // handled in sidebar.ts
+        // }
 
         }
     }
 
-
-
     async handleSendToSideBar() {
-
         await vscode.commands.executeCommand("refactai-toolbox.focus");
 
         let editor = vscode.window.activeTextEditor;
@@ -343,7 +439,6 @@ export class ChatTab {
             this.chat_id,
         );
     }
-    // TODO: handle this
     private async handleDiffPasteBack(data: {code_block: string}) {
         if (!this.working_on_snippet_editor) {
             return;
@@ -372,14 +467,14 @@ export class ChatTab {
         return this.cancellationTokenSource.cancel();
     }
 
-    private static async handleOpenNewFile(data : {value: string}) {
+    private async handleOpenNewFile(value: string) {
         vscode.workspace.openTextDocument().then((document) => {
             vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
                 .then((editor) => {
                     editor.edit((editBuilder) => {
-                    editBuilder.insert(new vscode.Position(0, 0), data.value);
+                        editBuilder.insert(new vscode.Position(0, 0), value);
+                    });
                 });
-            });
         });
     }
 
@@ -448,11 +543,11 @@ export class ChatTab {
         this.working_on_snippet_editor = undefined;
         this.working_on_snippet_column = undefined;
 
-        let fireup_message = {
-            command: "chat-set-fireup-options",
-            chat_attach_file: "",
-            chat_attach_default: false,
-        };
+        // let fireup_message = {
+        //   command: "chat-set-fireup-options",
+        //   chat_attach_file: "",
+        //   chat_attach_default: false,
+        // };
 
         if (editor) {
             let selection, attach_range: vscode.Range;
@@ -463,8 +558,8 @@ export class ChatTab {
                 this.working_on_snippet_editor = editor;
                 this.working_on_snippet_column = editor.viewColumn;
             }
-            fireup_message["chat_attach_file"] = this.working_on_attach_filename;
-            fireup_message["chat_attach_default"] = attach_default;
+            // fireup_message["chat_attach_file"] = this.working_on_attach_filename;
+            // fireup_message["chat_attach_default"] = attach_default;
         }
         this.working_on_snippet_code = code_snippet;
         this.messages = messages;
@@ -773,13 +868,14 @@ export class ChatTab {
     public get_html_for_chat(
         webview: vscode.Webview,
         extensionUri: any,
-        isTab = false,
+        isTab = false
     ): string {
+
         const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "chat.umd.cjs")
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "refact-chat.umd.cjs")
         );
         const styleMainUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "style.css")
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "style.css")
         );
 
         const styleOverride = webview.asWebviewUri(
@@ -788,109 +884,31 @@ export class ChatTab {
 
         const nonce = ChatTab.getNonce();
         return `<!DOCTYPE html>
-        <html lang="en" class="light">
-        <head>
-            <meta charset="UTF-8">
-            <!--
-                Use a content security policy to only allow loading images from https or from our extension directory,
-                and only allow scripts that have a specific nonce.
-                TODO: remove  unsafe-inline if posable
-            -->
-            <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource} 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
-            <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-
-            <title>Refact.ai Chat</title>
-            <link href="${styleMainUri}" rel="stylesheet">
-            <link href="${styleOverride}" rel="stylesheet">
-        </head>
-        <body>
-            <div id="refact-chat">
-
-            <script nonce="${nonce}" src="${scriptUri}"></script>
-
-            <script nonce="${nonce}">
-              window.onload = function() {
-                const root = document.getElementById("refact-chat")
-                console.log({RefactChat, root})
-                RefactChat.render(root, {host: "vscode"})
-              }
-            </script>
-        </body>
-        </html>`;
-    }
-
-    public get_html_for_chat_old(
-        webview: vscode.Webview,
-        extensionUri: any,
-        isTab = false,
-    ): string
-    {
-        const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "chat.js")
-        );
-        const styleMainUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
-        );
-        const hlUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "hl.min.js")
-        );
-
-        const nonce = ChatTab.getNonce();
-
-        return `<!DOCTYPE html>
-            <html lang="en">
+            <html lang="en" class="light">
             <head>
                 <meta charset="UTF-8">
                 <!--
                     Use a content security policy to only allow loading images from https or from our extension directory,
                     and only allow scripts that have a specific nonce.
+                    TODO: remove  unsafe-inline if posable
                 -->
-                <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource} 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
                 <title>Refact.ai Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
+                <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div class="refactcss-chat" ${isTab ? "data-state=\"tab\"" : ""}>
-
-                    ${isTab === false ? `<div class="chat__button-group">
-                    <button class="back-button">← Back</button>
-                    <button id="open_chat" class="chat__open-tab-button"><svg height="16px" id="icon" style="enable-background:new 0 0 16 16;" version="1.1" viewBox="0 0 16 16" width="16px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><style type="text/css">.st0{fill:none;}</style><title/><path d="M13,13H3V3h5V2H3C2.4,2,2,2.4,2,3v10c0,0.6,0.4,1,1,1h10c0.6,0,1-0.4,1-1V8h-1V13z"/><polygon points="13,3 13,1 12,1 12,3 10,3 10,4 12,4 12,6 13,6 13,4 15,4 15,3 "/></svg>Open In Tab</button>
-                    </div>`: ""}
-
-                    <div class="refactcss-chat__wrapper">
-                        <div class="refactcss-chat__inner">
-                            <div class="refactcss-chat__content" ${isTab ? "data-state=\"tab\"": ""}>
-                                <div class="refactcss-chat__welcome">
-                                    Welcome to Refact chat! How can I assist you today? Please type question below.
-                                </div>
-                            </div>
-                            <div class="refactcss-chat__panel">
-                                <div class="refactcss-chat__commands">
-                                    <div class="refactcss-chat__controls">
-                                        <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                                        <div class="refactcss-chat__model"><span>Use model:</span><select id="chat-model-combo"></select></div>
-                                    </div>
-                                    <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
-                                    <button id="chat-regenerate" class="refactcss-chat__regenerate"><svg height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M6.19306266,7 L10,7 L10,9 L3,9 L3,2 L5,2 L5,5.27034886 C6.72510698,3.18251178 9.19576641,2 12,2 C17.5228475,2 22,6.4771525 22,12 C20,12 22,12 20,12 C20,7.581722 16.418278,4 12,4 C9.60637619,4 7.55353989,5.07869636 6.19306266,7 Z M17.8069373,17 L14,17 L14,15 L21,15 L21,22 L19,22 L19,18.7296511 C17.274893,20.8174882 14.8042336,22 12,22 C6.4771525,22 2,17.5228475 2,12 C2,12 4,12 4,12 C4,16.418278 7.581722,20 12,20 C14.3936238,20 16.4464601,18.9213036 17.8069373,17 Z" fill-rule="evenodd"/></svg>Regenerate</button>
-                                    <div id="chat-error-message"><span></span></div>
-                                    <div class="refactcss-chat__decoration">
-                                        <textarea id="chat-input" class="refactcss-chat__input"></textarea>
-                                        <div class="refactcss-chat__button-group">
-                                            ${isTab ? `<button id="send-to-sidebar" class="refactcss-chat__button">${TAB_BUTTON_SVG}</button>` : ""}
-                                            <button id="chat-send" class="refactcss-chat__button"><span></span></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="refact-chat">
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
-                <script nonce="${nonce}" src="${hlUri}"></script>
+
                 <script nonce="${nonce}">
+                window.onload = function() {
+                    const root = document.getElementById("refact-chat")
+                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}})
+                }
                 </script>
             </body>
             </html>`;
