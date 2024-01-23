@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as rconsoleCommands from "./rconsoleCommands";
 import * as sidebar from "./sidebar";
 import * as chatTab from "./chatTab";
-
+import { v4 as uuidv4 } from 'uuid';
 
 export class MyCommentAuthorInformation implements vscode.CommentAuthorInformation {
     name: string;
@@ -414,32 +414,42 @@ export class RefactConsoleProvider {
         RefactConsoleProvider.close_all_consoles();
         await vscode.commands.executeCommand("refactai-toolbox.focus");
         for (let i = 0; i < 10; i++) {
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
             if (global.side_panel && global.side_panel._view) {
                 break;
             }
         }
-        let chat: chatTab.ChatTab|undefined = await sidebar.open_chat_tab(
-            question,
+
+        const id = uuidv4();
+        const messagesWithQuestion = messages.concat([["user", question]]);
+
+        // Input: from the user can be empty
+        let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
+            question, // is this needed ?
             this.editor,
             false,
             this.model_name,
-            messages,
-            "");
+            messagesWithQuestion,
+            id,
+        );
         if (!chat) {
             return;
         }
 
-        if(new_question) {
-            await chat.post_question_and_communicate_answer(
-                question,
-                this.model_name,
-                "",
-                false,
-                messages,
-                );
+        if (new_question) {
+            await chat.handleChatQuestion({
+                id: chat.chat_id,
+                model: this.model_name, // empty string
+                title: question,
+                messages: messagesWithQuestion,
+                attach_file: false,
+            });
         } else {
-            await chat.chatHistoryProvider.save_messages_list(chat.chat_id, messages, this.model_name);
+            await chat.chatHistoryProvider.save_messages_list(
+                chat.chat_id,
+                messages,
+                this.model_name
+            );
         }
     }
 }

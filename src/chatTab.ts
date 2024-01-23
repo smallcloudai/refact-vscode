@@ -12,11 +12,12 @@ import { marked } from "marked"; // Markdown parser documentation: https://marke
 
 // circular dependency
 import { open_chat_tab } from "./sidebar";
+
+// FIXME: vscode is importing the cjs chat script https://github.com/microsoft/vscode/issues/130367
 import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
 } from "./events";
-
 
 
 
@@ -184,25 +185,33 @@ export class ChatTab {
         await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages);
     }
 
-    restoreChat(chat: {
+    async restoreChat(chat: {
         id: string;
         messages: [string, string][];
         title?: string;
         model: string;
     }) {
         // this waits until the chat has been mounted
-        const disposables: vscode.Disposable[] = [];
-        const restore = (event: { type: string }) => {
-            if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
-                this.web_panel.webview.postMessage({
-                    type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                    payload: chat,
-                });
-                disposables.forEach((d) => d.dispose());
-            }
-        };
+        return new Promise<void>((resolve) => {
+            const disposables: vscode.Disposable[] = [];
+            const restore = (event: { type: string }) => {
+                if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
+                    this.web_panel.webview.postMessage({
+                        type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
+                        payload: chat,
+                    });
+                    disposables.forEach((d) => d.dispose());
+                    resolve();
+                }
+            };
 
-        this.web_panel.webview.onDidReceiveMessage(restore, undefined, disposables);
+            this.web_panel.webview.onDidReceiveMessage(
+                restore,
+                undefined,
+                disposables
+            );
+        });
+
     }
 
     createNewChat() {
@@ -261,6 +270,105 @@ export class ChatTab {
         return file;
     }
 
+    async handleChatQuestion({
+        id,
+        model,
+        title,
+        messages,
+        attach_file,
+    }: {
+        id: string;
+        model: string;
+        title: string;
+        messages: [string, string][];
+        // messages: ChatMessages;
+        attach_file?: boolean;
+    }): Promise<void> {
+        console.log("HandleChatQuestion:", {
+          id,
+          model,
+          title,
+          messages,
+          attach_file,
+        });
+        this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
+
+        if (attach_file) {
+            const file = this.getActiveFileInfo();
+            this.sendFileToChat(id, file);
+            const message: [string, string] = ["context_file", JSON.stringify([file])];
+            messages.unshift(message);
+        }
+        this.chat_id = id;
+        this.messages = messages;
+        this.cancellationTokenSource =
+            new vscode.CancellationTokenSource();
+        if (model) {
+            await chat_model_set(model, ""); // successfully used model, save it
+        }
+
+        await this.chatHistoryProvider.save_messages_list(
+            this.chat_id,
+            this.messages,
+            model,
+            title
+        );
+
+        await fetchAPI.wait_until_all_requests_finished();
+        const handle_response = (json: any) => {
+            if (typeof json !== "object") {
+            return;
+            }
+            const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
+            this.web_panel.webview.postMessage({
+            type,
+            payload: {
+                id: this.chat_id,
+                ...json,
+            },
+            });
+        };
+
+        const handle_stream_end = (
+            maybe_error_message?: string
+        ) => {
+            if (maybe_error_message) {
+            this.web_panel.webview.postMessage({
+                type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+                payload: {
+                id: this.chat_id,
+                message: maybe_error_message,
+                },
+            });
+            } else {
+            this.web_panel.webview.postMessage({
+                type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+                payload: { id: this.chat_id },
+            });
+            }
+        };
+
+        const request = new fetchAPI.PendingRequest(
+            undefined,
+            this.cancellationTokenSource.token
+        );
+        request.set_streaming_callback(
+            handle_response,
+            handle_stream_end
+        );
+        // What's this for?
+        const third_party = this.model_to_thirdparty[model];
+        const chat_promise = fetchAPI.fetch_chat_promise(
+            this.cancellationTokenSource.token,
+            "chat-tab",
+            this.messages,
+            model,
+            third_party
+        );
+        return request.supply_stream(...chat_promise);
+      // wait for READY signal, send EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT and ask the question
+    }
+
     async handleEvents({ type, ...data }: any) {
         // console.log({type, ...data})
         switch (type) {
@@ -281,75 +389,9 @@ export class ChatTab {
             }
 
             case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
+                // Note: context_file will be a different format
                 const { id, messages, title, model, attach_file } = data.payload;
-                if (attach_file) {
-
-                    const file = this.getActiveFileInfo();
-                    this.sendFileToChat(id, file);
-                    const message = ["context_file", JSON.stringify([file])];
-                    messages.unshift(message);
-                }
-                this.chat_id = id;
-                this.messages = messages;
-                this.cancellationTokenSource = new vscode.CancellationTokenSource();
-                if (model) {
-                    await chat_model_set(model, ""); // successfully used model, save it
-                }
-
-                await this.chatHistoryProvider.save_messages_list(
-                    this.chat_id,
-                    this.messages,
-                    model,
-                    title
-                );
-
-                await fetchAPI.wait_until_all_requests_finished();
-                const handle_response = (json: any) => {
-                    if (typeof json !== "object") {
-                        return;
-                    }
-                    const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
-                    this.web_panel.webview.postMessage({
-                        type,
-                        payload: {
-                            id: this.chat_id,
-                            ...json,
-                        },
-                    });
-                };
-
-                const handle_stream_end = (maybe_error_message?: string) => {
-                    if (maybe_error_message) {
-                        this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
-                            payload: {
-                                id: this.chat_id,
-                                message: maybe_error_message,
-                            },
-                        });
-                    } else {
-                        this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
-                            payload: { id: this.chat_id },
-                        });
-                    }
-                };
-
-                const request = new fetchAPI.PendingRequest(
-                    undefined,
-                    this.cancellationTokenSource.token
-                );
-                request.set_streaming_callback(handle_response, handle_stream_end);
-                // What's this for?
-                const third_party = this.model_to_thirdparty[model];
-                const chat_promise = fetchAPI.fetch_chat_promise(
-                    this.cancellationTokenSource.token,
-                    "chat-tab",
-                    this.messages,
-                    model,
-                    third_party
-                );
-                return request.supply_stream(...chat_promise);
+                this.handleChatQuestion({ id, model, title, messages, attach_file });
             }
 
             case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
@@ -505,6 +547,8 @@ export class ChatTab {
 
     }
 
+
+
     public static async clear_and_repopulate_chat(
         question: string,
         editor: vscode.TextEditor | undefined,
@@ -564,7 +608,8 @@ export class ChatTab {
         this.working_on_snippet_code = code_snippet;
         this.messages = messages;
 
-        this.restoreChat({
+
+        return this.restoreChat({
             id: this.chat_id,
             model: use_model,
             messages,
@@ -900,7 +945,7 @@ export class ChatTab {
                 <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div id="refact-chat">
+                <div id="refact-chat"></div>
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
 
