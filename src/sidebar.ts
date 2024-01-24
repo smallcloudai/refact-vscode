@@ -7,7 +7,7 @@ import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
-import { EVENT_NAMES_FROM_CHAT } from "./events";
+import { EVENT_NAMES_FROM_CHAT } from "refact-chat-js/dist/events";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {

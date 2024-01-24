@@ -17,7 +17,7 @@ import { open_chat_tab } from "./sidebar";
 import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
-} from "./events";
+} from "refact-chat-js/dist/events";
 
 
 
