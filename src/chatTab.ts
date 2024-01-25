@@ -348,10 +348,16 @@ export class ChatTab {
         );
         //TODO: find out what this is for?
         const third_party = this.model_to_thirdparty[model];
+        const formatedMessages = this.messages.map<[string, string]>(([role, content]) => {
+            if(role === "context_file" && typeof content !== "string") {
+                return [role, JSON.stringify(content)];
+            }
+            return [role, content];
+        })
         const chat_promise = fetchAPI.fetch_chat_promise(
             this.cancellationTokenSource.token,
             "chat-tab",
-            this.messages,
+            formatedMessages,
             model,
             third_party
         );
