@@ -255,9 +255,11 @@ export class ChatTab {
         vscode.window.activeTextEditor?.document.getText() || "";
         const start = vscode.window.activeTextEditor?.selection.start;
         const end = vscode.window.activeTextEditor?.selection.end;
+        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0
+
         const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
             ? { line1: start.line + 1, line2: end.line + 1 }
-            : {};
+            : { line1:  1, line2: lineCount + 1 };
         const file = {
             file_name,
             file_content,
@@ -348,12 +350,20 @@ export class ChatTab {
         );
         //TODO: find out what this is for?
         const third_party = this.model_to_thirdparty[model];
-        const formatedMessages = this.messages.map<[string, string]>(([role, content]) => {
-            if(role === "context_file" && typeof content !== "string") {
+
+        const formatedMessages = this.messages.map<[string, string]>(
+            ([role, content]) => {
+            if (
+                role === "context_file" &&
+                typeof content !== "string"
+            ) {
                 return [role, JSON.stringify(content)];
             }
             return [role, content];
-        })
+            }
+        );
+
+
         const chat_promise = fetchAPI.fetch_chat_promise(
             this.cancellationTokenSource.token,
             "chat-tab",
