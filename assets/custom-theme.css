@@ -23,6 +23,7 @@
 
 :where([data-state-tabbed]) .radix-themes {
   --color-background: var(--vscode-editor-background);
+  --color-panel: var(--vscode-input-background);
   color: var(--vscode-editor-foreground);
 }
 
