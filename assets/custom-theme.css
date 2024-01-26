@@ -12,7 +12,6 @@
 
 .radix-themes {
   /** TODO: there are more theme-able variables we can use */
-  /** TBD: should tab have a different theme mode? */
    --default-font-family: var(--vscode-font-family);
    --code-font-family: var(--vscode-editor-font-family);
    --color-background: var(--vscode-sideBar-background);
@@ -20,7 +19,11 @@
    --color-surface: var(--vscode-panel-background);
    color: var(--vscode-sideBar-foreground);
    background-color: var(--color-background);
+}
 
+:where([data-state-tabbed]) .radix-themes {
+  --color-background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
 }
 
 body {
