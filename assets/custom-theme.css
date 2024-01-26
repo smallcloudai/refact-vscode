@@ -1,6 +1,9 @@
-.vscode-light {
+:where(.vscode-light) {
     color-scheme: light;
 
+  }
+:where(.vscode-dark) {
+    color-scheme: dark;
   }
 
 .vscode-dark {
@@ -8,31 +11,17 @@
 }
 
 .radix-themes {
-  /** TODO: see if there are more theme-able variables */
+  /** TODO: there are more theme-able variables we can use */
+  /** TBD: should tab have a different theme mode? */
    --default-font-family: var(--vscode-font-family);
    --code-font-family: var(--vscode-editor-font-family);
    --color-background: var(--vscode-sideBar-background);
+   --color-panel: var(--vscode-panel-background);
+   --color-surface: var(--vscode-panel-background);
    color: var(--vscode-sideBar-foreground);
    background-color: var(--color-background);
 
 }
-
-/* :where(.radix-themes) {
-  --color-background: white;
-  --color-overlay: var(--black-a6);
-  --color-panel-solid: white;
-  --color-panel-translucent: rgba(255, 255, 255, 0.8);
-  --color-surface: rgba(255, 255, 255, 0.9);
-}
-:is(.dark, .dark-theme),
-:is(.dark, .dark-theme) :where(.radix-themes:not(.light, .light-theme)) {
-  --color-background: var(--gray-1);
-  --color-overlay: var(--black-a8);
-  --color-panel-solid: var(--gray-2);
-  --color-panel-translucent: var(--gray-2-translucent);
-  --color-surface: rgba(0, 0, 0, 0.25);
-} */
-
 
 body {
     padding: 0;
