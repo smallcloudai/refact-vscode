@@ -18,7 +18,7 @@ import {
 
 
 
-export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = false): [vscode.Range, vscode.Range, string, string, string]
+export function attach_code_from_editor(editor: vscode.TextEditor, insert_here_tag: boolean): [vscode.Range, vscode.Range, string, string, string]
 {
     if (editor.document.uri.scheme !== "file") {
         return [new vscode.Range(0, 0, 0, 0), new vscode.Range(0, 0, 0, 0), "", "", ""];
@@ -41,7 +41,7 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_tag = 
     while (1) {
         let attach_before = editor.document.getText(new vscode.Range(pos0, selection.start));
         let attach_after = editor.document.getText(new vscode.Range(selection.start, pos1));
-        let attach_test = attach_before + `${insert_tag ? "\n|INSERT-HERE|\n" : ""}` + attach_after;
+        let attach_test = attach_before + `${insert_here_tag ? "\n|INSERT-HERE|\n" : ""}` + attach_after;
         if (attach_test && attach_test.length > 2000) {
             break;
         }
@@ -551,7 +551,7 @@ export class ChatTab {
 
         if (editor) {
             let selection, attach_range: vscode.Range;
-            [selection, attach_range, this.working_on_attach_code, this.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor);
+            [selection, attach_range, this.working_on_attach_code, this.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor, false);
             this.working_on_attach_range = attach_range;
             if (!selection.isEmpty) {
                 this.working_on_snippet_range = selection;

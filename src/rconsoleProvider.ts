@@ -90,7 +90,7 @@ export class RefactConsoleProvider {
             this.working_on_attach_code,
             this.working_on_attach_filename,
             this.code_snippet
-        ] = chatTab.attach_code_from_editor(editor);
+        ] = chatTab.attach_code_from_editor(editor, false);
 
         this.dispose = this.dispose.bind(this);
         this.handle_message_stream = this.handle_message_stream.bind(this);
@@ -390,15 +390,10 @@ export class RefactConsoleProvider {
         cmd: string,
     ) {
         console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
-        console.log({messages: this.messages});
-        const context_files = this.messages.filter(([type]) => type === "context_file");
         vscode.commands.executeCommand("setContext", "refactaicmd.runningChat", true);
-        // signature:
-        // async (doc_uri, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
-       vscode.commands.executeCommand(
+        vscode.commands.executeCommand(
             "refactaicmd.cmd_" + cmd,
             this.editor.document.uri.toString(),
-            context_files,
             this.model_name,
             this.handle_message_stream, // bind this
             this.handle_message_stream_end // bind this

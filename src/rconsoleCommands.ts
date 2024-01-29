@@ -19,7 +19,34 @@ export let commands_available: { [key: string]: string } = {
 "typehints": "Add type hints",
 "naming": "Improve variable names",
 "explain": "Explain code",
+"summarize": "Summarize code in 1-2 paragraphs",
 "typos": "Rewrite this specific code block to fix typos",
+};
+
+
+export let commands_available2: { [key: string]: any } = {
+"shorter": {
+    "selection_needed": [1, 40],
+    "description": "Make code shorter",
+    "messages": [
+        ["context_file", "$CODE_AROUND_CURSOR_JSON"],
+        ["user", "Make this specific code block shorter\n\n```\n$CODE_SELECTION```\n"],
+    ]
+},
+"new": {
+    "selection_unwanted": true,
+    "insert_at_cursor": true,
+    "description": "Create new code, provide a description after the command",
+    "messages": [
+        ["system",
+            "You are an expert in writing new clean code, repeat in one paragraph how did you understand the instructions. Code needs to fit in the context around |INSERT-HERE| mark. " +
+            "Write a single block of code in backquotes that exactly implements the description. Do nothing else. Don't fix imports. The indent must match |INSERT-HERE| mark."],
+        // ["user", "@tree"],
+        // ["user", "@workspace $ARG"],
+        ["context_file", "$CODE_INSERT_HERE_JSON"],
+        ["user", "Generate new code according this description: $ARG"],
+    ]
+},
 };
 
 
@@ -69,8 +96,8 @@ export function get_hints(
 ): [string, string, string] {
     if (unfinished_text.startsWith("/")) {
         let cmd_score: { [key: string]: number } = {};
-        for (let cmd in commands_available) {
-            let text = commands_available[cmd] || "";
+        for (let cmd in commands_available2) {
+            let text = commands_available2[cmd]["description"] || "";
             let score = similarity_score(unfinished_text, "/" + cmd + " " + text);
             cmd_score[cmd] = score;
         }
@@ -80,7 +107,7 @@ export function get_hints(
         for (let i = 0; i < top3.length; i++) {
             let cmd = top3[i][0];
             const cmd_name = createCommandName(cmd);
-            let text = commands_available[cmd] || "";
+            let text = commands_available2[cmd]["description"] || "";
             result += `[**/${cmd}** ${text}](command:${cmd_name})<br />\n`;
         }
         return [result, "Available commands:", top3[0][0]];
@@ -102,6 +129,7 @@ export function get_hints(
 
 export function initial_messages(working_on_attach_filename: string, working_on_attach_code: string, attached_range: vscode.Range)
 {
+    // NOTE: this is initial messages for a chat without a command. With command it will get the structure from the command.
     let messages: Messages = [];
     if (!working_on_attach_filename) {
         // this should not happen, because we started from a file
@@ -232,9 +260,10 @@ export async function stream_chat_without_visible_chat(
     ));
 }
 
-function _run_command(cmd: string, doc_uri: string, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
+function _run_command(cmd: string, doc_uri: string, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
 {
-    let text = commands_available[cmd] || "";
+    let arg = "";  // TODO: parse the command, arg is the rest of the line after the command
+    let cmd_dict = commands_available2[cmd];
     let editor = vscode.window.visibleTextEditors.find((e) => {
         return e.document.uri.toString() === doc_uri;
     });
@@ -246,21 +275,42 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, model_na
         console.log("_run_command: editor2", editor2);
         return;
     }
-    let [official_selection, attach_range, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor);
-    const messageWithUserInput = [
-        ...messages
-    ];
-    // const formatted_question = code_snippet ?  "```\n" + code_snippet + "\n```\n\n" + text + "\n" : `\n${text}\n`;
-    const formatted_question = code_snippet ? text + "\n\n```\n" + code_snippet + "\n```\n" : text + "\n";
-    messageWithUserInput.push(["user", formatted_question]);
+
+    let [official_selection1, attach_range1, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor, false);
+    let code_around_cursor_json = JSON.stringify([{
+        "file_name": working_on_attach_filename,
+        "file_content": working_on_attach_code,
+        "line1": attach_range1.start.line,
+        "line2": attach_range1.end.line,
+    }]);
+
+    let [official_selection2, attach_range2, working_on_attach_code_insert_here] = chatTab.attach_code_from_editor(editor, true);
+    let code_insert_here_json = JSON.stringify([{
+        "file_name": working_on_attach_filename,
+        "file_content": working_on_attach_code_insert_here,
+        "line1": attach_range2.start.line,
+        "line2": attach_range2.end.line,
+    }]);
+
+    const messages: [string, string][] = [];
+    let cmd_messages = cmd_dict["messages"];
+    for (let i=0; i<cmd_messages.length; i++) {
+        let [role, text] = cmd_messages[i];
+        text = text.replace("$ARG", arg);
+        text = text.replace("$CODE_INSERT_HERE_JSON", code_insert_here_json);
+        text = text.replace("$CODE_AROUND_CURSOR_JSON", code_around_cursor_json);
+        text = text.replace("$CODE_SELECTION", code_snippet);
+        messages.push([role, text]);
+    }
+
     let cancellationTokenSource = new vscode.CancellationTokenSource();
     let cancellationToken = cancellationTokenSource.token;
     editor.selection = new vscode.Selection(editor.selection.start, editor.selection.start);
     stream_chat_without_visible_chat(
-        messageWithUserInput,
+        messages,
         model_name,
         editor,
-        official_selection,
+        official_selection1,
         cancellationToken,
         update_thread_callback,
         end_thread_callback
@@ -272,11 +322,11 @@ export function register_commands(): vscode.Disposable[]
     let dispos = [];
     for (let cmd in commands_available) {
         let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd,
-            async (doc_uri, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
+            async (doc_uri, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
                 if (!model_name) {
                     [model_name,] = await chatTab.chat_model_get();
                 }
-                _run_command(cmd, doc_uri, messages, model_name, update_thread_callback, end_thread_callback);
+                _run_command(cmd, doc_uri, model_name, update_thread_callback, end_thread_callback);
             }
         );
         dispos.push(d);
