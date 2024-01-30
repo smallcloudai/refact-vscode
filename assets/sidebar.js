@@ -133,11 +133,32 @@ function sidebar_general_script(vscode) {
     });
 
     const button_refact = document.querySelector('.refact-welcome__refact');
+    const api_input = document.querySelector('.refact-welcome__apikey_refact');
     button_refact.addEventListener("click", () => {
+        start_input_animation();
         vscode.postMessage({
             type: "button_refact_open_streamlined",
         });
     });
+
+    function start_input_animation() {
+        const loading_text = 'Fetching API Key ';
+        const animation_frames = ['/', '|', '\\', '-'];
+        let index = 0;
+      
+        function update_placeholder() {
+          const frame = animation_frames[index];
+          api_input.placeholder = ` ${loading_text} ${frame} `;
+          index = (index + 1) % animation_frames.length;
+        }
+      
+        api_input.loadingInterval = setInterval(update_placeholder, 100);
+    }
+      
+    function stop_input_animation() {
+        clearInterval(api_input.loadingInterval);
+        api_input.placeholder = '';
+    }
 
     // body.addEventListener("keyup", (event) => {
     //     event.preventDefault();
@@ -468,6 +489,7 @@ function sidebar_general_script(vscode) {
                 settings.style.display = 'flex';
                 hotkeys.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 if(message.ts2js_apikey) {
+                    stop_input_animation();
                     document.querySelector('.refact-welcome__apikey_refact').value = message.ts2js_apikey;
                 }
                 break;
