@@ -152,11 +152,12 @@ function sidebar_general_script(vscode) {
           index = (index + 1) % animation_frames.length;
         }
       
-        api_input.loadingInterval = setInterval(update_placeholder, 100);
+        api_input.loading_interval = setInterval(update_placeholder, 100);
+        setTimeout(stop_input_animation, 30000);
     }
       
     function stop_input_animation() {
-        clearInterval(api_input.loadingInterval);
+        clearInterval(api_input.loading_interval);
         api_input.placeholder = '';
     }
 
