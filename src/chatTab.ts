@@ -615,7 +615,9 @@ export class ChatTab {
                     and only allow scripts that have a specific nonce.
                     TODO: remove  unsafe-inline if posable
                 -->
-                <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource} 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <meta http-equiv="Content-Security-Policy" content="style-src ${
+                  webview.cspSource
+                } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
                 <title>Refact.ai Chat</title>
@@ -623,14 +625,14 @@ export class ChatTab {
                 <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div id="refact-chat"></div>
+                <div id="refact-chat" ${isTab ? "data-state-tabbed" : ""}></div>
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
 
                 <script nonce="${nonce}">
                 window.onload = function() {
                     const root = document.getElementById("refact-chat")
-                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}})
+                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}, themeProps: { accentColor: "gray" }})
                 }
                 </script>
             </body>

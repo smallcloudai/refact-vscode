@@ -7,12 +7,14 @@ import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
-import { EVENT_NAMES_FROM_CHAT } from "refact-chat-js/dist/events";
+import { EVENT_NAMES_FROM_CHAT, EVENT_NAMES_FROM_SIDE_BAR, EVENT_NAMES_TO_SIDE_BAR } from "refact-chat-js/dist/events";
+import type { ChatHistoryItem } from "refact-chat-js/dist/events";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
     return (data: any) => eventHandlers.forEach(fn => fn && fn(data));
 }
+
 
 export async function open_chat_tab(
     question: string,
@@ -141,14 +143,37 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this.update_webview();
     }
 
-    public update_chat_history()
+    public async update_chat_history()
     {
-        const history = this.make_sure_have_chat_history_provider().chats_sorted_by_time();
+        const chatHistoryProvider = this.make_sure_have_chat_history_provider();
+        const history = chatHistoryProvider.chats_sorted_by_time();
         if (this._view) {
+            // this._view.webview.postMessage({
+            //     command: "loadHistory",
+            //     history: history,
+            // });
+            const formattedHistory: ChatHistoryItem[] = [];
+            for (const item of history) {
+                const historyItem = await chatHistoryProvider.lookup_chat(
+                  item.chat_id
+                );
+                if(historyItem) {
+                  formattedHistory.push({
+                    id: historyItem.chat_id,
+                    title: historyItem.chat_title,
+                    createdAt: historyItem.time.toString(),
+                    // todo add last_updated
+                    lastUpdated: historyItem.time.toString(),
+                    messages: historyItem.messages as ChatHistoryItem["messages"],
+                    model: historyItem.chatModel,
+                });
+                }
+            }
+            // TODO: when the sidebar.js hears this it should set the chat_history_list display to flex
             this._view.webview.postMessage({
-                command: "loadHistory",
-                history: history,
-            });
+                type: EVENT_NAMES_TO_SIDE_BAR.RECEIVE_CHAT_HISTORY,
+                payload: formattedHistory,
+            })
         }
     }
 
@@ -167,155 +192,257 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
-        // console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
+        console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
-        case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
-        case "open_chat_in_new_tab": {
-            const chat_id = data?.chat_id || this.chat?.chat_id;
-            // const chat_id = data.payload.id;
-            if(!chat_id || typeof chat_id !== "string") {return; }
-            if(!this.chatHistoryProvider) { return; }
+          case EVENT_NAMES_FROM_SIDE_BAR.REQUEST_CHAT_HISTORY: {
+            this.update_chat_history();
+            break;
+          }
+          case EVENT_NAMES_FROM_SIDE_BAR.OPEN_IN_CHAT_IN_TAB:
+          case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
+          case "open_chat_in_new_tab": {
+            // const chat_id = data?.chat_id || this.chat?.chat_id;
+            const chat_id =
+              data.payload.id || data?.chat_id || this.chat?.chat_id;
+            if (!chat_id || typeof chat_id !== "string") {
+              return;
+            }
+            if (!this.chatHistoryProvider) {
+              return;
+            }
 
-            const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
-            if(openTab) {
-                return openTab.focus();
+            const openTab = global.open_chat_tabs?.find(
+              (tab) => tab.chat_id === chat_id
+            );
+            if (openTab) {
+              return openTab.focus();
             }
             // is extensionUri defined anywhere?
-            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this._context.extensionUri);
+            await chatTab.ChatTab.open_chat_in_new_tab(
+              this.chatHistoryProvider,
+              chat_id,
+              this._context.extensionUri
+            );
             this.chat = null;
             return this.goto_main();
-        }
-        case "focus_back_to_editor": {
-            vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+          }
+          case "focus_back_to_editor": {
+            vscode.commands.executeCommand(
+              "workbench.action.focusActiveEditorGroup"
+            );
             break;
-        }
-
-        case "open_new_chat": {
+          }
+          case "open_new_chat": {
             let question = data.question;
             if (!question) {
-                question = "";
+              question = "";
             }
             let editor = vscode.window.activeTextEditor;
             let attach_default = !!vscode.window.activeTextEditor;
             await open_chat_tab(
-                question,
-                editor,
-                attach_default,
-                data.chat_model,
-                [],      // messages
-                "",      // chat id
+              question,
+              editor,
+              attach_default,
+              data.chat_model,
+              [], // messages
+              "" // chat id
             );
             break;
-        }
-        case "delete_chat": {
-            const chat_id = data.chat_id;
-            await this.make_sure_have_chat_history_provider().delete_chat(chat_id);
+          }
+          case EVENT_NAMES_FROM_SIDE_BAR.DELETE_HISTORY_ITEM:
+          case "delete_chat": {
+            const chat_id = data.payload?.id || data.chat_id;
+            await this.make_sure_have_chat_history_provider().delete_chat(
+              chat_id
+            );
+            this.update_chat_history();
             break;
-        }
-        case "button_hf_open_tokens": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
+          }
+          case "button_hf_open_tokens": {
+            vscode.env.openExternal(
+              vscode.Uri.parse(`https://huggingface.co/settings/tokens`)
+            );
             break;
-        }
-        case "button_hf_save": {
+          }
+          case "button_hf_save": {
             await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.addressURL",
+                "HF",
+                vscode.ConfigurationTarget.Global
+              );
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.apiKey",
+                data.hf_api_key,
+                vscode.ConfigurationTarget.Global
+              );
             break;
-        }
-        case "button_refact_save": {
+          }
+          case "button_refact_save": {
             await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.addressURL",
+                "Refact",
+                vscode.ConfigurationTarget.Global
+              );
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.apiKey",
+                data.refact_api_key,
+                vscode.ConfigurationTarget.Global
+              );
             break;
-        }
-        case "button_refact_open_streamlined": {
+          }
+          case "button_refact_open_streamlined": {
             await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-            vscode.commands.executeCommand('refactaicmd.login');
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.addressURL",
+                "Refact",
+                vscode.ConfigurationTarget.Global
+              );
+            vscode.commands.executeCommand("refactaicmd.login");
             break;
-        }
-        case "save_enterprise": {
+          }
+          case "save_enterprise": {
             await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.addressURL",
+                data.endpoint,
+                vscode.ConfigurationTarget.Global
+              );
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.apiKey",
+                data.apikey,
+                vscode.ConfigurationTarget.Global
+              );
             break;
-        }
-        case "save_selfhosted": {
+          }
+          case "save_selfhosted": {
             await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.addressURL",
+                data.endpoint,
+                vscode.ConfigurationTarget.Global
+              );
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.apiKey",
+                "any-will-work-for-local-server",
+                vscode.ConfigurationTarget.Global
+              );
             break;
-        }
-        case "privacy": {
+          }
+          case "privacy": {
             vscode.commands.executeCommand("refactaicmd.privacySettings");
             break;
-        }
-        case "js2ts_report_bug": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/refact-vscode/issues`));
+          }
+          case "js2ts_report_bug": {
+            vscode.env.openExternal(
+              vscode.Uri.parse(
+                `https://github.com/smallcloudai/refact-vscode/issues`
+              )
+            );
             break;
-        }
-        case "js2ts_discord": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://www.smallcloud.ai/discord`));
+          }
+          case "js2ts_discord": {
+            vscode.env.openExternal(
+              vscode.Uri.parse(`https://www.smallcloud.ai/discord`)
+            );
             break;
-        }
-        case "js2ts_logout": {
+          }
+          case "js2ts_logout": {
             vscode.commands.executeCommand("refactaicmd.logout");
             break;
-        }
-        case "js2ts_goto_profile": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
+          }
+          case "js2ts_goto_profile": {
+            vscode.env.openExternal(
+              vscode.Uri.parse(
+                `https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`
+              )
+            );
             break;
-        }
-        case "js2ts_refresh_login": {
+          }
+          case "js2ts_refresh_login": {
             userLogin.inference_login_force_retry();
             await userLogin.inference_login();
             break;
-        }
-        case "openSettings": {
+          }
+          case "openSettings": {
             vscode.commands.executeCommand("refactaicmd.openSettings");
             break;
-        }
-        case "openKeys": {
-            vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
+          }
+          case "openKeys": {
+            vscode.commands.executeCommand(
+              "workbench.action.openGlobalKeybindings",
+              "@ext:smallcloud.codify"
+            );
             break;
-        }
-        case "restore_chat": {
-            const chat_id = data.chat_id;
+          }
+          case EVENT_NAMES_FROM_SIDE_BAR.OPEN_CHAT_IN_SIDEBAR:
+          case "restore_chat": {
+            const chat_id = data.payload?.id || data.chat_id;
             if (!chat_id) {
-                break;
+              break;
             }
             let editor = vscode.window.activeTextEditor;
-            let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
+            let chat: Chat | undefined =
+              await this.make_sure_have_chat_history_provider().lookup_chat(
+                chat_id
+              );
             if (!chat) {
-                console.log(`Chat ${chat_id} not found, cannot restore`);
-                break;
+              console.log(`Chat ${chat_id} not found, cannot restore`);
+              break;
             }
 
-            const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
-            if(openTab) {
-                return openTab.focus();
+            const openTab = global.open_chat_tabs?.find(
+              (tab) => tab.chat_id === chat_id
+            );
+            if (openTab) {
+              return openTab.focus();
             } else {
-                await open_chat_tab(
-                    "",
-                    editor,
-                    true,
-                    data.chat_model,
-                    chat.messages,
-                    chat_id,
-                );
+              await open_chat_tab(
+                "",
+                editor,
+                true,
+                data.chat_model,
+                chat.messages,
+                chat_id
+              );
             }
             break;
-        }
-        case "save_telemetry_settings": {
-            await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
+          }
+          case "save_telemetry_settings": {
+            await vscode.workspace
+              .getConfiguration()
+              .update(
+                "refactai.telemetryCodeSnippets",
+                data.code,
+                vscode.ConfigurationTarget.Global
+              );
             break;
-        }
-        case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
-        case "back-from-chat": {
+          }
+          case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
+          case "back-from-chat": {
             this.goto_main();
             this.chat = null;
             break;
-        }
+          }
         }
     }
 
@@ -353,12 +480,43 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const scriptUri2 = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.js")
             );
+
+        const scriptUri3 = webview.asWebviewUri(
+          vscode.Uri.joinPath(
+            this._context.extensionUri,
+            "node_modules",
+            "refact-chat-js",
+            "dist",
+            "chat",
+            "index.umd.cjs"
+          )
+        );
+
         const styleMainUri1 = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
             );
         const styleMainUri2 = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.css")
             );
+
+        const styleMainUri3 = webview.asWebviewUri(
+            vscode.Uri.joinPath(
+            this._context.extensionUri,
+            "node_modules",
+            "refact-chat-js",
+            "dist",
+            "chat",
+            "style.css"
+            )
+        );
+
+        const styleOverride = webview.asWebviewUri(
+            vscode.Uri.joinPath(
+                this._context.extensionUri,
+                "assets",
+                "custom-theme.css"
+            )
+        );
         const nonce = this.getNonce();
         const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
         let telemetry_code = '';
@@ -370,7 +528,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             existing_address = "";
         }
         return `<!DOCTYPE html>
-                <html lang="en">
+                <html lang="en" class="light">
                 <head>
                 <meta charset="UTF-8">
                 <!--
@@ -383,6 +541,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <title>Main Toolbox</title>
                 <link href="${styleMainUri1}" rel="stylesheet">
                 <link href="${styleMainUri2}" rel="stylesheet">
+                <link href="${styleMainUri3}" rel="stylesheet">
+                <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
                 <div id="sidebar" class="sidebar">
@@ -390,8 +550,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         <button tabindex="-1" id="chat-new"><?xml version="1.0" ?><svg height="1657.973px" style="enable-background:new 0 0 1692 1657.973;" version="1.1" viewBox="0 0 1692 1657.973" width="1692px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="comment"><g><path d="M1216.598,1657.973c-15.035,0-29.926-4.822-41.984-14.746l-439.527-361.254H158.332    C71.515,1281.973,0,1209.012,0,1120.074V160.168C0,71.627,71.515,0.973,158.332,0.973h1374.836    c87.743,0,158.832,70.655,158.832,159.195v959.909c0,88.938-71.089,161.896-158.832,161.896H1282v309.93    c0,25.561-14.415,48.826-37.528,59.744C1235.479,1655.892,1226.173,1657.973,1216.598,1657.973z M158.332,132.973    c-13.953,0-25.332,11.52-25.332,27.195v959.906c0,15.805,11.615,29.898,25.332,29.898H758.77c15.311,0,29.89,4.95,41.715,14.674    L1150,1451.998v-236.699c0-36.49,30.096-65.326,66.586-65.326h316.582c14.123,0,26.832-14.639,26.832-29.896V160.168    c0-15.146-12.457-27.195-26.832-27.195H158.332z"/></g></g><g id="Layer_1"/></svg>New&nbsp;Chat</button>
                     </div>
                     <div class="chat-history">
-                        <div class="chat-history-list"></div>
+                        <div id="chat-history-list" class="chat-history-list"></div>
                     </div>
+
 
                     <div class="refact-welcome__whole" style="display: none">
                         <div class="refact-welcome__menu">
@@ -534,10 +695,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 </div>
                 <script nonce="${nonce}" src="${scriptUri1}"></script>
                 <script nonce="${nonce}" src="${scriptUri2}"></script>
+                <script nonce="${nonce}" src="${scriptUri3}"></script>
                 <script>
+                // TODO: this might be an issue
                     const vscode = acquireVsCodeApi();
                     sidebar_general_script(vscode);
-                    chat_history_script(vscode);
+                // chat_history_script(vscode);
+                // TODO: workaround for multiple calls to acquireVsCodeApi
+                    window.acquireVsCodeApi = () => vscode
+                    window.onload = () => {
+                        const element = document.getElementById("chat-history-list")
+                        RefactChat.renderHistoryList(element, {host: "vscode", themeProps: {accentColor: "gray" }})
+                    }
                 </script>
                 </body>
                 </html>`;

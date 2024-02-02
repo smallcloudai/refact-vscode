@@ -10,6 +10,11 @@
     color-scheme: dark;
 }
 
+.dark,
+.light {
+  --color-page-background: var(--vscode-sideBar-background)!important;
+}
+
 .radix-themes {
   /** TODO: there are more theme-able variables we can use */
    --default-font-family: var(--vscode-font-family);
@@ -17,12 +22,14 @@
    --color-background: var(--vscode-sideBar-background);
    --color-panel: var(--vscode-panel-background);
    --color-surface: var(--vscode-panel-background);
+   --color-page-background: var(--vscode-sideBar-background);
    color: var(--vscode-sideBar-foreground);
    background-color: var(--color-background);
 }
 
 :where([data-state-tabbed]) .radix-themes {
   --color-background: var(--vscode-editor-background);
+  --color-page-background: var(--vscode-editor-background);
   --color-panel: var(--vscode-input-background);
   color: var(--vscode-editor-foreground);
 }

@@ -10,6 +10,7 @@ function chat_history_script(vscode) {
     window.addEventListener("message", (event) => {
         const message = event.data;
         switch (message.command) {
+            // TODO: move this to the side bar
             case "loadHistory":
                 // Clear the chat history list
                 chatHistoryList.innerHTML = "";
