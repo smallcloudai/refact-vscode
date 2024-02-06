@@ -141,6 +141,7 @@ function sidebar_general_script(vscode) {
         });
     });
 
+    let timer_started = false;
     function start_input_animation() {
         const loading_text = 'Fetching API Key ';
         const animation_frames = ['/', '|', '\\', '-'];
@@ -152,13 +153,17 @@ function sidebar_general_script(vscode) {
           index = (index + 1) % animation_frames.length;
         }
       
-        api_input.loading_interval = setInterval(update_placeholder, 100);
-        setTimeout(stop_input_animation, 30000);
+        if(!timer_started) {
+            api_input.loading_interval = setInterval(update_placeholder, 100);
+            setTimeout(stop_input_animation, 30000);
+            timer_started = true;
+        }
     }
       
     function stop_input_animation() {
         clearInterval(api_input.loading_interval);
         api_input.placeholder = '';
+        timer_started = false;
     }
 
     // body.addEventListener("keyup", (event) => {
