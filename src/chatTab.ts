@@ -711,6 +711,13 @@ export async function chat_model_get(): Promise<[string, string]>
     if (!context) {
         return ["", ""];
     }
+
+    try {
+        await global.rust_binary_blob?.read_caps();
+    } catch {
+        return ["", ""];
+    }
+
     let chat_model_ = await context.globalState.get("chat_model");
     let chat_model_function_ = await context.globalState.get("chat_model_function");
     let chat_model: string = "";
