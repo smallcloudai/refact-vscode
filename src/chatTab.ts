@@ -92,7 +92,7 @@ export class ChatTab {
     }
 
     dispose() {
-        const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id === this.chat_id);
+        const otherTabs = global.open_chat_tabs.filter(openTab => openTab.chat_id !== this.chat_id);
         global.open_chat_tabs = otherTabs;
     }
 
