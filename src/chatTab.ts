@@ -14,6 +14,9 @@ import { open_chat_tab } from "./sidebar";
 import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
+  type CreateNewChatThread,
+  type ChatSetSelectedSnippet,
+  type ToggleActiveFile,
 } from "refact-chat-js/dist/events";
 
 
@@ -197,6 +200,10 @@ export class ChatTab {
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
                         payload: chat,
                     });
+
+                    this.postActiveFileInfo(chat.id);
+                    this.sendSnippetToChat(this.working_on_snippet_code);
+                    this.toggleAttachFile(!!this.working_on_snippet_code)
                     disposables.forEach((d) => d.dispose());
                     resolve();
                 }
@@ -211,8 +218,28 @@ export class ChatTab {
 
     }
 
+    sendSnippetToChat(snippet: string = "") {
+        const action: ChatSetSelectedSnippet = {
+            type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET;
+            payload: { id: this.chat_id, snippet: snippet }
+        }
+        this.web_panel.webview.postMessage(action);
+    }
+
+    toggleAttachFile(attach_file: boolean) {
+        const action: ToggleActiveFile = {
+            type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
+            payload: { id: this.chat_id, attach_file, }
+        };
+
+        this.web_panel.webview.postMessage(action);
+    }
+
     createNewChat() {
-        this.web_panel.webview.postMessage({ type: EVENT_NAMES_TO_CHAT.NEW_CHAT });
+        const action: CreateNewChatThread = {
+            type: EVENT_NAMES_TO_CHAT.NEW_CHAT,
+        };
+        this.web_panel.webview.postMessage(action);
     }
 
     postActiveFileInfo(id: string) {
