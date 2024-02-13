@@ -157,9 +157,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
-        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
-        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+        if(vscode.workspace.workspaceFolders) {
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
+            await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+        }
     }
 
     public async js2ts_message(data: any)
@@ -276,7 +278,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "openKeys": {
-            vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
+            vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "Refact.ai");
             break;
         }
         case "restore_chat": {
