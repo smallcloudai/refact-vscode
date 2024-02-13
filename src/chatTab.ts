@@ -220,9 +220,9 @@ export class ChatTab {
 
     sendSnippetToChat(snippet: string = "") {
         const action: ChatSetSelectedSnippet = {
-            type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET;
+            type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
             payload: { id: this.chat_id, snippet: snippet }
-        }
+        };
         this.web_panel.webview.postMessage(action);
     }
 
