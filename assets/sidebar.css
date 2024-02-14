@@ -186,6 +186,21 @@ body.vscode-light #profile {
 	flex-shrink: 0;
 	border-radius: 6px;
 }
+#statistic {
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 7px 6px;
+	background-color: inherit;
+	width: 32px;
+	cursor: pointer;
+	box-sizing: border-box;
+	height: 100%;
+	text-align: center;
+    justify-content: center;
+	margin: 5px 5px 5px 0;
+    display: none;
+	border-radius: 6px;
+}
 #settings span {
 	display: none;
 	margin-left: 5px;
