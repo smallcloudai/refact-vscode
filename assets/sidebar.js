@@ -146,20 +146,20 @@ function sidebar_general_script(vscode) {
         const loading_text = 'Fetching API Key ';
         const animation_frames = ['/', '|', '\\', '-'];
         let index = 0;
-      
+
         function update_placeholder() {
           const frame = animation_frames[index];
           api_input.placeholder = ` ${loading_text} ${frame} `;
           index = (index + 1) % animation_frames.length;
         }
-      
+
         if(!timer_started) {
             api_input.loading_interval = setInterval(update_placeholder, 100);
             setTimeout(stop_input_animation, 30000);
             timer_started = true;
         }
     }
-      
+
     function stop_input_animation() {
         clearInterval(api_input.loading_interval);
         api_input.placeholder = '';
