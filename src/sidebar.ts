@@ -3,6 +3,7 @@ import * as vscode from "vscode";
 import * as estate from "./estate";
 import * as userLogin from "./userLogin";
 import * as chatTab from './chatTab';
+import * as statisticTab from './statisticTab';
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
@@ -47,6 +48,19 @@ export async function open_chat_tab(
     return;
 }
 
+export async function open_statistic_tab(): Promise<statisticTab.StatisticTab|undefined> {
+    if (global.side_panel && global.side_panel._view) {
+        let stat = global.side_panel.new_statistic(global.side_panel._view);
+
+        let context: vscode.ExtensionContext | undefined = global.global_context;
+        if (!context) {
+            return;
+        }
+        global.side_panel.goto_statistic(stat);  // changes html
+    }
+    return;
+}
+
 export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
     _history: string[] = [];
@@ -56,6 +70,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     public address: string;
 
     public chat: chatTab.ChatTab | null = null;
+    public statistic: statisticTab.StatisticTab | null = null;
     public chatHistoryProvider: ChatHistoryProvider|undefined;
 
     constructor(private readonly _context: any) {
@@ -87,6 +102,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this.chat = new chatTab.ChatTab(view, this.make_sure_have_chat_history_provider(), chat_id);
         this.address = chat_id;
         return this.chat;
+    }
+
+    public new_statistic(view: vscode.WebviewView)
+    {
+        this.statistic = new statisticTab.StatisticTab(view);
+        return this.statistic;
     }
 
     public resolveWebviewView(
@@ -137,6 +158,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view.webview.html = chat.get_html_for_chat(
             this._view.webview,
             this._context.extensionUri
+        );
+        this.update_webview();
+    }
+
+    public goto_statistic(statistic: statisticTab.StatisticTab)
+    {
+        if (!this._view) {
+            return;
+        }
+        this._view.webview.html = statistic.get_html_for_statistics(
+            this._view.webview,
+            this._context.extensionUri,
         );
         this.update_webview();
     }
@@ -205,6 +238,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 [],      // messages
                 "",      // chat id
             );
+            break;
+        }
+        case "open_statistic": {
+            let editor = vscode.window.activeTextEditor;
+            let attach_default = !!vscode.window.activeTextEditor;
+            vscode.commands.executeCommand('workbench.action.openEditorAtIndex1');
+            await open_statistic_tab();
             break;
         }
         case "delete_chat": {
@@ -342,6 +382,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ts2js_plan: plan_msg,
             ts2js_metering_balance: global.user_metering_balance,
             ts2js_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
+            ts2js_stat_info: "stat inforamtion"
         });
     }
 
@@ -520,6 +561,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             </div>
                             <div class="sidebar-buttons">
                                 <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
+                                <button tabindex="-1" id="statistic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill="rgba(255, 255, 255, 0.5)" d="M396.8 352h22.4c6.4 0 12.8-6.4 12.8-12.8V108.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v230.4c0 6.4 6.4 12.8 12.8 12.8zm-192 0h22.4c6.4 0 12.8-6.4 12.8-12.8V140.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v198.4c0 6.4 6.4 12.8 12.8 12.8zm96 0h22.4c6.4 0 12.8-6.4 12.8-12.8V204.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v134.4c0 6.4 6.4 12.8 12.8 12.8zM496 400H48V80c0-8.8-7.2-16-16-16H16C7.2 64 0 71.2 0 80v336c0 17.7 14.3 32 32 32h464c8.8 0 16-7.2 16-16v-16c0-8.8-7.2-16-16-16zm-387.2-48h22.4c6.4 0 12.8-6.4 12.8-12.8v-70.4c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v70.4c0 6.4 6.4 12.8 12.8 12.8z"/></svg></button>
                                 <button tabindex="-1" id="privacy"><span></span></button>
                                 <button tabindex="-1" id="settings"><i></i><span></span></button>
                                 <button tabindex="-1" id="keys"><span></span></button>

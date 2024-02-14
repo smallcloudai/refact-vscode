@@ -220,6 +220,10 @@ function sidebar_general_script(vscode) {
         vscode.postMessage({ type: "open_new_chat", question: '', chat_empty: true, chat_model: "" });
     });
 
+    const statistic = document.querySelector("#statistic");
+    statistic.addEventListener("click", () => {
+        vscode.postMessage({ type: "open_statistic" });
+    });
     // const chatHistoryButton = document.querySelector("#history");
     // chatHistoryButton.addEventListener("click", () => {
     //     vscode.postMessage({ type: "open_chat_history" });
@@ -445,8 +449,9 @@ function sidebar_general_script(vscode) {
                 let profile = document.querySelector('#profile');
                 let sidebar_account = document.querySelector('.sidebar-account');
                 let logout = document.querySelector('#logout');
-                let chat = document.querySelector('#chat-new');
+                let chat = document.querySelector('#chat-new');    
                 let privacy = document.querySelector('#privacy');
+                let statistic = document.querySelector('#statistic');
                 let discord = document.querySelector('#discord');
                 let settings = document.querySelector('#settings');
                 let hotkeys = document.querySelector('#keys');
@@ -465,6 +470,7 @@ function sidebar_general_script(vscode) {
                 }
                 discord.style.display = 'inline-flex';
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                statistic.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 settings.style.display = 'flex';
                 hotkeys.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 if(message.ts2js_apikey) {
