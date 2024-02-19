@@ -28,6 +28,11 @@ export async function welcome_message()
     }
 }
 
+export async function custom_message(message: string, button: string, button_url: string)
+{
+    let selection = await vscode.window.showInformationMessage(message, button);
+    vscode.env.openExternal(vscode.Uri.parse(button_url));
+}
 
 export async function account_message(info: string, action: string, url: string)
 {
