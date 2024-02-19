@@ -22,6 +22,7 @@ import {
   type ReceiveAtCommandPreview,
   type ChatContextFileMessage,
   type ChatContextFile,
+  type RemoveLastUserMessage,
 } from "refact-chat-js/dist/events";
 
 
@@ -387,7 +388,7 @@ export class ChatTab {
         //TODO: find out what this is for?
         const third_party = this.model_to_thirdparty[model];
 
-        const formatedMessages = this.messages.map<[string, string]>(
+        const formattedMessages = this.messages.map<[string, string]>(
             ([role, content]) => {
             if (
                 role === "context_file" &&
@@ -400,13 +401,20 @@ export class ChatTab {
         );
 
 
+
         const chat_promise = fetchAPI.fetch_chat_promise(
             this.cancellationTokenSource.token,
             "chat-tab",
-            formatedMessages,
+            formattedMessages,
             model,
             third_party
         );
+
+        const dedupe_messages_action: RemoveLastUserMessage = {
+            type: EVENT_NAMES_FROM_CHAT.REMOVE_LAST_USER_MESSAGE,
+            payload: {id: this.chat_id},
+        };
+        this.web_panel.webview.postMessage(dedupe_messages_action);
         return request.supply_stream(...chat_promise);
     }
 
