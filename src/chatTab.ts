@@ -11,12 +11,17 @@ const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdi
 
 // circular dependency
 import { open_chat_tab } from "./sidebar";
+
 import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
-  type CreateNewChatThread,
+  // type CreateNewChatThread,
   type ChatSetSelectedSnippet,
   type ToggleActiveFile,
+  type ReceiveAtCommandCompletion,
+  type ReceiveAtCommandPreview,
+  type ChatContextFileMessage,
+  type ChatContextFile,
 } from "refact-chat-js/dist/events";
 
 
@@ -219,10 +224,14 @@ export class ChatTab {
     }
 
     sendSnippetToChat(snippet: string = "") {
+        const language = vscode.window.activeTextEditor?.document.languageId ?? "";
+
         const action: ChatSetSelectedSnippet = {
             type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
-            payload: { id: this.chat_id, snippet: snippet }
+            payload: { id: this.chat_id, snippet: snippet, language }
         };
+
+        console.log({action})
         this.web_panel.webview.postMessage(action);
     }
 
@@ -235,12 +244,12 @@ export class ChatTab {
         this.web_panel.webview.postMessage(action);
     }
 
-    createNewChat() {
-        const action: CreateNewChatThread = {
-            type: EVENT_NAMES_TO_CHAT.NEW_CHAT,
-        };
-        this.web_panel.webview.postMessage(action);
-    }
+    // createNewChat() {
+    //     const action: CreateNewChatThread = {
+    //         type: EVENT_NAMES_TO_CHAT.NEW_CHAT,
+    //     };
+    //     this.web_panel.webview.postMessage(action);
+    // }
 
     postActiveFileInfo(id: string) {
         const file = this.getActiveFileInfo();
@@ -401,6 +410,32 @@ export class ChatTab {
         return request.supply_stream(...chat_promise);
     }
 
+    async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; number: number }) {
+        fetchAPI.getAtCommands(payload.query, payload.cursor, payload.number).then((res) => {
+            const message: ReceiveAtCommandCompletion = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
+                payload: { id: payload.id, ...res },
+            };
+
+            this.web_panel.webview.postMessage(message);
+        }).catch(() => ({}));
+
+        fetchAPI.getAtCommandPreview(payload.query).then(res => {
+            const preview = res.messages.map<ChatContextFileMessage>(
+                ({ role, content }) => {
+                const fileData = JSON.parse(content) as ChatContextFile[];
+                return [role, fileData];
+                }
+            );
+
+            const message: ReceiveAtCommandPreview = {
+              type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
+              payload: { id: payload.id, preview },
+            };
+            this.web_panel.webview.postMessage(message);
+        }).catch(() => ({}));
+    }
+
     async handleEvents({ type, ...data }: any) {
 
         switch (type) {
@@ -464,6 +499,11 @@ export class ChatTab {
             case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
                 const value = data.payload.content;
                 return this.handleDiffPasteBack({ code_block: value });
+            }
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
+                const payload: { id: string; query: string; cursor: number; number: number } = data.payload;
+                this.handleAtCommandCompletion(payload);
             }
 
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
@@ -642,7 +682,9 @@ export class ChatTab {
                     and only allow scripts that have a specific nonce.
                     TODO: remove  unsafe-inline if posable
                 -->
-                <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource} 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <meta http-equiv="Content-Security-Policy" content="style-src ${
+                  webview.cspSource
+                } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
                 <title>Refact.ai Chat</title>
@@ -650,14 +692,14 @@ export class ChatTab {
                 <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div id="refact-chat"></div>
+                <div id="refact-chat" ${isTab ? "data-state-tabbed" : ""}></div>
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
 
                 <script nonce="${nonce}">
                 window.onload = function() {
                     const root = document.getElementById("refact-chat")
-                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}})
+                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}, themeProps: { accentColor: "gray" }})
                 }
                 </script>
             </body>
