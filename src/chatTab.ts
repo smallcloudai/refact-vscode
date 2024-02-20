@@ -367,6 +367,7 @@ export class ChatTab {
                 ...json,
             },
             });
+            // console.log("chat response", json);
         };
 
         const handle_stream_end = (
@@ -521,7 +522,7 @@ export class ChatTab {
             }
 
             case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
-                const payload: { id: string; query: string; cursor: number; number: number } = data.payload;
+                const payload: ReceiveAtCommandCompletion["payload"] = data.payload;
                 this.handleAtCommandCompletion(payload);
             }
 
