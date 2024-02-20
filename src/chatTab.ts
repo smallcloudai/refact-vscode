@@ -23,6 +23,7 @@ import {
   type ChatContextFileMessage,
   type ChatContextFile,
   type RemoveLastUserMessage,
+  isUserMessage,
 } from "refact-chat-js/dist/events";
 
 
