@@ -348,6 +348,16 @@ export class ChatTab {
             if (typeof json !== "object") {
             return;
             }
+
+            if(isUserMessage(json)) {
+                const dedupe_messages_action: RemoveLastUserMessage = {
+                    type: EVENT_NAMES_TO_CHAT.REMOVE_LAST_USER_MESSAGE,
+                    payload: { id: this.chat_id },
+                };
+                this.web_panel.webview.postMessage(
+                    dedupe_messages_action
+                );
+            }
             const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
             this.web_panel.webview.postMessage({
             type,
@@ -410,11 +420,7 @@ export class ChatTab {
             third_party
         );
 
-        const dedupe_messages_action: RemoveLastUserMessage = {
-          type: EVENT_NAMES_TO_CHAT.REMOVE_LAST_USER_MESSAGE,
-          payload: { id: this.chat_id },
-        };
-        this.web_panel.webview.postMessage(dedupe_messages_action);
+
         return request.supply_stream(...chat_promise);
     }
 
