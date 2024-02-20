@@ -425,8 +425,12 @@ export class ChatTab {
         return request.supply_stream(...chat_promise);
     }
 
-    async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; number: number }) {
-        fetchAPI.getAtCommands(payload.query, payload.cursor, payload.number).then((res) => {
+    async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; trigger: string | null; number: number }) {
+        fetchAPI.getAtCommands(
+            payload.trigger ?? payload.query,
+            payload.trigger ? payload.trigger.length : payload.cursor,
+            payload.number
+        ).then((res) => {
             const message: ReceiveAtCommandCompletion = {
                 type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
                 payload: { id: payload.id, ...res },
