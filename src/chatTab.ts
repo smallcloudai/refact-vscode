@@ -23,7 +23,6 @@ import {
   type ChatContextFileMessage,
   type ChatContextFile,
   type RemoveLastUserMessage,
-  isUserMessage,
 } from "refact-chat-js/dist/events";
 
 
@@ -210,7 +209,7 @@ export class ChatTab {
 
                     this.postActiveFileInfo(chat.id);
                     this.sendSnippetToChat(this.working_on_snippet_code);
-                    this.toggleAttachFile(!!this.working_on_snippet_code)
+                    this.toggleAttachFile(!!this.working_on_snippet_code);
                     disposables.forEach((d) => d.dispose());
                     resolve();
                 }
@@ -233,7 +232,6 @@ export class ChatTab {
             payload: { id: this.chat_id, snippet: snippet, language }
         };
 
-        console.log({action})
         this.web_panel.webview.postMessage(action);
     }
 
@@ -293,7 +291,7 @@ export class ChatTab {
         vscode.window.activeTextEditor?.document.getText() || "";
         const start = vscode.window.activeTextEditor?.selection.start;
         const end = vscode.window.activeTextEditor?.selection.end;
-        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0
+        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
 
         const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
             ? { line1: start.line + 1, line2: end.line + 1 }
@@ -350,15 +348,6 @@ export class ChatTab {
             return;
             }
 
-            if(isUserMessage(json)) {
-                const dedupe_messages_action: RemoveLastUserMessage = {
-                    type: EVENT_NAMES_TO_CHAT.REMOVE_LAST_USER_MESSAGE,
-                    payload: { id: this.chat_id },
-                };
-                this.web_panel.webview.postMessage(
-                    dedupe_messages_action
-                );
-            }
             const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
             this.web_panel.webview.postMessage({
             type,
@@ -420,6 +409,15 @@ export class ChatTab {
             formattedMessages,
             model,
             third_party
+        );
+
+        const dedupe_messages_action: RemoveLastUserMessage = {
+            type: EVENT_NAMES_TO_CHAT.REMOVE_LAST_USER_MESSAGE,
+            payload: { id: this.chat_id },
+        };
+
+        this.web_panel.webview.postMessage(
+            dedupe_messages_action
         );
 
 
@@ -522,8 +520,7 @@ export class ChatTab {
             }
 
             case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
-                const payload: ReceiveAtCommandCompletion["payload"] = data.payload;
-                this.handleAtCommandCompletion(payload);
+                this.handleAtCommandCompletion(data.payload);
             }
 
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
