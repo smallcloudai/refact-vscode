@@ -246,12 +246,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "open_statistic": {
-<<<<<<< HEAD
-=======
-            let editor = vscode.window.activeTextEditor;
-            let attach_default = !!vscode.window.activeTextEditor;
-            vscode.commands.executeCommand('workbench.action.openEditorAtIndex1');
->>>>>>> edaba01 (connected statistic tab from refact-chat-js to show in sidebar)
             await open_statistic_tab();
             break;
         }
