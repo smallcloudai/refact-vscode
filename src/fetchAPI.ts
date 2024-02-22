@@ -5,10 +5,14 @@ import * as userLogin from "./userLogin";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
-import type {
-    CapsResponse,
-    CommandCompletionResponse,
-    CommandPreviewResponse
+import {
+    isCommandPreviewResponse,
+    isDetailMessage,
+    type CapsResponse,
+    type CommandCompletionResponse,
+    type CommandPreviewResponse,
+    type ChatContextFileMessage,
+    type ChatContextFile,
 } from 'refact-chat-js/dist/events';
 
 
@@ -622,7 +626,7 @@ export async function getAtCommands(query: string, cursor: number, amount: numbe
     return json as CommandCompletionResponse;
 }
 
-export async function getAtCommandPreview(query: string): Promise<CommandPreviewResponse> {
+export async function getAtCommandPreview(query: string): Promise<ChatContextFileMessage[]> {
     const url = rust_url("/v1/at-command-preview");
 
     const request = new fetchH2.Request(url, {
@@ -642,10 +646,19 @@ export async function getAtCommandPreview(query: string): Promise<CommandPreview
 
     const json = await response.json();
 
-    if("detail" in json) {
-        throw new Error("Command preview error: " + json.detail);
-    }
+      if (!isCommandPreviewResponse(json) && !isDetailMessage(json)) {
+        throw new Error("Invalid response from command preview");
+      }
+      if (isDetailMessage(json)) {
+        return [];
+      }
 
-    return json as CommandPreviewResponse;
+      const jsonMessages = json.messages.map<ChatContextFileMessage>(
+        ({ role, content }) => {
+          const fileData = JSON.parse(content) as ChatContextFile[];
+          return [role, fileData];
+        }
+      );
 
+      return jsonMessages;
 }

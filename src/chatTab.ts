@@ -430,17 +430,11 @@ export class ChatTab {
         }).catch(() => ({}));
 
         fetchAPI.getAtCommandPreview(payload.query).then(res => {
-            const preview = res.messages.map<ChatContextFileMessage>(
-                ({ role, content }) => {
-                const fileData = JSON.parse(content) as ChatContextFile[];
-                return [role, fileData];
-                }
-            );
-
             const message: ReceiveAtCommandPreview = {
-              type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
-              payload: { id: payload.id, preview },
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
+                payload: {id: payload.id, preview: res}
             };
+
             this.web_panel.webview.postMessage(message);
         }).catch(() => ({}));
     }
