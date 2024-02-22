@@ -9,35 +9,11 @@ export class StatisticTab {
     ) {
     }
 
-
-    getActiveFileInfo() {
-        const file_name = basename(
-        vscode.window.activeTextEditor?.document.fileName || ""
-        );
-        const file_content =
-        vscode.window.activeTextEditor?.document.getText() || "";
-        const start = vscode.window.activeTextEditor?.selection.start;
-        const end = vscode.window.activeTextEditor?.selection.end;
-        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0
-
-        const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
-            ? { line1: start.line + 1, line2: end.line + 1 }
-            : { line1:  1, line2: lineCount + 1 };
-        const file = {
-            file_name,
-            file_content,
-            ...maybeLineInfo,
-        };
-
-        return file;
-    }
-
     public get_html_for_statistics(
         webview: vscode.Webview,
         extensionUri: any,
         isTab = false
     ): string {
-        const file = this.getActiveFileInfo();
         const nonce = StatisticTab.getNonce();
     
         const scriptUri = webview.asWebviewUri(
