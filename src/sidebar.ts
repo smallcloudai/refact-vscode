@@ -8,7 +8,7 @@ import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
-import { EVENT_NAMES_FROM_CHAT } from "refact-chat-js/dist/events";
+import { EVENT_NAMES_FROM_CHAT, EVENT_NAMES_FROM_STATISTIC  } from "refact-chat-js/dist/events";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -241,9 +241,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "open_statistic": {
-            let editor = vscode.window.activeTextEditor;
-            let attach_default = !!vscode.window.activeTextEditor;
-            vscode.commands.executeCommand('workbench.action.openEditorAtIndex1');
             await open_statistic_tab();
             break;
         }
@@ -351,6 +348,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
+        case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
         case "back-from-chat": {
             this.goto_main();
             this.chat = null;

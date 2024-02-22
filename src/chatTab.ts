@@ -255,7 +255,7 @@ export class ChatTab {
         vscode.window.activeTextEditor?.document.getText() || "";
         const start = vscode.window.activeTextEditor?.selection.start;
         const end = vscode.window.activeTextEditor?.selection.end;
-        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0
+        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
 
         const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
             ? { line1: start.line + 1, line2: end.line + 1 }
