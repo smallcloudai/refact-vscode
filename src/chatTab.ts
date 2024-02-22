@@ -22,7 +22,6 @@ import {
   type ReceiveAtCommandPreview,
   type ChatContextFileMessage,
   type ChatContextFile,
-  type RemoveLastUserMessage,
 } from "refact-chat-js/dist/events";
 
 
@@ -232,7 +231,9 @@ export class ChatTab {
             payload: { id: this.chat_id, snippet: snippet, language }
         };
 
+       if(snippet) {
         this.web_panel.webview.postMessage(action);
+       }
     }
 
     toggleAttachFile(attach_file: boolean) {
