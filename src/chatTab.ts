@@ -161,7 +161,7 @@ export class ChatTab {
 
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab",
-            `Refact.ai ${chat_title}`,
+            truncate(`Refact.ai ${chat_title}`, 24),
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -285,11 +285,8 @@ export class ChatTab {
     }
 
     getActiveFileInfo() {
-        const file_name = basename(
-        vscode.window.activeTextEditor?.document.fileName || ""
-        );
-        const file_content =
-        vscode.window.activeTextEditor?.document.getText() || "";
+        const file_name = basename(vscode.window.activeTextEditor?.document.fileName || "");
+        const file_content = vscode.window.activeTextEditor?.document.getText() || "";
         const start = vscode.window.activeTextEditor?.selection.start;
         const end = vscode.window.activeTextEditor?.selection.end;
         const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
