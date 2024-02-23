@@ -855,3 +855,15 @@ export function diff_paste_back(
     }
     return last_affected_line;
 }
+
+function truncate(str: string, length: number): string {
+  if (str.length <= length) {
+    return str;
+  }
+
+  if (length <= 1) {
+    return "…";
+  }
+
+  return str.slice(0, length - 1) + "…";
+}
