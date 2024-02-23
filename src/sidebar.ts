@@ -41,6 +41,7 @@ export async function open_chat_tab(
             attach_default,
             model,
             messages,
+            false,
         );
         return chat;
     }

@@ -15,13 +15,11 @@ import { open_chat_tab } from "./sidebar";
 import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
-  // type CreateNewChatThread,
   type ChatSetSelectedSnippet,
   type ToggleActiveFile,
   type ReceiveAtCommandCompletion,
   type ReceiveAtCommandPreview,
-  type ChatContextFileMessage,
-  type ChatContextFile,
+  type Snippet
 } from "refact-chat-js/dist/events";
 
 
@@ -195,20 +193,20 @@ export class ChatTab {
         messages: [string, string][];
         title?: string;
         model: string;
-    }) {
+    }, appendSnippet = false) {
         // this waits until the chat has been mounted
         const [model] = chat.model ? [chat.model] : await chat_model_get();
+        const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
         return new Promise<void>((resolve) => {
             const disposables: vscode.Disposable[] = [];
             const restore = (event: { type: string }) => {
                 if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
                     this.web_panel.webview.postMessage({
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                        payload: {...chat, model }
+                        payload: {...chat, model, snippet }
                     });
 
                     this.postActiveFileInfo(chat.id);
-                    this.sendSnippetToChat(this.working_on_snippet_code);
                     this.toggleAttachFile(!!this.working_on_snippet_code);
                     disposables.forEach((d) => d.dispose());
                     resolve();
@@ -224,17 +222,22 @@ export class ChatTab {
 
     }
 
-    sendSnippetToChat(snippet: string = "") {
+    getSnippetFromEditor(): Snippet | undefined {
+        if(!this.working_on_snippet_code) { return; }
         const language = vscode.window.activeTextEditor?.document.languageId ?? "";
+        return {
+            code: this.working_on_snippet_code,
+            language,
+        };
+    }
 
+    sendSnippetToChat() {
+        const snippet = this.getSnippetFromEditor();
         const action: ChatSetSelectedSnippet = {
             type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
-            payload: { id: this.chat_id, snippet: snippet, language }
+            payload: { id: this.chat_id, snippet }
         };
-
-       if(snippet) {
         this.web_panel.webview.postMessage(action);
-       }
     }
 
     toggleAttachFile(attach_file: boolean) {
@@ -583,6 +586,7 @@ export class ChatTab {
         attach_default: boolean,
         use_model: string,
         messages: [string, string][],
+        append_snippet_to_input: boolean = false,
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -595,7 +599,7 @@ export class ChatTab {
             return;
         }
 
-        await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages);
+        await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages, append_snippet_to_input);
     }
 
     async _clear_and_repopulate_chat(
@@ -604,6 +608,7 @@ export class ChatTab {
         attach_default: boolean,
         use_model: string,
         messages: [string, string][],
+        append_snippet_to_input: boolean = false
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -630,13 +635,14 @@ export class ChatTab {
         this.working_on_snippet_code = code_snippet;
         this.messages = messages;
 
-
-        return this.restoreChat({
+        const chat = {
             id: this.chat_id,
             model: use_model,
             messages,
             title: question,
-        });
+        };
+
+        return this.restoreChat(chat, append_snippet_to_input);
 
     }
 
