@@ -138,7 +138,7 @@ export class ChatTab {
         }
     }
 
-    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string) {
+    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string, append_snippet_to_input: boolean) {
 
         const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
 
@@ -185,7 +185,7 @@ export class ChatTab {
 
         panel.webview.onDidReceiveMessage(tab.handleEvents);
 
-        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages);
+        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
     }
 
     async restoreChat(chat: {
