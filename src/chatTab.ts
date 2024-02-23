@@ -197,13 +197,14 @@ export class ChatTab {
         model: string;
     }) {
         // this waits until the chat has been mounted
+        const [model] = chat.model ? [chat.model] : await chat_model_get();
         return new Promise<void>((resolve) => {
             const disposables: vscode.Disposable[] = [];
             const restore = (event: { type: string }) => {
                 if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
                     this.web_panel.webview.postMessage({
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                        payload: chat,
+                        payload: {...chat, model }
                     });
 
                     this.postActiveFileInfo(chat.id);
