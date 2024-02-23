@@ -19,7 +19,8 @@ import {
   type ToggleActiveFile,
   type ReceiveAtCommandCompletion,
   type ReceiveAtCommandPreview,
-  type Snippet
+  type Snippet,
+  type ChatContextFile,
 } from "refact-chat-js/dist/events";
 
 
@@ -288,7 +289,10 @@ export class ChatTab {
         });
     }
 
-    getActiveFileInfo() {
+    getActiveFileInfo(): ChatContextFile | null {
+        if(vscode.window.activeTextEditor?.document.uri.scheme === "comment") {
+            return null;
+        }
         const file_name = basename(vscode.window.activeTextEditor?.document.fileName || "");
         const file_content = vscode.window.activeTextEditor?.document.getText() || "";
         const start = vscode.window.activeTextEditor?.selection.start;
@@ -322,12 +326,12 @@ export class ChatTab {
         attach_file?: boolean;
     }): Promise<void> {
         this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
-
-        if (attach_file) {
-            const file = this.getActiveFileInfo();
+        const file = attach_file && this.getActiveFileInfo();
+        if (file) {
             this.sendFileToChat(id, file);
             const message: [string, string] = ["context_file", JSON.stringify([file])];
-            messages.unshift(message);
+            const tail = messages.splice(-1, 1, message);
+            tail.map((m) => messages.push(m));
         }
         this.chat_id = id;
         this.messages = messages;
