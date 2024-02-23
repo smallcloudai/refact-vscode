@@ -96,6 +96,7 @@ export class RustBinaryBlob
         if (!plugin_version) {
             plugin_version = "unknown";
         }
+        let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
         let new_cmdline: string[] = [
             join(this.asset_path, "refact-lsp"),
             "--address-url", url,
@@ -103,6 +104,7 @@ export class RustBinaryBlob
             "--http-port", port.toString(),
             "--lsp-stdin-stdout", "1",
             "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
+            "--default-system-message", '"' + default_system_prompt + '"',
             "--basic-telemetry"
         ];
         let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");

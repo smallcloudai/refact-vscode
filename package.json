@@ -126,6 +126,11 @@
 					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
 					"default": false
 				},
+				"refactai.defaultSystemPrompt": {
+					"type": "string",
+					"description": "Customizable system prompt for chat models.",
+					"default": ""
+				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead."

@@ -351,6 +351,7 @@ export function activate(context: vscode.ExtensionContext)
             e.affectsConfiguration("refactai.addressURL") ||
             e.affectsConfiguration("refactai.xDebug") ||
             e.affectsConfiguration("refactai.apiKey") ||
+            e.affectsConfiguration("refactai.defaultSystemPrompt") ||
             e.affectsConfiguration("refactai.insecureSSL")
         ) {
             if (config_debounce) {
