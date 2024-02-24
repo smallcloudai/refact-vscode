@@ -24,37 +24,42 @@ export class StatisticTab {
         vscode.window.onDidChangeActiveTextEditor(this.watchDocumentPath, this, this._disposables);
     }
 
-    dispose() {
-        this._disposables.forEach((d) => d.dispose());
-    }
-
     private handleEvents(message: any) {
         switch (message.type) {
-            case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA: {
-                return fetchAPI
-                    .get_statistic_data()
-                    .then((data) => {
-                        return this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA,
-                            payload: data,
-                        });
-                    })
-                    .catch((err) => {
-                        return this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR,
-                            payload: {
-                                message: err,
-                              },
-                        });
-                    });
-            }
+          case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA: {
+            return fetchAPI
+              .get_statistic_data()
+              .then((data) => {
+                return this.web_panel.webview.postMessage({
+                  type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA,
+                  payload: data,
+                });
+              })
+              .catch((err) => {
+                return this.web_panel.webview.postMessage({
+                  type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR,
+                  payload: {
+                    message: err,
+                  },
+                });
+              });
+          }
+          case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR: {
+            console.error(
+              "Error fetching statistic data:",
+              message.payload.message
+            );
+            break;
+          }
 
-            case EVENT_NAMES_FROM_STATISTIC.REQUEST_FILL_IN_THE_MIDDLE_DATA: {
-                return this.handleFillInTheMiddleData(this._document_fsPath);
-            }
-
-
+          case EVENT_NAMES_FROM_STATISTIC.REQUEST_FILL_IN_THE_MIDDLE_DATA: {
+            return this.handleFillInTheMiddleData(this._document_fsPath);
+          }
         }
+    }
+
+    dispose() {
+        this._disposables.forEach((d) => d.dispose());
     }
 
     watchDocumentPath(event: vscode.TextEditor | undefined) {
