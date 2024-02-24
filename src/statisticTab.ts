@@ -72,6 +72,10 @@ export class StatisticTab {
         }
     }
 
+    dispose() {
+        this._disposables.forEach((d) => d.dispose());
+    }
+
     watchDocumentPath(event: vscode.TextEditor | undefined) {
         if (!event) { return; }
         if(event.document.uri.scheme !== "file") { return; }
