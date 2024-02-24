@@ -223,6 +223,7 @@ function sidebar_general_script(vscode) {
     const statistic = document.querySelector("#statistic");
     statistic.addEventListener("click", () => {
         vscode.postMessage({ type: "open_statistic" });
+        vscode.postMessage({ type: "receive_statistic_data" });
     });
     // const chatHistoryButton = document.querySelector("#history");
     // chatHistoryButton.addEventListener("click", () => {

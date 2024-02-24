@@ -591,3 +591,27 @@ export async function get_caps(): Promise<CapsResponse> {
   console.log(["successful read_caps", json]);
   return json as CapsResponse;
 }
+
+export async function get_statistic_data(): Promise<any> {
+    let url = rust_url("/v1/get-dashboard-plots");
+
+    if (!url) {
+      return Promise.reject("get-dashboard-plots doesn't work");
+    }
+  
+    let req = new fetchH2.Request(url, {
+      method: "GET",
+      redirect: "follow",
+      cache: "no-cache",
+      referrer: "no-referrer",
+    });
+
+    let resp = await fetchH2.fetch(req);
+    if (resp.status !== 200) {
+        console.log(["get_dashboard_plots http status", resp.status]);
+        return Promise.reject("get_dashboard_plots");
+      }
+      let json = await resp.json();
+    console.log(["successful get_dashboard_plots", json]);
+    return json;
+  }
