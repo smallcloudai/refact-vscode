@@ -2,11 +2,43 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import { basename } from "path";
-
+import {
+    EVENT_NAMES_TO_STATISTIC,
+  } from "refact-chat-js/dist/events";
+import * as fetchAPI from "./fetchAPI";
 export class StatisticTab {
     public constructor(
         public web_panel: vscode.WebviewPanel | vscode.WebviewView,
     ) {
+        this.handleEvents = this.handleEvents.bind(this);
+        this.web_panel.webview.onDidReceiveMessage(this.handleEvents);
+    }
+
+    private handleEvents(message: any) {
+        switch (message.type) {
+            case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA: {
+                return fetchAPI
+                    .get_statistic_data()
+                    .then((data) => {
+                        return this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA,
+                            payload: data,
+                        });
+                    })
+                    .catch((err) => {
+                        return this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR,
+                            payload: {
+                                message: err,
+                              },
+                        });
+                    });
+            }
+            case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR: {
+                console.error("Error fetching statistic data:", message.payload.message);
+                break;
+            }
+        }
     }
 
     public get_html_for_statistics(
