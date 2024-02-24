@@ -669,7 +669,6 @@ export async function get_statistic_data(): Promise<{ data: string }> {
     if (!url) {
       return Promise.reject("get-dashboard-plots doesn't work");
     }
-
     let req = new fetchH2.Request(url, {
       method: "GET",
       redirect: "follow",
