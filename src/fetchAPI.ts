@@ -681,7 +681,7 @@ export async function get_statistic_data(): Promise<any> {
         console.log(["get_dashboard_plots http status", resp.status]);
         return Promise.reject("get_dashboard_plots");
       }
-      let json = await resp.json();
+    let json = await resp.json();
     console.log(["successful get_dashboard_plots", json]);
     return json;
   }
