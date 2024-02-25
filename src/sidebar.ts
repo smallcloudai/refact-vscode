@@ -167,7 +167,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) {
             return;
         }
-        this._view.webview.html = statistic.get_html_for_statistics(
+        this._view.webview.html = statistic.get_html_for_statistic(
             this._view.webview,
             this._context.extensionUri,
         );
