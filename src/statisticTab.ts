@@ -100,7 +100,6 @@ export class StatisticTab {
         isTab = false
     ): string {
         const nonce = uuidv4();
-
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
         );
