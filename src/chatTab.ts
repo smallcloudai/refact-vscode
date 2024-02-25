@@ -11,9 +11,16 @@ const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdi
 
 // circular dependency
 import { open_chat_tab } from "./sidebar";
+
 import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
+  type ChatSetSelectedSnippet,
+  type ToggleActiveFile,
+  type ReceiveAtCommandCompletion,
+  type ReceiveAtCommandPreview,
+  type Snippet,
+  type ChatContextFile,
 } from "refact-chat-js/dist/events";
 
 
@@ -132,7 +139,7 @@ export class ChatTab {
         }
     }
 
-    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string) {
+    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string, append_snippet_to_input: boolean) {
 
         const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
 
@@ -153,7 +160,7 @@ export class ChatTab {
 
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab",
-            `Refact.ai ${chat_title}`,
+            truncate(`Refact.ai ${chat_title}`, 24),
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -179,7 +186,7 @@ export class ChatTab {
 
         panel.webview.onDidReceiveMessage(tab.handleEvents);
 
-        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages);
+        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
     }
 
     async restoreChat(chat: {
@@ -187,16 +194,21 @@ export class ChatTab {
         messages: [string, string][];
         title?: string;
         model: string;
-    }) {
+    }, appendSnippet = false) {
         // this waits until the chat has been mounted
+        const [model] = chat.model ? [chat.model] : await chat_model_get();
+        const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
         return new Promise<void>((resolve) => {
             const disposables: vscode.Disposable[] = [];
             const restore = (event: { type: string }) => {
                 if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
                     this.web_panel.webview.postMessage({
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                        payload: chat,
+                        payload: {...chat, model, snippet }
                     });
+
+                    this.postActiveFileInfo(chat.id);
+                    this.toggleAttachFile(!!this.working_on_snippet_code);
                     disposables.forEach((d) => d.dispose());
                     resolve();
                 }
@@ -211,9 +223,39 @@ export class ChatTab {
 
     }
 
-    createNewChat() {
-        this.web_panel.webview.postMessage({ type: EVENT_NAMES_TO_CHAT.NEW_CHAT });
+    getSnippetFromEditor(): Snippet | undefined {
+        if(!this.working_on_snippet_code) { return; }
+        const language = vscode.window.activeTextEditor?.document.languageId ?? "";
+        return {
+            code: this.working_on_snippet_code,
+            language,
+        };
     }
+
+    sendSnippetToChat() {
+        const snippet = this.getSnippetFromEditor();
+        const action: ChatSetSelectedSnippet = {
+            type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
+            payload: { id: this.chat_id, snippet }
+        };
+        this.web_panel.webview.postMessage(action);
+    }
+
+    toggleAttachFile(attach_file: boolean) {
+        const action: ToggleActiveFile = {
+            type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
+            payload: { id: this.chat_id, attach_file, }
+        };
+
+        this.web_panel.webview.postMessage(action);
+    }
+
+    // createNewChat() {
+    //     const action: CreateNewChatThread = {
+    //         type: EVENT_NAMES_TO_CHAT.NEW_CHAT,
+    //     };
+    //     this.web_panel.webview.postMessage(action);
+    // }
 
     postActiveFileInfo(id: string) {
         const file = this.getActiveFileInfo();
@@ -247,12 +289,12 @@ export class ChatTab {
         });
     }
 
-    getActiveFileInfo() {
-        const file_name = basename(
-        vscode.window.activeTextEditor?.document.fileName || ""
-        );
-        const file_content =
-        vscode.window.activeTextEditor?.document.getText() || "";
+    getActiveFileInfo(): ChatContextFile | null {
+        if(vscode.window.activeTextEditor?.document.uri.scheme === "comment") {
+            return null;
+        }
+        const file_name = basename(vscode.window.activeTextEditor?.document.fileName || "");
+        const file_content = vscode.window.activeTextEditor?.document.getText() || "";
         const start = vscode.window.activeTextEditor?.selection.start;
         const end = vscode.window.activeTextEditor?.selection.end;
         const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
@@ -284,12 +326,12 @@ export class ChatTab {
         attach_file?: boolean;
     }): Promise<void> {
         this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
-
-        if (attach_file) {
-            const file = this.getActiveFileInfo();
+        const file = attach_file && this.getActiveFileInfo();
+        if (file) {
             this.sendFileToChat(id, file);
             const message: [string, string] = ["context_file", JSON.stringify([file])];
-            messages.unshift(message);
+            const tail = messages.splice(-1, 1, message);
+            tail.map((m) => messages.push(m));
         }
         this.chat_id = id;
         this.messages = messages;
@@ -311,6 +353,7 @@ export class ChatTab {
             if (typeof json !== "object") {
             return;
             }
+
             const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
             this.web_panel.webview.postMessage({
             type,
@@ -319,6 +362,7 @@ export class ChatTab {
                 ...json,
             },
             });
+            // console.log("chat response", json);
         };
 
         const handle_stream_end = (
@@ -351,7 +395,7 @@ export class ChatTab {
         //TODO: find out what this is for?
         const third_party = this.model_to_thirdparty[model];
 
-        const formatedMessages = this.messages.map<[string, string]>(
+        const formattedMessages = this.messages.map<[string, string]>(
             ([role, content]) => {
             if (
                 role === "context_file" &&
@@ -364,14 +408,40 @@ export class ChatTab {
         );
 
 
+
         const chat_promise = fetchAPI.fetch_chat_promise(
             this.cancellationTokenSource.token,
             "chat-tab",
-            formatedMessages,
+            formattedMessages,
             model,
             third_party
         );
+
         return request.supply_stream(...chat_promise);
+    }
+
+    async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; trigger: string | null; number: number }) {
+        fetchAPI.getAtCommands(
+            payload.trigger ?? payload.query,
+            payload.trigger ? payload.trigger.length : payload.cursor,
+            payload.number
+        ).then((res) => {
+            const message: ReceiveAtCommandCompletion = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
+                payload: { id: payload.id, ...res },
+            };
+
+            this.web_panel.webview.postMessage(message);
+        }).catch(() => ({}));
+
+        fetchAPI.getAtCommandPreview(payload.query).then(res => {
+            const message: ReceiveAtCommandPreview = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
+                payload: {id: payload.id, preview: res}
+            };
+
+            this.web_panel.webview.postMessage(message);
+        }).catch(() => ({}));
     }
 
     async handleEvents({ type, ...data }: any) {
@@ -437,6 +507,10 @@ export class ChatTab {
             case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
                 const value = data.payload.content;
                 return this.handleDiffPasteBack({ code_block: value });
+            }
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
+                this.handleAtCommandCompletion(data.payload);
             }
 
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
@@ -516,6 +590,7 @@ export class ChatTab {
         attach_default: boolean,
         use_model: string,
         messages: [string, string][],
+        append_snippet_to_input: boolean = false,
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -528,7 +603,7 @@ export class ChatTab {
             return;
         }
 
-        await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages);
+        await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages, append_snippet_to_input);
     }
 
     async _clear_and_repopulate_chat(
@@ -537,6 +612,7 @@ export class ChatTab {
         attach_default: boolean,
         use_model: string,
         messages: [string, string][],
+        append_snippet_to_input: boolean = false
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
@@ -563,13 +639,14 @@ export class ChatTab {
         this.working_on_snippet_code = code_snippet;
         this.messages = messages;
 
-
-        return this.restoreChat({
+        const chat = {
             id: this.chat_id,
             model: use_model,
             messages,
             title: question,
-        });
+        };
+
+        return this.restoreChat(chat, append_snippet_to_input);
 
     }
 
@@ -615,7 +692,9 @@ export class ChatTab {
                     and only allow scripts that have a specific nonce.
                     TODO: remove  unsafe-inline if posable
                 -->
-                <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource} 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <meta http-equiv="Content-Security-Policy" content="style-src ${
+                  webview.cspSource
+                } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
                 <title>Refact.ai Chat</title>
@@ -623,14 +702,14 @@ export class ChatTab {
                 <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div id="refact-chat"></div>
+                <div id="refact-chat" ${isTab ? "data-state-tabbed" : ""}></div>
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
 
                 <script nonce="${nonce}">
                 window.onload = function() {
                     const root = document.getElementById("refact-chat")
-                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}})
+                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}, themeProps: { accentColor: "gray" }})
                 }
                 </script>
             </body>
@@ -656,6 +735,13 @@ export async function chat_model_get(): Promise<[string, string]>
     if (!context) {
         return ["", ""];
     }
+
+    try {
+        await global.rust_binary_blob?.read_caps();
+    } catch {
+        return ["", ""];
+    }
+
     let chat_model_ = await context.globalState.get("chat_model");
     let chat_model_function_ = await context.globalState.get("chat_model_function");
     let chat_model: string = "";
@@ -778,4 +864,16 @@ export function diff_paste_back(
         last_affected_line = Math.max(...state.diffDeletedLines);
     }
     return last_affected_line;
+}
+
+function truncate(str: string, length: number): string {
+  if (str.length <= length) {
+    return str;
+  }
+
+  if (length <= 1) {
+    return "…";
+  }
+
+  return str.slice(0, length - 1) + "…";
 }

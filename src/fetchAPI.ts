@@ -5,7 +5,15 @@ import * as userLogin from "./userLogin";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
-import type { CapsResponse } from 'refact-chat-js/dist/events';
+import {
+    isCommandPreviewResponse,
+    isDetailMessage,
+    type CapsResponse,
+    type CommandCompletionResponse,
+    type CommandPreviewResponse,
+    type ChatContextFileMessage,
+    type ChatContextFile,
+} from 'refact-chat-js/dist/events';
 
 
 let globalSeq = 100;
@@ -592,13 +600,76 @@ export async function get_caps(): Promise<CapsResponse> {
   return json as CapsResponse;
 }
 
+export async function getAtCommands(query: string, cursor: number, amount: number): Promise<CommandCompletionResponse> {
+    const url = rust_url("/v1/at-command-completion");
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query, cursor, top_n: amount }),
+    });
+
+    const response = await fetchH2.fetch(request);
+    if (response.status!== 200) {
+      console.log([`${url} http status`, response.status]);
+      return Promise.reject("get At Commands bad status");
+    }
+
+    const json = await response.json();
+
+    if("detail" in json) {
+        throw new Error("Command completion error: " + json.detail);
+    }
+
+    return json as CommandCompletionResponse;
+}
+
+export async function getAtCommandPreview(query: string): Promise<ChatContextFileMessage[]> {
+    const url = rust_url("/v1/at-command-preview");
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({query})
+    });
+
+    const response = await fetchH2.fetch(request);
+
+    if (response.status!== 200) {
+      console.log([`${url} http status`, response.status]);
+      return Promise.reject("get at command preview bad status");
+    }
+
+    const json = await response.json();
+
+      if (!isCommandPreviewResponse(json) && !isDetailMessage(json)) {
+        throw new Error("Invalid response from command preview");
+      }
+      if (isDetailMessage(json)) {
+        return [];
+      }
+
+      const jsonMessages = json.messages.map<ChatContextFileMessage>(
+        ({ role, content }) => {
+          const fileData = JSON.parse(content) as ChatContextFile[];
+          return [role, fileData];
+        }
+      );
+
+      return jsonMessages;
+}
+
 export async function get_statistic_data(): Promise<any> {
     let url = rust_url("/v1/get-dashboard-plots");
 
     if (!url) {
       return Promise.reject("get-dashboard-plots doesn't work");
     }
-  
+
     let req = new fetchH2.Request(url, {
       method: "GET",
       redirect: "follow",

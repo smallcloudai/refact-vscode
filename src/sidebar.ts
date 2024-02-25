@@ -22,6 +22,7 @@ export async function open_chat_tab(
     model: string,
     messages: [string, string][],
     chat_id: string,
+    append_snippet_to_input: boolean = false,
 ): Promise<chatTab.ChatTab|undefined> {
     if (global.side_panel?.chat) {
         global.side_panel.chat = null;
@@ -42,6 +43,7 @@ export async function open_chat_tab(
             attach_default,
             model,
             messages,
+            append_snippet_to_input,
         );
         return chat;
     }
@@ -190,9 +192,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Global);
         await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
-        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
-        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+        if(vscode.workspace.workspaceFolders) {
+            await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+            await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
+            await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
+        }
     }
 
     public async js2ts_message(data: any)
@@ -214,7 +218,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 return openTab.focus();
             }
             // is extensionUri defined anywhere?
-            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this._context.extensionUri);
+            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this._context.extensionUri, true);
             this.chat = null;
             return this.goto_main();
         }
@@ -237,6 +241,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 data.chat_model,
                 [],      // messages
                 "",      // chat id
+                true,
             );
             break;
         }
@@ -313,7 +318,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "openKeys": {
-            vscode.commands.executeCommand('workbench.action.openGlobalKeybindings', '@ext:smallcloud.codify');
+            vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "Refact.ai");
             break;
         }
         case "restore_chat": {
