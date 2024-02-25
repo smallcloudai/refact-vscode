@@ -6,6 +6,8 @@ import {
     EVENT_NAMES_TO_STATISTIC,
   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
+import { v4 as uuidv4 } from "uuid";
+
 export class StatisticTab {
     public constructor(
         public web_panel: vscode.WebviewPanel | vscode.WebviewView,
@@ -41,12 +43,12 @@ export class StatisticTab {
         }
     }
 
-    public get_html_for_statistics(
+    public get_html_for_statistic(
         webview: vscode.Webview,
         extensionUri: any,
         isTab = false
     ): string {
-        const nonce = StatisticTab.getNonce();
+        const nonce = uuidv4();
     
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
@@ -88,17 +90,6 @@ export class StatisticTab {
                 </script>
             </body>
             </html>`;
-    }
-
-    static getNonce()
-    {
-        let text = "";
-        const possible =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        for (let i = 0; i < 32; i++) {
-            text += possible.charAt(Math.floor(Math.random() * possible.length));
-        }
-        return text;
     }
 }
 
