@@ -21,6 +21,9 @@ import {
   type Snippet,
   type ChatContextFile,
   type ToggleActiveFile,
+  type RestoreChat,
+  type ActiveFileInfo,
+  ChatMessages,
 } from "refact-chat-js/dist/events";
 
 
@@ -195,17 +198,22 @@ export class ChatTab {
         title?: string;
         model: string;
     }, appendSnippet = false) {
-        // this waits until the chat has been mounted
         const [model] = chat.model ? [chat.model] : await chat_model_get();
         const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
+        // TODO: fix cast this
+        const messages = chat.messages as ChatMessages;
+        this.chat_id = chat.id;
         return new Promise<void>((resolve) => {
             const disposables: vscode.Disposable[] = [];
             const restore = (event: { type: string }) => {
                 if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
-                    this.web_panel.webview.postMessage({
+
+                    const action: RestoreChat = {
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                        payload: {...chat, model, snippet }
-                    });
+                        payload: {...chat, messages, attach_file: !!snippet, model }
+                    }
+
+                    this.web_panel.webview.postMessage(action);
 
                     this.postActiveFileInfo(chat.id);
                     this.toggleAttachFile(!!this.working_on_snippet_code);
@@ -260,20 +268,28 @@ export class ChatTab {
 
     postActiveFileInfo(id: string) {
         const file = this.getActiveFileInfo();
-        if(file === null) { return; }
-        const fileName = file.file_name;
-        const lineInfo = file.line1 !== undefined && file.line2 !== undefined ? `:${file.line1}-${file.line2}` : "";
+        if(file === null) {
+            const action: ActiveFileInfo = {
+                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+                payload: { id: id, file: { can_paste: false } },
+            }
+            this.web_panel.webview.postMessage(action);
+        } else {
+            const action: ActiveFileInfo = {
+                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+                payload: {
+                    id: id,
+                    file: {
+                        name: file.file_name,
+                        line1: file.line1 ?? null,
+                        line2: file.line2 ?? null,
+                        can_paste: !!vscode.window.activeTextEditor,
+                    }
+                },
+            };
 
-        const action = {
-            type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
-            payload: {
-                id: id,
-                name: fileName + lineInfo,
-                can_paste: vscode.window.activeTextEditor && vscode.window.activeTextEditor.selection.isEmpty === false ? true : false,
-            },
-        };
-
-        this.web_panel.webview.postMessage(action);
+            this.web_panel.webview.postMessage(action);
+        }
     }
 
     getActiveFileInfo(): ChatContextFile | null {
@@ -316,14 +332,14 @@ export class ChatTab {
         attach_file?: boolean;
     }): Promise<void> {
         this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
-        const file = attach_file && this.getActiveFileInfo();
+        // const file = attach_file && this.getActiveFileInfo();
 
         // TODO: confirm if context files are no longer sent
-        if (file) {
-            const message: [string, string] = ["context_file", JSON.stringify([file])];
-            const tail = messages.splice(-1, 1, message);
-            tail.map((m) => messages.push(m));
-        }
+        // if (file) {
+        //     const message: [string, string] = ["context_file", JSON.stringify([file])];
+        //     const tail = messages.splice(-1, 1, message);
+        //     tail.map((m) => messages.push(m));
+        // }
         this.chat_id = id;
         this.messages = messages;
         this.cancellationTokenSource =
@@ -550,6 +566,9 @@ export class ChatTab {
             return;
         }
         if (!this.working_on_snippet_range) {
+            const range = this.working_on_snippet_editor.selection;
+            const snippet = new vscode.SnippetString(data.code_block);
+            vscode.window.activeTextEditor?.insertSnippet(snippet, range);
             return;
         }
         return diff_paste_back(
@@ -609,10 +628,10 @@ export class ChatTab {
             return;
         }
 
-        //TODO: find out if this is this needed any more?
+        // TODO: find out if this is this needed any more?
         let code_snippet = "";
         this.working_on_snippet_range = undefined;
-        this.working_on_snippet_editor = undefined;
+        this.working_on_snippet_editor = editor;
         this.working_on_snippet_column = undefined;
 
         if (editor) {
@@ -621,7 +640,6 @@ export class ChatTab {
             this.working_on_attach_range = attach_range;
             if (!selection.isEmpty) {
                 this.working_on_snippet_range = selection;
-                this.working_on_snippet_editor = editor;
                 this.working_on_snippet_column = editor.viewColumn;
             }
 
