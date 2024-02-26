@@ -16,11 +16,11 @@ import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
   type ChatSetSelectedSnippet,
-  type ToggleActiveFile,
   type ReceiveAtCommandCompletion,
   type ReceiveAtCommandPreview,
   type Snippet,
   type ChatContextFile,
+  type ToggleActiveFile,
 } from "refact-chat-js/dist/events";
 
 
@@ -234,6 +234,7 @@ export class ChatTab {
 
     sendSnippetToChat() {
         const snippet = this.getSnippetFromEditor();
+        if(snippet === undefined) { return; }
         const action: ChatSetSelectedSnippet = {
             type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
             payload: { id: this.chat_id, snippet }
@@ -259,6 +260,7 @@ export class ChatTab {
 
     postActiveFileInfo(id: string) {
         const file = this.getActiveFileInfo();
+        if(file === null) { return; }
         const fileName = file.file_name;
         const lineInfo = file.line1 !== undefined && file.line2 !== undefined ? `:${file.line1}-${file.line2}` : "";
 
@@ -272,21 +274,6 @@ export class ChatTab {
         };
 
         this.web_panel.webview.postMessage(action);
-    }
-
-    sendFileToChat(id: string, file: {
-        file_name: string,
-        file_content: string,
-        line1?: number;
-        line2?: number
-    }) {
-        return this.web_panel.webview.postMessage({
-            type: EVENT_NAMES_TO_CHAT.RECEIVE_FILES,
-            payload: {
-                id,
-                files: [file]
-            }
-        });
     }
 
     getActiveFileInfo(): ChatContextFile | null {
@@ -305,6 +292,9 @@ export class ChatTab {
         const file = {
             file_name,
             file_content,
+            // FIXME: typo in lsp and chat
+            usefullness: 100,
+            usefulness: 100,
             ...maybeLineInfo,
         };
 
@@ -327,8 +317,9 @@ export class ChatTab {
     }): Promise<void> {
         this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
         const file = attach_file && this.getActiveFileInfo();
+
+        // TODO: confirm if context files are no longer sent
         if (file) {
-            this.sendFileToChat(id, file);
             const message: [string, string] = ["context_file", JSON.stringify([file])];
             const tail = messages.splice(-1, 1, message);
             tail.map((m) => messages.push(m));
@@ -362,7 +353,6 @@ export class ChatTab {
                 ...json,
             },
             });
-            // console.log("chat response", json);
         };
 
         const handle_stream_end = (
