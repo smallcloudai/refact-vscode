@@ -717,7 +717,7 @@ export async function get_debug_fill_in_the_middle_data(fileName: string): Promi
         redirect: "follow",
         cache: "no-cache",
         referrer: "no-referrer",
-        body: JSON.stringify({file_name: fileName})
+        body: JSON.stringify({file_uri: fileName})
     });
 
     const response = await fetchH2.fetch(request);
@@ -725,16 +725,23 @@ export async function get_debug_fill_in_the_middle_data(fileName: string): Promi
         console.log([`${url} http status`, response.status]);
         throw new Error(`get_debug_fill_in_the_middle_data bad status: [${response.status} | ${response.statusText}]`);
     }
-    const json = await response.json();
 
+    try {
+        const json = await response.json();
 
+        const content = JSON.parse(json.content);
 
-    if(!isFillInTheMiddleResponse(json)) {
-        console.warn("invalid response format from " + url);
-        throw new Error(`get_debug_fill_in_the_middle_data bad response format`);
+        const data = { ...json , content };
+        if(!isFillInTheMiddleResponse(data)) {
+            console.warn("invalid response format from " + url);
+            throw new Error(`get_debug_fill_in_the_middle_data bad response format`);
+        }
+
+        return data;
+    } catch (e) {
+        console.warn("debug fim error", e);
+        throw e;
     }
-
-    return json;
 }
 
 
