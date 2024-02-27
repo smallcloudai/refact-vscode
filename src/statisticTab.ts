@@ -72,6 +72,16 @@ export class StatisticTab {
         }
     }
 
+    watchDocumentPath(event: vscode.TextEditor | undefined) {
+        if (!event) { return; }
+        if(event.document.uri.scheme !== "file") { return; }
+
+        if(this._document_fsPath === undefined || this._document_fsPath !== event.document.uri.fsPath) {
+            this._document_fsPath = event.document.uri.fsPath;
+            this.handleFillInTheMiddleData(this._document_fsPath);
+        }
+    }
+
     // The fetch might need a debounce or throttle
     handleFillInTheMiddleData(fileName?: string) {
         if(fileName === undefined) { return; }
