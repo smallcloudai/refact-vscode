@@ -23,7 +23,8 @@ import {
   type ToggleActiveFile,
   type RestoreChat,
   type ActiveFileInfo,
-  ChatMessages,
+  type ChatMessages,
+  type ReceiveTokenCount
 } from "refact-chat-js/dist/events";
 
 
@@ -217,6 +218,7 @@ export class ChatTab {
 
                     this.postActiveFileInfo(chat.id);
                     this.toggleAttachFile(!!this.working_on_snippet_code);
+                    this.sendTokenCountToChat();
                     disposables.forEach((d) => d.dispose());
                     resolve();
                 }
@@ -254,6 +256,18 @@ export class ChatTab {
         const action: ToggleActiveFile = {
             type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
             payload: { id: this.chat_id, attach_file, }
+        };
+
+        this.web_panel.webview.postMessage(action);
+    }
+
+    sendTokenCountToChat() {
+        const action: ReceiveTokenCount = {
+            type: EVENT_NAMES_TO_CHAT.RECEIVE_TOKEN_COUNT,
+            payload: {
+                id: this.chat_id,
+                tokens: global.user_logged_in ? global.user_metering_balance : null
+            }
         };
 
         this.web_panel.webview.postMessage(action);
@@ -375,18 +389,19 @@ export class ChatTab {
             maybe_error_message?: string
         ) => {
             if (maybe_error_message) {
-            this.web_panel.webview.postMessage({
-                type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
-                payload: {
-                id: this.chat_id,
-                message: maybe_error_message,
-                },
-            });
+                this.web_panel.webview.postMessage({
+                        type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+                        payload: {
+                        id: this.chat_id,
+                        message: maybe_error_message,
+                    },
+                });
             } else {
-            this.web_panel.webview.postMessage({
-                type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
-                payload: { id: this.chat_id },
-            });
+                this.web_panel.webview.postMessage({
+                    type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+                    payload: { id: this.chat_id },
+                });
+                this.sendTokenCountToChat();
             }
         };
 
