@@ -716,28 +716,13 @@ export async function get_debug_fill_in_the_middle_data(fileName: string): Promi
         redirect: "follow",
         cache: "no-cache",
         referrer: "no-referrer",
-<<<<<<< HEAD
         body: JSON.stringify({file_uri: fileName})
-=======
-        body: JSON.stringify({file_name: fileName})
->>>>>>> 449b7d4 (wip(statistics fim): add handlers to request data from chat and send data to chat)
     });
 
     const response = await fetchH2.fetch(request);
     if(!response.ok) {
         console.log([`${url} http status`, response.status]);
         throw new Error(`get_debug_fill_in_the_middle_data bad status: [${response.status} | ${response.statusText}]`);
-<<<<<<< HEAD
-=======
-    }
-    const json = await response.json();
-
-
-
-    if(!isFillInTheMiddleResponse(json)) {
-        console.warn("invalid response format from " + url);
-        throw new Error(`get_debug_fill_in_the_middle_data bad response format`);
->>>>>>> 449b7d4 (wip(statistics fim): add handlers to request data from chat and send data to chat)
     }
 
     try {
