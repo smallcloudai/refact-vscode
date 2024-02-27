@@ -502,6 +502,13 @@ export function fetch_chat_promise(
     }
     let ctx = inference_context(third_party);
     let json_messages = [];
+    let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
+    if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
+        json_messages.push({
+            "role": "system",
+            "content": default_system_prompt,
+        });
+    }
     for (let i=0; i<messages.length; i++) {
         json_messages.push({
             "role": messages[i][0],
