@@ -687,30 +687,54 @@ export async function get_statistic_data(): Promise<{ data: string }> {
     return json;
   }
 
-export async function get_debug_fill_in_the_middle_data(): Promise<ChatContextFileMessage> {
+type FillInTheMiddleResponse = {
+    role: "context_file",
+    content: ChatContextFile[],
+}
+
+function isFillInTheMiddleResponse(json: unknown): json is FillInTheMiddleResponse {
+    if(!json) { return false; }
+    if(typeof json !== "object") { return false; }
+
+    if(!("role" in json)) { return false; }
+    if(json.role!== "context_file") { return false; }
+
+    if(!("content" in json)) { return false; }
+
+    return Array.isArray(json.content);
+
+}
+
+export async function get_debug_fill_in_the_middle_data(fileName: string): Promise<FillInTheMiddleResponse> {
     const url = rust_url("/v1/debug-fim-data");
 
     if(!url) {
-        return Promise.reject(`rust_url("/v1/debug-fim-data"); didn't work`);
+        throw new Error(`rust_url("/v1/debug-fim-data"); didn't work`);
     }
 
     const request = new fetchH2.Request(url, {
-        method: "GET",
+        method: "POST",
         redirect: "follow",
         cache: "no-cache",
         referrer: "no-referrer",
+        body: JSON.stringify({file_name: fileName})
     });
 
     const response = await fetchH2.fetch(request);
     if(!response.ok) {
         console.log([`${url} http status`, response.status]);
-        return Promise.reject(`get_debug_fill_in_the_middle_data bad status: [${response.status} | ${response.statusText}]`);
+        throw new Error(`get_debug_fill_in_the_middle_data bad status: [${response.status} | ${response.statusText}]`);
     }
     const json = await response.json();
 
-    if(!isChatContextFileMessage(json)) {
-        return [];
+
+
+    if(!isFillInTheMiddleResponse(json)) {
+        console.warn("invalid response format from " + url);
+        throw new Error(`get_debug_fill_in_the_middle_data bad response format`);
     }
 
     return json;
 }
+
+

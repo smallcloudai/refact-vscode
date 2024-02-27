@@ -4,6 +4,8 @@ import * as vscode from "vscode";
 import { basename } from "path";
 import {
     EVENT_NAMES_TO_STATISTIC,
+    type ReceiveFillInTheMiddleData,
+    type ReceiveFillInTheMiddleDataError,
   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
 import { v4 as uuidv4 } from "uuid";
@@ -36,7 +38,30 @@ export class StatisticTab {
                         });
                     });
             }
+
+
         }
+    }
+
+    // The fetch might need a debounce or throttle
+    handleFillInTheMiddleData(fileName: string) {
+        return fetchAPI.get_debug_fill_in_the_middle_data(fileName)
+        .then((data) => {
+            const action: ReceiveFillInTheMiddleData = {
+                type: EVENT_NAMES_TO_STATISTIC.RECEIVE_FILL_IN_THE_MIDDLE_DATA,
+                payload: {files: data.content }
+            };
+
+            this.web_panel.webview.postMessage(action);
+        })
+        .catch(err => {
+            const action: ReceiveFillInTheMiddleDataError = {
+                type: EVENT_NAMES_TO_STATISTIC.RECEIVE_FILL_IN_THE_MIDDLE_DATA_ERROR,
+                payload: {message: err.message ?? "Unknown error"}
+            };
+
+            this.web_panel.webview.postMessage(action);
+        });
     }
 
     public get_html_for_statistic(
@@ -45,7 +70,7 @@ export class StatisticTab {
         isTab = false
     ): string {
         const nonce = uuidv4();
-    
+
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
         );
