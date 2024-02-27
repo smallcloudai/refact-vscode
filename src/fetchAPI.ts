@@ -8,9 +8,9 @@ import * as statusBar from "./statusBar";
 import {
     isCommandPreviewResponse,
     isDetailMessage,
+    isChatContextFileMessage,
     type CapsResponse,
     type CommandCompletionResponse,
-    type CommandPreviewResponse,
     type ChatContextFileMessage,
     type ChatContextFile,
 } from 'refact-chat-js/dist/events';
@@ -686,3 +686,31 @@ export async function get_statistic_data(): Promise<{ data: string }> {
     console.log(["successful get_dashboard_plots", json]);
     return json;
   }
+
+export async function get_debug_fill_in_the_middle_data(): Promise<ChatContextFileMessage> {
+    const url = rust_url("/v1/debug-fim-data");
+
+    if(!url) {
+        return Promise.reject(`rust_url("/v1/debug-fim-data"); didn't work`);
+    }
+
+    const request = new fetchH2.Request(url, {
+        method: "GET",
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    });
+
+    const response = await fetchH2.fetch(request);
+    if(!response.ok) {
+        console.log([`${url} http status`, response.status]);
+        return Promise.reject(`get_debug_fill_in_the_middle_data bad status: [${response.status} | ${response.statusText}]`);
+    }
+    const json = await response.json();
+
+    if(!isChatContextFileMessage(json)) {
+        return [];
+    }
+
+    return json;
+}
