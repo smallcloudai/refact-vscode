@@ -662,7 +662,8 @@ export async function getAtCommandPreview(query: string): Promise<ChatContextFil
 
       return jsonMessages;
 }
-export async function get_statistic_data(): Promise<any> {
+
+export async function get_statistic_data(): Promise<{ data: string }> {
     let url = rust_url("/v1/get-dashboard-plots");
 
     if (!url) {
