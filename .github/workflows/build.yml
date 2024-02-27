@@ -9,6 +9,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  setup-vars:
+    name: Setup variables
+    runs-on: ubuntu-latest
+    outputs:
+      lsp_version: ${{ steps.set-variables.outputs.lsp_version }}
+    steps:
+      - id: set-variables
+        name: Setup variables
+        shell: bash
+        run: |
+          echo "lsp_version=$(cat refact_lsp)" >> $GITHUB_OUTPUT
+
+  build-lsp:
+    name: Build lsp
+    needs: [setup-vars]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: convictional/trigger-workflow-and-wait@v1.6.1
+        name: "Build refact-lsp"
+        with:
+          owner: smallcloudai
+          repo: refact-lsp
+          workflow_file_name: build.yml
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: ${{ needs.setup-vars.outputs.lsp_version }}
+
   dist:
     strategy:
       matrix:
@@ -41,13 +67,14 @@ jobs:
     name: dist (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
+    needs: [build-lsp]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           fetch-depth: ${{ env.FETCH_DEPTH }}
-          
+
       - name: Download artifact
         id: download-artifact
         uses: dawidd6/action-download-artifact@v2
@@ -55,7 +82,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
           repo: smallcloudai/refact-lsp
-          branch: main 
+          branch: ${{ needs.setup-vars.outputs.lsp_version }}
           path: ./assets
           name: dist-${{ matrix.target }}
 

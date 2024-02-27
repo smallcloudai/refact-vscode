@@ -3,15 +3,38 @@ name: Publish
 on:
   workflow_dispatch:
     inputs:
-      lsp_branch:
-        description: "Branch name to publish"
-        default: "main"
       stable_release:
         description: "Publish stable release version"
         default: false
         type: boolean
 
 jobs:
+  setup-vars:
+    name: Setup variables
+    runs-on: ubuntu-latest
+    outputs:
+      lsp_version: ${{ steps.set-variables.outputs.lsp_version }}
+    steps:
+      - id: set-variables
+        name: Setup variables
+        shell: bash
+        run: |
+          echo "lsp_version=$(cat refact_lsp)" >> $GITHUB_OUTPUT
+
+  build-lsp:
+    name: Build lsp
+    needs: [setup-vars]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: convictional/trigger-workflow-and-wait@v1.6.1
+        name: "Build refact-lsp"
+        with:
+          owner: smallcloudai
+          repo: refact-lsp
+          workflow_file_name: build.yml
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: ${{ needs.setup-vars.outputs.lsp_version }}
+
   publish:
     strategy:
       matrix:
@@ -44,6 +67,7 @@ jobs:
     name: Publish in marketplace (VSCE) (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     container: ${{ matrix.container }}
+    needs: [build-lsp]
 
     steps:
       - name: Checkout repository
@@ -63,7 +87,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
           repo: smallcloudai/refact-lsp
-          branch: ${{ inputs.lsp_branch }}
+          branch: ${{ needs.setup-vars.outputs.lsp_version }}
           path: ./assets
           name: dist-${{ matrix.target }}
 
