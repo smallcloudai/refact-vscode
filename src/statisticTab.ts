@@ -36,10 +36,6 @@ export class StatisticTab {
                         });
                     });
             }
-            case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR: {
-                console.error("Error fetching statistic data:", message.payload.message);
-                break;
-            }
         }
     }
 
