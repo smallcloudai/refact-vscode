@@ -6,7 +6,7 @@ import * as crlf from "./crlf";
 import * as estate from "./estate";
 import ChatHistoryProvider, { Chat } from "./chatHistory";
 import { basename } from "path";
-// import * as userLogin from "./userLogin";
+
 const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdiff/
 
 // circular dependency
