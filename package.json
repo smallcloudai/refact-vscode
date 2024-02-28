@@ -387,7 +387,7 @@
 		"difflib": "^0.2.4",
 		"fetch-h2": "^3.0.2",
 		"marked": "^4.0.8",
-		"refact-chat-js": "^0.0.2",
+		"refact-chat-js": "^0.0.4",
 		"uuid": "^9.0.1",
 		"vscode-languageclient": "^7.0.0"
 	},
@@ -395,7 +395,6 @@
 		"@types/glob": "^7.2.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "^20.4.2",
-		"@types/react": "^18.2.60",
 		"@types/uuid": "^9.0.4",
 		"@types/vscode": "^1.69.0",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
