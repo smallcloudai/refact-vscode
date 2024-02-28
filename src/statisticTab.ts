@@ -26,7 +26,7 @@ export class StatisticTab {
 
     private handleEvents(message: any) {
         switch (message.type) {
-          case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA: {
+          case EVENT_NAMES_TO_STATISTIC.REQUEST_STATISTIC_DATA: {
             return fetchAPI
               .get_statistic_data()
               .then((data) => {
@@ -43,13 +43,6 @@ export class StatisticTab {
                   },
                 });
               });
-          }
-          case EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR: {
-            console.error(
-              "Error fetching statistic data:",
-              message.payload.message
-            );
-            break;
           }
 
           case EVENT_NAMES_FROM_STATISTIC.REQUEST_FILL_IN_THE_MIDDLE_DATA: {
