@@ -5,6 +5,7 @@ import * as userLogin from './userLogin';
 import { join } from 'path';
 import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
+// import { register_commands } from './rconsoleCommands';
 
 
 const DEBUG_HTTP_PORT = 8001;
@@ -83,6 +84,9 @@ export class RustBinaryBlob
             this.cmdline = [];
             await this.terminate();  // terminate our own
             await this.read_caps();  // debugging rust already running, can read here
+
+            await this.fetch_toolbox_config();
+            // await register_commands();
             await this.start_lsp_socket();
             return;
         }
@@ -231,6 +235,7 @@ export class RustBinaryBlob
         // therefore the LSP server is started.
         // A little doubt remains about the http port, but it's very likely there's no race.
         await this.read_caps();
+        await this.fetch_toolbox_config();
     }
 
     public async start_lsp_socket()
@@ -274,4 +279,60 @@ export class RustBinaryBlob
         });
         this.lsp_socket.connect(DEBUG_LSP_PORT);
     }
+
+
+    async fetch_toolbox_config(): Promise<ToolboxConfig> {
+      const rust_url = this.rust_url();
+
+      if (!rust_url) {
+        console.log(["fetch_toolbox_config: No rust binary working"]);
+        return Promise.reject("No rust binary working");
+      }
+      const url = rust_url + "v1/customization";
+
+      const request = new fetchH2.Request(url, { method: "GET" });
+
+      const response = await fetchH2.fetch(request);
+
+      if (!response.ok) {
+        console.log([
+          "fetch_toolbox_config: Error fetching toolbox config",
+          response.status,
+          url,
+        ]);
+        return Promise.reject(
+          `Error fetching toolbox config: [status: ${response.status}] [statusText: ${response.statusText}]`
+        );
+      }
+
+      // TBD: type-guards or some sort of runtime validation
+      const json = await response.json() as ToolboxConfig;
+      console.log(["success fetch_toolbox_config", json]);
+
+      global.toolbox_config = json;
+      return json;
+    }
 }
+
+export type ChatMessageFromLsp = {
+  role: string;
+  content: string;
+};
+
+export type ToolboxCommand = {
+  description: string;
+  messages: ChatMessageFromLsp[];
+  selection_needed: number[];
+  selection_unwanted: boolean;
+  insert_at_cursor: boolean;
+};
+
+export type SystemPrompt = {
+  description: string;
+  text: string;
+};
+
+export type ToolboxConfig = {
+  system_prompts: Record<string, SystemPrompt>;
+  toolbox_commands: Record<string, ToolboxCommand>;
+};

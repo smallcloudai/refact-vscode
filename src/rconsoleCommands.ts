@@ -10,19 +10,6 @@ export type Messages = [string, string][];
 export type ThreadEndCallback = (messages: Messages) => void;
 
 
-
-export let commands_available: { [key: string]: string } = {
-"shorter": "Make code shorter",
-"bugs": "Find and fix bugs",
-"improve": "Rewrite this specific code block of code to improve it",
-"comment": "Comment each line",
-"typehints": "Add type hints",
-"naming": "Improve variable names",
-"explain": "Explain code",
-"typos": "Rewrite this specific code block to fix typos",
-};
-
-
 export function createCommandName(command: string): string {
     return `run_rconsole_command_${command}`;
 }
@@ -61,16 +48,20 @@ function get_chars(str: string): Set<string>
     return chars;
 }
 
-export function get_hints(
+export async function get_hints(
     msgs: Messages,
     unfinished_text: string,
     selected_range: vscode.Range,
     model_name: string,
-): [string, string, string] {
-    if (unfinished_text.startsWith("/")) {
+): Promise<[string, string, string]> {
+
+    const toolbox_config = await ensure_toolbox_config();
+    const commands_available = toolbox_config?.toolbox_commands;
+
+    if (unfinished_text.startsWith("/") && commands_available) {
         let cmd_score: { [key: string]: number } = {};
         for (let cmd in commands_available) {
-            let text = commands_available[cmd] || "";
+            let text = commands_available[cmd].description || "";
             let score = similarity_score(unfinished_text, "/" + cmd + " " + text);
             cmd_score[cmd] = score;
         }
@@ -80,7 +71,7 @@ export function get_hints(
         for (let i = 0; i < top3.length; i++) {
             let cmd = top3[i][0];
             const cmd_name = createCommandName(cmd);
-            let text = commands_available[cmd] || "";
+            let text = commands_available[cmd].description || "";
             result += `[**/${cmd}** ${text}](command:${cmd_name})<br />\n`;
         }
         return [result, "Available commands:", top3[0][0]];
@@ -232,9 +223,11 @@ export async function stream_chat_without_visible_chat(
     ));
 }
 
-function _run_command(cmd: string, doc_uri: string, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
+async function _run_command(cmd: string, doc_uri: string, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
 {
-    let text = commands_available[cmd] || "";
+
+    const toolbox_config = await ensure_toolbox_config();
+    let text = toolbox_config?.toolbox_commands[cmd].description ?? "";
     let editor = vscode.window.visibleTextEditors.find((e) => {
         return e.document.uri.toString() === doc_uri;
     });
@@ -266,20 +259,35 @@ function _run_command(cmd: string, doc_uri: string, messages: Messages, model_na
         end_thread_callback
     );
 }
-
-export function register_commands(): vscode.Disposable[]
+//TBD: Called at start up, might need to be called on settings change?
+export async function register_commands(): Promise<vscode.Disposable[]>
 {
-    let dispos = [];
-    for (let cmd in commands_available) {
-        let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd,
-            async (doc_uri, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
-                if (!model_name) {
-                    [model_name,] = await chatTab.chat_model_get();
+    try {
+
+        const toolbox_config = await ensure_toolbox_config();
+        const commands_available = toolbox_config?.toolbox_commands;
+
+        let dispos = [];
+        for (let cmd in commands_available) {
+            let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd,
+                async (doc_uri, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
+                    if (!model_name) {
+                        [model_name,] = await chatTab.chat_model_get();
+                    }
+                    _run_command(cmd, doc_uri, messages, model_name, update_thread_callback, end_thread_callback);
                 }
-                _run_command(cmd, doc_uri, messages, model_name, update_thread_callback, end_thread_callback);
-            }
-        );
-        dispos.push(d);
+            );
+            dispos.push(d);
+        }
+
+        return dispos;
+    } catch (e) {
+        console.log(["register_commands error", e]);
+        return [];
     }
-    return dispos;
+}
+
+export async function ensure_toolbox_config() {
+    if (global.toolbox_config) { return global.toolbox_config; }
+    return global.rust_binary_blob?.fetch_toolbox_config();
 }
