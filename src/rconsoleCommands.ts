@@ -259,16 +259,15 @@ async function _run_command(cmd: string, doc_uri: string, messages: Messages, mo
         end_thread_callback
     );
 }
-
-
-export async function register_commands(): Promise<void> {
-    global.toolbox_command_disposables.forEach(disposable => disposable.dispose());
-    global.toolbox_command_disposables = [];
+//TBD: Called at start up, might need to be called on settings change?
+export async function register_commands(): Promise<vscode.Disposable[]>
+{
     try {
 
         const toolbox_config = await ensure_toolbox_config();
         const commands_available = toolbox_config?.toolbox_commands;
 
+        let dispos = [];
         for (let cmd in commands_available) {
             let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd,
                 async (doc_uri, messages: Messages, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
@@ -278,10 +277,13 @@ export async function register_commands(): Promise<void> {
                     _run_command(cmd, doc_uri, messages, model_name, update_thread_callback, end_thread_callback);
                 }
             );
-            global.toolbox_command_disposables.push(d);
+            dispos.push(d);
         }
+
+        return dispos;
     } catch (e) {
         console.log(["register_commands error", e]);
+        return [];
     }
 }
 
