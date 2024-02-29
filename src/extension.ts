@@ -40,7 +40,9 @@ declare global {
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
+
     var toolbox_config: launchRust.ToolboxConfig | undefined;
+    var toolbox_command_disposables: vscode.Disposable[];
 }
 
 async function pressed_call_chat() {
@@ -247,6 +249,8 @@ export function activate(context: vscode.ExtensionContext)
     global.status_bar = new statusBar.StatusBarMenu();
     global.status_bar.createStatusBarBlock(context);
     global.open_chat_tabs = [];
+    global.toolbox_command_disposables = [];
+
 
     context.subscriptions.push(vscode.commands.registerCommand(global.status_bar.command, status_bar_clicked));
 
@@ -290,7 +294,9 @@ export function activate(context: vscode.ExtensionContext)
     });
     let disposable6 = vscode.commands.registerCommand('refactaicmd.callChat', pressed_call_chat);
 
-
+    let toolbar_command_disposable = new vscode.Disposable(() => {
+        global.toolbox_command_disposables.forEach(d => d.dispose());
+    });
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
@@ -302,18 +308,12 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable12);
     context.subscriptions.push(disposable13);
     context.subscriptions.push(disposable6);
+    context.subscriptions.push(toolbar_command_disposable);
 
     global.rust_binary_blob = new launchRust.RustBinaryBlob(
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
     );
     global.rust_binary_blob.settings_changed();  // async function will finish later
-
-    // Refactor: move this into fetch_toolbox_commands, It'll need to dispose the commands too
-    rconsoleCommands.register_commands().then((disposables) => {
-        console.log("registered commands");
-
-        context.subscriptions.push(...disposables);
-    });
 
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(

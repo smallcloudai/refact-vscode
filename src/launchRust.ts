@@ -5,7 +5,7 @@ import * as userLogin from './userLogin';
 import { join } from 'path';
 import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
-// import { register_commands } from './rconsoleCommands';
+import { register_commands } from './rconsoleCommands';
 
 
 const DEBUG_HTTP_PORT = 8001;
@@ -310,6 +310,7 @@ export class RustBinaryBlob
       console.log(["success fetch_toolbox_config", json]);
 
       global.toolbox_config = json;
+      await register_commands();
       return json;
     }
 }
