@@ -40,7 +40,6 @@ declare global {
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
-    var toolbox_config: launchRust.ToolboxConfig | undefined;
 }
 
 async function pressed_call_chat() {
@@ -290,6 +289,8 @@ export function activate(context: vscode.ExtensionContext)
     });
     let disposable6 = vscode.commands.registerCommand('refactaicmd.callChat', pressed_call_chat);
 
+    let dlist = rconsoleCommands.register_commands();
+    context.subscriptions.push(...dlist);
 
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
@@ -307,12 +308,6 @@ export function activate(context: vscode.ExtensionContext)
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
     );
     global.rust_binary_blob.settings_changed();  // async function will finish later
-
-    rconsoleCommands.register_commands().then((disposables) => {
-        console.log("registered commands");
-
-        context.subscriptions.push(...disposables);
-    });
 
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
