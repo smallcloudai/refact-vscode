@@ -40,6 +40,9 @@ declare global {
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
+
+    var toolbox_config: launchRust.ToolboxConfig | undefined;
+    var toolbox_command_disposables: vscode.Disposable[];
 }
 
 async function pressed_call_chat() {
@@ -246,6 +249,8 @@ export function activate(context: vscode.ExtensionContext)
     global.status_bar = new statusBar.StatusBarMenu();
     global.status_bar.createStatusBarBlock(context);
     global.open_chat_tabs = [];
+    global.toolbox_command_disposables = [];
+
 
     context.subscriptions.push(vscode.commands.registerCommand(global.status_bar.command, status_bar_clicked));
 
@@ -289,9 +294,9 @@ export function activate(context: vscode.ExtensionContext)
     });
     let disposable6 = vscode.commands.registerCommand('refactaicmd.callChat', pressed_call_chat);
 
-    let dlist = rconsoleCommands.register_commands();
-    context.subscriptions.push(...dlist);
-
+    let toolbar_command_disposable = new vscode.Disposable(() => {
+        global.toolbox_command_disposables.forEach(d => d.dispose());
+    });
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
@@ -303,6 +308,7 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable12);
     context.subscriptions.push(disposable13);
     context.subscriptions.push(disposable6);
+    context.subscriptions.push(toolbar_command_disposable);
 
     global.rust_binary_blob = new launchRust.RustBinaryBlob(
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
@@ -346,6 +352,7 @@ export function activate(context: vscode.ExtensionContext)
 
     let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
+        // TODO: update commands here?
         if (
             e.affectsConfiguration("refactai.infurl") ||
             e.affectsConfiguration("refactai.addressURL") ||

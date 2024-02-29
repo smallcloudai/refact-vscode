@@ -13,7 +13,6 @@ export class MyCommentAuthorInformation implements vscode.CommentAuthorInformati
         this.iconPath = iconPath;
     }
 }
-
 export class MyComment implements vscode.Comment {
     body: vscode.MarkdownString;
     mode: vscode.CommentMode;
@@ -22,11 +21,11 @@ export class MyComment implements vscode.Comment {
 
     constructor(body: string, mode: vscode.CommentMode, author: vscode.CommentAuthorInformation) {
         this.body = new vscode.MarkdownString();
-        this.body.isTrusted = {
-            enabledCommands: Object.keys(rconsoleCommands.commands_available).map(cmd => rconsoleCommands.createCommandName(cmd))
-        };
+
         this.body.appendMarkdown(body);
+
         this.body.isTrusted = true;
+
         this.body.supportHtml = true;
         this.mode = mode;
         this.author = author;
@@ -99,7 +98,6 @@ export class RefactConsoleProvider {
         this.handle_close_inline_chat = this.handle_close_inline_chat.bind(this);
         this.handle_move_chat_to_sidebar = this.handle_move_chat_to_sidebar.bind(this);
 
-
         this.thread = this.initialize_thread();
         this.messages = this.initial_messages();
 
@@ -128,7 +126,7 @@ export class RefactConsoleProvider {
         // This trick puts cursor into the input box, possibly VS thinks the only use for
         // the thread is to ask user if there are no messages. But then we add a message.
         await new Promise(resolve => setTimeout(resolve, 100));
-        let [hint, author, _top1] = rconsoleCommands.get_hints(this.messages, "", this.official_selection, this.model_name);
+        let [hint, author, _top1] = await rconsoleCommands.get_hints(this.messages, "", this.official_selection, this.model_name);
         const hint_comment = this.format_message(author, hint);
         this.thread.comments = [hint_comment];
     }
@@ -149,9 +147,14 @@ export class RefactConsoleProvider {
         this.disposable_commands.forEach(command => command.dispose());
     }
 
-    add_click_handlers_for_commands() {
+    async add_click_handlers_for_commands() {
         this.remove_click_handlers_for_commands();
-        Object.keys(rconsoleCommands.commands_available).forEach(cmd => {
+        const toolbox_config = await rconsoleCommands.ensure_toolbox_config();
+        if(!toolbox_config) {
+            console.log(["RefactConsoleCommands: No toolbox config found"]);
+            return;
+        }
+        Object.keys(toolbox_config.toolbox_commands).forEach(cmd => {
             const commandName = rconsoleCommands.createCommandName(cmd);
             this.disposable_commands.push(
                 vscode.commands.registerCommand(commandName, () =>  {
@@ -294,14 +297,17 @@ export class RefactConsoleProvider {
     async handle_user_pressed_enter(event: vscode.TextDocumentChangeEvent) {
         // handle pressed enter
         // active  chat also close the console
+        const toolbox_config = await rconsoleCommands.ensure_toolbox_config();
+
         let comment_editor = vscode.window.visibleTextEditors.find((e1) => {
             return e1.document.uri === event.document.uri;
         });
 
         let first_line = this.input_text.split("\n")[0];
 
-        if (first_line.startsWith("/")) {
-            for (let cmd in rconsoleCommands.commands_available) {
+        if (first_line.startsWith("/") && toolbox_config) {
+
+            for (let cmd in toolbox_config.toolbox_commands) {
                 if (first_line.startsWith("/" + cmd)) { // maybe first_line.trim() === `/${cmd}`
                     this.hint_mode = false;
                     vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", false);
@@ -331,7 +337,7 @@ export class RefactConsoleProvider {
     }
 
     async hints_and_magic_tabs(event: vscode.TextDocumentChangeEvent) {
-        const [hint, author, top1] = rconsoleCommands.get_hints(this.messages, this.input_text, this.official_selection, this.model_name);
+        const [hint, author, top1] = await rconsoleCommands.get_hints(this.messages, this.input_text, this.official_selection, this.model_name);
 
         if (this.hint_mode) {
             if (this.hint_debounce) {
