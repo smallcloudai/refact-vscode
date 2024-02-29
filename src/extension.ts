@@ -308,7 +308,6 @@ export function activate(context: vscode.ExtensionContext)
     );
     global.rust_binary_blob.settings_changed();  // async function will finish later
 
-    // Refactor: move this into fetch_toolbox_commands, It'll need to dispose the commands too
     rconsoleCommands.register_commands().then((disposables) => {
         console.log("registered commands");
 
