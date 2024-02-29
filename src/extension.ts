@@ -285,6 +285,7 @@ export function activate(context: vscode.ExtensionContext)
         PrivacySettings.render(context);
     });
     let disposable13 = vscode.commands.registerCommand('refactaicmd.completionManual', async () => {
+        await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
         await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
     });
     let disposable6 = vscode.commands.registerCommand('refactaicmd.callChat', pressed_call_chat);
