@@ -353,21 +353,31 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(...statusBar.status_bar_init());
     context.subscriptions.push(...estate.estate_init());
 
+    const home = path.posix.format(path.parse(os.homedir()));
+    const toolbox_config_file_posix_path = path.posix.join(
+		home,
+		".cache",
+		"refact",
+		"customization.yaml"
+	);
+
+    const toolbox_config_file_uri = vscode.Uri.file(toolbox_config_file_posix_path);
+
     const openPromptCustomizationPage = vscode.commands.registerCommand(
         "refactaicmd.openPromptCustomizationPage",
-        () => {
-            const home = path.posix.format(path.parse(os.homedir()));
-            const pathToFile = path.posix.join(
-                home,
-                ".cache",
-                "refact",
-                "customization.yaml"
-            );
-            const file = vscode.Uri.file(pathToFile);
-            return vscode.commands.executeCommand("vscode.open", file);
-        }
+        () => vscode.commands.executeCommand("vscode.open", toolbox_config_file_uri)
     );
+
     context.subscriptions.push(openPromptCustomizationPage);
+
+    const reloadOnCommandFileChange = vscode.workspace.onDidSaveTextDocument(document => {
+        if(document.fileName === toolbox_config_file_uri.fsPath) {
+            console.log("reloading commands");
+            global.rust_binary_blob?.fetch_toolbox_config();
+        }
+    });
+
+    context.subscriptions.push(reloadOnCommandFileChange);
 
 
     let config_debounce: NodeJS.Timeout|undefined;
