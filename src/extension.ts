@@ -15,6 +15,8 @@ import * as launchRust from "./launchRust";
 import { RefactConsoleProvider } from './rconsoleProvider';
 import * as rconsoleCommands from "./rconsoleCommands";
 
+import * as os from 'os';
+import * as path from 'path';
 import { PrivacySettings } from './privacySettings';
 import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
@@ -297,6 +299,7 @@ export function activate(context: vscode.ExtensionContext)
     let toolbar_command_disposable = new vscode.Disposable(() => {
         global.toolbox_command_disposables.forEach(d => d.dispose());
     });
+
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
@@ -349,6 +352,23 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(logout);
     context.subscriptions.push(...statusBar.status_bar_init());
     context.subscriptions.push(...estate.estate_init());
+
+    const openPromptCustomizationPage = vscode.commands.registerCommand(
+        "refactaicmd.openPromptCustomizationPage",
+        () => {
+            const home = path.posix.format(path.parse(os.homedir()));
+            const pathToFile = path.posix.join(
+                home,
+                ".cache",
+                "refact",
+                "customization.yaml"
+            );
+            const file = vscode.Uri.file(pathToFile);
+            return vscode.commands.executeCommand("vscode.open", file);
+        }
+    );
+    context.subscriptions.push(openPromptCustomizationPage);
+
 
     let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
