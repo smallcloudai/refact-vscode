@@ -100,6 +100,51 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         return [completionItem];
     }
 
+    // public cache: Map<string, CacheEntry> = new Map();  // LRUCache?
+    // public slowdown_rapidfire_ts = 0;
+    // public slowdown_rapidfire_count = 0;
+    // public slowdown_sustained_ts = 0;
+    // public slowdown_sustained_count = 0;
+
+    // async slowdown(cancelToken: vscode.CancellationToken): Promise<boolean>
+    // {
+    //     const ALLOWED_RATE_RAPIDFIRE = 2.0;
+    //     const ALLOWED_RATE_SUSTAINED = 1.0;  // requests per second
+    //     while (1) {
+    //         await fetch.wait_until_all_requests_finished();
+    //         if (cancelToken.isCancellationRequested) {
+    //             return true;
+    //         }
+    //         let now = Date.now();
+    //         let rapid_rate = this.slowdown_rapidfire_count / ((now - this.slowdown_rapidfire_ts) / 1000.0);
+    //         let sustained_rate = this.slowdown_sustained_count / ((now - this.slowdown_sustained_ts) / 1000.0);
+    //         if (rapid_rate > ALLOWED_RATE_RAPIDFIRE || sustained_rate > ALLOWED_RATE_SUSTAINED) {
+    //             // console.log("slowdown, rapid=" + rapid_rate + ", sustained=" + sustained_rate);
+    //             let sleep = 100;
+    //             await new Promise(resolve => setTimeout(resolve, sleep));
+    //         } else {
+    //             // console.log("go ahead, rapid=" + rapid_rate + ", sustained=" + sustained_rate);
+    //             break;
+    //         }
+    //     }
+    //     let now = Date.now();
+    //     if (now - this.slowdown_rapidfire_ts > 500) {
+    //         // 2*0.5=1 request in 0.5 seconds -- it's there to prevent a wi-fi lag from forming a pile of requests
+    //         this.slowdown_rapidfire_ts = now;
+    //         this.slowdown_rapidfire_count = 0;
+    //     }
+    //     if (now - this.slowdown_sustained_ts > 20000) {
+    //         // reset every 20 seconds
+    //         this.slowdown_sustained_ts = now;
+    //         this.slowdown_sustained_count = 0;
+    //     }
+    //     this.slowdown_rapidfire_count += 1;
+    //     this.slowdown_sustained_count += 1;
+    //     return false;
+    // }
+
+    private called_manually_count: number = 0;
+
     async cached_request(
         cancelToken: vscode.CancellationToken,
         file_name: string,
@@ -137,6 +182,18 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let t0 = Date.now();
         let promise: any;
         let no_cache = called_manually;
+
+        if (called_manually) {
+            this.called_manually_count++;
+        } else {
+            this.called_manually_count = 0;
+        }
+
+        let temperature = 0.2
+        if (this.called_manually_count > 1) {
+            temperature = 0.6;
+        }
+
         promise = fetchAPI.fetch_code_completion(
             cancelToken,
             sources,
@@ -146,6 +203,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             cursor_character,
             max_tokens,
             no_cache,
+            temperature,
         );
         request.supply_stream(promise, "completion", "");
         let json: any;
