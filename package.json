@@ -135,23 +135,16 @@
 					"default": false,
 					"order": 4
 				},
-				"refactai.customizeToolbox": {
-					"type": "null",
-					"default": null,
-					"description": "",
-					"markdownDescription": "[Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
-					"order": 5
-				},
 				"refactai.defaultSystemPrompt": {
 					"type": "string",
-					"description": "Default system prompt for chat models.",
+					"markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
 					"default": "",
-					"order": 6
+					"order": 5
 				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
-					"oder": 10
+					"oder": 6
 				}
 			}
 		},
