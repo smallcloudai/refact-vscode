@@ -409,6 +409,7 @@ export function fetch_code_completion(
     cursor_character: number,
     max_new_tokens: number,
     no_cache: boolean,
+    temperature: number,
     // api_fields: estate.ApiFields,
 ): Promise<fetchH2.Response>
 {
@@ -424,7 +425,6 @@ export function fetch_code_completion(
     // if (!apiKey) {
     //     return Promise.reject("No API key");
     // }
-    let temp = 0.2;
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     // api_fields.scope = "code-completion";
     // api_fields.url = url;
@@ -448,7 +448,7 @@ export function fetch_code_completion(
             "multiline": multiline,
         },
         "parameters": {
-            "temperature": temp,
+            "temperature": temperature,
             "max_new_tokens": max_new_tokens,
         },
         "no_cache": no_cache,
@@ -493,7 +493,7 @@ export function fetch_chat_promise(
 {
     let url = rust_url("/v1/chat");
     if (!url) {
-        console.log(["fetch_code_completion: No rust binary working"]);
+        console.log(["fetch_chat_promise: No rust binary working"]);
         return [Promise.reject("No rust binary working"), scope, ""];
     }
     const apiKey = userLogin.secret_api_key();

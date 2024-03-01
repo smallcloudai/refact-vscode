@@ -137,6 +137,8 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
     //     return false;
     // }
 
+    private called_manually_count: number = 0;
+
     async cached_request(
         cancelToken: vscode.CancellationToken,
         file_name: string,
@@ -167,6 +169,18 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         let t0 = Date.now();
         let promise: any;
         let no_cache = called_manually;
+
+        if (called_manually) {
+            this.called_manually_count++;
+        } else {
+            this.called_manually_count = 0;
+        }
+
+        let temperature = 0.2
+        if (this.called_manually_count > 1) {
+            temperature = 0.6;
+        }
+
         promise = fetchAPI.fetch_code_completion(
             cancelToken,
             sources,
@@ -176,6 +190,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             cursor_character,
             max_tokens,
             no_cache,
+            temperature,
         );
         request.supply_stream(promise, "completion", "");
         let json: any;
