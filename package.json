@@ -86,54 +86,72 @@
 				"refactai.addressURL": {
 					"type": "string",
 					"description": "For Enterprise, put there your company's server address. Your admin should have emailed that to you.\nFor self-hosted, use something like http://127.0.0.1:8008/\nFor inference in public cloud, use \"Refact\" or \"HF\".",
-					"default": ""
+					"default": "",
+					"order": 0
 				},
 				"refactai.insecureSSL": {
 					"type": "boolean",
 					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors.",
-					"default": false
+					"default": false,
+					"order": 4
 				},
 				"refactai.infurl": {
 					"type": "string",
-					"deprecationMessage": "The new field is called addressURL. It's about the same, but it has special values like \"HF\" and if it's empty, makes the plugin do nothing, which is better for Enterprise use case to prevent leaks."
+					"deprecationMessage": "The new field is called addressURL. It's about the same, but it has special values like \"HF\" and if it's empty, makes the plugin do nothing, which is better for Enterprise use case to prevent leaks.",
+					"order": 0
 				},
 				"refactai.apiKey": {
 					"type": "string",
 					"default": "",
-					"description": "Secret API Key. It's used to authenticate your requests."
+					"description": "Secret API Key. It's used to authenticate your requests.",
+					"order": 1
 				},
 				"codify.apiKey": {
 					"type": "string",
-					"deprecationMessage": "Use refactai.apiKey instead."
+					"deprecationMessage": "Use refactai.apiKey instead.",
+					"order": 1
 				},
 				"refactai.codeCompletionModel": {
 					"type": "string",
 					"description": "Which model to use, for example \"bigcode/starcoder\". Leave blank if not sure.",
-					"default": ""
+					"default": "",
+					"order": 2
 				},
 				"refactai.codeCompletionScratchpad": {
 					"type": "string",
 					"description": "Which scratchpad to use, for example \"FIM-PSM\". Leave blank if not sure.",
-					"default": ""
+					"default": "",
+					"order": 3
 				},
 				"refactai.pauseCompletion": {
 					"type": "boolean",
 					"description": "Pause automatic code suggestions. Manual activation still works.",
-					"default": false
+					"default": false,
+					"order": 4
 				},
 				"refactai.telemetryCodeSnippets": {
 					"type": "boolean",
 					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
-					"default": false
+					"default": false,
+					"order": 4
 				},
-				"refactai.xDebug": {
-					"type": "number|undefined",
-					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead."
+				"refactai.customizeToolbox": {
+					"type": "null",
+					"default": null,
+					"description": "",
+					"markdownDescription": "[Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
+					"order": 5
 				},
 				"refactai.defaultSystemPrompt": {
 					"type": "string",
 					"description": "Default system prompt for chat models.",
-					"default": ""
+					"default": "",
+					"order": 6
+				},
+				"refactai.xDebug": {
+					"type": "number|undefined",
+					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
+					"oder": 10
 				}
 			}
 		},
@@ -200,10 +218,10 @@
 				"category": "Refact.ai"
 			},
 			{
-                "command": "refactaicmd.openPromptCustomizationPage",
-                "title": "Open Prompt Customization Page",
-                "category": "Refact.ai"
-            }
+				"command": "refactaicmd.openPromptCustomizationPage",
+				"title": "Open Prompt Customization Page",
+				"category": "Refact.ai"
+			}
 		],
 		"menus": {
 			"editor/context": [
