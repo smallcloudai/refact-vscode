@@ -76,7 +76,8 @@ export async function get_hints(
         }
 
         // TODO: find  how to link to a file
-        result += "\n[Customize these commands]()\n";
+        result +=
+			"\n<sub>[**Customize commands**](command:refactaicmd.openPromptCustomizationPage)</sub>\n";
         return [result, "Available commands:", top3[0][0]];
     } else {
         if (!selected_range.isEmpty) {
