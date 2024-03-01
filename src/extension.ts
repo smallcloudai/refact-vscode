@@ -372,7 +372,6 @@ export function activate(context: vscode.ExtensionContext)
 
     const reloadOnCommandFileChange = vscode.workspace.onDidSaveTextDocument(document => {
         if(document.fileName === toolbox_config_file_uri.fsPath) {
-            console.log("reloading commands");
             global.rust_binary_blob?.fetch_toolbox_config();
         }
     });
