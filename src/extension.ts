@@ -48,8 +48,13 @@ declare global {
 }
 
 async function pressed_call_chat() {
-    console.log(["pressed_call_chat"]);
     let editor = vscode.window.activeTextEditor;
+    if(global.side_panel && !global.side_panel._view) {
+        await vscode.commands.executeCommand(sidebar.default.viewType + ".focus");
+        // TODO: is there an event it should wait for before opening the chat?
+        await new Promise((resolve, reject) => setTimeout(resolve, 100));
+    }
+
     await open_chat_tab(
         "",
         editor,
