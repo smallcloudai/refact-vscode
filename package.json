@@ -198,7 +198,12 @@
 				"command": "refactaicmd.addPrivacyOverride2",
 				"title": "Add Privacy Rule: Level 2",
 				"category": "Refact.ai"
-			}
+			},
+			{
+                "command": "refactaicmd.openPromptCustomizationPage",
+                "title": "Open Prompt Customization Page",
+                "category": "Refact.ai"
+            }
 		],
 		"menus": {
 			"editor/context": [
