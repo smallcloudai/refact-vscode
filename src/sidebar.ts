@@ -75,6 +75,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     public statistic: statisticTab.StatisticTab | null = null;
     public chatHistoryProvider: ChatHistoryProvider|undefined;
 
+    public static readonly viewType = "refactai-toolbox";
+
     constructor(private readonly _context: any) {
         this.chatHistoryProvider = undefined;
         this.address = "";

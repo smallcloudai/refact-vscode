@@ -195,7 +195,7 @@
 			},
 			{
 				"command": "refactaicmd.callChat",
-				"title": "Call Chat",
+				"title": "Chat",
 				"key": "alt+c",
 				"category": "Refact.ai"
 			},
@@ -240,6 +240,10 @@
 				{
 					"submenu": "refact-access-menu",
 					"group": "z_commands"
+				},
+				{
+					"group": "z_commands",
+					"command": "refactaicmd.callChat"
 				}
 			],
 			"refact-access-menu": [
