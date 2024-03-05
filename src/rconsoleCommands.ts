@@ -270,11 +270,13 @@ async function _run_command(cmd: string, doc_uri: string, model_name: string, up
 
     const messages: [string, string][] = [];
     let cmd_messages = cmd_dict["messages"];
+    let CURRENT_FILE_PATH_COLON_CURSOR = `${editor.document.uri.fsPath}:${official_selection1.start.line + 1}`;
+    console.log("CURRENT_FILE_PATH_COLON_CURSOR", CURRENT_FILE_PATH_COLON_CURSOR);
     for (let i=0; i<cmd_messages.length; i++) {
         let {role, content: text} = cmd_messages[i];
         text = text.replace("%ARG%", arg);
         text = text.replace("%CODE_INSERT_HERE_JSON%", code_insert_here_json);
-        text = text.replace("%CODE_AROUND_CURSOR_JSON%", code_around_cursor_json);
+        text = text.replace("%CURRENT_FILE_PATH_COLON_CURSOR%", CURRENT_FILE_PATH_COLON_CURSOR);
         text = text.replace("%CODE_SELECTION%", code_snippet);
         messages.push([role, text]);
     }
