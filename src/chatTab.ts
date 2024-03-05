@@ -24,7 +24,8 @@ import {
   type RestoreChat,
   type ActiveFileInfo,
   type ChatMessages,
-  type ReceiveTokenCount
+  type ReceiveTokenCount,
+  type FileInfo,
 } from "refact-chat-js/dist/events";
 
 
@@ -103,11 +104,13 @@ export class ChatTab {
         this.handleEvents = this.handleEvents.bind(this);
 
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
-          this.postActiveFileInfo(this.chat_id);
+          this.postActiveFileInfo();
+          this.sendSnippetToChat();
         }));
 
         this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
-          this.postActiveFileInfo(this.chat_id);
+          this.postActiveFileInfo();
+          this.sendSnippetToChat();
         }));
 
     }
@@ -212,11 +215,11 @@ export class ChatTab {
                     const action: RestoreChat = {
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
                         payload: {...chat, messages, attach_file: !!snippet, model }
-                    }
+                    };
 
                     this.web_panel.webview.postMessage(action);
 
-                    this.postActiveFileInfo(chat.id);
+                    this.postActiveFileInfo();
                     this.toggleAttachFile(!!this.working_on_snippet_code);
                     this.sendTokenCountToChat();
                     disposables.forEach((d) => d.dispose());
@@ -233,18 +236,25 @@ export class ChatTab {
 
     }
 
-    getSnippetFromEditor(): Snippet | undefined {
-        if(!this.working_on_snippet_code) { return; }
+    getSnippetFromEditor(): Snippet {
+        // if(!this.working_on_snippet_code) { return; }
         const language = vscode.window.activeTextEditor?.document.languageId ?? "";
+        const isEmpty = vscode.window.activeTextEditor?.selection.isEmpty ?? true;
+        const selection = vscode.window.activeTextEditor?.selection;
+        const code = isEmpty ? "" : vscode.window.activeTextEditor?.document.getText(selection) ?? "";
+        const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
+        const fileName = basename(filePath);
+        console.log({language, code, filePath, fileName});
         return {
-            code: this.working_on_snippet_code,
+            code,
             language,
+            path: filePath,
+            basename: fileName
         };
     }
 
     sendSnippetToChat() {
         const snippet = this.getSnippetFromEditor();
-        if(snippet === undefined) { return; }
         const action: ChatSetSelectedSnippet = {
             type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
             payload: { id: this.chat_id, snippet }
@@ -280,37 +290,31 @@ export class ChatTab {
     //     this.web_panel.webview.postMessage(action);
     // }
 
-    postActiveFileInfo(id: string) {
+    postActiveFileInfo(id = this.chat_id) {
         const file = this.getActiveFileInfo();
         if(file === null) {
             const action: ActiveFileInfo = {
                 type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
-                payload: { id: id, file: { can_paste: false } },
+                payload: { id, file: { can_paste: false } },
             }
             this.web_panel.webview.postMessage(action);
         } else {
             const action: ActiveFileInfo = {
                 type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
-                payload: {
-                    id: id,
-                    file: {
-                        name: file.file_name,
-                        line1: file.line1 ?? null,
-                        line2: file.line2 ?? null,
-                        can_paste: !!vscode.window.activeTextEditor,
-                    }
-                },
+                payload: { id, file },
             };
 
             this.web_panel.webview.postMessage(action);
         }
     }
 
-    getActiveFileInfo(): ChatContextFile | null {
+    getActiveFileInfo(): Partial<FileInfo> | null {
         if(vscode.window.activeTextEditor?.document.uri.scheme === "comment") {
             return null;
         }
-        const file_name = basename(vscode.window.activeTextEditor?.document.fileName || "");
+        const file_path =
+			vscode.window.activeTextEditor?.document.fileName || "";
+        const file_name = basename(file_path);
         const file_content = vscode.window.activeTextEditor?.document.getText() || "";
         const start = vscode.window.activeTextEditor?.selection.start;
         const end = vscode.window.activeTextEditor?.selection.end;
@@ -319,11 +323,11 @@ export class ChatTab {
         const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
             ? { line1: start.line + 1, line2: end.line + 1 }
             : { line1:  1, line2: lineCount + 1 };
+
         const file = {
-            file_name,
-            file_content,
-            // FIXME: typo in lsp and chat
-            usefullness: 100,
+            name: file_name,
+            content: file_content,
+            path: file_path,
             usefulness: 100,
             ...maybeLineInfo,
         };
@@ -466,7 +470,7 @@ export class ChatTab {
     }
 
     async handleEvents({ type, ...data }: any) {
-
+        console.log([type, data]);
         switch (type) {
 
             case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
@@ -513,6 +517,7 @@ export class ChatTab {
 
             case EVENT_NAMES_FROM_CHAT.READY: {
                 const { id } = data.payload;
+                // this.chat_id = id;
                 return this.postActiveFileInfo(id);
             }
 
