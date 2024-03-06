@@ -189,18 +189,26 @@ body.vscode-light #profile {
 #statistic {
 	font-size: 13px;
 	border: 1px solid var(--secondary);
+	color: var(--secondary);
 	padding: 7px 6px;
-	background-color: inherit;
-	width: 32px;
+	background-color: transparent;
 	cursor: pointer;
 	box-sizing: border-box;
-	height: 100%;
+	text-decoration: none;
+	/* display: flex; */
+	display: none;
+    flex: 1 0 auto;
+	width: 32px;
+	height: 33px;
+	align-items: center;
 	text-align: center;
     justify-content: center;
-	margin: 5px 5px 5px 0;
-    display: none;
+	margin: 5px;
+	flex-grow: 0;
+	flex-shrink: 0;
 	border-radius: 6px;
 }
+
 #settings span {
 	display: none;
 	margin-left: 5px;
