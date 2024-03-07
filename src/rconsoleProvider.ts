@@ -430,7 +430,7 @@ export class RefactConsoleProvider {
             this.editor,
             false,
             this.model_name,
-            messagesWithQuestion,
+            messages,
             id,
         );
         if (!chat) {
