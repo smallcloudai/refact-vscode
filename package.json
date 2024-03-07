@@ -1,7 +1,7 @@
 {
 	"name": "codify",
-	"displayName": "Refact",
-	"description": "Refact AI Assistant for Code Writing and Refactoring",
+	"displayName": "Refact.ai: Open-Source AI Coding Assistant: Code Autocompletion, Toolbox, Chat for Python, Javascript, Java, Rust, Typescript, PHP, Java, C++, C#, Go & more.",
+	"description": "Refact.ai is an open-source AI coding assistant that boosts your team's productivity. It writes around 45% of the code for you after fine-tuning. Refact.ai offers code completion, refactoring, context-aware chat, and an AI toolbox. Deploy it on-premise: on your self-hosted servers or in a private cloud.",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
 	"galleryBanner": {
@@ -26,7 +26,10 @@
 		"Programming Languages",
 		"Snippets",
 		"Other",
-		"Machine Learning"
+		"Machine Learning",
+		"Education", 
+		"Testing", 
+		"Data Science"
 	],
 	"keywords": [
 		"copilot",
@@ -72,7 +75,16 @@
 		"nodejs",
 		"node",
 		"node.js",
-		"jupyter"
+		"jupyter",
+		"chat", 
+		"chatgpt", 
+		"code completion", 
+		"documentation", 
+		"refactor", 
+		"llm", 
+		"test",
+		"security", 
+		"coding"
 	],
 	"activationEvents": [
 		"onStartupFinished"
