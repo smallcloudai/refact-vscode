@@ -320,6 +320,7 @@ export class ChatTab {
         const end = vscode.window.activeTextEditor?.selection.end;
         const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
         const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null
+        const can_paste = vscode.window.activeTextEditor?.document.uri.scheme === "file";
 
         const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
             ? { line1: start.line + 1, line2: end.line + 1 }
@@ -331,6 +332,7 @@ export class ChatTab {
             path: file_path,
             usefulness: 100,
             cursor,
+            can_paste,
             ...maybeLineInfo,
         };
 
