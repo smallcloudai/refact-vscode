@@ -1,27 +1,19 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import { basename } from "path";
 import {
-    EVENT_NAMES_FROM_STATISTIC,
     EVENT_NAMES_TO_STATISTIC,
-    type ReceiveFillInTheMiddleData,
-    type ReceiveFillInTheMiddleDataError,
   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
 import { v4 as uuidv4 } from "uuid";
 
 export class StatisticTab {
     private _disposables: vscode.Disposable[] = [];
-    private _document_fsPath?: vscode.Uri["fsPath"];
     public constructor(
         public web_panel: vscode.WebviewPanel | vscode.WebviewView,
     ) {
         this.handleEvents = this.handleEvents.bind(this);
         this.web_panel.webview.onDidReceiveMessage(this.handleEvents);
-        this._document_fsPath = vscode.window.activeTextEditor?.document.uri.fsPath;
-
-        vscode.window.onDidChangeActiveTextEditor(this.watchDocumentPath, this, this._disposables);
     }
 
     private handleEvents(message: any) {
@@ -45,46 +37,11 @@ export class StatisticTab {
               });
           }
 
-          case EVENT_NAMES_FROM_STATISTIC.REQUEST_FILL_IN_THE_MIDDLE_DATA: {
-            return this.handleFillInTheMiddleData(this._document_fsPath);
-          }
         }
     }
 
     dispose() {
         this._disposables.forEach((d) => d.dispose());
-    }
-
-    watchDocumentPath(event: vscode.TextEditor | undefined) {
-        if (!event) { return; }
-        if(event.document.uri.scheme !== "file") { return; }
-
-        if(this._document_fsPath === undefined || this._document_fsPath !== event.document.uri.fsPath) {
-            this._document_fsPath = event.document.uri.fsPath;
-            this.handleFillInTheMiddleData(this._document_fsPath);
-        }
-    }
-
-    // The fetch might need a debounce or throttle
-    handleFillInTheMiddleData(fileName?: string) {
-        if(fileName === undefined) { return; }
-        return fetchAPI.get_debug_fill_in_the_middle_data(fileName)
-        .then((data) => {
-            const action: ReceiveFillInTheMiddleData = {
-                type: EVENT_NAMES_TO_STATISTIC.RECEIVE_FILL_IN_THE_MIDDLE_DATA,
-                payload: {files: data.content }
-            };
-
-            this.web_panel.webview.postMessage(action);
-        })
-        .catch(err => {
-            const action: ReceiveFillInTheMiddleDataError = {
-                type: EVENT_NAMES_TO_STATISTIC.RECEIVE_FILL_IN_THE_MIDDLE_DATA_ERROR,
-                payload: {message: err.message ?? "Unknown error"}
-            };
-
-            this.web_panel.webview.postMessage(action);
-        });
     }
 
     public get_html_for_statistic(
