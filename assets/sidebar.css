@@ -208,6 +208,9 @@ body.vscode-light #profile {
 	flex-shrink: 0;
 	border-radius: 6px;
 }
+body.vscode-light #statistic svg path {
+	fill: var(--secondary) !important;
+}
 
 #settings span {
 	display: none;
