@@ -123,9 +123,12 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
 
         let request = new fetchAPI.PendingRequest(undefined, cancelToken);
-        let max_tokens = vscode.workspace.getConfiguration().get('refactai.completionMaxTokens');
-        if (!max_tokens) {
+        let max_tokens_ = vscode.workspace.getConfiguration().get('refactai.completionMaxTokens');
+        let max_tokens: number;
+        if (!max_tokens_ || typeof max_tokens_ !== "number") {
             max_tokens = 50;
+        } else {
+            max_tokens = max_tokens_;
         }
 
         let sources: { [key: string]: string } = {};
