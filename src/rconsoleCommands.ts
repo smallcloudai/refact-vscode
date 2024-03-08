@@ -60,10 +60,12 @@ export async function get_hints(
 
     if (unfinished_text.startsWith("/") && commands_available) {
         let cmd_score: { [key: string]: number } = {};
+        let unfinished_text_up_to_space = unfinished_text.split(" ")[0];
         for (let cmd in commands_available) {
             let text = commands_available[cmd].description || "";
-            let score = similarity_score(unfinished_text, "/" + cmd + " " + text);
-            cmd_score[cmd] = score;
+            let score1 = similarity_score(unfinished_text_up_to_space, "/" + cmd + " " + text);
+            let score2 = similarity_score(unfinished_text_up_to_space, "/" + cmd);
+            cmd_score[cmd] = Math.max(score1, score2);
         }
         let sorted_cmd_score = Object.entries(cmd_score).sort((a, b) => b[1] - a[1]);
         let top3 = sorted_cmd_score.slice(0, 3);
@@ -229,15 +231,13 @@ export async function stream_chat_without_visible_chat(
 }
 
 
-async function _run_command(cmd: string, doc_uri: string, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
+async function _run_command(cmd: string, args: string, doc_uri: string, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback)
 {
-
     const toolbox_config = await ensure_toolbox_config();
     if(!toolbox_config) {
         console.log(["_run_command: no toolbox config found", doc_uri]);
         return;
     }
-    let arg = "";
     const cmd_dict = toolbox_config?.toolbox_commands[cmd];
     // let text = toolbox_config?.toolbox_commands[cmd].description ?? "";
     let editor = vscode.window.visibleTextEditors.find((e) => {
@@ -252,31 +252,20 @@ async function _run_command(cmd: string, doc_uri: string, model_name: string, up
         return;
     }
 
-    let [official_selection1, attach_range1, working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor, false);
-    let code_around_cursor_json = JSON.stringify([{
-        "file_name": working_on_attach_filename,
-        "file_content": working_on_attach_code,
-        "line1": attach_range1.start.line,
-        "line2": attach_range1.end.line,
-    }]);
-
-    let [official_selection2, attach_range2, working_on_attach_code_insert_here] = chatTab.attach_code_from_editor(editor, true);
-    let code_insert_here_json = JSON.stringify([{
-        "file_name": working_on_attach_filename,
-        "file_content": working_on_attach_code_insert_here,
-        "line1": attach_range2.start.line,
-        "line2": attach_range2.end.line,
-    }]);
+    let [official_selection1, _attach_range1, _working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor, false);
+    let middle_line_of_selection = Math.floor((official_selection1.start.line + official_selection1.end.line) / 2);
 
     const messages: [string, string][] = [];
     let cmd_messages = cmd_dict["messages"];
-    let CURRENT_FILE_PATH_COLON_CURSOR = `${editor.document.uri.fsPath}:${official_selection1.start.line + 1}`;
+    let CURRENT_FILE_PATH_COLON_CURSOR = `${working_on_attach_filename}:${middle_line_of_selection + 1}`;
+    let CURRENT_FILE = editor.document.uri.fsPath;
     console.log("CURRENT_FILE_PATH_COLON_CURSOR", CURRENT_FILE_PATH_COLON_CURSOR);
     for (let i=0; i<cmd_messages.length; i++) {
         let {role, content: text} = cmd_messages[i];
-        text = text.replace("%ARG%", arg);
-        text = text.replace("%CODE_INSERT_HERE_JSON%", code_insert_here_json);
+        text = text.replace("%ARGS%", args);
         text = text.replace("%CURRENT_FILE_PATH_COLON_CURSOR%", CURRENT_FILE_PATH_COLON_CURSOR);
+        text = text.replace("%CURRENT_FILE%", working_on_attach_filename);
+        text = text.replace("%CURSOR_LINE%", (middle_line_of_selection + 1).toString());
         text = text.replace("%CODE_SELECTION%", code_snippet);
         messages.push([role, text]);
     }
@@ -306,11 +295,11 @@ export async function register_commands(): Promise<void> {
 
         for (let cmd in commands_available) {
             let d = vscode.commands.registerCommand('refactaicmd.cmd_' + cmd,
-                async (doc_uri, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
+                async (args, doc_uri, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
                     if (!model_name) {
                         [model_name,] = await chatTab.chat_model_get();
                     }
-                    _run_command(cmd, doc_uri, model_name, update_thread_callback, end_thread_callback);
+                    _run_command(cmd, args, doc_uri, model_name, update_thread_callback, end_thread_callback);
                 }
             );
             global.toolbox_command_disposables.push(d);

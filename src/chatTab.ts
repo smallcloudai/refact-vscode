@@ -296,7 +296,7 @@ export class ChatTab {
             const action: ActiveFileInfo = {
                 type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
                 payload: { id, file: { can_paste: false } },
-            }
+            };
             this.web_panel.webview.postMessage(action);
         } else {
             const action: ActiveFileInfo = {
@@ -319,7 +319,7 @@ export class ChatTab {
         const start = vscode.window.activeTextEditor?.selection.start;
         const end = vscode.window.activeTextEditor?.selection.end;
         const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
-        const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null
+        const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
         const can_paste = vscode.window.activeTextEditor?.document.uri.scheme === "file";
 
         const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
@@ -864,10 +864,11 @@ export function diff_paste_back(
         console.log("diff_paste_back: not in normal mode");
         return -1;
     }
-    if (dest_range.isEmpty) {
-        console.log("diff_paste_back: dest_range is empty");
-        return -1;
-    }
+    // Commented out: allows to insert without selection
+    // if (dest_range.isEmpty) {
+    //     console.log("diff_paste_back: dest_range is empty");
+    //     return -1;
+    // }
     let snippet_ofs0 = editor.document.offsetAt(dest_range.start);
     let snippet_ofs1 = editor.document.offsetAt(dest_range.end);
     let code_block_clean = backquote_backquote_backquote_remove_language_spec(new_code_block);

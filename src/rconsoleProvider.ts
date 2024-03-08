@@ -158,7 +158,7 @@ export class RefactConsoleProvider {
             const commandName = rconsoleCommands.createCommandName(cmd);
             this.disposable_commands.push(
                 vscode.commands.registerCommand(commandName, () =>  {
-                    this.activate_cmd(cmd);
+                    this.activate_cmd(cmd, "");
                 })
             );
         });
@@ -317,7 +317,8 @@ export class RefactConsoleProvider {
                         });
                     }
                     this.reset_thread();
-                    this.activate_cmd(cmd);
+                    let args = first_line.substring(cmd.length + 1);
+                    this.activate_cmd(cmd, args.trim());
                     return;
                 }
             }
@@ -360,7 +361,7 @@ export class RefactConsoleProvider {
             if (comment_editor) {
                 await comment_editor.edit(edit => {
                     edit.delete(new vscode.Range(0, 0, 1000, 0));
-                    edit.insert(new vscode.Position(0, 0), "/" + top1);
+                    edit.insert(new vscode.Position(0, 0), "/" + top1 + " ");
                 });
             }
             return;
@@ -394,11 +395,13 @@ export class RefactConsoleProvider {
 
     activate_cmd(
         cmd: string,
+        args: string
     ) {
-        console.log(`activate_cmd refactaicmd.cmd_${cmd}`);
+        console.log(`activate_cmd refactaicmd.cmd_${cmd} args="${args}"`);
         vscode.commands.executeCommand("setContext", "refactaicmd.runningChat", true);
         vscode.commands.executeCommand(
             "refactaicmd.cmd_" + cmd,
+            args,
             this.editor.document.uri.toString(),
             this.model_name,
             this.handle_message_stream, // bind this
