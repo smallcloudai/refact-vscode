@@ -89,12 +89,6 @@
 					"default": "",
 					"order": 0
 				},
-				"refactai.insecureSSL": {
-					"type": "boolean",
-					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors.",
-					"default": false,
-					"order": 4
-				},
 				"refactai.infurl": {
 					"type": "string",
 					"deprecationMessage": "The new field is called addressURL. It's about the same, but it has special values like \"HF\" and if it's empty, makes the plugin do nothing, which is better for Enterprise use case to prevent leaks.",
@@ -111,40 +105,52 @@
 					"deprecationMessage": "Use refactai.apiKey instead.",
 					"order": 1
 				},
+				"refactai.insecureSSL": {
+					"type": "boolean",
+					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors.",
+					"default": false,
+					"order": 2
+				},
+				"refactai.completionMaxTokens": {
+					"type": "number",
+					"markdownDescription": "Maximum number of tokens to generate for code completion. Leave 0 if not sure.",
+					"default": 0,
+					"order": 3
+				},
 				"refactai.codeCompletionModel": {
 					"type": "string",
 					"description": "Which model to use, for example \"bigcode/starcoder\". Leave blank if not sure.",
 					"default": "",
-					"order": 2
+					"order": 4
 				},
 				"refactai.codeCompletionScratchpad": {
 					"type": "string",
 					"description": "Which scratchpad to use, for example \"FIM-PSM\". Leave blank if not sure.",
 					"default": "",
-					"order": 3
-				},
-				"refactai.pauseCompletion": {
-					"type": "boolean",
-					"description": "Pause automatic code suggestions. Manual activation still works.",
-					"default": false,
-					"order": 4
+					"order": 5
 				},
 				"refactai.telemetryCodeSnippets": {
 					"type": "boolean",
 					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
 					"default": false,
-					"order": 4
+					"order": 6
+				},
+				"refactai.pauseCompletion": {
+					"type": "boolean",
+					"description": "Pause automatic code suggestions. Manual activation still works.",
+					"default": false,
+					"order": 7
 				},
 				"refactai.defaultSystemPrompt": {
 					"type": "string",
 					"markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
 					"default": "",
-					"order": 5
+					"order": 8
 				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
-					"oder": 6
+					"order": 9
 				}
 			}
 		},
