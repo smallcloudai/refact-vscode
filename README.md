@@ -8,9 +8,11 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/refact_ai)](https://twitter.com/intent/follow?screen_name=refact_ai)
 ![License](https://img.shields.io/github/license/smallcloudai/refact-vscode)
 
-# refact-vscode
 
-*Refact.ai: Fine-tuned AI Coding Assistant*
+# Refact
+
+*Refact: Open Source, Customizable AI Coding Assistant*
+
 Refact.ai is an open-source AI coding assistant that boosts developer's productivity. It's suitable for both individual and enterprise use, supporting 25+ programming languages including Python, Javascript, Java, Rust, Typescript, PHP, Java, C++, C#, Go and more.
 
 Simplify your coding experience with Refact's functions:
@@ -23,7 +25,9 @@ Simplify your coding experience with Refact's functions:
 
   ![image](https://github.com/smallcloudai/refact-vscode/assets/5008686/3b1d6d4e-1d2a-44ea-a8fa-1fb1b1517469)
 
-## Refact.ai For Enterprise
+
+## Refact For Enterprise
+
 Are you part of an Enterprise and want to **boost developers' efficiency by 45%**? The Refact.ai Enterprise plan offers:
 - **Knows Your Code:** Refact.ai focuses on automated customization for internal codebases and improving over time.
 - **Ultimate Security:** Deploy Refact.ai on-premise: on your own servers or private cloud. Your data never leaves your control. Telemetry from the plugins goes to your server and nowhere else. You can verify what the code does, it's open source.
@@ -35,6 +39,7 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 To get a 3-month free trial for your team, just fill out the form on [our website](https://refact.ai/enterprise/). We'll reach out with more details!
 
 ## Community
+
 Join our [**Discord community**](https://www.smallcloud.ai/discord) and meet with other developers who care about AI tools. Ask questions, share your opinion, propose new features.
 
 Implement a feature you want, and contribute to the future of programming!
