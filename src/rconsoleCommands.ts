@@ -56,43 +56,63 @@ export async function get_hints(
 ): Promise<[string, string, string]> {
 
     const toolbox_config = await ensure_toolbox_config();
-    const commands_available = toolbox_config?.toolbox_commands;
+    let commands_available = toolbox_config?.toolbox_commands;
 
     if (unfinished_text.startsWith("/") && commands_available) {
         let cmd_score: { [key: string]: number } = {};
         let unfinished_text_up_to_space = unfinished_text.split(" ")[0];
-        for (let cmd in commands_available) {
-            let text = commands_available[cmd].description || "";
-            let score1 = similarity_score(unfinished_text_up_to_space, "/" + cmd + " " + text);
-            let score2 = similarity_score(unfinished_text_up_to_space, "/" + cmd);
-            cmd_score[cmd] = Math.max(score1, score2);
-        }
-        let sorted_cmd_score = Object.entries(cmd_score).sort((a, b) => b[1] - a[1]);
-        let top3 = sorted_cmd_score.slice(0, 3);
-        let result = "";
-        for (let i = 0; i < top3.length; i++) {
-            let cmd = top3[i][0];
-            const cmd_name = createCommandName(cmd);
-            let text = commands_available[cmd].description || "";
-            result += `[**/${cmd}** ${text}](command:${cmd_name})<br />\n`;
-        }
 
-        // TODO: find  how to link to a file
-        result +=
-			"\n<sub>[**Customize commands**](command:refactaicmd.openPromptCustomizationPage)</sub>\n";
-        return [result, "Available commands:", top3[0][0]];
+        // handle help
+        let result = "";
+        if (unfinished_text_up_to_space === "/help") {
+            let all_cmds_sorted = Object.getOwnPropertyNames(commands_available).sort();
+            result += "<table><tr><td>";
+            for (let i = 0; i < all_cmds_sorted.length; i++) {
+                let cmd = all_cmds_sorted[i];
+                if (cmd === "help") {
+                    continue;
+                }
+                let text = commands_available[cmd].description || "";
+                if (i === Math.floor((all_cmds_sorted.length + 1) / 2)) {
+                    result += "</td><td>\n";
+                }
+                result += `<b>/${cmd}</b> ${text}<br/>\n`;
+            }
+            result += "</td></tr></table>\n";
+            result += "\n[Customize toolbox](command:refactaicmd.openPromptCustomizationPage)\n";
+            return [result, "Available commands:", ""];
+        } else {
+            for (let cmd in commands_available) {
+                let text = commands_available[cmd].description || "";
+                let score1 = similarity_score(unfinished_text_up_to_space, "/" + cmd + " " + text);
+                let score2 = similarity_score(unfinished_text_up_to_space, "/" + cmd);
+                cmd_score[cmd] = Math.max(score1, score2);
+            }
+            let sorted_cmd_score = Object.entries(cmd_score).sort((a, b) => b[1] - a[1]);
+            let top3 = sorted_cmd_score.slice(0, 3);
+            for (let i = 0; i < top3.length; i++) {
+                let cmd = top3[i][0];
+                // const cmd_name = createCommandName(cmd);
+                // result += `[**/${cmd}** ${text}](command:${cmd_name})<br />\n`;
+                let text = commands_available[cmd].description || "";
+                result += `<b>/${cmd}</b> ${text}<br/>\n`;
+            }
+            // TODO: find how to link to a file
+            result += "\n[Customize toolbox](command:refactaicmd.openPromptCustomizationPage)\n";
+            return [result, "Available commands:", top3[0][0]];
+        }
     } else {
         if (!selected_range.isEmpty) {
             let lines_n = selected_range.end.line - selected_range.start.line + 1;
             return [
-                `How to change these ${lines_n} lines? Also try "explain this" or commands starting with \"/\".\n\n` +
+                `Ask any question about these ${lines_n} lines. Try "explain this" or commands starting with \"/\", for example "/help".\n\n` +
                 `Model: ${model_name}\n`,
                 "🪄 Selected text", ""];
         } else {
             return [
-                `What would you like to generate? Also try commands starting with \"/\".\n\n` +
+                `Any any question about this source file. To generate new code, use \"/gen\", try other commands starting with \"/\", for example "/help".\n\n` +
                 `Model: ${model_name}\n`,
-                "🪄 New Code", ""];
+                "🪄 This File", ""];
         }
     }
 }

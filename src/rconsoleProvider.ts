@@ -155,12 +155,14 @@ export class RefactConsoleProvider {
             return;
         }
         Object.keys(toolbox_config.toolbox_commands).forEach(cmd => {
-            const commandName = rconsoleCommands.createCommandName(cmd);
-            this.disposable_commands.push(
-                vscode.commands.registerCommand(commandName, () =>  {
-                    this.activate_cmd(cmd, "");
-                })
-            );
+            if (cmd !== "help") {
+                const commandName = rconsoleCommands.createCommandName(cmd);
+                this.disposable_commands.push(
+                    vscode.commands.registerCommand(commandName, () =>  {
+                        this.activate_cmd(cmd, "");
+                    })
+                );
+            }
         });
     };
 
@@ -306,8 +308,10 @@ export class RefactConsoleProvider {
         let first_line = this.input_text.split("\n")[0];
 
         if (first_line.startsWith("/") && toolbox_config) {
-
             for (let cmd in toolbox_config.toolbox_commands) {
+                if (cmd === "help") {
+                    continue;
+                }
                 if (first_line.startsWith("/" + cmd)) { // maybe first_line.trim() === `/${cmd}`
                     this.hint_mode = false;
                     vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", false);
@@ -322,17 +326,15 @@ export class RefactConsoleProvider {
                     return;
                 }
             }
+        } else if (this.input_text.trim() === "") {
+            // do nothing
         } else {
             this.hint_mode = false;
-            if (this.code_snippet === "") {
-                const question = "Replace |INSERT-HERE| with the following:\n\n" + this.input_text;
-                const messages = this.get_messages_with_insert_tag_on_context_file();
-                this.activate_chat(messages, question);
-            } else if(this.messages.length > 1) {
-                this.activate_chat(this.messages, this.input_text);
-            } else {
+            if (this.code_snippet !== "") {
                 const question = "```\n" + this.code_snippet + "\n```\n\n" + this.input_text;
                 this.activate_chat(this.messages, question);
+            } else {  // if(this.messages.length > 1)
+                this.activate_chat(this.messages, this.input_text);
             }
         }
     }
@@ -386,7 +388,7 @@ export class RefactConsoleProvider {
 
 
         if (this.input_text.includes("\n")) {
-            return this.handle_user_pressed_enter(e);
+            return await this.handle_user_pressed_enter(e);
         }
 
         await this.hints_and_magic_tabs(e);
