@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "3.0.100",
+	"version": "3.0.101",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -27,8 +27,8 @@
 		"Snippets",
 		"Other",
 		"Machine Learning",
-		"Education", 
-		"Testing", 
+		"Education",
+		"Testing",
 		"Data Science"
 	],
 	"keywords": [
@@ -76,14 +76,14 @@
 		"node",
 		"node.js",
 		"jupyter",
-		"chat", 
-		"chatgpt", 
-		"code completion", 
-		"documentation", 
-		"refactor", 
-		"llm", 
+		"chat",
+		"chatgpt",
+		"code completion",
+		"documentation",
+		"refactor",
+		"llm",
 		"test",
-		"security", 
+		"security",
 		"coding"
 	],
 	"activationEvents": [
@@ -426,7 +426,7 @@
 		"difflib": "^0.2.4",
 		"fetch-h2": "^3.0.2",
 		"marked": "^4.0.8",
-		"refact-chat-js": "^0.0.7",
+		"refact-chat-js": "^0.0.8",
 		"uuid": "^9.0.1",
 		"vscode-languageclient": "^7.0.0"
 	},
