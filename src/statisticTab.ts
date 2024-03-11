@@ -6,6 +6,8 @@ import {
   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
 import { v4 as uuidv4 } from "uuid";
+import {secret_api_key} from './userLogin';
+import { createHash } from "crypto";
 
 export class StatisticTab {
     private _disposables: vscode.Disposable[] = [];
@@ -44,12 +46,22 @@ export class StatisticTab {
         this._disposables.forEach((d) => d.dispose());
     }
 
+    createStatisticsHash() {
+        const sessionId = vscode.env.sessionId;
+        const apiKey = secret_api_key();
+        const hash = createHash("md5").update(apiKey + sessionId).digest("hex");
+        return hash;
+    }
+
     public get_html_for_statistic(
         webview: vscode.Webview,
         extensionUri: any,
         isTab = false
     ): string {
         const nonce = uuidv4();
+
+        const hash = this.createStatisticsHash();
+
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
         );
@@ -85,7 +97,7 @@ export class StatisticTab {
                 <script nonce="${nonce}">
                 window.onload = function() {
                     const root = document.getElementById("refact-statistic")
-                    RefactChat.renderStatistic(root, {host: "vscode", tabbed: ${isTab}})
+                    RefactChat.renderStatistic(root, {host: "vscode", tabbed: ${isTab}, statsHash: "${hash}"});
                 }
                 </script>
             </body>
