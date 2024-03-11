@@ -3,13 +3,10 @@
 import * as vscode from "vscode";
 import {
     EVENT_NAMES_TO_STATISTIC,
-    EVENT_NAMES_FROM_STATISTIC,
-    SetStatisticsHash,
   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
 import { v4 as uuidv4 } from "uuid";
-import {secret_api_key, get_address} from './userLogin';
-import { createHash } from "crypto";
+
 
 export class StatisticTab {
     private _disposables: vscode.Disposable[] = [];
@@ -40,31 +37,11 @@ export class StatisticTab {
                 });
               });
           }
-
-          case EVENT_NAMES_FROM_STATISTIC.READY: {
-            const message: SetStatisticsHash = {
-              type: EVENT_NAMES_TO_STATISTIC.SET_STATISTIC_HASH,
-              payload: { data: this.createStatisticsHash() }
-            };
-
-            this.web_panel.webview.postMessage(message);
-          }
-
         }
     }
 
     dispose() {
         this._disposables.forEach((d) => d.dispose());
-    }
-
-    createStatisticsHash() {
-        const sessionId = vscode.env.sessionId;
-        const user = global.user_logged_in;
-        const address = get_address();
-        const apiKey = secret_api_key();
-        const str = `${sessionId}:${user}:${address}:${apiKey}`;
-        const hash = createHash("md5").update(str).digest("hex");
-        return hash;
     }
 
     public get_html_for_statistic(
