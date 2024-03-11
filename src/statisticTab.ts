@@ -3,6 +3,8 @@
 import * as vscode from "vscode";
 import {
     EVENT_NAMES_TO_STATISTIC,
+    EVENT_NAMES_FROM_STATISTIC,
+    SetStatisticsHash,
   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
 import { v4 as uuidv4 } from "uuid";
@@ -39,6 +41,15 @@ export class StatisticTab {
               });
           }
 
+          case EVENT_NAMES_FROM_STATISTIC.READY: {
+            const message: SetStatisticsHash = {
+              type: EVENT_NAMES_TO_STATISTIC.SET_STATISTIC_HASH,
+              payload: { data: this.createStatisticsHash() }
+            };
+
+            this.web_panel.webview.postMessage(message);
+          }
+
         }
     }
 
@@ -59,8 +70,6 @@ export class StatisticTab {
         isTab = false
     ): string {
         const nonce = uuidv4();
-
-        const hash = this.createStatisticsHash();
 
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
@@ -97,7 +106,7 @@ export class StatisticTab {
                 <script nonce="${nonce}">
                 window.onload = function() {
                     const root = document.getElementById("refact-statistic")
-                    RefactChat.renderStatistic(root, {host: "vscode", tabbed: ${isTab}, statsHash: "${hash}"});
+                    RefactChat.renderStatistic(root, {host: "vscode", tabbed: ${isTab} });
                 }
                 </script>
             </body>
