@@ -8,7 +8,7 @@ import {
   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
 import { v4 as uuidv4 } from "uuid";
-import {secret_api_key} from './userLogin';
+import {secret_api_key, get_address} from './userLogin';
 import { createHash } from "crypto";
 
 export class StatisticTab {
@@ -59,8 +59,11 @@ export class StatisticTab {
 
     createStatisticsHash() {
         const sessionId = vscode.env.sessionId;
+        const user = global.user_logged_in;
+        const address = get_address();
         const apiKey = secret_api_key();
-        const hash = createHash("md5").update(apiKey + sessionId).digest("hex");
+        const str = `${sessionId}:${user}:${address}:${apiKey}`;
+        const hash = createHash("md5").update(str).digest("hex");
         return hash;
     }
 
