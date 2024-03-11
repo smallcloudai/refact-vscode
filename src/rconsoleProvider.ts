@@ -360,11 +360,14 @@ export class RefactConsoleProvider {
             let comment_editor = vscode.window.visibleTextEditors.find((e1) => {
                 return e1.document.uri === event.document.uri;
             });
+            let ideal = "/" + top1 + " ";
             if (comment_editor) {
-                await comment_editor.edit(edit => {
-                    edit.delete(new vscode.Range(0, 0, 1000, 0));
-                    edit.insert(new vscode.Position(0, 0), "/" + top1 + " ");
-                });
+                if (this.input_text.trim() !== ideal.trim()) {
+                    await comment_editor.edit(edit => {
+                        edit.delete(new vscode.Range(0, 0, 1000, 0));
+                        edit.insert(new vscode.Position(0, 0), ideal);
+                    });
+                }
             }
             return;
         }

@@ -84,6 +84,19 @@ export async function get_hints(
         } else {
             for (let cmd in commands_available) {
                 let text = commands_available[cmd].description || "";
+                let ideal = "/" + cmd + " ";
+                if (unfinished_text.startsWith(ideal)) {
+                    result += "<b>/" + cmd + "</b> " + text + "<br/><br/>\n";
+                    let selection_unwanted = commands_available[cmd]["selection_unwanted"];
+                    let selection_needed = commands_available[cmd]["selection_needed"];
+                    if (selection_needed.length > 0) {
+                        result += `Selection needed: ${selection_needed[0]}..${selection_needed[1]} lines<br/>\n`;
+                    }
+                    if (selection_unwanted) {
+                        result += `Selection unwanted: true<br/>\n`;
+                    }
+                    return [result, "Available commands:", cmd];
+                }
                 let score1 = similarity_score(unfinished_text_up_to_space, "/" + cmd + " " + text);
                 let score2 = similarity_score(unfinished_text_up_to_space, "/" + cmd);
                 cmd_score[cmd] = Math.max(score1, score2);
@@ -275,10 +288,24 @@ async function _run_command(cmd: string, args: string, doc_uri: string, model_na
     let [official_selection1, _attach_range1, _working_on_attach_code, working_on_attach_filename, code_snippet] = chatTab.attach_code_from_editor(editor, false);
     let middle_line_of_selection = Math.floor((official_selection1.start.line + official_selection1.end.line) / 2);
 
+    let selection_empty = official_selection1.isEmpty;
+    let selection_unwanted = cmd_dict["selection_unwanted"];
+    let selection_needed = cmd_dict["selection_needed"];
+    if (selection_unwanted && !selection_empty) {
+        return;
+    }
+    if (selection_needed) {
+        let [smin, smax] = selection_needed;
+        let official_selection_nlines = official_selection1.end.line - official_selection1.start.line;
+        if (official_selection_nlines < smin || official_selection_nlines > smax) {
+            return;
+        }
+    }
+
     const messages: [string, string][] = [];
     let cmd_messages = cmd_dict["messages"];
     let CURRENT_FILE_PATH_COLON_CURSOR = `${working_on_attach_filename}:${middle_line_of_selection + 1}`;
-    let CURRENT_FILE = editor.document.uri.fsPath;
+    // let CURRENT_FILE = editor.document.uri.fsPath;
     console.log("CURRENT_FILE_PATH_COLON_CURSOR", CURRENT_FILE_PATH_COLON_CURSOR);
     for (let i=0; i<cmd_messages.length; i++) {
         let {role, content: text} = cmd_messages[i];
