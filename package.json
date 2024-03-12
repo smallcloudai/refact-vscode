@@ -26,10 +26,7 @@
 		"Programming Languages",
 		"Snippets",
 		"Other",
-		"Machine Learning",
-		"Education",
-		"Testing",
-		"Data Science"
+		"Machine Learning"
 	],
 	"keywords": [
 		"copilot",
@@ -75,16 +72,7 @@
 		"nodejs",
 		"node",
 		"node.js",
-		"jupyter",
-		"chat",
-		"chatgpt",
-		"code completion",
-		"documentation",
-		"refactor",
-		"llm",
-		"test",
-		"security",
-		"coding"
+		"jupyter"
 	],
 	"activationEvents": [
 		"onStartupFinished"
