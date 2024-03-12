@@ -58,6 +58,8 @@ async function pressed_call_chat(n = 0) {
 
         setTimeout(() => pressed_call_chat(n + 1), delay);
         return;
+    } else if (global.side_panel && global.side_panel._view && !global.side_panel?._view?.visible) {
+        global.side_panel._view.show();
     }
 
     await open_chat_tab(
