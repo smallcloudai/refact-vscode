@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "3.0.104",
+	"version": "3.0.105",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -26,11 +26,15 @@
 		"Programming Languages",
 		"Snippets",
 		"Other",
-		"Machine Learning"
+		"Machine Learning",
+		"Education",
+		"Testing",
+		"Data Science"
 	],
 	"keywords": [
-		"copilot",
+		"refact",
 		"refactoring",
+		"copilot",
 		"tabnine",
 		"javascript",
 		"python",
@@ -72,7 +76,16 @@
 		"nodejs",
 		"node",
 		"node.js",
-		"jupyter"
+		"jupyter",
+		"chat",
+		"chatgpt",
+		"code completion",
+		"documentation",
+		"refactor",
+		"llm",
+		"test",
+		"security",
+		"coding"
 	],
 	"activationEvents": [
 		"onStartupFinished"
