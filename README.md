@@ -30,7 +30,7 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 - **Efficient Inference:** The Enterprise version supports paged attention and continuous batching, supporting up to 50 engineers per GPU for code completion.
 - **Priority Support:** Our engineers are always available to assist you at every stage, from setup to fine-tuning and beyond.
 
-To get a 3-month free trial for your team, just fill out the form on [our website](https://refact.ai/enterprise/). We'll reach out with more details!
+To get a 3-month free trial for your team, just fill out the form on [our website](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
 
 ## Join Our Discord Community
 
