@@ -15,6 +15,7 @@ import { open_chat_tab } from "./sidebar";
 import {
   EVENT_NAMES_FROM_CHAT,
   EVENT_NAMES_TO_CHAT,
+  EVENT_NAMES_TO_CONFIG,
   type ChatSetSelectedSnippet,
   type ReceiveAtCommandCompletion,
   type ReceiveAtCommandPreview,
@@ -26,6 +27,7 @@ import {
   type ChatMessages,
   type ReceiveTokenCount,
   type FileInfo,
+  type UpdateConfigMessage,
 } from "refact-chat-js/dist/events";
 
 
@@ -111,6 +113,12 @@ export class ChatTab {
         this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
           this.postActiveFileInfo();
           this.sendSnippetToChat();
+        }));
+
+        this._disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
+            if(event.affectsConfiguration("refactai.vectorization") || event.affectsConfiguration("refactai.ast")) {
+                this.handleSettingsChange();
+            }
         }));
 
     }
@@ -244,7 +252,7 @@ export class ChatTab {
         const code = isEmpty ? "" : vscode.window.activeTextEditor?.document.getText(selection) ?? "";
         const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
         const fileName = basename(filePath);
-        console.log({language, code, filePath, fileName});
+
         return {
             code,
             language,
@@ -474,7 +482,6 @@ export class ChatTab {
     }
 
     async handleEvents({ type, ...data }: any) {
-        console.log([type, data]);
         switch (type) {
 
             case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
@@ -694,6 +701,24 @@ export class ChatTab {
     //     }
     // }
 
+    handleSettingsChange() {
+        const vecdb =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.vectorization") ?? false;
+
+        const ast =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.ast") ?? false;
+        const message: UpdateConfigMessage = {
+            type: EVENT_NAMES_TO_CONFIG.UPDATE,
+            payload: {
+                features: { vecdb, ast}
+            }
+        };
+        this.web_panel.webview.postMessage(message);
+    }
 
 
     public get_html_for_chat(
@@ -701,6 +726,11 @@ export class ChatTab {
         extensionUri: any,
         isTab = false
     ): string {
+        const vecdb = vscode.workspace
+			.getConfiguration()
+			?.get<boolean>("refactai.vectorization") ?? false;
+
+        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
 
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
@@ -741,7 +771,15 @@ export class ChatTab {
                 <script nonce="${nonce}">
                 window.onload = function() {
                     const root = document.getElementById("refact-chat")
-                    RefactChat.render(root, {host: "vscode", tabbed: ${isTab}, themeProps: { accentColor: "gray" }})
+                    RefactChat.render(root, {
+                        host: "vscode",
+                        tabbed: ${isTab},
+                        themeProps: { accentColor: "gray" },
+                        features: {
+                            vecdb: ${vecdb},
+                            ast: ${ast},
+                        }
+                    })
                 }
                 </script>
             </body>

@@ -100,6 +100,7 @@ export class RustBinaryBlob
         if (!plugin_version) {
             plugin_version = "unknown";
         }
+
         let new_cmdline: string[] = [
             join(this.asset_path, "refact-lsp"),
             "--address-url", url,
@@ -107,8 +108,16 @@ export class RustBinaryBlob
             "--http-port", port.toString(),
             "--lsp-stdin-stdout", "1",
             "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
-            "--basic-telemetry"
+            "--basic-telemetry",
         ];
+
+        if(vscode.workspace.getConfiguration().get<boolean>("refactai.vectorization")) {
+            new_cmdline.push("--vecdb");
+        }
+        if( vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
+            new_cmdline.push("--ast");
+        }
+
         let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");
         if (insecureSSL) {
             new_cmdline.push("--insecure");

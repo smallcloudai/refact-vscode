@@ -160,10 +160,22 @@
 					"default": "",
 					"order": 8
 				},
+				"refactai.vectorization": {
+					"type": "boolean",
+					"description": "Enable vectorization of code completion. This is experimental and may not work on all languages.",
+					"default": false,
+					"order": 9
+				},
+				"refactai.ast": {
+					"type": "boolean",
+					"description": "Enable AST parsing of code completion. This is experimental and may not work on all languages.",
+					"default": false,
+					"order": 10
+				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
-					"order": 9
+					"order": 11
 				}
 			}
 		},
