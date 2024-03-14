@@ -200,7 +200,7 @@ export class RefactConsoleProvider {
     }
 
     initial_messages(): rconsoleCommands.Messages {
-        return rconsoleCommands.initial_messages(this.working_on_attach_filename, this.working_on_attach_code, this.attach_range);
+        return rconsoleCommands.initial_messages(this.working_on_attach_filename, this.editor.selection);
     }
 
     dispose() {

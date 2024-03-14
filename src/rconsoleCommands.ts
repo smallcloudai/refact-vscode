@@ -130,7 +130,7 @@ export async function get_hints(
     }
 }
 
-export function initial_messages(working_on_attach_filename: string, working_on_attach_code: string, attached_range: vscode.Range)
+export function initial_messages(working_on_attach_filename: string, selection: vscode.Selection)
 {
     // NOTE: this is initial messages for a chat without a command. With command it will get the structure from the command.
     let messages: Messages = [];
@@ -141,13 +141,7 @@ export function initial_messages(working_on_attach_filename: string, working_on_
 
     messages.push([
         "user",
-        `@file ${
-            working_on_attach_filename
-        }:${
-            attached_range.start.line + 1
-        }-${
-            attached_range.end.line + 1
-        }`
+        `@file ${working_on_attach_filename}:${selection.anchor.line}`
     ]);
 
     return messages;
