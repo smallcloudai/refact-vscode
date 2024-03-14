@@ -123,7 +123,7 @@ export async function get_hints(
                 "🪄 Selected text", ""];
         } else {
             return [
-                `Any any question about this source file. To generate new code, use \"/gen\", try other commands starting with \"/\", for example "/help".\n\n` +
+                `Any question about this source file. To generate new code, use \"/gen\", try other commands starting with \"/\", for example "/help".\n\n` +
                 `Model: ${model_name}\n`,
                 "🪄 This File", ""];
         }
