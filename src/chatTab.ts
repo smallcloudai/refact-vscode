@@ -742,6 +742,9 @@ export class ChatTab {
             vscode.Uri.joinPath(extensionUri, "assets", "custom-theme.css")
         );
 
+        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
+        const scaling = fontSize < 14 ? "90%" : "100%";
+
         const nonce = ChatTab.getNonce();
         return `<!DOCTYPE html>
             <html lang="en" class="light">
@@ -772,7 +775,10 @@ export class ChatTab {
                     RefactChat.render(root, {
                         host: "vscode",
                         tabbed: ${isTab},
-                        themeProps: { accentColor: "gray" },
+                        themeProps: {
+                            accentColor: "gray",
+                            scaling: "${scaling}",
+                        },
                         features: {
                             vecdb: ${vecdb},
                             ast: ${ast},
