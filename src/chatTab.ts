@@ -401,33 +401,13 @@ export class ChatTab {
             });
         };
 
-        const handle_stream_end = (
-            maybe_error_message?: string
-        ) => {
-            if (maybe_error_message) {
-                this.web_panel.webview.postMessage({
-                        type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
-                        payload: {
-                        id: this.chat_id,
-                        message: maybe_error_message,
-                    },
-                });
-            } else {
-                this.web_panel.webview.postMessage({
-                    type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
-                    payload: { id: this.chat_id },
-                });
-                this.sendTokenCountToChat();
-            }
-        };
-
         const request = new fetchAPI.PendingRequest(
             undefined,
             this.cancellationTokenSource.token
         );
         request.set_streaming_callback(
             handle_response,
-            handle_stream_end
+            this.handleStreamEnd,
         );
         //TODO: find out what this is for?
         const third_party = this.model_to_thirdparty[model];
@@ -455,6 +435,24 @@ export class ChatTab {
         );
 
         return request.supply_stream(...chat_promise);
+    }
+
+    handleStreamEnd(error?: string) {
+        if (error) {
+            this.web_panel.webview.postMessage({
+                type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+                payload: {
+                    id: this.chat_id,
+                    message: error,
+                },
+            });
+        } else {
+            this.web_panel.webview.postMessage({
+                type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+                payload: { id: this.chat_id },
+            });
+            this.sendTokenCountToChat();
+        }
     }
 
     async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; trigger: string | null; number: number }) {

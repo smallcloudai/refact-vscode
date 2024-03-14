@@ -207,6 +207,7 @@ export async function send_network_problems_to_status_bar(
         }
     }
     if (!positive) {
+        global.side_panel?.chat?.handleStreamEnd();
         await fetchH2.disconnectAll();
     } else {
         global.last_positive_result = Date.now();

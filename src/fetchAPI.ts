@@ -483,6 +483,9 @@ export function fetch_code_completion(
         cancelToken.onCancellationRequested(async () => {
             console.log(["API fetch cancelled"]);
             abort.abort();
+
+            global.side_panel?.chat?.handleStreamEnd();
+
             await fetchH2.disconnectAll();
         });
         init.signal = abort.signal;
