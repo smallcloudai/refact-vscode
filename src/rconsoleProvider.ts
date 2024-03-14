@@ -205,7 +205,6 @@ export class RefactConsoleProvider {
 
     dispose() {
         console.log("console dispose");
-        console.log(this);
         this.remove_click_handlers_for_commands();
         this.thread.dispose();
         this.comment_controller.dispose();
@@ -263,8 +262,6 @@ export class RefactConsoleProvider {
 
     handle_message_stream_end(response_messages: rconsoleCommands.Messages) {
         this.messages = response_messages;
-        console.log("end_thread_callback");
-        console.log({response_messages});
         this.send_messages_to_thread();
         vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", true);
         // "comments/commentThread/additionalActions": [
@@ -374,7 +371,7 @@ export class RefactConsoleProvider {
     }
 
     async handle_text_document_change(e: vscode.TextDocumentChangeEvent) {
-        console.log("onDidChangeTextDocument", e.document.uri, this.messages.length);
+        // console.log("onDidChangeTextDocument", e.document.uri, this.messages.length);
 
         if (e.document.uri.scheme !== "comment" || this.messages.length === 0) {
             return;

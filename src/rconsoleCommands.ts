@@ -352,7 +352,8 @@ export async function register_commands(): Promise<void> {
             global.toolbox_command_disposables.push(d);
         }
     } catch (e) {
-        console.log(["register_commands error", e]);
+        console.log(["register_commands error"]);
+        console.error(e);
     }
 }
 
