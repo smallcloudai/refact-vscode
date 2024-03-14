@@ -283,15 +283,17 @@ export class RefactConsoleProvider {
         RefactConsoleProvider.close_all_consoles();
     }
 
-    get_messages_with_insert_tag_on_context_file() :rconsoleCommands.Messages {
-        return this.messages.map(([type, text]) => {
-            if(type === "context_file") {
-                const [_selection, attach_range, working_on_attach_code, working_on_attach_filename, _code_snippet] = chatTab.attach_code_from_editor(this.editor, true);
-                return rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code, attach_range)[0];
-            }
-            return [type, text];
-        });
-    }
+    // Not called any where?
+    // get_messages_with_insert_tag_on_context_file() :rconsoleCommands.Messages {
+    //     return this.messages.map(([type, text]) => {
+    //         if(type === "context_file") {
+    //             // here
+    //             const [_selection, attach_range, working_on_attach_code, working_on_attach_filename, _code_snippet] = chatTab.attach_code_from_editor(this.editor, true);
+    //             return rconsoleCommands.initial_messages(working_on_attach_filename, working_on_attach_code, attach_range)[0];
+    //         }
+    //         return [type, text];
+    //     });
+    // }
 
     async handle_user_pressed_enter(event: vscode.TextDocumentChangeEvent) {
         // handle pressed enter
@@ -414,7 +416,7 @@ export class RefactConsoleProvider {
     async activate_chat(
         messages: [string, string][],
         question: string,
-        new_question = true
+        new_question = true // not set anywhere
     ) {
         console.log(`activate_chat question.length=${question.length}`);
         RefactConsoleProvider.close_all_consoles();
@@ -427,27 +429,37 @@ export class RefactConsoleProvider {
         }
 
         const id = uuidv4();
-        const messagesWithQuestion = messages.concat([["user", question]]);
 
-        // Input: from the user can be empty
+        let input = question;
+        const lastMessage = messages.slice(-1)[0];
+        if(lastMessage && lastMessage[0] === "user") {
+            const text = lastMessage[1];
+            input = text + "\n" + question;
+            messages.splice(-1, 1, ["user", input]);
+        }
+
+
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
-            question, // is this needed ?
+            // input, // is this needed ?
+            input,
             this.editor,
             false,
             this.model_name,
-            messages,
+            // messages,
+            [],
             id,
         );
         if (!chat) {
             return;
         }
 
+        // always true
         if (new_question) {
             await chat.handleChatQuestion({
                 id: chat.chat_id,
                 model: this.model_name, // empty string
                 title: question,
-                messages: messagesWithQuestion,
+                messages: messages,
                 attach_file: false,
             });
         } else {

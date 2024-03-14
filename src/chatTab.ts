@@ -48,7 +48,6 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_here_t
         code_snippet = editor.document.getText(selection);
     }
     let fn = editor.document.fileName;
-    let short_fn = fn.replace(/.*[\/\\]/, "");
     let pos0 = selection.start;
     let pos1 = selection.end;
     let attach = "";
@@ -75,7 +74,7 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_here_t
     }
     let attach_range = new vscode.Range(pos0, pos1);
     [attach] = crlf.cleanup_cr_lf(attach, []);
-    return [selection, attach_range, attach, short_fn, code_snippet];
+    return [selection, attach_range, attach, fn, code_snippet];
 }
 
 

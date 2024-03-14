@@ -138,13 +138,18 @@ export function initial_messages(working_on_attach_filename: string, working_on_
         // this should not happen, because we started from a file
         return messages;
     }
-    let single_file_json = JSON.stringify([{
-        "file_name": working_on_attach_filename,
-        "file_content": working_on_attach_code,
-        "line1": attached_range.start.line,
-        "line2": attached_range.end.line,
-    }]);
-    messages.push(["context_file", single_file_json]);
+
+    messages.push([
+        "user",
+        `@file ${
+            working_on_attach_filename
+        }:${
+            attached_range.start.line + 1
+        }-${
+            attached_range.end.line + 1
+        }`
+    ]);
+
     return messages;
 }
 
