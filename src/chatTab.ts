@@ -104,6 +104,7 @@ export class ChatTab {
     ) {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         this.handleEvents = this.handleEvents.bind(this);
+        this.handleStreamEnd = this.handleStreamEnd.bind(this);
 
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
           this.postActiveFileInfo();
