@@ -931,13 +931,13 @@ export function diff_paste_back(
     state.showing_diff_modif_doc = modif_doc;
     state.showing_diff_move_cursor = true;
     estate.switch_mode(state, estate.Mode.Diff);
+
     let last_affected_line = -1;
-    if (state.diffAddedLines.length > 0) {
-        last_affected_line = Math.max(...state.diffAddedLines);
+    const changedLines = [...state.diffAddedLines, ...state.diffDeletedLines];
+    if (changedLines.length > 0) {
+        last_affected_line = Math.max(...changedLines);
     }
-    if (state.diffDeletedLines.length > 0) {
-        last_affected_line = Math.max(...state.diffDeletedLines);
-    }
+
     return last_affected_line;
 }
 

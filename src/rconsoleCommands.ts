@@ -225,19 +225,19 @@ export async function stream_chat_without_visible_chat(
                 }
             }
 
-            end_thread_callback(messages, selected_range.start.line);
-
             if (largest_block) {
                 let last_affected_line = chatTab.diff_paste_back(
                     editor,
                     selected_range,
                     largest_block,
                 );
+                end_thread_callback(messages, last_affected_line);
             } else {
                 let state = estate.state_of_document(editor.document);
                 if (state) {
                     await estate.switch_mode(state, estate.Mode.Normal);
                 }
+                end_thread_callback(messages);
             }
         } else {
             let error_message_escaped = error_message.replace(/</g, "&lt;").replace(/>/g, "&gt;");
