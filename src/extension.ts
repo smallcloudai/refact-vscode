@@ -69,6 +69,7 @@ async function pressed_call_chat(n = 0) {
         "",      // model
         [],      // messages
         "",      // chat id
+        true,    // append snippet
     );
 }
 
