@@ -296,6 +296,9 @@ async function _run_command(cmd: string, args: string, doc_uri: string, model_na
     if (selection_needed) {
         let [smin, smax] = selection_needed;
         let official_selection_nlines = official_selection1.end.line - official_selection1.start.line;
+        if (!selection_empty && official_selection_nlines === 0) {
+            official_selection_nlines = 1;
+        }
         if (official_selection_nlines < smin || official_selection_nlines > smax) {
             return;
         }
