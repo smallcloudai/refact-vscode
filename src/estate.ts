@@ -60,8 +60,8 @@ export class StateOfEditor {
 
     public diff_changing_doc: boolean = false;
     public diffDecos: any = [];
-    public diffDeletedLines: any = [];
-    public diffAddedLines: any = [];
+    public diffDeletedLines: number[] = [];
+    public diffAddedLines: number[] = [];
 
     public diff_lens_pos: number = Number.MAX_SAFE_INTEGER;
     public completion_lens_pos: number = Number.MAX_SAFE_INTEGER;
