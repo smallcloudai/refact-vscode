@@ -6,14 +6,16 @@ import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
 import {
-    isCommandPreviewResponse,
-    isDetailMessage,
-    isChatContextFileMessage,
-    type CapsResponse,
-    type CommandCompletionResponse,
-    type ChatContextFileMessage,
-    type ChatContextFile,
-} from 'refact-chat-js/dist/events';
+	isCommandPreviewResponse,
+	isDetailMessage,
+	isChatContextFileMessage,
+	type CapsResponse,
+	type CommandCompletionResponse,
+	type ChatContextFileMessage,
+	type ChatContextFile,
+	isCustomPromptsResponse,
+    CustomPromptsResponse,
+} from "refact-chat-js/dist/events";
 
 
 let globalSeq = 100;
@@ -696,3 +698,34 @@ export async function get_statistic_data(): Promise<{ data: string }> {
     return json;
   }
 
+export async function get_prompt_customization(): Promise<CustomPromptsResponse> {
+    const url = rust_url("/v1/customization");
+
+    if (!url) {
+        return Promise.reject("unable to get prompt customization");
+    }
+
+    const request = new fetchH2.Request(url, {
+		method: "GET",
+		redirect: "follow",
+		cache: "no-cache",
+		referrer: "no-referrer",
+	});
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["get_prompt_customization http status", response.status]);
+        return Promise.reject("unable to get prompt customization");
+    }
+
+    const json = await response.json();
+
+    if(!isCustomPromptsResponse(json)) {
+        console.log(["get_prompt_customization invalid json", json]);
+        return Promise.reject("unable to get prompt customization: data invalid");
+    }
+
+    return json;
+
+}

@@ -13,21 +13,24 @@ const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdi
 import { open_chat_tab } from "./sidebar";
 
 import {
-  EVENT_NAMES_FROM_CHAT,
-  EVENT_NAMES_TO_CHAT,
-  EVENT_NAMES_TO_CONFIG,
-  type ChatSetSelectedSnippet,
-  type ReceiveAtCommandCompletion,
-  type ReceiveAtCommandPreview,
-  type Snippet,
-  type ChatContextFile,
-  type ToggleActiveFile,
-  type RestoreChat,
-  type ActiveFileInfo,
-  type ChatMessages,
-  type ReceiveTokenCount,
-  type FileInfo,
-  type UpdateConfigMessage,
+	EVENT_NAMES_FROM_CHAT,
+	EVENT_NAMES_TO_CHAT,
+	EVENT_NAMES_TO_CONFIG,
+	type ChatSetSelectedSnippet,
+	type ReceiveAtCommandCompletion,
+	type ReceiveAtCommandPreview,
+	type Snippet,
+	type ChatContextFile,
+	type ToggleActiveFile,
+	type RestoreChat,
+	type ActiveFileInfo,
+	type ChatMessages,
+	type ReceiveTokenCount,
+	type FileInfo,
+	type UpdateConfigMessage,
+	type RequestPrompts,
+	type ReceivePromptsError,
+	type ReceivePrompts,
 } from "refact-chat-js/dist/events";
 
 
@@ -548,6 +551,10 @@ export class ChatTab {
                 this.handleAtCommandCompletion(data.payload);
             }
 
+            case EVENT_NAMES_FROM_CHAT.REQUEST_PROMPTS: {
+              const action: RequestPrompts = data;
+              return this.handleCustomPromptsRequest(action.payload.id);
+            }
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
             // // handled in sidebar.ts
             // }
@@ -557,6 +564,24 @@ export class ChatTab {
             // }
 
         }
+    }
+
+    	async handleCustomPromptsRequest(id: string) {
+        return fetchAPI.get_prompt_customization().then((data) => {
+          const message: ReceivePrompts = {
+				    type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS,
+				    payload: { id, prompts: data.system_prompts },
+			    };
+
+          return this.web_panel.webview.postMessage(message);
+
+        }).catch((err: string) => {
+            const message: ReceivePromptsError = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS_ERROR,
+                payload: { id, error: `Prompts: ${err}` },
+            };
+            return this.web_panel.webview.postMessage(message);
+        });
     }
 
     async handleSendToSideBar() {
