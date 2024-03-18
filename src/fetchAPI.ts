@@ -8,13 +8,12 @@ import * as statusBar from "./statusBar";
 import {
 	isCommandPreviewResponse,
 	isDetailMessage,
-	isChatContextFileMessage,
 	type CapsResponse,
 	type CommandCompletionResponse,
 	type ChatContextFileMessage,
 	type ChatContextFile,
 	isCustomPromptsResponse,
-    CustomPromptsResponse,
+    type CustomPromptsResponse,
 } from "refact-chat-js/dist/events";
 
 

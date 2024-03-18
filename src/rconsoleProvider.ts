@@ -455,7 +455,7 @@ export class RefactConsoleProvider {
             this.editor,
             false,
             this.model_name,
-            [],
+            messages,
             id,
         );
         if (!chat) {
@@ -466,7 +466,7 @@ export class RefactConsoleProvider {
             id: chat.chat_id,
             model: this.model_name,
             title: question,
-            messages: messages,
+            messages: messages.concat([["user", input]]),
             attach_file: false,
         });
     }
