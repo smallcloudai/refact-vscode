@@ -529,7 +529,7 @@ export class ChatTab {
 
             case EVENT_NAMES_FROM_CHAT.READY: {
                 const { id } = data.payload;
-                // this.chat_id = id;
+                this.chat_id = id;
                 return this.postActiveFileInfo(id);
             }
 
