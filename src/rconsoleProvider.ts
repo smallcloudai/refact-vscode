@@ -441,33 +441,43 @@ export class RefactConsoleProvider {
 
         const id = uuidv4();
 
-        let input = question;
-        const lastMessage = messages.slice(-1)[0];
-        if(lastMessage && lastMessage[0] === "user") {
-            const text = lastMessage[1];
-            input = text + "\n" + question;
-            messages.splice(-1, 1, ["user", input]);
-        }
-
+        const messagesWithQuestion = appendQuestion(question, messages);
 
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
-            input,
+            question,
             this.editor,
             false,
             this.model_name,
-            messages,
+            messagesWithQuestion,
             id,
         );
         if (!chat) {
             return;
         }
 
+
+
         await chat.handleChatQuestion({
             id: chat.chat_id,
             model: this.model_name,
             title: question,
-            messages: messages.concat([["user", input]]),
+            messages: messagesWithQuestion,
             attach_file: false,
         });
     }
+}
+
+function appendQuestion(question: string, messages: [string, string][]): [string, string][] {
+    if(messages.length === 0) {
+        return [["user", question]];
+    }
+    const lastMessage = messages[messages.length - 1];
+
+    // for some reason this is circular?
+    if(lastMessage[0] === "user") {
+        const message: [string, string][] = [["user", lastMessage[1] + '\n' + question]];
+        return messages.slice(0, -1).concat(message);
+    }
+
+    return messages.concat([["user", question]]);
 }
