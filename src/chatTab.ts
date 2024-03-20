@@ -548,7 +548,7 @@ export class ChatTab {
             }
 
             case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
-                this.handleAtCommandCompletion(data.payload);
+                return this.handleAtCommandCompletion(data.payload);
             }
 
             case EVENT_NAMES_FROM_CHAT.REQUEST_PROMPTS: {
