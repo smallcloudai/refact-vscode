@@ -107,6 +107,7 @@ export class ChatTab {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
         this.handleEvents = this.handleEvents.bind(this);
         this.handleStreamEnd = this.handleStreamEnd.bind(this);
+        this.dispose = this.dispose.bind(this);
 
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
           this.postActiveFileInfo();
@@ -123,6 +124,8 @@ export class ChatTab {
                 this.handleSettingsChange();
             }
         }));
+
+        this._disposables.push(this.web_panel.onDidDispose(this.dispose));
 
     }
 
