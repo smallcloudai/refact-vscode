@@ -387,7 +387,7 @@ export class RefactConsoleProvider {
     async handle_text_document_change(e: vscode.TextDocumentChangeEvent) {
         // console.log("onDidChangeTextDocument", e.document.uri, this.messages.length);
 
-        if (e.document.uri.scheme !== "comment" || this.messages.length === 0) {
+        if (e.document.uri.scheme !== "comment") {
             return;
         }
 
