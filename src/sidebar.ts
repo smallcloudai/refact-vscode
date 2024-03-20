@@ -4,6 +4,7 @@ import * as estate from "./estate";
 import * as userLogin from "./userLogin";
 import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
+import { get_caps } from "./fetchAPI";
 import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
@@ -329,6 +330,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 break;
             }
             let editor = vscode.window.activeTextEditor;
+
+            const caps = await get_caps();
+
             let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
             if (!chat) {
                 console.log(`Chat ${chat_id} not found, cannot restore`);
@@ -339,11 +343,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if(openTab) {
                 return openTab.focus();
             } else {
+                const model = caps.running_models.includes(chat.chatModel)
+					? chat.chatModel
+					: caps.code_chat_default_model;
+
                 await open_chat_tab(
                     "",
                     editor,
                     true,
-                    data.chat_model,
+                    model,
                     chat.messages,
                     chat_id,
                 );
