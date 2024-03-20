@@ -208,7 +208,7 @@ export class RefactConsoleProvider {
     dispose() {
         console.log("console dispose");
         this.remove_click_handlers_for_commands();
-        this.thread.dispose();
+        // this.thread.dispose();
         this.comment_controller.dispose();
     }
 
