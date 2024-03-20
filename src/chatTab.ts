@@ -149,12 +149,15 @@ export class ChatTab {
 
     async saveToSideBar() {
         const history = await this.getHistory();
-        this.chatHistoryProvider.save_messages_list(
+        if(this.messages.length > 0) {
+          this.chatHistoryProvider.save_messages_list(
             this.chat_id,
             this.messages,
             history?.chatModel || "",
             history?.chat_title
-        );
+          );
+        }
+
         if (!global.side_panel?.chat) {
           global.side_panel?.goto_main();
         }
