@@ -442,13 +442,16 @@ export class RefactConsoleProvider {
         const id = uuidv4();
 
         const messagesWithQuestion = appendQuestion(question, messages);
+        const uniqueMessages = dedupeMessages(messagesWithQuestion);
+
+        console.log(messagesWithQuestion);
 
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
             question,
             this.editor,
             false,
             this.model_name,
-            messagesWithQuestion,
+            uniqueMessages,
             id,
         );
         if (!chat) {
@@ -461,7 +464,7 @@ export class RefactConsoleProvider {
             id: chat.chat_id,
             model: this.model_name,
             title: question,
-            messages: messagesWithQuestion,
+            messages: uniqueMessages,
             attach_file: false,
         });
     }
@@ -480,4 +483,12 @@ function appendQuestion(question: string, messages: [string, string][]): [string
     }
 
     return messages.concat([["user", question]]);
+}
+
+function dedupeMessages(messages: [string, string][]): [string, string][] {
+	return messages.filter((m, i, self) => {
+		const next = self[i + 1];
+		if (!next) { return true; }
+		return m[0] !== next[0] && m[1] !== next[1];
+	});
 }
