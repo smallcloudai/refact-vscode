@@ -231,7 +231,16 @@ export class ChatTab {
 
                     const action: RestoreChat = {
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                        payload: {...chat, messages, attach_file: !!snippet, model, snippet }
+                        payload: {
+                          id: this.chat_id,
+                          chat: {
+                            ...chat,
+                            messages,
+                            attach_file: !!snippet,
+                            model
+                          },
+                          snippet
+                        }
                     };
 
                     this.web_panel.webview.postMessage(action);
