@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "3.0.112",
+	"version": "3.0.113",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -33,6 +33,7 @@
 	],
 	"keywords": [
 		"refact",
+		"refact.ai",
 		"refactoring",
 		"copilot",
 		"tabnine",
