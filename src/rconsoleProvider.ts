@@ -442,31 +442,43 @@ export class RefactConsoleProvider {
         const id = uuidv4();
 
         const messagesWithQuestion = appendQuestion(question, messages);
-        const uniqueMessages = dedupeMessages(messagesWithQuestion);
 
-        console.log(messagesWithQuestion);
 
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
             question,
             this.editor,
             false,
             this.model_name,
-            uniqueMessages,
+            messagesWithQuestion,
             id,
         );
         if (!chat) {
             return;
         }
 
+        // TODO: This looks weird with all the changes from the call to restore
+        // const disposables: vscode.Disposable[] = [];
+        // disposables.push(chat.web_panel.webview.onDidReceiveMessage(e => {
+        //     if(chat && e.type === EVENT_NAMES_FROM_CHAT.READY && e.payload.id === chat.chat_id) {
+        //         chat.handleChatQuestion({
+        //             id: chat.chat_id,
+        //             model: this.model_name,
+        //             title: question,
+        //             messages: messagesWithQuestion,
+        //             attach_file: false,
+        //         });
+        //         disposables.forEach(d => d.dispose());
+        //     }
+        // }));
 
-
+        await new Promise(r => setTimeout(r, 200));
         await chat.handleChatQuestion({
-            id: chat.chat_id,
-            model: this.model_name,
-            title: question,
-            messages: uniqueMessages,
-            attach_file: false,
-        });
+			id: chat.chat_id,
+			model: this.model_name,
+			title: question,
+			messages: messagesWithQuestion,
+			attach_file: false,
+		});
     }
 }
 
@@ -483,12 +495,4 @@ function appendQuestion(question: string, messages: [string, string][]): [string
     }
 
     return messages.concat([["user", question]]);
-}
-
-function dedupeMessages(messages: [string, string][]): [string, string][] {
-	return messages.filter((m, i, self) => {
-		const next = self[i + 1];
-		if (!next) { return true; }
-		return m[0] !== next[0] && m[1] !== next[1];
-	});
 }
