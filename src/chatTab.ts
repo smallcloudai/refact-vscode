@@ -120,7 +120,7 @@ export class ChatTab {
         }));
 
         this._disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
-            if(event.affectsConfiguration("refactai.vectorization") || event.affectsConfiguration("refactai.ast")) {
+            if(event.affectsConfiguration("refactai.vecdb") || event.affectsConfiguration("refactai.ast")) {
                 this.handleSettingsChange();
             }
         }));
@@ -743,7 +743,7 @@ export class ChatTab {
         const vecdb =
             vscode.workspace
                 .getConfiguration()
-                ?.get<boolean>("refactai.vectorization") ?? false;
+                ?.get<boolean>("refactai.vecdb") ?? false;
 
         const ast =
             vscode.workspace
@@ -766,7 +766,7 @@ export class ChatTab {
     ): string {
         const vecdb = vscode.workspace
 			.getConfiguration()
-			?.get<boolean>("refactai.vectorization") ?? false;
+			?.get<boolean>("refactai.vecdb") ?? false;
 
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
 

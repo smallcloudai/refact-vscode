@@ -111,7 +111,7 @@ export class RustBinaryBlob
             "--basic-telemetry",
         ];
 
-        if(vscode.workspace.getConfiguration().get<boolean>("refactai.vectorization")) {
+        if(vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
             new_cmdline.push("--vecdb");
         }
         if( vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
@@ -171,6 +171,7 @@ export class RustBinaryBlob
     public async terminate()
     {
         await this.stop_lsp();
+        await fetchH2.disconnectAll();
         global.have_caps = false;
         status_bar.choose_color();
     }

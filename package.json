@@ -161,15 +161,15 @@
 					"default": "",
 					"order": 8
 				},
-				"refactai.vectorization": {
+				"refactai.vecdb": {
 					"type": "boolean",
-					"description": "Enable vectorization of code completion. This is experimental and may not work on all languages.",
+					"description": "Enable embedded vecdb for search (experimental)",
 					"default": false,
 					"order": 9
 				},
 				"refactai.ast": {
 					"type": "boolean",
-					"description": "Enable AST parsing of code completion. This is experimental and may not work on all languages.",
+					"description": "Enable syntax parsing (experimental, works only for popular languages).",
 					"default": false,
 					"order": 10
 				},
