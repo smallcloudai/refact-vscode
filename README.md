@@ -8,7 +8,7 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/refact_ai)](https://twitter.com/intent/follow?screen_name=refact_ai)
 ![License](https://img.shields.io/github/license/smallcloudai/refact-vscode)
 
-*Refact.ai Open Source, Customizable AI Coding Assistant*
+## Refact.ai Open Source, Customizable AI Coding Assistant
 Refact.ai is an open-source AI coding assistant that boosts developer's productivity. It's suitable for both individual and enterprise use, supporting 25+ programming languages including Python, Javascript, Java, Rust, Typescript, PHP, Java, C++, C#, Go and more.
 
 Simplify your coding experience with Refact.ai's functions:
@@ -17,9 +17,6 @@ Simplify your coding experience with Refact.ai's functions:
 - **AI Toolbox:** helps explain, refactor your code, write documentation, find bugs, you can ask in natural language to generate new code for you. The Toolbox is customizable, you can create your own commands.
 - **Integrated in-IDE Chat:** It's better than switching between IDE and a browser: select a piece of code in the editor, ask a question without the need to copy-paste anything, and apply changes back as a diff. Chat can either automatically include the relevant files within the project for context, or you can use @-commands to control what context to use to answer your question.
 - **Self-hosting or cloud version:** enables you to host code completion and chat models yourself. The Refact.ai self-hosting server supports many recent models, offers efficient inference, and facilitates fine-tuning.
-- **Access to 20+ LLMs:** (including Refact/1.6B, GPT-4, Code Llama, StarCoder2, Mistral, Mixtral, etc.) some of them with the opportunity to fine-tune.
-
-  ![image](https://github.com/smallcloudai/refact-vscode/assets/5008686/3b1d6d4e-1d2a-44ea-a8fa-1fb1b1517469)
 
 ## Refact.ai For Enterprise
 Are you part of an Enterprise and want to **boost developers' efficiency by 45%**? The Refact.ai Enterprise plan offers:
@@ -30,7 +27,14 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 - **Efficient Inference:** The Enterprise version supports paged attention and continuous batching, supporting up to 50 engineers per GPU for code completion.
 - **Priority Support:** Our engineers are always available to assist you at every stage, from setup to fine-tuning and beyond.
 
-To get a 3-month free trial for your team, just fill out the form on [our website](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
+**To get a 3-month free trial** for your team, just fill out the form on [our website](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
+
+## Check Out How Easy Refact.ai Is to Use
+
+### Boost coding productivity with fine-tuned auto-completions
+### Get the answer to your question in the embedded Chat
+### Just highlight part of the code and ask Toolbox to explain it
+### Ask Toolbox to shorten your code
 
 ## Join Our Discord Community
 
