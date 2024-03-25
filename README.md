@@ -18,8 +18,6 @@ Simplify your coding experience with Refact.ai's functions:
 - **Integrated in-IDE Chat:** It's better than switching between IDE and a browser: select a piece of code in the editor, ask a question without the need to copy-paste anything, and apply changes back as a diff. Chat can either automatically include the relevant files within the project for context, or you can use @-commands to control what context to use to answer your question.
 - **Self-hosting or cloud version:** enables you to host code completion and chat models yourself. The Refact.ai self-hosting server supports many recent models, offers efficient inference, and facilitates fine-tuning.
 
-![screen-refact](https://github.com/smallcloudai/refact-vscode/assets/15157041/50d79757-10f0-4d9e-8c2d-2875421de46f)
-
 ## Refact.ai For Enterprise
 Are you part of an Enterprise and want to **boost developers' efficiency by 45%**? The Refact.ai Enterprise plan offers:
 - **Knows Your Code:** Refact.ai focuses on automated customization for internal codebases and improving over time.
