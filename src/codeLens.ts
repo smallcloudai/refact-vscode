@@ -50,7 +50,7 @@ export class LensProvider implements vscode.CodeLensProvider
             let range = new vscode.Range(state.diff_lens_pos, 0, state.diff_lens_pos, 0);
             lenses.push(new ExperimentalLens(range, "👍 Approve (Tab)", "APPROVE"));
             lenses.push(new ExperimentalLens(range, "👎 Reject (Esc)", "REJECT"));
-            lenses.push(new ExperimentalLens(range, "↻ Rerun \"" + estate.global_intent + "\" (F1)", "RERUN"));  // 🔃
+            // lenses.push(new ExperimentalLens(range, "↻ Rerun \"" + estate.global_intent + "\" (F1)", "RERUN"));  // 🔃
             // lenses.push(new ExperimentalLens(range, "🐶 Teach", "TEACH"));
         }
         if (global.enable_longthink_completion && state.completion_lens_pos < document.lineCount) {

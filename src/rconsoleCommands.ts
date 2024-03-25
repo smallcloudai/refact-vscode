@@ -93,7 +93,7 @@ export async function get_hints(
                         result += `Selection needed: ${selection_needed[0]}..${selection_needed[1]} lines<br/>\n`;
                     }
                     if (selection_unwanted) {
-                        result += `Selection unwanted: true<br/>\n`;
+                        result += `This function works with no lines selected<br/>\n`;
                     }
                     return [result, "Available commands:", cmd];
                 }
