@@ -26,6 +26,7 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 - **User Statistics:** Keep track of how much code Refact.ai helps to write for each team member. Measure productivity gains with real numbers.
 - **Efficient Inference:** The Enterprise version supports paged attention and continuous batching, supporting up to 50 engineers per GPU for code completion.
 - **Priority Support:** Our engineers are always available to assist you at every stage, from setup to fine-tuning and beyond.
+- **Access to 20+ LLMs:** (including Refact/1.6B, GPT-4, Code Llama, StarCoder2, Mistral, Mixtral, etc.) some of them with the opportunity to fine-tune.
 
 **To get a 3-month free trial** for your team, just fill out the form on [our website](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
 
