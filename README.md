@@ -32,9 +32,16 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 ## Check Out How Easy Refact.ai Is to Use
 
 ### Boost coding productivity with fine-tuned auto-completions
+![fine-tuned auto-completions](https://github.com/smallcloudai/refact-vscode/assets/15157041/e76b5d41-bc45-431b-9919-8c7b0269af70)
+
 ### Get the answer to your question in the embedded Chat
+![embedded Chat](https://github.com/smallcloudai/refact-vscode/assets/15157041/a3087ac8-4982-4d28-9c84-3a7259ede3c1)
+
 ### Just highlight part of the code and ask Toolbox to explain it
+![Toolbox](https://github.com/smallcloudai/refact-vscode/assets/15157041/501d9c0c-4edd-4dcf-9b6b-5d7c44f24f3b)
+
 ### Ask Toolbox to shorten your code
+![Shorter_FT](https://github.com/smallcloudai/refact-vscode/assets/15157041/5ac69ca3-196b-4983-8e72-2ed87f282957)
 
 ## Join Our Discord Community
 
