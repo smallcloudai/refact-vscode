@@ -94,6 +94,7 @@ export class ChatTab {
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
     public model_to_thirdparty: { [key: string]: boolean } = {};
+    private default_chat_model: undefined|string;
 
     public get_messages(): [string, string][] {
         return this.messages;
@@ -414,10 +415,10 @@ export class ChatTab {
             const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
             this.web_panel.webview.postMessage({
             type,
-            payload: {
-                id: this.chat_id,
-                ...json,
-            },
+              payload: {
+                  id,
+                  ...json,
+              },
             });
         };
 
@@ -427,7 +428,7 @@ export class ChatTab {
         );
         request.set_streaming_callback(
             handle_response,
-            this.handleStreamEnd,
+            (error?: string) => this.handleStreamEnd(id, error),
         );
         //TODO: find out what this is for?
         const third_party = this.model_to_thirdparty[model];
@@ -457,19 +458,19 @@ export class ChatTab {
         return request.supply_stream(...chat_promise);
     }
 
-    handleStreamEnd(error?: string) {
+    handleStreamEnd(id: string = this.chat_id, error?: string) {
         if (error) {
             this.web_panel.webview.postMessage({
                 type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
                 payload: {
-                    id: this.chat_id,
+                    id,
                     message: error,
                 },
             });
         } else {
             this.web_panel.webview.postMessage({
                 type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
-                payload: { id: this.chat_id },
+                payload: { id },
             });
             this.sendTokenCountToChat();
         }
@@ -512,6 +513,7 @@ export class ChatTab {
                 return fetchAPI
                     .get_caps()
                     .then((caps) => {
+                        this.default_chat_model = caps.code_chat_default_model;
                         return this.web_panel.webview.postMessage({
                             type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
                             payload: {
