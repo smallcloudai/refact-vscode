@@ -394,6 +394,8 @@ export class ChatTab {
             new vscode.CancellationTokenSource();
         if (model) {
             await chat_model_set(model, ""); // successfully used model, save it
+        } else if(this.default_chat_model) {
+            await chat_model_set(this.default_chat_model, "");
         }
 
         await this.chatHistoryProvider.save_messages_list(
