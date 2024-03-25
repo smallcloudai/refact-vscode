@@ -444,7 +444,7 @@
 		"difflib": "^0.2.4",
 		"fetch-h2": "^3.0.2",
 		"marked": "^4.0.8",
-		"refact-chat-js": "^0.1.2",
+		"refact-chat-js": "^0.1.3",
 		"uuid": "^9.0.1",
 		"vscode-languageclient": "^7.0.0"
 	},
