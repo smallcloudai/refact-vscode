@@ -10,6 +10,7 @@ import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
 import { EVENT_NAMES_FROM_CHAT, EVENT_NAMES_FROM_STATISTIC  } from "refact-chat-js/dist/events";
+import { getKeyBindingForChat } from "./getKeybindings";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -144,13 +145,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    public goto_main()
+    public async goto_main()
     {
         this.address = "";
         if (!this._view) {
             return;
         }
-        this._view.webview.html = this.html_main_screen(this._view.webview);
+        this._view.webview.html = await this.html_main_screen(this._view.webview);
         this.update_webview();
     }
 
@@ -399,7 +400,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    private html_main_screen(webview: vscode.Webview)
+    private async html_main_screen(webview: vscode.Webview)
     {
         const scriptUri1 = webview.asWebviewUri(
             vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
@@ -423,6 +424,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (typeof existing_address !== "string" || (typeof existing_address === "string" && !existing_address.match(/^https?:\/\//))) {
             existing_address = "";
         }
+
+        const open_chat_hotkey = await getKeyBindingForChat();
+
         return `<!DOCTYPE html>
                 <html lang="en">
                 <head>
@@ -441,7 +445,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div id="sidebar" class="sidebar">
                     <div class="chat-panel">
-                        <button tabindex="-1" id="chat-new"><?xml version="1.0" ?><svg height="1657.973px" style="enable-background:new 0 0 1692 1657.973;" version="1.1" viewBox="0 0 1692 1657.973" width="1692px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="comment"><g><path d="M1216.598,1657.973c-15.035,0-29.926-4.822-41.984-14.746l-439.527-361.254H158.332    C71.515,1281.973,0,1209.012,0,1120.074V160.168C0,71.627,71.515,0.973,158.332,0.973h1374.836    c87.743,0,158.832,70.655,158.832,159.195v959.909c0,88.938-71.089,161.896-158.832,161.896H1282v309.93    c0,25.561-14.415,48.826-37.528,59.744C1235.479,1655.892,1226.173,1657.973,1216.598,1657.973z M158.332,132.973    c-13.953,0-25.332,11.52-25.332,27.195v959.906c0,15.805,11.615,29.898,25.332,29.898H758.77c15.311,0,29.89,4.95,41.715,14.674    L1150,1451.998v-236.699c0-36.49,30.096-65.326,66.586-65.326h316.582c14.123,0,26.832-14.639,26.832-29.896V160.168    c0-15.146-12.457-27.195-26.832-27.195H158.332z"/></g></g><g id="Layer_1"/></svg>New&nbsp;Chat</button>
+                        <button tabindex="-1" id="chat-new">
+                            <?xml version="1.0" ?>
+                            <svg height="1657.973px" style="enable-background:new 0 0 1692 1657.973;" version="1.1" viewBox="0 0 1692 1657.973" width="1692px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="comment"><g><path d="M1216.598,1657.973c-15.035,0-29.926-4.822-41.984-14.746l-439.527-361.254H158.332    C71.515,1281.973,0,1209.012,0,1120.074V160.168C0,71.627,71.515,0.973,158.332,0.973h1374.836    c87.743,0,158.832,70.655,158.832,159.195v959.909c0,88.938-71.089,161.896-158.832,161.896H1282v309.93    c0,25.561-14.415,48.826-37.528,59.744C1235.479,1655.892,1226.173,1657.973,1216.598,1657.973z M158.332,132.973    c-13.953,0-25.332,11.52-25.332,27.195v959.906c0,15.805,11.615,29.898,25.332,29.898H758.77c15.311,0,29.89,4.95,41.715,14.674    L1150,1451.998v-236.699c0-36.49,30.096-65.326,66.586-65.326h316.582c14.123,0,26.832-14.639,26.832-29.896V160.168    c0-15.146-12.457-27.195-26.832-27.195H158.332z"/></g></g><g id="Layer_1"/></svg>
+                            New&nbsp;Chat
+                            <sup class="sidebar__hotkey">${open_chat_hotkey}</sup>
+                        </button>
                     </div>
                     <div class="chat-history">
                         <div class="chat-history-list"></div>

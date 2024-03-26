@@ -359,6 +359,7 @@ body.vscode-light #login {
 	box-sizing: border-box;
 	text-decoration: none;
 	display: flex;
+	gap: 6px;
 	align-items: center;
 	justify-content: center;
 	width: 100%;
@@ -370,7 +371,7 @@ body.vscode-light #login {
 	margin-top: 2px;
 	width: 14px;
 	height: 14px;
-	margin-right: 5px;
+	/* margin-right: 5px; */
 }
 #chat-new svg {
 	fill: var(--secondary);
@@ -1246,4 +1247,9 @@ body.vscode-light .refact-welcome__subpanel {
 	margin: 0 !important;
 	margin-right: 4px !important;
 	margin-top: -1px !important;
+}
+
+.sidebar__hotkey {
+	align-self: flex-start;
+	font-size: 8px;
 }
