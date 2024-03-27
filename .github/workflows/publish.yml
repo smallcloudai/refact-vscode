@@ -1,0 +1,93 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      lsp_branch:
+        description: "Branch name to publish"
+        default: "main"
+      stable_release:
+        description: "Publish stable release version"
+        default: false
+        type: boolean
+
+jobs:
+  publish:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            code-target: win32-x64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            code-target: win32-arm64
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+            code-target: linux-x64
+          - os: ubuntu-20.04
+            target: aarch64-unknown-linux-gnu
+            code-target: linux-arm64
+          - os: ubuntu-20.04
+            target: arm-unknown-linux-gnueabihf
+            code-target: linux-armhf
+          - os: macos-11
+            target: x86_64-apple-darwin
+            code-target: darwin-x64
+          - os: macos-11
+            target: aarch64-apple-darwin
+            code-target: darwin-arm64
+
+    env:
+      LLM_LS_TARGET: ${{ matrix.target }}
+
+    name: Publish in marketplace (VSCE) (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: ${{ env.FETCH_DEPTH }}
+
+      - name: Install VSCE
+        run: |
+          npm install
+          npm install -g @vscode/vsce
+
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: build.yml
+          repo: smallcloudai/refact-lsp
+          branch: ${{ inputs.lsp_branch }}
+          path: ./assets
+          name: dist-${{ matrix.target }}
+
+      - name: Package VSCE extension
+        shell: bash
+        run: |
+          chmod +x ./assets/refact-lsp*
+          if [[ ${{ inputs.stable_release }}  != "true" ]]; then
+            export PRERELEASE=--pre-release
+          fi
+          echo "PRERELEASE=${PRERELEASE}"
+          vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
+
+      - name: Publish VSCE extension
+        shell: bash
+        run: |
+          if [[ ${{ inputs.stable_release }}  != "true" ]]; then
+            export PRERELEASE=--pre-release
+          fi
+          echo "PRERELEASE=${PRERELEASE}"
+          vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: vscode-plugin-${{ matrix.target }}
+          path: ./*.vsix

@@ -1,0 +1,42 @@
+:where(.vscode-light) {
+    color-scheme: light;
+
+  }
+:where(.vscode-dark) {
+    color-scheme: dark;
+  }
+
+.vscode-dark {
+    color-scheme: dark;
+}
+
+.radix-themes {
+  /** TODO: there are more theme-able variables we can use */
+   --default-font-family: var(--vscode-font-family);
+   --code-font-family: var(--vscode-editor-font-family);
+   --color-background: var(--vscode-sideBar-background);
+   --color-panel: var(--vscode-panel-background);
+   --color-surface: var(--vscode-panel-background);
+   color: var(--vscode-sideBar-foreground);
+   background-color: var(--color-background);
+}
+
+:where([data-state-tabbed]) .radix-themes {
+  --color-background: var(--vscode-editor-background);
+  --color-panel: var(--vscode-input-background);
+  color: var(--vscode-editor-foreground);
+}
+
+body {
+    padding: 0;
+    background-color: transparent;
+}
+
+
+.hljs {
+  background: var(--vscode-textPreformat-background);
+}
+
+.hljs > code {
+  background-color: transparent;
+}

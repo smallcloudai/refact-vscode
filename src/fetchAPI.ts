@@ -2,9 +2,19 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from "./userLogin";
-import * as usageStats from "./usageStats";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
+import * as statusBar from "./statusBar";
+import {
+	isCommandPreviewResponse,
+	isDetailMessage,
+	type CapsResponse,
+	type CommandCompletionResponse,
+	type ChatContextFileMessage,
+	type ChatContextFile,
+	isCustomPromptsResponse,
+    type CustomPromptsResponse,
+} from "refact-chat-js/dist/events";
 
 
 let globalSeq = 100;
@@ -19,7 +29,7 @@ export class PendingRequest {
     streaming_callback: Function | undefined;
     streaming_end_callback: Function | undefined;
     streaming_buf: string = "";
-    streaming_error: boolean = false;
+    streaming_error: string = "";
 
     constructor(apiPromise: Promise<any> | undefined, cancelToken: vscode.CancellationToken)
     {
@@ -52,32 +62,39 @@ export class PendingRequest {
             if (to_eat === "[DONE]") {
                 if (this.streaming_end_callback) {
                     // The normal way to end the streaming
-                    await this.streaming_end_callback(this.streaming_error);
+                    let my_cb = this.streaming_end_callback;
                     this.streaming_end_callback = undefined;
+                    await my_cb(this.streaming_error);
                 }
                 break;
             }
             if (to_eat === "[ERROR]") {
                 console.log("Streaming error");
-                this.streaming_error = true;
+                this.streaming_error = "[ERROR]";
                 break;
             }
             let json = JSON.parse(to_eat);
+            let error_detail = json["detail"];
+            if (typeof error_detail === "string") {
+                this.streaming_error = error_detail;
+                break;
+            }
             if (this.streaming_callback) {
                 await this.streaming_callback(json);
             }
         }
     }
 
-    supply_stream(h2stream: Promise<fetchH2.Response>, api_fields: estate.ApiFields)
+    supply_stream(h2stream: Promise<fetchH2.Response>, scope: string, url: string)
     {
-        this.streaming_error = false;
-        this.api_fields = api_fields;
+        this.streaming_error = "";
         h2stream.catch((error) => {
-            if (!error.message.includes("aborted")) {
-                usageStats.report_success_or_failure(false, "h2stream (1)", api_fields.url, error, "");
+            let aborted = error && error.message && error.message.includes("aborted");
+            if (!aborted) {
+                console.log(["h2stream error (1)", error]);
+                statusBar.send_network_problems_to_status_bar(false, scope, url, error, "");
             } else {
-                // Totally normal, user cancelled the request.
+                // Normal, user cancelled the request.
             }
             return;
         });
@@ -111,19 +128,31 @@ export class PendingRequest {
                         if (this.streaming_buf.startsWith("{")) {
                             // likely a error, because it's not a stream, no "data: " prefix
                             console.log(["looks like a error", this.streaming_buf]);
-                            this.streaming_error = true;
-                            usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, this.streaming_buf, "");
+                            let error_message: string;
+                            try {
+                                let j = JSON.parse(this.streaming_buf);
+                                error_message = j["detail"];
+                                if (typeof error_message !== "string") {
+                                    error_message = this.streaming_buf;
+                                }
+                            } catch (e) {
+                                console.log(["error parsing error json", e]);
+                                error_message = this.streaming_buf; // as a string
+                            }
+                            this.streaming_error = error_message;
+                            // statusBar.send_network_problems_to_status_bar(false, scope, url, this.streaming_buf, "");
                         } else if (this.streaming_error) {
-                            usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, "streaming_error", "");
+                            // statusBar.send_network_problems_to_status_bar(false, scope, url, "streaming_error", "");
                         } else {
-                            usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", "");
+                            // statusBar.send_network_problems_to_status_bar(true, scope, url, "", "");
                         }
                         // Normally [DONE] produces a callback, but it's possible there's no [DONE] sent by the server.
                         // Wait 500ms because inside VS Code "readable" and "end"/"close" are sometimes called in the wrong order.
                         await new Promise(resolve => setTimeout(resolve, 500));
                         if (this.streaming_end_callback) {
-                            await this.streaming_end_callback(this.streaming_error);
+                            let my_cb = this.streaming_end_callback;
                             this.streaming_end_callback = undefined;
+                            await my_cb(this.streaming_error);
                         }
                     });
                     resolve("");
@@ -135,20 +164,27 @@ export class PendingRequest {
                         // until the previous one is finished, should be fine...
                         usabilityHints.show_message_from_server("InferenceServer", json_arrived.inference_message);
                     }
-                    if (look_for_common_errors(json_arrived, api_fields)) {
+                    if (look_for_common_errors(json_arrived, scope, "")) {
                         reject();
                         return;
                     }
-                    usageStats.report_success_or_failure(true, api_fields.scope, api_fields.url, "", json_arrived["model"]);
+                    let model_name = json_arrived["model"];
+                    if (typeof json_arrived === "object" && json_arrived.length !== undefined) {
+                        model_name = json_arrived[0]["model"];
+                    }
+                    statusBar.send_network_problems_to_status_bar(true, scope, url, "", model_name);
                     resolve(json_arrived);
                 }
             }).catch(async (error) => {
-                if (error && !error.message.includes("aborted")) {
-                    usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
+                let aborted = error && error.message && error.message.includes("aborted");
+                if (!aborted) {
+                    console.log(["h2stream error (2)", error]);
+                    statusBar.send_network_problems_to_status_bar(false, scope, url, error, "");
                 }
                 if (this.streaming_end_callback) {
-                    await this.streaming_end_callback(error !== undefined);
+                    let my_cb = this.streaming_end_callback;
                     this.streaming_end_callback = undefined;
+                    await my_cb(error !== undefined);
                 }
                 reject();
             });
@@ -158,19 +194,21 @@ export class PendingRequest {
                 _global_reqs.splice(index, 1);
             }
             if (_global_reqs.length === 0) {
-                global.status_bar.statusbarLoading(false);
+                global.status_bar.statusbar_spinner(false);
             }
             // console.log(["--pendingRequests", _global_reqs.length, request.seq]);
         }).catch((error) => {
+            let aborted = error && error.message && error.message.includes("aborted");
             if (error === undefined) {
                 // This is a result of reject() without parameters
                 return;
-            } else if (!error || !error.message || !error.message.includes("aborted")) {
-                usageStats.report_success_or_failure(false, api_fields.scope, api_fields.url, error, "");
+            } else if (!aborted) {
+                console.log(["h2stream error (3)", error]);
+                statusBar.send_network_problems_to_status_bar(false, scope, url, error, "");
             }
         });
         _global_reqs.push(this);
-        global.status_bar.statusbarLoading(true);
+        global.status_bar.statusbar_spinner(true);
         // console.log(["++pendingRequests", _global_reqs.length, request.seq]);
     }
 }
@@ -184,8 +222,9 @@ export async function wait_until_all_requests_finished()
     for (let i=0; i<_global_reqs.length; i++) {
         let r = _global_reqs[i];
         if (r.apiPromise !== undefined) {
+            console.log([r.seq, "wwwwwwwwwwwwwwwww"]);
             let tmp = await r.apiPromise;
-            console.log([r.seq, "wwwwwwwwwwwwwwwww", tmp]);
+            r.apiPromise = undefined;
         }
     }
 }
@@ -222,29 +261,43 @@ export function save_url_from_login(url: string)
 }
 
 
-export function inference_url(addthis: string, third_party: boolean)
+// export function inference_url(addthis: string, third_party: boolean)
+// {
+//     let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
+//     let url: string;
+//     if (!manual_infurl) {
+//         // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
+//         let url_ = vscode.workspace.getConfiguration().get(third_party ? 'refactai.infurl3rd' : 'refactai.infurl');
+//         if (!url_) {
+//             // Backward compatibility: codify is the old name
+//             url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
+//         }
+//         if (typeof url_ !== 'string' || url_ === '' || !url_) {
+//             url = global_inference_url_from_login;
+//         } else {
+//             url = `${url_}`;
+//         }
+//     } else {
+//         // If manual, then only the specified manual
+//         url = `${manual_infurl}`;
+//     }
+//     if (!url) {
+//         return url;
+//     }
+//     while (url.endsWith("/")) {
+//         url = url.slice(0, -1);
+//     }
+//     url += addthis;
+//     return url;
+// }
+
+
+export function rust_url(addthis: string)
 {
-    let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
-    let url: string;
-    if (!manual_infurl) {
-        // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
-        let url_ = vscode.workspace.getConfiguration().get(third_party ? 'refactai.infurl3rd' : 'refactai.infurl');
-        if (!url_) {
-            // Backward compatibility: codify is the old name
-            url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
-        }
-        if (typeof url_ !== 'string' || url_ === '' || !url_) {
-            url = global_inference_url_from_login;
-        } else {
-            url = `${url_}`;
-        }
-    } else {
-        // If manual, then only the specified manual
-        url = `${manual_infurl}`;
+    if (!global.rust_binary_blob) {
+        return "";
     }
-    if (!url) {
-        return url;
-    }
+    let url = global.rust_binary_blob.rust_url();
     while (url.endsWith("/")) {
         url = url.slice(0, -1);
     }
@@ -253,104 +306,172 @@ export function inference_url(addthis: string, third_party: boolean)
 }
 
 
-export let non_verifying_ctx = fetchH2.context({
-    session: {
-        rejectUnauthorized: false,
-        sessionTimeout: 600,
-    },
-});
-
-
 export function inference_context(third_party: boolean)
 {
-    let modified_url = vscode.workspace.getConfiguration().get('refactai.infurl');
-    if (!modified_url) {
-        // Backward compatibility: codify is the old name
-        modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
-    }
-    // If user has modified the URL, we don't check the certificate, because we assume it's self-signed self-hosted server.
-    // Unless it's a third party request -- that always has a valid certificate.
-    let dont_check_certificate: boolean = !third_party && !!modified_url;
-    if (dont_check_certificate) {
-        return non_verifying_ctx;
-    } else {
-        return {
-            disconnect: fetchH2.disconnect,
-            disconnectAll: fetchH2.disconnectAll,
-            fetch: fetchH2.fetch,
-            onPush: fetchH2.onPush,
-            setup: fetchH2.setup,
-        };
-    }
+    // let modified_url = vscode.workspace.getConfiguration().get('refactai.infurl');
+    // if (!modified_url) {
+    //     // Backward compatibility: codify is the old name
+    //     modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
+    // }
+    // in previous versions, it was possible to skip certificate verification
+    return {
+        disconnect: fetchH2.disconnect,
+        disconnectAll: fetchH2.disconnectAll,
+        fetch: fetchH2.fetch,
+        onPush: fetchH2.onPush,
+        setup: fetchH2.setup,
+    };
 }
 
 
-export function fetch_api_promise(
+// export function fetch_api_promise(
+//     cancelToken: vscode.CancellationToken,
+//     scope: string,
+//     sources: { [key: string]: string },
+//     intent: string,
+//     functionName: string,
+//     cursorFile: string,
+//     cursor0: number,
+//     cursor1: number,
+//     maxTokens: number,
+//     maxEdits: number,
+//     stop_tokens: string[],
+//     stream: boolean,
+//     suggest_longthink_model: string = "",
+//     third_party: boolean = false,
+// ): [Promise<fetchH2.Response>, estate.ApiFields]
+// {
+//     let url = inference_url("/v1/contrast", third_party);
+//     let ctx = inference_context(third_party);
+//     let model_ = vscode.workspace.getConfiguration().get('refactai.model') || "CONTRASTcode";
+//     let model_longthink: string = vscode.workspace.getConfiguration().get('refactai.longthinkModel') || suggest_longthink_model;
+//     if (suggest_longthink_model && suggest_longthink_model !== "CONTRASTcode") {
+//         model_ = model_longthink;
+//     }
+//     vscode.workspace.getConfiguration().update("files.autoSave", "off", true); // otherwise diffs do not work properly
+//     let model: string = `${model_}`;
+//     const apiKey = userLogin.secret_api_key();
+//     if (!apiKey) {
+//         return [Promise.reject("No API key"), new estate.ApiFields()];
+//     }
+//     let temp = 0.2;  // vscode.workspace.getConfiguration().get('codify.temperature');
+//     let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
+//     let api_fields = new estate.ApiFields();
+//     api_fields.scope = scope;
+//     api_fields.url = url;
+//     api_fields.model = model;
+//     api_fields.sources = sources;
+//     api_fields.intent = intent;
+//     api_fields.function = functionName;
+//     api_fields.cursor_file = cursorFile;
+//     api_fields.cursor_pos0 = cursor0;
+//     api_fields.cursor_pos1 = cursor1;
+//     api_fields.ts_req = Date.now();
+//     const body = JSON.stringify({
+//         "model": model,
+//         "sources": sources,
+//         "intent": intent,
+//         "function": functionName,
+//         "cursor_file": cursorFile,
+//         "cursor0": cursor0,
+//         "cursor1": cursor1,
+//         "temperature": temp,
+//         "max_tokens": maxTokens,
+//         "max_edits": maxEdits,
+//         "stop": stop_tokens,
+//         "stream": stream,
+//         "client": `vscode-${client_version}`,
+//     });
+//     const headers = {
+//         "Content-Type": "application/json",
+//         "Authorization": `Bearer ${apiKey}`,
+//     };
+//     let req = new fetchH2.Request(url, {
+//         method: "POST",
+//         headers: headers,
+//         body: body,
+//         redirect: "follow",
+//         cache: "no-cache",
+//         referrer: "no-referrer"
+//     });
+//     let init: any = {
+//         timeout: 20*1000,
+//     };
+//     if (cancelToken) {
+//         let abort = new fetchH2.AbortController();
+//         cancelToken.onCancellationRequested(() => {
+//             console.log(["API fetch cancelled"]);
+//             abort.abort();
+//         });
+//         init.signal = abort.signal;
+//     }
+//     let promise = ctx.fetch(req, init);
+//     return [promise, api_fields];
+// }
+
+
+export function fetch_code_completion(
     cancelToken: vscode.CancellationToken,
-    scope: string,
     sources: { [key: string]: string },
-    intent: string,
-    functionName: string,
-    cursorFile: string,
-    cursor0: number,
-    cursor1: number,
-    maxTokens: number,
-    maxEdits: number,
-    stop_tokens: string[],
-    stream: boolean,
-    suggest_longthink_model: string = "",
-    third_party: boolean = false,
-): [Promise<fetchH2.Response>, estate.ApiFields]
+    multiline: boolean,
+    cursor_file: string,
+    cursor_line: number,
+    cursor_character: number,
+    max_new_tokens: number,
+    no_cache: boolean,
+    temperature: number,
+    // api_fields: estate.ApiFields,
+): Promise<fetchH2.Response>
 {
-    let url = inference_url("/v1/contrast", third_party);
+    let url = rust_url("/v1/code-completion");
+    if (!url) {
+        console.log(["fetch_code_completion: No rust binary working"]);
+        return Promise.reject("No rust binary working");
+    }
+    let third_party = false;
     let ctx = inference_context(third_party);
-    let model_ = vscode.workspace.getConfiguration().get('refactai.model') || "CONTRASTcode";
-    let model_longthink: string = vscode.workspace.getConfiguration().get('refactai.longthinkModel') || suggest_longthink_model;
-    if (suggest_longthink_model && suggest_longthink_model !== "CONTRASTcode") {
-        model_ = model_longthink;
-    }
-    vscode.workspace.getConfiguration().update("files.autoSave", "off", true); // otherwise diffs do not work properly
-    let model: string = `${model_}`;
-    const apiKey = userLogin.secret_api_key();
-    if (!apiKey) {
-        return [Promise.reject("No API key"), new estate.ApiFields()];
-    }
-    let temp = 0.2;  // vscode.workspace.getConfiguration().get('codify.temperature');
+    let model: string = vscode.workspace.getConfiguration().get('refactai.model') || "";
+    // const apiKey = userLogin.secret_api_key();
+    // if (!apiKey) {
+    //     return Promise.reject("No API key");
+    // }
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
-    let api_fields = new estate.ApiFields();
-    api_fields.scope = scope;
-    api_fields.url = url;
-    api_fields.model = model;
-    api_fields.sources = sources;
-    api_fields.intent = intent;
-    api_fields.function = functionName;
-    api_fields.cursor_file = cursorFile;
-    api_fields.cursor_pos0 = cursor0;
-    api_fields.cursor_pos1 = cursor1;
-    api_fields.ts_req = Date.now();
-    const body = JSON.stringify({
+    // api_fields.scope = "code-completion";
+    // api_fields.url = url;
+    // api_fields.model = model;
+    // api_fields.sources = sources;
+    // api_fields.intent = "";
+    // api_fields.function = "completion";
+    // api_fields.cursor_file = cursor_file;
+    // api_fields.cursor_pos0 = -1;
+    // api_fields.cursor_pos1 = -1;
+    // api_fields.ts_req = Date.now();
+    const post = JSON.stringify({
         "model": model,
-        "sources": sources,
-        "intent": intent,
-        "function": functionName,
-        "cursor_file": cursorFile,
-        "cursor0": cursor0,
-        "cursor1": cursor1,
-        "temperature": temp,
-        "max_tokens": maxTokens,
-        "max_edits": maxEdits,
-        "stop": stop_tokens,
-        "stream": stream,
+        "inputs": {
+            "sources": sources,
+            "cursor": {
+                "file": cursor_file,
+                "line": cursor_line,
+                "character": cursor_character,
+            },
+            "multiline": multiline,
+        },
+        "parameters": {
+            "temperature": temperature,
+            "max_new_tokens": max_new_tokens,
+        },
+        "no_cache": no_cache,
         "client": `vscode-${client_version}`,
     });
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        // "Authorization": `Bearer ${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
         headers: headers,
-        body: body,
+        body: post,
         redirect: "follow",
         cache: "no-cache",
         referrer: "no-referrer"
@@ -360,14 +481,18 @@ export function fetch_api_promise(
     };
     if (cancelToken) {
         let abort = new fetchH2.AbortController();
-        cancelToken.onCancellationRequested(() => {
+        cancelToken.onCancellationRequested(async () => {
             console.log(["API fetch cancelled"]);
             abort.abort();
+
+            global.side_panel?.chat?.handleStreamEnd();
+
+            await fetchH2.disconnectAll();
         });
         init.signal = abort.signal;
     }
     let promise = ctx.fetch(req, init);
-    return [promise, api_fields];
+    return promise;
 }
 
 
@@ -375,46 +500,41 @@ export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
     messages: [string, string][],
-    function_name: string,
     model: string,
-    stop_tokens: string[],
     third_party: boolean = false,
-): [Promise<fetchH2.Response>, estate.ApiFields]
+): [Promise<fetchH2.Response>, string, string]
 {
-    let url = "";
-    if (global.chat_v1_style) {
-        url = inference_url("/v1/chat", third_party);
-    } else {
-        url = inference_url("/chat-v1/completions", third_party);
+    let url = rust_url("/v1/chat");
+    if (!url) {
+        console.log(["fetch_chat_promise: No rust binary working"]);
+        return [Promise.reject("No rust binary working"), scope, ""];
     }
     const apiKey = userLogin.secret_api_key();
     if (!apiKey) {
-        return [Promise.reject("No API key"), new estate.ApiFields()];
+        return [Promise.reject("No API key"), "chat", ""];
     }
     let ctx = inference_context(third_party);
-    let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
-    let api_fields = new estate.ApiFields();
-    api_fields.scope = scope;
-    api_fields.url = url;
-    api_fields.function = function_name;
-    api_fields.ts_req = Date.now();
-    api_fields.model = model;
     let json_messages = [];
-    for (let i=0; i<messages.length; i++) {
-        let role = messages[i][0];
-        let text = messages[i][1];
+    let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
+    if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
         json_messages.push({
-            "role": role,
-            "content": text,
+            "role": "system",
+            "content": default_system_prompt,
         });
-        console.log([i, "chat", role]);
+    }
+    for (let i=0; i<messages.length; i++) {
+        json_messages.push({
+            "role": messages[i][0],
+            "content": messages[i][1],
+        });
     }
     const body = JSON.stringify({
         "messages": json_messages,
-        "function": function_name,
-        "stop": stop_tokens,
         "model": model,
-        "client": `vscode-${client_version}`,
+        "parameters": {
+            "max_new_tokens": 1000,
+        },
+        "stream": true,
     });
     const headers = {
         "Content-Type": "application/json",
@@ -440,33 +560,171 @@ export function fetch_chat_promise(
         init.signal = abort.signal;
     }
     let promise = ctx.fetch(req, init);
-    return [promise, api_fields];
+    return [promise, scope, ""];
 }
 
 
-export function look_for_common_errors(json: any, api_fields: estate.ApiFields | undefined): boolean
+export function look_for_common_errors(json: any, scope: string, url: string): boolean
 {
     if (json === undefined) {
         // undefined means error is already handled, do nothing
         return true;
     }
-    let scope = "unknown";
-    let url = "unknown";
-    if (api_fields !== undefined) {
-        scope = api_fields.scope;
-        url = api_fields.url;
-    }
     if (json.detail) {
-        usageStats.report_success_or_failure(false, scope, url, json.detail, "");
+        statusBar.send_network_problems_to_status_bar(false, scope, url, json.detail, "");
         return true;
     }
     if (json.retcode && json.retcode !== "OK") {
-        usageStats.report_success_or_failure(false, scope, url, json.human_readable_message, "");
+        statusBar.send_network_problems_to_status_bar(false, scope, url, json.human_readable_message, "");
         return true;
     }
     if (json.error) {
-        usageStats.report_success_or_failure(false, scope, url, json.error.message, "");
-        return true;
+        if (typeof json.error === "string") {
+            statusBar.send_network_problems_to_status_bar(false, scope, url, json.error, "");
+        } else {
+            statusBar.send_network_problems_to_status_bar(false, scope, url, json.error.message, "");
+        }
     }
     return false;
+}
+
+export async function get_caps(): Promise<CapsResponse> {
+  let url = rust_url("/v1/caps");
+  if (!url) {
+    return Promise.reject("read_caps no rust binary working, very strange");
+  }
+
+  let req = new fetchH2.Request(url, {
+    method: "GET",
+    redirect: "follow",
+    cache: "no-cache",
+    referrer: "no-referrer",
+  });
+
+  let resp = await fetchH2.fetch(req);
+  if (resp.status !== 200) {
+    console.log(["read_caps http status", resp.status]);
+    return Promise.reject("read_caps bad status");
+  }
+  let json = await resp.json();
+  console.log(["successful read_caps", json]);
+  return json as CapsResponse;
+}
+
+export async function getAtCommands(query: string, cursor: number, amount: number): Promise<CommandCompletionResponse> {
+    const url = rust_url("/v1/at-command-completion");
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query, cursor, top_n: amount }),
+    });
+
+    const response = await fetchH2.fetch(request);
+    if (response.status!== 200) {
+      console.log([`${url} http status`, response.status]);
+      return Promise.reject("get At Commands bad status");
+    }
+
+    const json = await response.json();
+
+    if("detail" in json) {
+        throw new Error("Command completion error: " + json.detail);
+    }
+
+    return json as CommandCompletionResponse;
+}
+
+export async function getAtCommandPreview(query: string): Promise<ChatContextFileMessage[]> {
+    const url = rust_url("/v1/at-command-preview");
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({query})
+    });
+
+    const response = await fetchH2.fetch(request);
+
+    if (response.status!== 200) {
+      console.log([`${url} http status`, response.status]);
+      return Promise.reject("get at command preview bad status");
+    }
+
+    const json = await response.json();
+
+      if (!isCommandPreviewResponse(json) && !isDetailMessage(json)) {
+        throw new Error("Invalid response from command preview");
+      }
+      if (isDetailMessage(json)) {
+        return [];
+      }
+
+      const jsonMessages = json.messages.map<ChatContextFileMessage>(
+        ({ role, content }) => {
+          const fileData = JSON.parse(content) as ChatContextFile[];
+          return [role, fileData];
+        }
+      );
+
+      return jsonMessages;
+}
+
+export async function get_statistic_data(): Promise<{ data: string }> {
+    let url = rust_url("/v1/get-dashboard-plots");
+
+    if (!url) {
+      return Promise.reject("get-dashboard-plots doesn't work");
+    }
+    let req = new fetchH2.Request(url, {
+      method: "GET",
+      redirect: "follow",
+      cache: "no-cache",
+      referrer: "no-referrer",
+    });
+
+    let resp = await fetchH2.fetch(req);
+    if (resp.status !== 200) {
+        console.log(["get_dashboard_plots http status", resp.status]);
+        return Promise.reject("get_dashboard_plots");
+      }
+    let json = await resp.json();
+    console.log(["successful get_dashboard_plots", json]);
+    return json;
+  }
+
+export async function get_prompt_customization(): Promise<CustomPromptsResponse> {
+    const url = rust_url("/v1/customization");
+
+    if (!url) {
+        return Promise.reject("unable to get prompt customization");
+    }
+
+    const request = new fetchH2.Request(url, {
+		method: "GET",
+		redirect: "follow",
+		cache: "no-cache",
+		referrer: "no-referrer",
+	});
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["get_prompt_customization http status", response.status]);
+        return Promise.reject("unable to get prompt customization");
+    }
+
+    const json = await response.json();
+
+    if(!isCustomPromptsResponse(json)) {
+        console.log(["get_prompt_customization invalid json", json]);
+        return Promise.reject("unable to get prompt customization: data invalid");
+    }
+
+    return json;
+
 }

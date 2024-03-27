@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as highlight from "./highlight";
 import * as interactiveDiff from "./interactiveDiff";
 import * as codeLens from "./codeLens";
 import * as completionProvider from "./completionProvider";
@@ -25,17 +24,20 @@ export class ApiFields {
     public function: string = "";
     public intent: string = "";
     public sources: { [key: string]: string } = {};
-    public results: { [key: string]: string } = {};
-    public grey_text_explicitly: string = "";  // can be calculated from results minus sources, but this is easier to handle
-    public de_facto_model: string = "";
-    public messages: [string, string][] = [];
     public cursor_file: string = "";
     public cursor_pos0: number = 0;
     public cursor_pos1: number = 0;
+    public de_facto_model: string = "";
+    public results: { [key: string]: string } = {}; // filled for diff
+    public grey_text_explicitly: string = "";       // filled for completion
+    public grey_text_edited: string = "";           // user changed something within completion
+    public messages: [string, string][] = [];       // filled for chat
     public ts_req: number = 0;
     public ts_presented: number = 0;
     public ts_reacted: number = 0;
     public serial_number: number = 0;
+    public accepted: boolean = false;
+    public rejected_reason: string = "";
 };
 
 
@@ -49,8 +51,6 @@ export class StateOfEditor {
     public last_used_ts: number = 0;
     public fn: string = "";
 
-    public inline_prefer_edit_chaining: boolean = false; // Delete?
-
     public highlight_json_backup: any = undefined;
     public highlight_function: string = "";
     public highlight_model: string = "";
@@ -60,8 +60,8 @@ export class StateOfEditor {
 
     public diff_changing_doc: boolean = false;
     public diffDecos: any = [];
-    public diffDeletedLines: any = [];
-    public diffAddedLines: any = [];
+    public diffDeletedLines: number[] = [];
+    public diffAddedLines: number[] = [];
 
     public diff_lens_pos: number = Number.MAX_SAFE_INTEGER;
     public completion_lens_pos: number = Number.MAX_SAFE_INTEGER;
@@ -74,16 +74,13 @@ export class StateOfEditor {
     public showing_diff_for_function: string | undefined = undefined;
     public showing_diff_for_model: string | undefined = undefined;
     public showing_diff_thirdparty: boolean = true;
-    public showing_diff_edit_chain: vscode.Range | undefined = undefined;
     public diff_load_animation_head: number = 0;
     public diff_load_animation_mid: string = "";
-
-    public edit_chain_modif_doc: string | undefined = undefined;
 
     public cursor_move_event: vscode.Disposable|undefined = undefined;
     public text_edited_event: vscode.Disposable|undefined = undefined;
 
-    public data_feedback_candidate: ApiFields|undefined = undefined;
+    // public data_feedback_candidate: ApiFields|undefined = undefined;
 
     constructor(editor: vscode.TextEditor)
     {
@@ -197,9 +194,9 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         vscode.commands.executeCommand('setContext', 'refactcx.runTab', false);
         vscode.commands.executeCommand('setContext', 'refactcx.runEsc', false);
     } else if (old_mode === Mode.Highlight) {
-        highlight.hl_clear(state.editor);
+        // highlight.hl_clear(state.editor);
     } else if (old_mode === Mode.DiffWait) {
-        highlight.hl_clear(state.editor);
+        // highlight.hl_clear(state.editor);
     }
 
     if (new_mode === Mode.Diff) {
@@ -216,7 +213,7 @@ export async function switch_mode(state: StateOfEditor, new_mode: Mode)
         state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
         codeLens.quick_refresh();
         if (state.highlight_json_backup !== undefined) {
-            highlight.hl_show(state.editor, state.highlight_json_backup);
+            // highlight.hl_show(state.editor, state.highlight_json_backup);
         } else {
             console.log(["cannot enter highlight state, no hl json"]);
         }
@@ -242,9 +239,9 @@ export async function back_to_normal(state: StateOfEditor)
 
 function info2sidebar(ev_editor: vscode.TextEditor|undefined)
 {
-    if(global.side_panel !== undefined) {
-        global.side_panel.editor_inform_how_many_lines_selected(ev_editor);
-    }
+    // if(global.side_panel !== undefined) {
+    //     global.side_panel.editor_inform_how_many_lines_selected(ev_editor);
+    // }
 }
 
 
@@ -322,7 +319,7 @@ export function on_text_edited(editor: vscode.TextEditor)
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);
     } else if (state._mode === Mode.Highlight) {
-        highlight.hl_clear(editor);
+        // highlight.hl_clear(editor);
         state.highlight_json_backup = undefined;
         // state.area2cache.clear();
         switch_mode(state, Mode.Normal);

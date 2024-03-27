@@ -1,7 +1,7 @@
 {
 	"name": "codify",
-	"displayName": "Refact Assistant",
-	"description": "The AI Assistant for Code Writing and Refactoring",
+	"displayName": "Refact",
+	"description": "Refact AI Assistant for Code Writing and Refactoring",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
 	"galleryBanner": {
@@ -10,15 +10,15 @@
 	},
 	"homepage": "https://refact.ai",
 	"author": "Small Magellanic Cloud AI <info@smallcloud.tech> (https://refact.ai)",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/smallcloudai/refact-vscode"
-    },
-    "bugs": {
-        "url": "https://github.com/smallcloudai/refact-vscode/issues",
-        "email": "support@smallcloud.tech"
-    },
-	"version": "1.0.53",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/smallcloudai/refact-vscode"
+	},
+	"bugs": {
+		"url": "https://github.com/smallcloudai/refact-vscode/issues",
+		"email": "support@smallcloud.tech"
+	},
+	"version": "3.0.117",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -26,11 +26,16 @@
 		"Programming Languages",
 		"Snippets",
 		"Other",
-		"Machine Learning"
+		"Machine Learning",
+		"Education",
+		"Testing",
+		"Data Science"
 	],
 	"keywords": [
-		"copilot",
+		"refact",
+		"refact.ai",
 		"refactoring",
+		"copilot",
 		"tabnine",
 		"javascript",
 		"python",
@@ -72,11 +77,19 @@
 		"nodejs",
 		"node",
 		"node.js",
-		"jupyter"
+		"jupyter",
+		"chat",
+		"chatgpt",
+		"code completion",
+		"documentation",
+		"refactor",
+		"llm",
+		"test",
+		"security",
+		"coding"
 	],
 	"activationEvents": [
-		"onStartupFinished",
-		"onView:refactai-toolbox"
+		"onStartupFinished"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -84,35 +97,100 @@
 			"type": "object",
 			"title": "Refact Assistant",
 			"properties": {
-				"refactai.apiKey": {
+				"refactai.addressURL": {
 					"type": "string",
-					"default": null,
-					"description": "Secret API Key. It's used to authenticate your requests. It's filled automatically on first login, you don't have to change it."
-				},
-				"codify.apiKey": {
-					"type": "string",
-					"default": null,
-					"deprecationMessage": "Use refactai.apiKey instead."
+					"description": "For Enterprise, put there your company's server address. Your admin should have emailed that to you.\nFor self-hosted, use something like http://127.0.0.1:8008/\nFor inference in public cloud, use \"Refact\" or \"HF\".",
+					"default": "",
+					"order": 0
 				},
 				"refactai.infurl": {
 					"type": "string",
-					"description": "For self-hosted inference, set the URL to your inference server, for example https://127.0.0.1:8008/\nLeave blank otherwise.",
-					"default": ""
+					"deprecationMessage": "The new field is called addressURL. It's about the same, but it has special values like \"HF\" and if it's empty, makes the plugin do nothing, which is better for Enterprise use case to prevent leaks.",
+					"order": 0
+				},
+				"refactai.apiKey": {
+					"type": "string",
+					"default": "",
+					"description": "Secret API Key. It's used to authenticate your requests.",
+					"order": 1
+				},
+				"codify.apiKey": {
+					"type": "string",
+					"deprecationMessage": "Use refactai.apiKey instead.",
+					"order": 1
+				},
+				"refactai.insecureSSL": {
+					"type": "boolean",
+					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors.",
+					"default": false,
+					"order": 2
+				},
+				"refactai.completionMaxTokens": {
+					"type": "number",
+					"markdownDescription": "Maximum number of tokens to generate for code completion. Leave 0 if not sure.",
+					"default": 0,
+					"order": 3
+				},
+				"refactai.codeCompletionModel": {
+					"type": "string",
+					"description": "Which model to use, for example \"bigcode/starcoder\". Leave blank if not sure.",
+					"default": "",
+					"order": 4
+				},
+				"refactai.codeCompletionScratchpad": {
+					"type": "string",
+					"description": "Which scratchpad to use, for example \"FIM-PSM\". Leave blank if not sure.",
+					"default": "",
+					"order": 5
+				},
+				"refactai.telemetryCodeSnippets": {
+					"type": "boolean",
+					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
+					"default": false,
+					"order": 6
 				},
 				"refactai.pauseCompletion": {
 					"type": "boolean",
 					"description": "Pause automatic code suggestions. Manual activation still works.",
-					"default": false
+					"default": false,
+					"order": 7
 				},
-				"refactai.autoHideSidebar": {
+				"refactai.defaultSystemPrompt": {
+					"type": "string",
+					"markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
+					"default": "",
+					"order": 8
+				},
+				"refactai.vecdb": {
 					"type": "boolean",
-					"description": "Auto hide sidebar after function activation.",
-					"default": false
+					"description": "Enable embedded vecdb for search (experimental)",
+					"default": false,
+					"order": 9
+				},
+				"refactai.ast": {
+					"type": "boolean",
+					"description": "Enable syntax parsing (experimental, works only for popular languages).",
+					"default": false,
+					"order": 10
+				},
+				"refactai.xDebug": {
+					"type": "number|undefined",
+					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
+					"order": 11
 				}
 			}
 		},
 		"properties": [],
 		"commands": [
+			{
+				"command": "refactaicmd.sendChatToSidebar",
+				"title": "Open in Sidebar",
+				"enablement": "refactaicmd.openSidebarButtonEnabled"
+			},
+			{
+				"command": "refactaicmd.closeInlineChat",
+				"title": "Close"
+			},
 			{
 				"command": "refactaicmd.activateToolbox",
 				"title": "Activate",
@@ -130,7 +208,7 @@
 			},
 			{
 				"command": "refactaicmd.callChat",
-				"title": "Call Chat",
+				"title": "Chat",
 				"key": "alt+c",
 				"category": "Refact.ai"
 			},
@@ -163,6 +241,11 @@
 				"command": "refactaicmd.addPrivacyOverride2",
 				"title": "Add Privacy Rule: Level 2",
 				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.openPromptCustomizationPage",
+				"title": "Open Prompt Customization Page",
+				"category": "Refact.ai"
 			}
 		],
 		"menus": {
@@ -170,6 +253,10 @@
 				{
 					"submenu": "refact-access-menu",
 					"group": "z_commands"
+				},
+				{
+					"group": "z_commands",
+					"command": "refactaicmd.callChat"
 				}
 			],
 			"refact-access-menu": [
@@ -241,7 +328,7 @@
 				{
 					"type": "webview",
 					"id": "refactai-toolbox",
-					"name": "AI Toolbox"
+					"name": ""
 				}
 			]
 		},
@@ -352,15 +439,21 @@
 	},
 	"dependencies": {
 		"@types/marked": "^4.0.8",
+		"@types/vscode": "^1.69.0",
 		"diff": "^5.1.0",
 		"difflib": "^0.2.4",
 		"fetch-h2": "^3.0.2",
-		"marked": "^4.0.8"
+		"json5": "^2.2.3",
+		"marked": "^4.0.8",
+		"refact-chat-js": "^0.1.5",
+		"uuid": "^9.0.1",
+		"vscode-languageclient": "^7.0.0"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.2.0",
 		"@types/mocha": "^9.1.1",
 		"@types/node": "^20.4.2",
+		"@types/uuid": "^9.0.4",
 		"@types/vscode": "^1.69.0",
 		"@typescript-eslint/eslint-plugin": "^5.30.0",
 		"@typescript-eslint/parser": "^5.30.0",

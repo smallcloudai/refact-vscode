@@ -9,8 +9,13 @@ body.vscode-light {
 	--secondary: rgba(0, 0, 0, 0.5);
 	--dark: rgba(0, 0, 0, 0.7);
 }
+* {
+	box-sizing: border-box !important;
+}
 body {
-	overflow: hidden;
+	padding: 0;
+	margin: 0;
+	position: relative;
 }
 body.vscode-dark {
 	--color: #fff;
@@ -22,16 +27,22 @@ body.vscode-dark {
 	bottom: 0px;
 	left: 0;
 	right: 0;
+	width: 100%;
+	box-sizing: border-box;
+	/* background-color: var(--vscode-sideBar-background) !important; */
+	z-index: 10 !important;
+	overflow: hidden;
+	padding: 20px 0 0px;
+}
+.sidebar-controls-inner {
 	display: flex;
 	justify-content: flex-start;
 	flex-direction: column;
 	align-items: center;
-	width: 100%;
-	box-sizing: border-box;
+	position: relative;
+	padding: 10px 10px 1px;
 	background-color: var(--vscode-sideBar-background) !important;
-	padding: 0 0 10px 0;
-	z-index: 10 !important;
-	overflow: hidden;
+	z-index: 998;
 }
 .sidebar-buttons {
 	width: 100%;
@@ -69,8 +80,10 @@ body.vscode-dark {
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
+	margin-right: 10px;
 	line-height: 14px;
-    display: none;
+	display: none;
+	white-space: nowrap;
 }
 #profile span::before {
 	content: "\e80A";
@@ -103,7 +116,9 @@ body.vscode-light #profile {
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
+	margin-right: 10px;
 	line-height: 14px;
+	white-space: nowrap;
 }
 #report_bugs span::before {
 	content: "\e80A";
@@ -132,7 +147,9 @@ body.vscode-light #profile {
 	text-align: right;
 	margin: 5px 0;
 	margin-top: 5px;
+	margin-right: 10px;
 	line-height: 14px;
+	white-space: nowrap;
 }
 #discord span::before {
 	content: "\e80F";
@@ -167,10 +184,40 @@ body.vscode-light #profile {
 	margin: 5px 0;
 	flex-grow: 0;
 	flex-shrink: 0;
+	border-radius: 6px;
 }
+#statistic {
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	color: var(--secondary);
+	padding: 7px 6px;
+	background-color: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	/* display: flex; */
+	display: none;
+    flex: 1 0 auto;
+	width: 32px;
+	height: 33px;
+	align-items: center;
+	text-align: center;
+    justify-content: center;
+	margin: 5px;
+	flex-grow: 0;
+	flex-shrink: 0;
+	border-radius: 6px;
+}
+body.vscode-light #statistic svg path {
+	fill: var(--secondary) !important;
+}
+
 #settings span {
 	display: none;
 	margin-left: 5px;
+}
+.vscode-high-contrast #settings {
+    border: 1px solid var(--vscode-textSeparator-foreground);
 }
 #settings i::before {
 	color: var(--secondary);
@@ -200,7 +247,6 @@ body.vscode-light #profile {
 	cursor: pointer;
 	box-sizing: border-box;
 	text-decoration: none;
-    flex: 1 0 auto;
     width: 32px;
     height: 33px;
 	align-items: center;
@@ -210,6 +256,7 @@ body.vscode-light #profile {
 	margin-left: 5px;
 	position: relative;
     display: none;
+	border-radius: 6px;
 }
 #keys span::before {
 	color: var(--vscode-sideBar-background);
@@ -233,6 +280,12 @@ body.vscode-light #profile {
 	text-transform: none;
 	line-height: 1em;
 }
+.vscode-high-contrast #keys {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
+.vscode-high-contrast #keys span::before {
+	color: var(--vscode-textSeparator-foreground) !important;
+}
 #privacy {
 	font-size: 13px;
 	border: 1px solid var(--secondary);
@@ -242,11 +295,12 @@ body.vscode-light #profile {
     height: 33px;
 	cursor: pointer;
 	box-sizing: border-box;
-	width: 100%;
+	/* width: 100%; */
 	text-align: center;
     justify-content: center;
 	margin: 5px 5px 5px 0;
     display: none;
+	border-radius: 6px;
 }
 #privacy span::before {
 	color: var(--secondary);
@@ -262,6 +316,9 @@ body.vscode-light #profile {
 	line-height: 1em;
 	font-size: 13px;
 	margin-right: 5px;
+}
+.vscode-high-contrast #privacy {
+    border: 1px solid var(--vscode-textSeparator-foreground);
 }
 body.vscode-light #settings {
 	color: var(--secondary);
@@ -286,8 +343,44 @@ body.vscode-light #login {
 	color: var(--secondary);
 	border-color: var(--secondary);
 }
+.chat-panel {
+	position: relative;
+	width: 100%;
+	padding: 0 10px;
+}
+#chat-new {
+	font-size: 13px;
+	margin: 0;
+	border: 1px solid var(--secondary);
+	padding: 8px 6px;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	text-align: center;
+    display: none;
+	border-radius: 6px;
+}
+#chat-new svg {
+	margin-top: 2px;
+	width: 14px;
+	height: 14px;
+	/* margin-right: 5px; */
+}
+#chat-new svg {
+	fill: var(--secondary);
+}
+.vscode-high-contrast #chat {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
 
-#chat {
+#history {
 	font-size: 13px;
 	border: 1px solid var(--secondary);
 	padding: 8px 6px;
@@ -342,6 +435,7 @@ body.vscode-light #chat {
 	margin-left: 5px;
 	line-height: 14px;
     display: none;
+	margin-right: auto;
 }
 #logout::before {
 	content: "\e812";
@@ -518,6 +612,7 @@ body.vscode-light #logout {
     position: relative;
     box-sizing: border-box;
     height: 100vh;
+	width: 100%;
 }
 .toolbox {
     height: 100%;
@@ -775,30 +870,23 @@ body.vscode-light #logout {
 	display: none;
 }
 @media screen and (max-width: 300px) {
-	.sidebar-buttons {
+	/* .sidebar-buttons {
 		flex-wrap: wrap;
-	}
-	.sidebar-inline {
-		flex-direction: column;
-        align-items: flex-start;
-	}
-	#login {
+	} */
+	/* #login {
 		width: calc(100% - 38px);
 		margin-left: 0 !important;
 	}
     #privacy {
-		width: calc(100% - 36px - 32px - 10px);	
+		width: calc(100% - 36px - 32px - 10px);
     }
 	#key {
 		width: 32px !important;
 	}
-	#chat {
-		margin-right: 0;
-	}
     #settings {
         margin-left: 0;
         margin-right: 0;
-    }
+    } */
 }
 
 .toolbox-tags {
@@ -906,4 +994,262 @@ body.vscode-light #logout {
 	text-transform: uppercase;
 	width: 100% !important;
 	font-size: 11px;
+}
+
+.refact-welcome__container {
+	height: 100%;
+	box-sizing: border-box;
+}
+.refact-welcome__whole {
+	padding: 10px 10px 0;
+}
+.refact-welcome__menu { }
+.refact-welcome__lead {
+	margin-bottom: 10px;
+}
+.refact-welcome__select,
+.refact-welcome__provider {
+	display: flex;
+	padding: 10px;
+	background-color: rgba(255, 255, 255, 0.05);
+	margin-bottom: 10px;
+	cursor: pointer;
+	padding-left: 12px;
+	box-sizing: border-box;
+	border-radius: 6px;
+}
+.refact-welcome__select:hover,
+.refact-welcome__provider:hover {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+}
+body.vscode-light .refact-welcome__select,
+body.vscode-light .refact-welcome__provider {
+	background-color: rgba(0, 0, 0, 0.05);
+}
+body.vscode-light .refact-welcome__select:hover,
+body.vscode-light .refact-welcome__provider:hover {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+}
+.refact-welcome__select input {
+	/* display: none; */
+}
+.refact-welcome__inlinewrap {
+	display: flex;
+	align-items: center;
+}
+.refact-welcome__select ul {
+	padding-left: 13px;
+	margin-top: 5px;
+	list-style-type: '- ';
+}
+.refact-welcome__select span {
+	margin-left: 5px;
+	font-size: 14px;
+}
+.refact-welcome__select--selected {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	color: var(--vscode-editor-selectionForeground) !important;
+}
+
+.refact-welcome__input {
+	width: 100%;
+	border: 0;
+	border: 1px solid var(--secondary);
+	padding: 10px;
+	background-color: transparent;
+	color: var(--secondary);
+	box-sizing: border-box;
+	border-radius: 6px;
+}
+
+.refact-welcome__select:hover .refact-welcome__desc {
+    display: block;
+}
+.refact-welcome__radio {
+	margin: 0;
+	position: relative;
+}
+.refact-welcome__desc {
+	/* display: none; */
+	font-size: 12px;
+}
+.refact-welcome__savebutton { }
+.refact-welcome__enterprise {
+	display: none;
+}
+.refact-welcome__personal {
+	display: none;
+}
+.refact-welcome__selfhosted {
+	display: none;
+}
+.refact-welcome__back {
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 20px;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: block;
+	text-align: center;
+	display: inline-flex;
+	color: var(--secondary);
+	background-color: transparent;
+	border-radius: 6px;
+}
+.refact-welcome__back:hover {
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	color: var(--vscode-editor-selectionForeground) !important;
+}
+.refact-welcome__subscreen--selected {
+	display: block;
+}
+.refact-welcome__subscreen {
+	position: relative;
+	overflow: hidden;
+	box-sizing: border-box;
+}
+.refact-welcome__subscreen div {
+	margin-bottom: 15px;
+	box-sizing: border-box;
+}
+.refact-welcome__savebutton {
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 20px;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: block;
+	text-align: center;
+	display: inline-flex;
+	color: var(--vscode-editor-selectionForeground) !important;
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	border-radius: 6px;
+}
+.vscode-high-contrast .refact-welcome__savebutton,
+.vscode-high-contrast .refact-welcome__next,
+.vscode-high-contrast .refact-welcome__back,
+.vscode-high-contrast input {
+    border: 1px solid var(--vscode-textSeparator-foreground);
+}
+.refact-welcome__hf {
+	/* border: 0;
+	display: block;
+	text-align: left;
+	padding: 0;
+	margin: 0;
+	background: transparent;
+	margin-bottom: 30px;
+	margin-top: 15px;
+	color: var(--secondary); */
+	text-decoration: underline;
+	cursor: pointer;
+}
+body.vscode-light .refact-welcome__hf {
+	/* border: 0;
+	display: inline;
+	text-align: left;
+	padding: 0;
+	margin: 0;
+	background: transparent;
+	margin-bottom: 30px;
+	margin-top: 15px; */
+	text-decoration: underline;
+}
+.refact-welcome__actions {
+	display: flex;
+	width: 100%;
+	justify-content: space-between;
+	box-sizing: border-box;
+	align-items: center;
+}
+.refact-welcome__next {
+	font-size: 13px;
+	border: 1px solid var(--secondary);
+	padding: 8px 20px;
+	color: var(--secondary);
+	background: transparent;
+	cursor: pointer;
+	box-sizing: border-box;
+	text-decoration: none;
+	display: block;
+	text-align: center;
+	margin: 5px 0;
+	margin-left: auto;
+	border-radius: 6px;
+}
+.refact-welcome__content  {
+	box-sizing: border-box;
+}
+.refact-welcome__subpanel {
+	padding: 10px;
+	background-color: rgba(255, 255, 255, 0.05);
+	margin-bottom: 20px;
+	display: none;
+}
+.refact-welcome__subpanel--selected {
+	display: block;
+}
+body.vscode-light .refact-welcome__subpanel {
+	padding: 10px;
+	background-color: rgba(0, 0, 0, 0.05);
+}
+.refact-welcome__hflink {
+	margin: 15px 0;
+}
+
+.refact-welcome__label {
+	display: block;
+	/* font-weight: bold; */
+	margin-bottom: 5px;
+}
+.refact-welcome__or {
+	margin: 10px 0;
+	/* text-align: center; */
+}
+.refact-welcome__refact {
+	display: block;
+	width: 100%;
+	background-color: var(--vscode-editor-selectionBackground) !important;
+	border: 0;
+	padding: 10px 20px;
+	text-align: center;
+	/* font-weight: bold; */
+	color: var(--vscode-editor-selectionForeground) !important;
+	cursor: pointer;
+	margin-bottom: 20px;
+	border-radius: 6px;
+}
+.refact-welcome__error-refact,
+.refact-welcome__error-enterprise {
+	display: none;
+	color: var(--vscode-editorError-foreground);
+}
+.refact-welcome__telemetry {
+	margin-top: 25px;
+}
+.refact-welcome__telemetry label {
+	display: flex;
+	align-items: flex-start;
+	padding-left: 0;
+	margin-bottom: 7px;
+	font-size: 12px;
+	line-height: 12px;
+}
+.refact-welcome__telemetrybasic,
+.refact-welcome__telemetrycode {
+	padding: 0 !important;
+	margin: 0 !important;
+	margin-right: 4px !important;
+	margin-top: -1px !important;
+}
+
+.sidebar__hotkey {
+	align-self: flex-start;
+	font-size: 8px;
 }

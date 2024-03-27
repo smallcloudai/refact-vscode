@@ -26,14 +26,14 @@ export class PrivacySettings {
           value: 1,
           name: "Level 1",
           short_description:
-            "Refact can read your files, but only uses AI models hosted at Refact",
+            "Refact uses AI models hosted at Refact cloud, or your self-hosting server.",
           long_description:
             "Data will be sent to Refact servers only. We don't collect datasets on the server side. If you use a self-hosting server, your data will be sent only to your server.",
         },
         {
           value: 2,
           name: "Level 2",
-          short_description: "Refact can use any model, including 3rd party",
+          short_description: "Refact is allowed to use any model, including 3rd party",
           long_description: "Data could be sent also to a 3rd party model.",
         },
       ];
@@ -64,7 +64,6 @@ export class PrivacySettings {
         // );
 
         PrivacySettings.currentPanel = new PrivacySettings(panel, context.extensionUri, context);
-
 
         panel.webview.onDidReceiveMessage((data) => {
 			switch (data.type) {

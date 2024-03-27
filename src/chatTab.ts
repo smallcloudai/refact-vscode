@@ -1,212 +1,734 @@
+
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
-import * as userLogin from "./userLogin";
-import { marked } from 'marked'; // Markdown parser documentation: https://marked.js.org/
-import * as estate from "./estate";
 import * as crlf from "./crlf";
+import * as estate from "./estate";
+import ChatHistoryProvider, { Chat } from "./chatHistory";
+import { basename } from "path";
+
+const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdiff/
+
+// circular dependency
+import { open_chat_tab } from "./sidebar";
+
+import {
+	EVENT_NAMES_FROM_CHAT,
+	EVENT_NAMES_TO_CHAT,
+	EVENT_NAMES_TO_CONFIG,
+	type ChatSetSelectedSnippet,
+	type ReceiveAtCommandCompletion,
+	type ReceiveAtCommandPreview,
+	type Snippet,
+	type ChatContextFile,
+	type ToggleActiveFile,
+	type RestoreChat,
+	type ActiveFileInfo,
+	type ChatMessages,
+	type ReceiveTokenCount,
+	type FileInfo,
+	type UpdateConfigMessage,
+	type RequestPrompts,
+	type ReceivePromptsError,
+	type ReceivePrompts,
+} from "refact-chat-js/dist/events";
+
+
+
+export function attach_code_from_editor(editor: vscode.TextEditor, insert_here_tag: boolean): [vscode.Range, vscode.Range, string, string, string]
+{
+    if (editor.document.uri.scheme !== "file") {
+        return [new vscode.Range(0, 0, 0, 0), new vscode.Range(0, 0, 0, 0), "", "", ""];
+    }
+    let selection = editor.selection;
+    let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
+    let code_snippet = "";
+    if (!empty) {
+        let last_line_empty = selection.end.character === 0;
+        let last_line_n = Math.max(selection.end.line - (last_line_empty ? 1 : 0), selection.start.line);
+        let last_line_maxpos = editor.document.lineAt(last_line_n).range.end.character;
+        selection = new vscode.Selection(selection.start.line, 0, last_line_n, last_line_maxpos);
+        code_snippet = editor.document.getText(selection);
+    }
+    let fn = editor.document.fileName;
+    let pos0 = selection.start;
+    let pos1 = selection.end;
+    let attach = "";
+    while (1) {
+        let attach_before = editor.document.getText(new vscode.Range(pos0, selection.start));
+        let attach_after = editor.document.getText(new vscode.Range(selection.start, pos1));
+        let attach_test = attach_before + `${insert_here_tag ? "\n|INSERT-HERE|\n" : ""}` + attach_after;
+        if (attach_test && attach_test.length > 2000) {
+            break;
+        }
+        attach = attach_test;
+        let moved = false;
+        if (pos0.line > 0) {
+            pos0 = new vscode.Position(pos0.line - 1, 0);
+            moved = true;
+        }
+        if (pos1.line < editor.document.lineCount - 1) {
+            pos1 = new vscode.Position(pos1.line + 1, 999999);
+            moved = true;
+        }
+        if (!moved) {
+            break;
+        }
+    }
+    let attach_range = new vscode.Range(pos0, pos1);
+    [attach] = crlf.cleanup_cr_lf(attach, []);
+    return [selection, attach_range, attach, fn, code_snippet];
+}
 
 
 export class ChatTab {
-    // public static current_tab: ChatTab | undefined;
-    // private _disposables: vscode.Disposable[] = [];
-    public web_panel: vscode.WebviewPanel;
-    public messages: [string, string][];
+  // public static current_tab: ChatTab | undefined;
+    private _disposables: vscode.Disposable[] = [];
+    public messages: [string, string][] = [];
     public cancellationTokenSource: vscode.CancellationTokenSource;
+    public working_on_attach_filename: string = "";
     public working_on_attach_code: string = "";
+    public working_on_attach_range: vscode.Range | undefined = undefined;
     public working_on_snippet_code: string = "";
     public working_on_snippet_range: vscode.Range | undefined = undefined;
     public working_on_snippet_editor: vscode.TextEditor | undefined = undefined;
     public working_on_snippet_column: vscode.ViewColumn | undefined = undefined;
-    public model_to_thirdparty: {[key: string]: boolean};
+    public model_to_thirdparty: { [key: string]: boolean } = {};
+    private default_chat_model: undefined|string;
 
-    private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, context: any)
-    {
-        this.web_panel = panel;
-        this.web_panel.webview.html = ChatTab.get_html_for_webview(
-            this.web_panel.webview,
-            extensionUri,
-        );
-        this.messages = [];
-        this.model_to_thirdparty = {};
-        this.cancellationTokenSource = new vscode.CancellationTokenSource();
+    public get_messages(): [string, string][] {
+        return this.messages;
     }
 
-    public static async activate_from_outside(
-        question: string,
-        editor: vscode.TextEditor | undefined,
-        attach_default: boolean,
-        use_model: string,
-        use_model_function: string,
-        )
-    {
-        let context: vscode.ExtensionContext | undefined = global.global_context;
-        if (!context) {
-            return;
+    public constructor(
+        public web_panel: vscode.WebviewPanel | vscode.WebviewView,
+        public chatHistoryProvider: ChatHistoryProvider,
+        public chat_id = ""
+    ) {
+        this.cancellationTokenSource = new vscode.CancellationTokenSource();
+        this.handleEvents = this.handleEvents.bind(this);
+        this.handleStreamEnd = this.handleStreamEnd.bind(this);
+        this.dispose = this.dispose.bind(this);
+
+        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
+          this.postActiveFileInfo();
+          this.sendSnippetToChat();
+        }));
+
+        this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
+          this.postActiveFileInfo();
+          this.sendSnippetToChat();
+        }));
+
+        this._disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
+            if(event.affectsConfiguration("refactai.vecdb") || event.affectsConfiguration("refactai.ast")) {
+                this.handleSettingsChange();
+            }
+        }));
+
+        this._disposables.push(this.web_panel.onDidDispose(this.dispose));
+
+    }
+
+    async focus() {
+        if("reveal" in this.web_panel) {
+            this.web_panel.reveal();
         }
+    }
+
+    dispose() {
+        this._disposables.forEach(d => d.dispose());
+        const otherTabs = global.open_chat_tabs.filter(
+          (openTab) => openTab.chat_id !== this.chat_id
+        );
+        global.open_chat_tabs = otherTabs;
+    }
+
+    async getHistory(): Promise<Chat | undefined> {
+        return this.chatHistoryProvider.lookup_chat(this.chat_id);
+    }
+
+    async saveToSideBar() {
+        const history = await this.getHistory();
+        if(this.messages.length > 0) {
+          this.chatHistoryProvider.save_messages_list(
+            this.chat_id,
+            this.messages,
+            history?.chatModel || "",
+            history?.chat_title
+          );
+        }
+
+        if (!global.side_panel?.chat) {
+          global.side_panel?.goto_main();
+        }
+    }
+
+    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string, append_snippet_to_input: boolean) {
+
+        const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
+
+        const history = {
+            chat_id: "",
+            chatModel: "",
+            messages: [],
+            chat_title: "",
+            ...(savedHistory || {})
+        };
+
+        const {
+            chatModel,
+            messages,
+            chat_title
+        } = history;
+
 
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab",
-            "Refact.ai Chat",
-            vscode.ViewColumn.Two,
+            truncate(`Refact.ai ${chat_title}`, 24),
+            vscode.ViewColumn.One,
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
             }
         );
-        panel.iconPath = vscode.Uri.file(context.asAbsolutePath("images/discussion-bubble.svg"));
 
-        let free_floating_tab = new ChatTab(panel, context.extensionUri, context);
-        let code_snippet = "";
-        free_floating_tab.working_on_snippet_range = undefined;
-        free_floating_tab.working_on_snippet_editor = undefined;
-        free_floating_tab.working_on_snippet_column = undefined;
-        if (!use_model) {
-            [use_model, use_model_function] = await chat_model_get();
-        }
-        let fireup_message = {
-            command: "chat-set-fireup-options",
-            chat_models: [] as [string, string][],
-            chat_use_model: use_model,
-            chat_use_model_function: use_model_function,
-            chat_attach_file: "",
-            chat_attach_default: false,
-            manual_infurl: vscode.workspace.getConfiguration().get("refactai.infurl")
-        };
-        if (global.longthink_functions_today) {
-            const keys = Object.keys(global.longthink_functions_today);
-            for (let i = 0; i < keys.length; i++) {
-                let key = keys[i];
-                if (key.includes("chat-") || key.includes("-chat")) {
-                    let function_dict = global.longthink_functions_today[key];
-                    let model = function_dict.model;
-                    if (model === "open-chat") { // TODO: for backward compatibility, remove this later
-                        model = "gpt3.5";
-                    }
-                    fireup_message["chat_models"].push([model, function_dict.function_name]);
-                    free_floating_tab.model_to_thirdparty[model] = !!(function_dict.thirdparty);
-                }
-            }
-            if (fireup_message["chat_models"].length === 0 && !global.chat_v1_style) {
-                fireup_message["chat_models"] = [["gpt3.5", "chat"]];
-            }
-        }
-        if (editor) {
-            let selection = editor.selection;
-            let empty = selection.start.line === selection.end.line && selection.start.character === selection.end.character;
-            if (!empty) {
-                let last_line_empty = selection.end.character === 0;
-                selection = new vscode.Selection(selection.start.line, 0, selection.end.line, last_line_empty ? 0 : 999999);
-                code_snippet = editor.document.getText(selection);
-                free_floating_tab.working_on_snippet_range = selection;
-                free_floating_tab.working_on_snippet_editor = editor;
-                free_floating_tab.working_on_snippet_column = editor.viewColumn;
-            }
-            let fn = editor.document.fileName;
-            let short_fn = fn.replace(/.*[\/\\]/, "");
-            fireup_message["chat_attach_file"] = short_fn;
-            fireup_message["chat_attach_default"] = attach_default;
-            let pos0 = selection.start;
-            let pos1 = selection.end;
-            let attach = "";
-            while (1) {
-                let attach_test = editor.document.getText(new vscode.Range(pos0, pos1));
-                if (attach_test.length > 2000) {
-                    break;
-                }
-                attach = attach_test;
-                let moved = false;
-                if (pos0.line > 0) {
-                    pos0 = new vscode.Position(pos0.line - 1, 0);
-                    moved = true;
-                }
-                if (pos1.line < editor.document.lineCount - 1) {
-                    pos1 = new vscode.Position(pos1.line + 1, 999999);
-                    moved = true;
-                }
-                if (!moved) {
-                    break;
-                }
-            }
-            free_floating_tab.working_on_attach_code = attach;
-        }
-        free_floating_tab.working_on_snippet_code = code_snippet;
-        if (question) {
-            if (code_snippet) {
-                question = "```\n" + code_snippet + "\n```\n" + question;
-            }
-            free_floating_tab.chat_post_question(question, use_model, use_model_function, !!code_snippet);
+        const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
+
+        if (global.open_chat_tabs === undefined) {
+            // TODO: find out how this gets unset :/
+            global.open_chat_tabs = [tab];
         } else {
-            let pass_dict = { command: "chat-set-question-text", value: {question: ""} };
-            if (code_snippet) {
-                pass_dict["value"]["question"] = "```\n" + code_snippet + "\n```\n";
-            }
-            panel.webview.postMessage(pass_dict);
+            global.open_chat_tabs.push(tab);
         }
 
-        panel.webview.onDidReceiveMessage(async (data) => {
-			switch (data.type) {
-                case "open-new-file": {
-                    vscode.workspace.openTextDocument().then((document) => {
-                        vscode.window.showTextDocument(document, vscode.ViewColumn.Active).then((editor) => {
-                            editor.edit((editBuilder) => {
-                                editBuilder.insert(new vscode.Position(0, 0), data.value);
-                            });
+        panel.onDidDispose(async () => {
+            await tab.saveToSideBar();
+            tab.dispose();
+        });
+
+        panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
+
+        panel.webview.onDidReceiveMessage(tab.handleEvents);
+
+        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
+    }
+
+    async restoreChat(chat: {
+        id: string;
+        messages: [string, string][];
+        title?: string;
+        model: string;
+    }, appendSnippet = false) {
+        const [model] = chat.model ? [chat.model] : await chat_model_get();
+        const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
+        // TODO: fix cast this
+        const messages = chat.messages as ChatMessages;
+        this.chat_id = chat.id;
+        return new Promise<void>((resolve) => {
+            const disposables: vscode.Disposable[] = [];
+            const restore = (event: { type: string }) => {
+                if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
+
+                    const action: RestoreChat = {
+                        type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
+                        payload: {
+                          id: this.chat_id,
+                          chat: {
+                            ...chat,
+                            messages,
+                            attach_file: !!snippet,
+                            model
+                          },
+                          snippet
+                        }
+                    };
+
+                    this.web_panel.webview.postMessage(action);
+
+                    this.postActiveFileInfo();
+                    this.toggleAttachFile(!!this.working_on_snippet_code);
+                    this.sendTokenCountToChat();
+                    disposables.forEach((d) => d.dispose());
+                    resolve();
+                }
+            };
+
+            this.web_panel.webview.onDidReceiveMessage(
+                restore,
+                undefined,
+                disposables
+            );
+        });
+
+    }
+
+    getSnippetFromEditor(): Snippet {
+        // if(!this.working_on_snippet_code) { return; }
+        const language = vscode.window.activeTextEditor?.document.languageId ?? "";
+        const isEmpty = vscode.window.activeTextEditor?.selection.isEmpty ?? true;
+        const selection = vscode.window.activeTextEditor?.selection;
+        const code = isEmpty ? "" : vscode.window.activeTextEditor?.document.getText(selection) ?? "";
+        const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
+        const fileName = basename(filePath);
+
+        return {
+            code,
+            language,
+            path: filePath,
+            basename: fileName
+        };
+    }
+
+    sendSnippetToChat() {
+        const snippet = this.getSnippetFromEditor();
+        const action: ChatSetSelectedSnippet = {
+            type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
+            payload: { id: this.chat_id, snippet }
+        };
+        this.web_panel.webview.postMessage(action);
+    }
+
+    toggleAttachFile(attach_file: boolean) {
+        const action: ToggleActiveFile = {
+            type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
+            payload: { id: this.chat_id, attach_file, }
+        };
+
+        this.web_panel.webview.postMessage(action);
+    }
+
+    sendTokenCountToChat() {
+        const action: ReceiveTokenCount = {
+            type: EVENT_NAMES_TO_CHAT.RECEIVE_TOKEN_COUNT,
+            payload: {
+                id: this.chat_id,
+                tokens: global.user_logged_in ? global.user_metering_balance : null
+            }
+        };
+
+        this.web_panel.webview.postMessage(action);
+    }
+
+    // createNewChat() {
+    //     const action: CreateNewChatThread = {
+    //         type: EVENT_NAMES_TO_CHAT.NEW_CHAT,
+    //     };
+    //     this.web_panel.webview.postMessage(action);
+    // }
+
+    postActiveFileInfo(id = this.chat_id) {
+        const file = this.getActiveFileInfo();
+        if(file === null) {
+            const action: ActiveFileInfo = {
+                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+                payload: { id, file: { can_paste: false } },
+            };
+            this.web_panel.webview.postMessage(action);
+        } else {
+            const action: ActiveFileInfo = {
+                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+                payload: { id, file },
+            };
+
+            this.web_panel.webview.postMessage(action);
+        }
+    }
+
+    getActiveFileInfo(): Partial<FileInfo> | null {
+        if(vscode.window.activeTextEditor?.document.uri.scheme === "comment") {
+            return null;
+        }
+        const file_path =
+			vscode.window.activeTextEditor?.document.fileName || "";
+        const file_name = basename(file_path);
+        const file_content = vscode.window.activeTextEditor?.document.getText() || "";
+        const start = vscode.window.activeTextEditor?.selection.start;
+        const end = vscode.window.activeTextEditor?.selection.end;
+        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
+        const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
+        const can_paste = vscode.window.activeTextEditor?.document.uri.scheme === "file";
+
+        const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
+            ? { line1: start.line + 1, line2: end.line + 1 }
+            : { line1:  1, line2: lineCount + 1 };
+
+        const file = {
+            name: file_name,
+            content: file_content,
+            path: file_path,
+            usefulness: 100,
+            cursor,
+            can_paste,
+            ...maybeLineInfo,
+        };
+
+        return file;
+    }
+
+    async handleChatQuestion({
+        id,
+        model,
+        title,
+        messages,
+        attach_file,
+    }: {
+        id: string;
+        model: string;
+        title: string;
+        messages: [string, string][];
+        // messages: ChatMessages;
+        attach_file?: boolean;
+    }): Promise<void> {
+        this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
+        // const file = attach_file && this.getActiveFileInfo();
+
+        // TODO: confirm if context files are no longer sent
+        // if (file) {
+        //     const message: [string, string] = ["context_file", JSON.stringify([file])];
+        //     const tail = messages.splice(-1, 1, message);
+        //     tail.map((m) => messages.push(m));
+        // }
+        this.chat_id = id;
+        this.messages = messages;
+        this.cancellationTokenSource =
+            new vscode.CancellationTokenSource();
+        if (model) {
+            await chat_model_set(model, ""); // successfully used model, save it
+        } else if(this.default_chat_model) {
+            await chat_model_set(this.default_chat_model, "");
+        }
+
+        await this.chatHistoryProvider.save_messages_list(
+            this.chat_id,
+            this.messages,
+            model,
+            title
+        );
+
+        await fetchAPI.wait_until_all_requests_finished();
+        const handle_response = (json: any) => {
+            if (typeof json !== "object") {
+            return;
+            }
+
+            const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
+            this.web_panel.webview.postMessage({
+            type,
+              payload: {
+                  id,
+                  ...json,
+              },
+            });
+        };
+
+        const request = new fetchAPI.PendingRequest(
+            undefined,
+            this.cancellationTokenSource.token
+        );
+        request.set_streaming_callback(
+            handle_response,
+            (error?: string) => this.handleStreamEnd(id, error),
+        );
+        //TODO: find out what this is for?
+        const third_party = this.model_to_thirdparty[model];
+
+        const formattedMessages = this.messages.map<[string, string]>(
+            ([role, content]) => {
+            if (
+                role === "context_file" &&
+                typeof content !== "string"
+            ) {
+                return [role, JSON.stringify(content)];
+            }
+            return [role, content];
+            }
+        );
+
+
+
+        const chat_promise = fetchAPI.fetch_chat_promise(
+            this.cancellationTokenSource.token,
+            "chat-tab",
+            formattedMessages,
+            model,
+            third_party
+        );
+
+        return request.supply_stream(...chat_promise);
+    }
+
+    handleStreamEnd(id: string = this.chat_id, error?: string) {
+        if (error) {
+            this.web_panel.webview.postMessage({
+                type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+                payload: {
+                    id,
+                    message: error,
+                },
+            });
+        } else {
+            this.web_panel.webview.postMessage({
+                type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+                payload: { id },
+            });
+            this.sendTokenCountToChat();
+        }
+    }
+
+    async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; trigger: string | null; number: number }) {
+        fetchAPI.getAtCommands(
+            payload.trigger ?? payload.query,
+            payload.trigger ? payload.trigger.length : payload.cursor,
+            payload.number
+        ).then((res) => {
+            const message: ReceiveAtCommandCompletion = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
+                payload: { id: payload.id, ...res },
+            };
+
+            this.web_panel.webview.postMessage(message);
+        }).catch(() => ({}));
+
+        fetchAPI.getAtCommandPreview(payload.query).then(res => {
+            const message: ReceiveAtCommandPreview = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
+                payload: {id: payload.id, preview: res}
+            };
+
+            this.web_panel.webview.postMessage(message);
+        }).catch(() => ({}));
+    }
+
+    async handleEvents({ type, ...data }: any) {
+        switch (type) {
+
+            case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
+                // Note: context_file will be a different format
+                const { id, messages, title, model, attach_file } = data.payload;
+                return this.handleChatQuestion({ id, model, title, messages, attach_file });
+            }
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
+                return fetchAPI
+                    .get_caps()
+                    .then((caps) => {
+                        this.default_chat_model = caps.code_chat_default_model;
+                        return this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
+                            payload: {
+                                id: data.payload.id,
+                                caps,
+                            },
+                        });
+                    })
+                    .catch((err) => {
+                        return this.web_panel.webview.postMessage({
+                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
+                            payload: {
+                                id: data.payload.id,
+                                message: err.message,
+                            },
                         });
                     });
-                    break;
-                }
-                case "diff-paste-back": {
-                    if (!free_floating_tab.working_on_snippet_editor) {
-                        return;
-                    }
-                    await vscode.window.showTextDocument(free_floating_tab.working_on_snippet_editor.document, free_floating_tab.working_on_snippet_column);
-                    let state = estate.state_of_document(free_floating_tab.working_on_snippet_editor.document);
-                    if (!state) {
-                        return;
-                    }
-                    let editor = state.editor;
-                    if (state.get_mode() !== estate.Mode.Normal) {
-                        return;
-                    }
-                    if (!free_floating_tab.working_on_snippet_range) {
-                        return;
-                    }
-                    let verify_snippet = editor.document.getText(free_floating_tab.working_on_snippet_range!);
-                    if (verify_snippet !== free_floating_tab.working_on_snippet_code) {
-                        return;
-                    }
-                    let text = editor.document.getText();
-                    let snippet_ofs0 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.start);
-                    let snippet_ofs1 = editor.document.offsetAt(free_floating_tab.working_on_snippet_range.end);
-                    let modif_doc: string = text.substring(0, snippet_ofs0) + data.value + text.substring(snippet_ofs1);
-                    [modif_doc, ] = crlf.cleanup_cr_lf(modif_doc, []);
-                    state.showing_diff_modif_doc = modif_doc;
-                    state.showing_diff_move_cursor = true;
-                    estate.switch_mode(state, estate.Mode.Diff);
-                    break;
-                }
-				case "question-posted-within-tab": {
-                    await free_floating_tab.chat_post_question(
-                        data.chat_question,
-                        data.chat_model,
-                        data.chat_model_function,
-                        data.chat_attach_file
-                    );
-                    break;
-				}
-                case "stop-clicked": {
-                    free_floating_tab.cancellationTokenSource.cancel();
-                    break;
-                }
-                case "reset-messages": {
-                    free_floating_tab.messages = data.messages_backup;
-                    break;
-                }
-			}
-		});
+            }
 
-        panel.webview.postMessage(fireup_message);
+            case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
+                const { id, model, messages, title } = data.payload;
+                return this.chatHistoryProvider.save_messages_list(
+                    id,
+                    messages,
+                    model,
+                    title
+                );
+            }
+            case EVENT_NAMES_FROM_CHAT.STOP_STREAMING: {
+                return this.handleStopClicked();
+            }
+
+            case EVENT_NAMES_FROM_CHAT.READY: {
+                const { id } = data.payload;
+                this.chat_id = id;
+                return this.postActiveFileInfo(id);
+            }
+
+            case EVENT_NAMES_FROM_CHAT.SEND_TO_SIDE_BAR: {
+                return this.handleSendToSideBar();
+            }
+
+            case EVENT_NAMES_FROM_CHAT.NEW_FILE: {
+                const value = data.payload.content;
+                return this.handleOpenNewFile(value);
+            }
+
+            case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
+                const value = data.payload.content;
+                return this.handleDiffPasteBack({ code_block: value });
+            }
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
+                return this.handleAtCommandCompletion(data.payload);
+            }
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_PROMPTS: {
+              const action: RequestPrompts = data;
+              return this.handleCustomPromptsRequest(action.payload.id);
+            }
+            // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
+            // // handled in sidebar.ts
+            // }
+
+            // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB: {
+            //  // handled in sidebar.ts
+            // }
+
+        }
+    }
+
+    	async handleCustomPromptsRequest(id: string) {
+        return fetchAPI.get_prompt_customization().then((data) => {
+          const message: ReceivePrompts = {
+				    type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS,
+				    payload: { id, prompts: data.system_prompts },
+			    };
+
+          return this.web_panel.webview.postMessage(message);
+
+        }).catch((err: string) => {
+            const message: ReceivePromptsError = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS_ERROR,
+                payload: { id, error: `Prompts: ${err}` },
+            };
+            return this.web_panel.webview.postMessage(message);
+        });
+    }
+
+    async handleSendToSideBar() {
+        await vscode.commands.executeCommand("refactai-toolbox.focus");
+
+        let editor = vscode.window.activeTextEditor;
+        const history = await this.getHistory();
+
+        if(!history) {
+            await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
+        }
+
+        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+
+        await open_chat_tab(
+            history?.chat_title || "",
+            editor,
+            false,
+            history?.chatModel || "",
+            this.messages,
+            this.chat_id,
+        );
+    }
+    private async handleDiffPasteBack(data: {code_block: string}) {
+        if (!this.working_on_snippet_editor) {
+            return;
+        }
+        await vscode.window.showTextDocument(
+            this.working_on_snippet_editor.document,
+            this.working_on_snippet_column
+        );
+        let state = estate.state_of_document(
+            this.working_on_snippet_editor.document
+        );
+        if (!state) {
+            return;
+        }
+        if (!this.working_on_snippet_range) {
+            const range = this.working_on_snippet_editor.selection;
+            const snippet = new vscode.SnippetString(data.code_block);
+            vscode.window.activeTextEditor?.insertSnippet(snippet, range);
+            return;
+        }
+        return diff_paste_back(
+            state.editor,
+            this.working_on_snippet_range,
+            data.code_block,
+        );
+    }
+
+    private handleStopClicked() {
+        return this.cancellationTokenSource.cancel();
+    }
+
+    private async handleOpenNewFile(value: string) {
+        vscode.workspace.openTextDocument().then((document) => {
+            vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+                .then((editor) => {
+                    editor.edit((editBuilder) => {
+                        editBuilder.insert(new vscode.Position(0, 0), value);
+                    });
+                });
+        });
+    }
+
+    public static async clear_and_repopulate_chat(
+        question: string,
+        editor: vscode.TextEditor | undefined,
+        attach_default: boolean,
+        use_model: string,
+        messages: [string, string][],
+        append_snippet_to_input: boolean = false,
+    ) {
+        let context: vscode.ExtensionContext | undefined = global.global_context;
+        if (!context) {
+            return;
+        }
+        // Okay the check here is for a selected chat
+        let free_floating_tab = global.side_panel?.chat;
+        if (!free_floating_tab) {
+            console.log("no chat found!");
+            return;
+        }
+
+        await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages, append_snippet_to_input);
+    }
+
+    async _clear_and_repopulate_chat(
+        question: string,
+        editor: vscode.TextEditor | undefined,
+        attach_default: boolean,
+        use_model: string,
+        messages: [string, string][],
+        append_snippet_to_input: boolean = false
+    ) {
+        let context: vscode.ExtensionContext | undefined = global.global_context;
+        if (!context) {
+            return;
+        }
+
+        // TODO: find out if this is this needed any more?
+        let code_snippet = "";
+        this.working_on_snippet_range = undefined;
+        this.working_on_snippet_editor = editor;
+        this.working_on_snippet_column = undefined;
+
+        if (editor) {
+            let selection, attach_range: vscode.Range;
+            [selection, attach_range, this.working_on_attach_code, this.working_on_attach_filename, code_snippet] = attach_code_from_editor(editor, false);
+            this.working_on_attach_range = attach_range;
+            if (!selection.isEmpty) {
+                this.working_on_snippet_range = selection;
+                this.working_on_snippet_column = editor.viewColumn;
+            }
+
+        }
+        this.working_on_snippet_code = code_snippet;
+        this.messages = messages;
+
+        const chat = {
+            id: this.chat_id,
+            model: use_model,
+            messages,
+            title: question,
+        };
+
+        return this.restoreChat(chat, append_snippet_to_input);
+
     }
 
     // public dispose()
@@ -221,228 +743,93 @@ export class ChatTab {
     //     }
     // }
 
-    private _question_to_div(question: string, messages_backup: [string, string][])
-    {
-        let valid_html = false;
-        let html = "";
-        try {
-            html = marked.parse(question);
-            valid_html = true;
-        } catch (e) {
-            valid_html = false;
-        }
-        if (!valid_html) {
-            html = question;
-        }
-        this.web_panel.webview.postMessage({
-            command: "chat-post-question",
-            question_html: html,
-            question_raw: question,
-            messages_backup: messages_backup,
-        });
+    handleSettingsChange() {
+        const vecdb =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.vecdb") ?? false;
+
+        const ast =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.ast") ?? false;
+        const message: UpdateConfigMessage = {
+            type: EVENT_NAMES_TO_CONFIG.UPDATE,
+            payload: {
+                features: { vecdb, ast}
+            }
+        };
+        this.web_panel.webview.postMessage(message);
     }
 
-    async chat_post_question(
-        question: string,
-        model: string,
-        model_function: string,
-        attach_file: boolean
-    ) {
-        if(!this.web_panel) {
-            return false;
-        }
-        let login = await userLogin.inference_login();
-        if (!login) {
-            this.web_panel.webview.postMessage({
-                command: "chat-post-answer",
-                answer_html: "The inference server isn't working. Possible reasons: your internet connection is down, you didn't log in, or the Refact.ai inference server is currently experiencing issues.",
-                answer_raw: "",
-                have_editor: false,
-            });
-            return;
-        }
 
-        chat_model_set(model, model_function);  // successfully used model, save it
-
-        this.cancellationTokenSource = new vscode.CancellationTokenSource();
-        let cancelToken = this.cancellationTokenSource.token;
-
-        if (this.messages.length === 0) {
-            // find first 15 characters, non space, non newline, non special character
-            let first_normal_char_index = question.search(/[^ \n\r\t`]/);
-            let first_15_characters = question.substring(first_normal_char_index, first_normal_char_index + 15);
-            let first_16_characters = question.substring(first_normal_char_index, first_normal_char_index + 16);
-            if (first_15_characters !== first_16_characters) {
-                first_15_characters += "…";
-            }
-            this.web_panel.title = first_15_characters;
-            if (attach_file) {
-                this.messages.push(["user", this.working_on_attach_code]);
-                this.messages.push(["assistant", "Thanks for context, what's your question?"]);
-            }
-        }
-
-        if (this.messages.length > 0 && this.messages[this.messages.length - 1][0] === "user") {
-            this.messages.length -= 1;
-        }
-
-        let messages_backup = this.messages.slice();
-        this.messages.push(["user", question]);
-        if (this.messages.length > 10) {
-            this.messages.shift();
-            this.messages.shift(); // so it always starts with a user
-        }
-        this._question_to_div(question, messages_backup);
-        this.web_panel.webview.postMessage({
-            command: "chat-post-answer",
-            answer_html: "⏳",
-            answer_raw: "",
-            have_editor: false,
-        });
-        await fetchAPI.wait_until_all_requests_finished();
-
-        let answer = "";
-        let stack_web_panel = this.web_panel;
-        let stack_this = this;
-
-        async function _streaming_callback(json: any)
-        {
-            if (json === undefined) {
-                return;
-            }
-            if (cancelToken.isCancellationRequested) {
-                console.log(["chat request is cancelled, new data is coming", json]);
-                return;
-            } else {
-                let delta = "";
-                if (json && json["choices"]) {
-                    let choice0 = json["choices"][0];
-                    delta = choice0["delta"];
-                }
-                if (json && json["delta"]) { // TODO: remove this after inference server is updated
-                    delta = json["delta"];
-                }
-                if (delta) {
-                    answer += delta;
-                    let valid_html = false;
-                    let html = "";
-                    try {
-                        let raw_html = answer;
-                        let backtick_backtick_backtick_count = (answer.match(/```/g) || []).length;
-                        if (backtick_backtick_backtick_count % 2 === 1) {
-                            raw_html = answer + "\n```";
-                        }
-                        html = marked.parse(raw_html);
-                        valid_html = true;
-                    } catch (e) {
-                        valid_html = false;
-                    }
-                    if (valid_html) {
-                        stack_web_panel.webview.postMessage({
-                            command: "chat-post-answer",
-                            answer_html: html,
-                            answer_raw: answer,
-                            have_editor: Boolean(stack_this.working_on_snippet_editor)
-                        });
-                        // console.log(["assistant", answer]);
-                    }
-                }
-                if (json && json["metering_balance"]) {
-                    global.user_metering_balance = json["metering_balance"];
-                    if (global.side_panel) {
-                        global.side_panel.update_webview();
-                    }
-                }
-            }
-        }
-
-        async function _streaming_end_callback(any_error: boolean)
-        {
-            // stack_this.web_panel.reveal();
-            console.log("streaming end callback, error: " + any_error);
-            if (any_error) {
-                let backup_user_phrase = "";
-                for (let i = stack_this.messages.length - 1; i < stack_this.messages.length; i++) {
-                    if (i >= 0) {
-                        if (stack_this.messages[i][0] === "user") {
-                            backup_user_phrase = stack_this.messages[i][1];
-                            stack_this.messages.length -= 1;
-                            break;
-                        }
-                    }
-                }
-                console.log("backup_user_phrase:" + backup_user_phrase);
-                stack_this.web_panel.webview.postMessage({ command: "chat-error-streaming", backup_user_phrase: backup_user_phrase });
-            } else {
-                stack_this.messages.push(["assistant", answer]);
-                stack_this.web_panel.webview.postMessage({ command: "chat-end-streaming" });
-            }
-        }
-
-        let request = new fetchAPI.PendingRequest(undefined, cancelToken);
-        request.set_streaming_callback(_streaming_callback, _streaming_end_callback);
-        let third_party = true;
-        third_party = this.model_to_thirdparty[model];
-
-        request.supply_stream(...fetchAPI.fetch_chat_promise(
-            cancelToken,
-            "chat-tab",
-            this.messages,
-            model_function,
-            model,
-            [],
-            third_party,
-        ));
-    }
-
-    static get_html_for_webview(
+    public get_html_for_chat(
         webview: vscode.Webview,
         extensionUri: any,
-    ): string
-    {
+        isTab = false
+    ): string {
+        const vecdb = vscode.workspace
+			.getConfiguration()
+			?.get<boolean>("refactai.vecdb") ?? false;
+
+        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
+
         const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "chat.js")
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
         );
+
         const styleMainUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(extensionUri, "assets", "chat.css")
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "style.css")
         );
+
+        const styleOverride = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "custom-theme.css")
+        );
+
+        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
+        const scaling = fontSize < 14 ? "90%" : "100%";
 
         const nonce = ChatTab.getNonce();
-
         return `<!DOCTYPE html>
-            <html lang="en">
+            <html lang="en" class="light">
             <head>
                 <meta charset="UTF-8">
                 <!--
                     Use a content security policy to only allow loading images from https or from our extension directory,
                     and only allow scripts that have a specific nonce.
+                    TODO: remove  unsafe-inline if posable
                 -->
-                <meta http-equiv="Content-Security-Policy" content="style-src ${webview.cspSource}; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="Content-Security-Policy" content="style-src ${
+                  webview.cspSource
+                } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
                 <title>Refact.ai Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
+                <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div class="refactcss-chat">
-                    <h2 class="refactcss-chat__title">Refact.ai Chat</h2>
-                    <div class="refactcss-chat__wrapper">
-                        <div class="refactcss-chat__content"></div>
-                        <div class="refactcss-chat__panel">
-                            <div class="refactcss-chat__controls">
-                                <div><input type="checkbox" id="chat-attach" name="chat-attach"><label id="chat-attach-label" for="chat-attach">Attach file</label></div>
-                                <div class="refactcss-chat__model">Use model:<select id="chat-model"></select></div>
-                            </div>
-                            <div class="refactcss-chat__commands">
-                                <button id="chat-stop" class="refactcss-chat__stop"><span></span>Stop&nbsp;generating</button>
-                                <textarea id="chat-input" class="refactcss-chat__input"></textarea>
-                                <button id="chat-send" class="refactcss-chat__button"><span></span></button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div id="refact-chat" ${isTab ? "data-state-tabbed" : ""}></div>
 
                 <script nonce="${nonce}" src="${scriptUri}"></script>
+
+                <script nonce="${nonce}">
+                window.onload = function() {
+                    const root = document.getElementById("refact-chat")
+                    RefactChat.render(root, {
+                        host: "vscode",
+                        tabbed: ${isTab},
+                        themeProps: {
+                            accentColor: "gray",
+                            scaling: "${scaling}",
+                        },
+                        features: {
+                            vecdb: ${vecdb},
+                            ast: ${ast},
+                        }
+                    })
+                }
+                </script>
             </body>
             </html>`;
     }
@@ -466,6 +853,13 @@ export async function chat_model_get(): Promise<[string, string]>
     if (!context) {
         return ["", ""];
     }
+
+    try {
+        await global.rust_binary_blob?.read_caps();
+    } catch {
+        return ["", ""];
+    }
+
     let chat_model_ = await context.globalState.get("chat_model");
     let chat_model_function_ = await context.globalState.get("chat_model_function");
     let chat_model: string = "";
@@ -479,6 +873,9 @@ export async function chat_model_get(): Promise<[string, string]>
         chat_model_function = "";
     } else {
         chat_model_function = chat_model_function_;
+    }
+    if (chat_model === "" || !global.chat_models.includes(chat_model)) {
+        chat_model = global.chat_default_model;
     }
     return [chat_model, chat_model_function];
 }
@@ -496,4 +893,106 @@ export async function chat_model_set(chat_model: string, model_function: string)
     await context.globalState.update("chat_model_function", model_function);
 }
 
-export default ChatTab;
+export function backquote_backquote_backquote_remove_language_spec(code: string): string
+{
+    // this removes ```python or ```json or similar, assuming ``` itself is already not there
+    while (1) {
+        let first_char = code[0];
+        if (first_char === "\n") {
+            return code.substring(1);
+        }
+        if (first_char >= 'a' && first_char <= 'z' || first_char >= '0' && first_char <= '9') {
+            code = code.substring(1);
+            continue;
+        } else {
+            break;
+        }
+    }
+    return code;
+}
+
+export function indent_so_diff_is_minimized(orig_code: string, code_block: string): string
+{
+    let least_bad = 1000000;
+    let least_bad_block = "";
+    let code_block_lines = code_block.split(/\r?\n/);
+    for (const indent of ["", "    ", "        ", "            ", "                ", "                    ", "\t", "\t\t", "\t\t\t", "\t\t\t\t", "\t\t\t\t\t", "\t\t\t\t\t"]) {
+        let code_block_indented = code_block_lines.map(line => (line !== "" ? (indent + line) : "")).join('\n');
+        const diff = Diff.diffWordsWithSpace(orig_code, code_block_indented);
+        let how_bad = 0;
+        for (const part of diff) {
+            if (part.added) {
+                how_bad += part.value.length;
+            }
+            if (part.removed) {
+                how_bad += part.value.length;
+            }
+        }
+        if (how_bad < least_bad) {
+            least_bad = how_bad;
+            least_bad_block = code_block_indented;
+        }
+    }
+    return least_bad_block;
+}
+
+export function diff_paste_back(
+    editor: vscode.TextEditor,
+    dest_range: vscode.Range,
+    new_code_block: string,
+): number {
+    let state = estate.state_of_document(editor.document);
+    if (!state) {
+        console.log("diff_paste_back: no state");
+        return -1;
+    }
+    if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.DiffWait) {
+        console.log("diff_paste_back: not in normal mode");
+        return -1;
+    }
+    // Commented out: allows to insert without selection
+    // if (dest_range.isEmpty) {
+    //     console.log("diff_paste_back: dest_range is empty");
+    //     return -1;
+    // }
+    let snippet_ofs0 = editor.document.offsetAt(dest_range.start);
+    let snippet_ofs1 = editor.document.offsetAt(dest_range.end);
+    let code_block_clean = backquote_backquote_backquote_remove_language_spec(new_code_block);
+    let text = editor.document.getText();
+    let orig_text0 = text.substring(0, snippet_ofs0);
+    let orig_text1 = text.substring(snippet_ofs1);
+    let orig_code = text.substring(snippet_ofs0, snippet_ofs1);
+    if (orig_text1.startsWith("\n")) {
+        orig_text1 = orig_text1.substring(1);
+    } else if (orig_text1.startsWith("\r\n")) {
+        orig_text1 = orig_text1.substring(2);
+    }
+    [orig_code] = crlf.cleanup_cr_lf(orig_code, []);
+    [code_block_clean] = crlf.cleanup_cr_lf(code_block_clean, []);
+    code_block_clean = indent_so_diff_is_minimized(orig_code, code_block_clean);
+    let modif_doc: string = orig_text0 + code_block_clean + orig_text1;
+    [modif_doc] = crlf.cleanup_cr_lf(modif_doc, []);
+    state.showing_diff_modif_doc = modif_doc;
+    state.showing_diff_move_cursor = true;
+    estate.switch_mode(state, estate.Mode.Diff);
+
+    let last_affected_line = -1;
+    const changedLines = [...state.diffAddedLines, ...state.diffDeletedLines];
+    if (changedLines.length > 0) {
+        last_affected_line = Math.max(...changedLines);
+    }
+
+    return last_affected_line;
+}
+
+function truncate(str: string, length: number): string {
+  if (str.length <= length) {
+    return str;
+  }
+
+  if (length <= 1) {
+    return "…";
+  }
+
+  return str.slice(0, length - 1) + "…";
+}

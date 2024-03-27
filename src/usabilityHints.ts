@@ -36,6 +36,7 @@ async function _countdown(key: string, start: number)
 
 export async function hint_after_successful_completion()
 {
+    return; // TODO: come up with a better hint
     let fire = await _countdown("codify.countdownHint1", 5);
     if (fire) {
         await show_hint1();
@@ -79,7 +80,7 @@ export async function show_message_from_server(kind_of_message: string, msg: str
         return false;
     }
     let context = context_ as vscode.ExtensionContext;
-    let already_seen = context.globalState.get<string>(`codify.servermsg${kind_of_message}`);
+    let already_seen = context.globalState.get<string>(`refactai.servermsg${kind_of_message}`);
     if (already_seen === undefined) {
         already_seen = "";
     }
@@ -89,6 +90,6 @@ export async function show_message_from_server(kind_of_message: string, msg: str
     if (msg === "") {
         return false;
     }
-    await context.globalState.update(`codify.servermsg${kind_of_message}`, msg);
+    await context.globalState.update(`refactai.servermsg${kind_of_message}`, msg);
     let selection = await vscode.window.showInformationMessage(msg, "OK");
 }
