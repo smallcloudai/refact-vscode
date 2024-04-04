@@ -186,7 +186,8 @@ body.vscode-light #profile {
 	flex-shrink: 0;
 	border-radius: 6px;
 }
-#statistic {
+#statistic,
+#fim-debug {
 	font-size: 13px;
 	border: 1px solid var(--secondary);
 	color: var(--secondary);
@@ -208,6 +209,8 @@ body.vscode-light #profile {
 	flex-shrink: 0;
 	border-radius: 6px;
 }
+
+
 body.vscode-light #statistic svg path {
 	fill: var(--secondary) !important;
 }
