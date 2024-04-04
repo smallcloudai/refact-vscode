@@ -11,6 +11,8 @@ import {
 	type ReceiveFillInTheMiddleDataError,
     type ChatContextFile,
 } from "refact-chat-js/dist/events";
+import { FimDebugData } from 'refact-chat-js/dist/events';
+import { FimDebug, isFIMView } from './fimDebug';
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -222,41 +224,17 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         }
         let de_facto_model = json["model"];
         let serial_number = json["snippet_telemetry_id"];
-        let maybeContext = json["context"] ?? null;
-        this.maybeSendContextToSideBar(maybeContext);
+        this.maybeSendFIMData(json);
         global.status_bar.completion_model_worked(de_facto_model);
         return [completion, serial_number];
     }
 
-	maybeSendContextToSideBar(
-		maybeContext: { role: string; content: string; }[] | null
-	) {
-		if (maybeContext !== null && global.side_panel?._view) {
-			try {
-				const contextFiles: ChatContextFile[] = maybeContext
-					.filter((x) => x.role === "context_file")
-					.map((message) => {
-                        if(typeof message.content === "string"){
-						    return JSON.parse(message.content) as ChatContextFile;
-                        } else {
-                            return message.content
-                        }
-					});
-
-				const message: ReceiveFillInTheMiddleData = {
-					type: EVENT_NAMES_TO_STATISTIC.RECEIVE_FILL_IN_THE_MIDDLE_DATA,
-					payload: { files: contextFiles },
-				};
-				global.side_panel?._view?.webview.postMessage(message);
-			} catch (e: unknown) {
-				const message: ReceiveFillInTheMiddleDataError = {
-					type: EVENT_NAMES_TO_STATISTIC.RECEIVE_FILL_IN_THE_MIDDLE_DATA_ERROR,
-					payload: { message: JSON.stringify(e) },
-				};
-				global.side_panel?._view?.webview.postMessage(message);
-			}
-		}
-	}
+    maybeSendFIMData(data: FimDebugData | null) {
+        console.log("maybeSendFIMData", data);
+        if(data === null) { return; }
+        global.fim_data_cache = data;
+        global.side_panel?.fim_debug?.sendFIMData(data);
+    }
 }
 
 export function _extract_extension(feed: estate.ApiFields)

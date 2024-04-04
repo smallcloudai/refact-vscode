@@ -1,12 +1,24 @@
 import * as vscode from "vscode";
 
-import * as Events from "refact-chat-js/dist/events"
+import * as Events from "refact-chat-js/dist/events";
 
-// Note: this construct seems to be repetitive
+export const VIEW_TYPE = "fim-debug";
 
 function isEvent(e: unknown): e is MessageEvent {
-	return e instanceof MessageEvent;
+    if(!e) { return false; }
+    if(typeof e!== "object") { return false; }
+    if(!("data" in e)) { return false; }
+    return true;
 }
+
+export function isFIMView(view: unknown): view is FimDebug {
+    if(!view) { return false; }
+    if(typeof view!== "object") { return false; }
+    if(!("viewType" in view)) { return false; }
+    return view.viewType === VIEW_TYPE;
+}
+
+// Note: this construct seems to be repetitive
 
 export class FimDebug {
 	private _disposables: vscode.Disposable[] = [];
@@ -15,8 +27,22 @@ export class FimDebug {
 	) {
 		this.dispose = this.dispose.bind(this);
 		this.handleEvents = this.handleEvents.bind(this);
+        this.sendFIMData = this.sendFIMData.bind(this);
+        this.sendFIMError = this.sendFIMError.bind(this);
+        this.handleReadyMessage = this.handleReadyMessage.bind(this);
 		this.web_panel.webview.onDidReceiveMessage(this.handleEvents, this, this._disposables);
 	}
+
+    readonly viewType = VIEW_TYPE;
+
+    handleReadyMessage() {
+        if(global.fim_data_cache) {
+            this.sendFIMData(global.fim_data_cache);
+        } else {
+            const error = "No FIM data found, please make a completion";
+            this.sendFIMError(error);
+        }
+    }
 
     sendFIMData(data: Events.FimDebugData) {
         const event: Events.ReceiveFIMDebugData = {
@@ -37,16 +63,20 @@ export class FimDebug {
     }
 
 	handleEvents(e: unknown) {
-        if(!isEvent(e)) { return; }
-
-        if(Events.isReadyMessageFromFIMDebug(e.data)) {
-            // handle ready message
+        if(!Events.isFIMAction(e)) {
             return;
         }
 
-        if(Events.isRequestFIMData(e.data)) {
-            // check a cache and send the data
-            return;
+        if(Events.isReadyMessageFromFIMDebug(e)) {
+            return this.handleReadyMessage();
+        }
+
+        if(Events.isRequestFIMData(e)) {
+            if(global.fim_data_cache) {
+                return this.sendFIMData(global.fim_data_cache);
+            } else {
+                return this.sendFIMError("No FIM data found, please make a completion");
+            }
         }
 
 	}
