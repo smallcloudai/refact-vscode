@@ -293,6 +293,11 @@ function sidebar_general_script(vscode) {
         vscode.postMessage({ type: "privacy" });
     });
 
+    const fimDebugButton = document.querySelector("#fim-debug");
+    fimDebugButton.addEventListener("click", () => {
+        vscode.postMessage({ type: "fim_debug" });
+    });
+
     const refreshButton = document.querySelector(".sidebar-plan-button");
     refreshButton.addEventListener("click", () => {
         vscode.postMessage({ type: "js2ts_refresh_login" });
@@ -499,6 +504,7 @@ function sidebar_general_script(vscode) {
                 discord.style.display = 'inline-flex';
                 chat.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 statistic.style.display = message.ts2js_havekey ? 'flex' : 'none';
+                fimDebugButton.style.display = message.ts2js_havekey ? "flex": "none";
                 settings.style.display = 'flex';
                 hotkeys.style.display = message.ts2js_havekey ? 'flex' : 'none';
                 if(message.ts2js_apikey) {
