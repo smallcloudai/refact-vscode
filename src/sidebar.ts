@@ -635,9 +635,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <script nonce="${nonce}" src="${scriptUri1}"></script>
                 <script nonce="${nonce}" src="${scriptUri2}"></script>
                 <script>
-                    const vscode = acquireVsCodeApi();
-                    sidebar_general_script(vscode);
-                    chat_history_script(vscode);
+                    window.onload = function() {
+                        const vscode = acquireVsCodeApi();
+                        sidebar_general_script(vscode);
+                        chat_history_script(vscode);
+                    }
                 </script>
                 </body>
                 </html>`;

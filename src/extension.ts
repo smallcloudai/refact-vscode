@@ -22,6 +22,7 @@ import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
 import { fileURLToPath } from 'url';
 import { ChatTab } from './chatTab';
+import { FimDebugData } from 'refact-chat-js/dist/events';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -45,6 +46,8 @@ declare global {
 
     var toolbox_config: launchRust.ToolboxConfig | undefined;
     var toolbox_command_disposables: vscode.Disposable[];
+
+    var fim_data_cache: FimDebugData | undefined;
 }
 
 async function pressed_call_chat(n = 0) {
