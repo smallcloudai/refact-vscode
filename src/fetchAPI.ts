@@ -446,6 +446,8 @@ export function fetch_code_completion(
     // api_fields.cursor_pos0 = -1;
     // api_fields.cursor_pos1 = -1;
     // api_fields.ts_req = Date.now();
+    let use_ast = vscode.workspace.getConfiguration().get<boolean>("refactai.ast");
+
     const post = JSON.stringify({
         "model": model,
         "inputs": {
@@ -462,6 +464,7 @@ export function fetch_code_completion(
             "max_new_tokens": max_new_tokens,
         },
         "no_cache": no_cache,
+        "use_ast": use_ast,
         "client": `vscode-${client_version}`,
     });
     const headers = {
