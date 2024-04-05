@@ -10,7 +10,11 @@ import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
-import { EVENT_NAMES_FROM_CHAT, EVENT_NAMES_FROM_STATISTIC  } from "refact-chat-js/dist/events";
+import {
+	EVENT_NAMES_FROM_CHAT,
+	EVENT_NAMES_FROM_STATISTIC,
+	FIM_EVENT_NAMES,
+} from "refact-chat-js/dist/events";
 import { getKeyBindingForChat } from "./getKeybindings";
 
 type Handler = ((data: any) => void) | undefined;
@@ -395,6 +399,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
         case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
+        case FIM_EVENT_NAMES.BACK:
         case "back-from-chat": {
             this.goto_main();
             this.chat = null;
