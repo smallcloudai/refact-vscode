@@ -73,9 +73,10 @@ export class RustBinaryBlob
         let api_key: string = userLogin.secret_api_key();
         let port: number;
         if (xdebug === 0) {
-            port = this.port;  // keep the same port
-            if (port === 0) {
-                port = Math.floor(Math.random() * 10) + 9090;
+            if (this.lsp_client) { // running
+                port = this.port;  // keep the same port
+            } else {
+                port = Math.floor(Math.random() * 2) + 9080;
             }
         } else {
             port = DEBUG_HTTP_PORT;
@@ -156,6 +157,7 @@ export class RustBinaryBlob
             }
         }
         this.lsp_dispose();
+        this.lsp_client = undefined;
     }
 
     public lsp_dispose()
