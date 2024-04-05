@@ -404,7 +404,9 @@ export function activate(context: vscode.ExtensionContext)
             e.affectsConfiguration("refactai.addressURL") ||
             e.affectsConfiguration("refactai.xDebug") ||
             e.affectsConfiguration("refactai.apiKey") ||
-            e.affectsConfiguration("refactai.insecureSSL")
+            e.affectsConfiguration("refactai.insecureSSL") ||
+            e.affectsConfiguration("refactai.ast") ||
+            e.affectsConfiguration("refactai.vecdb")
         ) {
             if (config_debounce) {
                 clearTimeout(config_debounce);

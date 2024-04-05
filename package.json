@@ -121,7 +121,7 @@
 				},
 				"refactai.insecureSSL": {
 					"type": "boolean",
-					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors.",
+					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors. Allows you to use self-signed certificates.",
 					"default": false,
 					"order": 2
 				},
