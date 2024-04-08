@@ -32,7 +32,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             return [];
         }
 
-        let file_name = storeVersions.filename_from_document(document);
+        let file_name = document.fileName;  // to test canonical path in rust add .toUpperCase();
         let current_line = document.lineAt(position.line);
         let left_of_cursor = current_line.text.substring(0, position.character);
         let right_of_cursor = current_line.text.substring(position.character);
