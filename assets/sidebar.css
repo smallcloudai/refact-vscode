@@ -1250,6 +1250,5 @@ body.vscode-light .refact-welcome__subpanel {
 }
 
 .sidebar__hotkey {
-	align-self: flex-start;
-	font-size: 8px;
+	opacity: 0.8;
 }
