@@ -445,7 +445,7 @@
 		"fetch-h2": "^3.0.2",
 		"json5": "^2.2.3",
 		"marked": "^4.0.8",
-		"refact-chat-js": "^0.1.5",
+		"refact-chat-js": "^0.2.0",
 		"uuid": "^9.0.1",
 		"vscode-languageclient": "^7.0.0"
 	},
