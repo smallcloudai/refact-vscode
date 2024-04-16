@@ -76,7 +76,7 @@ export class RustBinaryBlob
             if (this.lsp_client) { // running
                 port = this.port;  // keep the same port
             } else {
-                port = Math.floor(Math.random() * 2) + 9080;
+                port = Math.floor(Math.random() * 20) + 9080;
             }
         } else {
             port = DEBUG_HTTP_PORT;
