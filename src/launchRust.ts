@@ -21,6 +21,7 @@ export class RustBinaryBlob
     public lsp_client: lspClient.LanguageClient|undefined = undefined;
     public lsp_socket: net.Socket|undefined = undefined;
     public lsp_client_options: lspClient.LanguageClientOptions;
+    public ping_response: string = "";
 
     constructor(asset_path: string)
     {
@@ -69,66 +70,77 @@ export class RustBinaryBlob
 
     public async settings_changed()
     {
-        let xdebug = this.x_debug();
-        let api_key: string = userLogin.secret_api_key();
-        let port: number;
-        if (xdebug === 0) {
-            if (this.lsp_client) { // running
-                port = this.port;  // keep the same port
+        for (let i = 0; i<5; i++) {
+            console.log(`RUST settings changed, attempt to restart ${i+1}`);
+            let xdebug = this.x_debug();
+            let api_key: string = userLogin.secret_api_key();
+            let port: number;
+            let ping_response: string;
+            if (xdebug === 0) {
+                if (this.lsp_client) { // running
+                    port = this.port;  // keep the same port
+                    ping_response = this.ping_response;
+                } else {
+                    port = Math.floor(Math.random() * 20) + 9080;
+                    ping_response = `ping-${Math.floor(Math.random() * 0x10000000000000000).toString(16)}`;
+                }
             } else {
-                port = Math.floor(Math.random() * 20) + 9080;
+                port = DEBUG_HTTP_PORT;
+                console.log(`RUST debug is set, don't start the rust binary. Will attempt HTTP port ${DEBUG_HTTP_PORT}, LSP port ${DEBUG_LSP_PORT}`);
+                console.log("Also, will try to read caps. If that fails, things like lists of available models will be empty.");
+                this.cmdline = [];
+                await this.terminate();  // terminate our own
+                await this.read_caps();  // debugging rust already running, can read here
+
+                await this.fetch_toolbox_config();
+                // await register_commands();
+                await this.start_lsp_socket();
+                return;
             }
-        } else {
-            port = DEBUG_HTTP_PORT;
-            console.log(`RUST debug is set, don't start the rust binary. Will attempt HTTP port ${DEBUG_HTTP_PORT}, LSP port ${DEBUG_LSP_PORT}`);
-            console.log("Also, will try to read caps. If that fails, things like lists of available models will be empty.");
-            this.cmdline = [];
-            await this.terminate();  // terminate our own
-            await this.read_caps();  // debugging rust already running, can read here
+            let url: string = userLogin.get_address();
+            if (url === "") {
+                this.cmdline = [];
+                await this.terminate();
+                return;
+            }
+            let plugin_version = vscode.extensions.getExtension("smallcloud.codify")?.packageJSON.version;   // codify is the old name of the product, smallcloud is the company
+            if (!plugin_version) {
+                plugin_version = "unknown";
+            }
 
-            await this.fetch_toolbox_config();
-            // await register_commands();
-            await this.start_lsp_socket();
-            return;
-        }
-        let url: string = userLogin.get_address();
-        if (url === "") {
-            this.cmdline = [];
-            await this.terminate();
-            return;
-        }
-        let plugin_version = vscode.extensions.getExtension("smallcloud.codify")?.packageJSON.version;   // codify is the old name of the product, smallcloud is the company
-        if (!plugin_version) {
-            plugin_version = "unknown";
-        }
+            let new_cmdline: string[] = [
+                join(this.asset_path, "refact-lsp"),
+                "--address-url", url,
+                "--api-key", api_key,
+                "--ping-message", ping_response,
+                "--http-port", port.toString(),
+                "--lsp-stdin-stdout", "1",
+                "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
+                "--basic-telemetry",
+            ];
 
-        let new_cmdline: string[] = [
-            join(this.asset_path, "refact-lsp"),
-            "--address-url", url,
-            "--api-key", api_key,
-            "--http-port", port.toString(),
-            "--lsp-stdin-stdout", "1",
-            "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
-            "--basic-telemetry",
-        ];
+            if(vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
+                new_cmdline.push("--vecdb");
+            }
+            if( vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
+                new_cmdline.push("--ast");
+            }
 
-        if(vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
-            new_cmdline.push("--vecdb");
-        }
-        if( vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
-            new_cmdline.push("--ast");
-        }
-
-        let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");
-        if (insecureSSL) {
-            new_cmdline.push("--insecure");
-        }
-        let cmdline_existing: string = this.cmdline.join(" ");
-        let cmdline_new: string = new_cmdline.join(" ");
-        if (cmdline_existing !== cmdline_new) {
-            this.cmdline = new_cmdline;
-            this.port = port;
-            await this.launch();
+            let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");
+            if (insecureSSL) {
+                new_cmdline.push("--insecure");
+            }
+            let cmdline_existing: string = this.cmdline.join(" ");
+            let cmdline_new: string = new_cmdline.join(" ");
+            if (cmdline_existing !== cmdline_new) {
+                this.cmdline = new_cmdline;
+                this.port = port;
+                this.ping_response = ping_response;
+                await this.launch();
+            }
+            if (this.lsp_disposable !== undefined) {
+                break;
+            }
         }
         global.side_panel?.update_webview();
     }
@@ -138,9 +150,9 @@ export class RustBinaryBlob
         await this.terminate();
         let xdebug = this.x_debug();
         if (xdebug) {
-            this.start_lsp_socket();
+            await this.start_lsp_socket();
         } else {
-            this.start_lsp_stdin_stdout();
+            await this.start_lsp_stdin_stdout();
         }
     }
 
@@ -211,6 +223,36 @@ export class RustBinaryBlob
         global.side_panel?.update_webview();
     }
 
+    public async ping()
+    {
+        try {
+            let url = this.rust_url();
+            if (!url) {
+                return Promise.reject("ping no rust binary working, very strange");
+            }
+            url += "v1/ping";
+            console.log([url]);
+            let req = new fetchH2.Request(url, {
+                method: "GET",
+                redirect: "follow",
+                cache: "no-cache",
+                referrer: "no-referrer",
+            });
+            let resp = await fetchH2.fetch(req, { timeout: 5000 });
+            if (resp.status !== 200) {
+                console.log(["ping http status", resp.status]);
+                return Promise.reject("ping bad status");
+            }
+            let pong = await resp.text();
+            let success = (pong === this.ping_response || pong === this.ping_response + "\n");
+            console.log([`pong=${pong}`, `expected ${this.ping_response}`, success]);
+            return success;
+        } catch (e) {
+            console.log(["ping error:", e]);
+        }
+        return false;
+    }
+
     public async start_lsp_stdin_stdout()
     {
         console.log("RUST start_lsp_stdint_stdout");
@@ -237,11 +279,24 @@ export class RustBinaryBlob
         );
         this.lsp_disposable = this.lsp_client.start();
         console.log(`RUST START`);
+        const timeoutPromise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+                reject("timeout");
+            }, 5000);
+        });
         try {
-            await this.lsp_client.onReady();
+            await Promise.race([this.lsp_client.onReady(), timeoutPromise]);
             console.log(`RUST /START`);
         } catch (e) {
             console.log(`RUST START PROBLEM e=${e}`);
+            this.lsp_dispose();
+            return;
+        }
+        let success = await this.ping();
+        if (!success) {
+            console.log("RUST ping failed");
+            this.lsp_dispose();
+            return;
         }
         // At this point we had successful client_info and workspace_folders server to client calls,
         // therefore the LSP server is started.
@@ -304,7 +359,7 @@ export class RustBinaryBlob
 
       const request = new fetchH2.Request(url, { method: "GET" });
 
-      const response = await fetchH2.fetch(request);
+      const response = await fetchH2.fetch(request, { timeout: 5000 });
 
       if (!response.ok) {
         console.log([
