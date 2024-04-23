@@ -430,7 +430,7 @@ export function fetch_code_completion(
     }
     let third_party = false;
     let ctx = inference_context(third_party);
-    let model: string = vscode.workspace.getConfiguration().get('refactai.model') || "";
+    let model_name = vscode.workspace.getConfiguration().get<string>("refactai.codeCompletionModel") || "";
     // const apiKey = userLogin.secret_api_key();
     // if (!apiKey) {
     //     return Promise.reject("No API key");
@@ -449,7 +449,7 @@ export function fetch_code_completion(
     let use_ast = vscode.workspace.getConfiguration().get<boolean>("refactai.ast");
 
     const post = JSON.stringify({
-        "model": model,
+        "model": model_name,
         "inputs": {
             "sources": sources,
             "cursor": {
