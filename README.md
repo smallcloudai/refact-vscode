@@ -28,7 +28,7 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 - **Priority Support:** Our engineers are always available to assist you at every stage, from setup to fine-tuning and beyond.
 - **Access to 20+ LLMs:** (including Refact/1.6B, GPT-4, Code Llama, StarCoder2, Mistral, Mixtral, etc.) some of them with the opportunity to fine-tune.
 
-**To get a 3-month free trial** for your team, just fill out the form on [our website](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
+**To get a 2-Week free trial** for your team, just fill out the form on [our website](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
 
 ## Check Out How Easy Refact.ai Is to Use
 
