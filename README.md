@@ -40,7 +40,7 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 ![Chat_brand](https://github.com/smallcloudai/refact-vscode/assets/15157041/7e10a353-bb6f-4c79-b65e-c01a7ab6aece)
 
 ### Just highlight part of the code and ask Toolbox to explain it
-![Toolbox](https://github.com/smallcloudai/refact-vscode/assets/15157041/5c6934d7-0c62-4454-ae6c-55bf0b3d88df)
+![Explain_brand](https://github.com/smallcloudai/refact-vscode/assets/15157041/a5f8519f-284f-43c7-9cce-163dbac86ef7)
 
 ### Ask Toolbox to shorten your code
 ![Shorter_brand](https://github.com/smallcloudai/refact-vscode/assets/15157041/d3724ac7-076c-43d6-a300-2617952ebc8e)
