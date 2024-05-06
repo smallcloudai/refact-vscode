@@ -272,6 +272,11 @@ export class ChatTab {
         const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
         const fileName = basename(filePath);
 
+        this.working_on_snippet_editor = vscode.window.activeTextEditor;
+        this.working_on_snippet_range = selection;
+        this.working_on_snippet_code = code;
+        this.working_on_snippet_column = this.working_on_snippet_editor?.viewColumn;
+
         return {
             code,
             language,
@@ -625,31 +630,34 @@ export class ChatTab {
         );
     }
     private async handleDiffPasteBack(data: {code_block: string}) {
-        if (!this.working_on_snippet_editor) {
-            return;
-        }
-        await vscode.window.showTextDocument(
-            this.working_on_snippet_editor.document,
-            this.working_on_snippet_column
-        );
-        let state = estate.state_of_document(
-            this.working_on_snippet_editor.document
-        );
-        if (!state) {
-            return;
-        }
-        if (!this.working_on_snippet_range) {
-            const range = this.working_on_snippet_editor.selection;
-            const snippet = new vscode.SnippetString(data.code_block);
-            vscode.window.activeTextEditor?.insertSnippet(snippet, range);
-            return;
-        }
-        return diff_paste_back(
-            state.editor,
+		if (!this.working_on_snippet_editor) {
+			return;
+		}
+		await vscode.window.showTextDocument(
+			this.working_on_snippet_editor.document,
+			this.working_on_snippet_column
+		);
+		let state = estate.state_of_document(
+			this.working_on_snippet_editor.document
+		);
+		if (!state) {
+			return;
+		}
+		if (!this.working_on_snippet_range) {
+			const range = this.working_on_snippet_editor.selection;
+			const snippet = new vscode.SnippetString(data.code_block);
+			vscode.window.activeTextEditor?.insertSnippet(snippet, range);
+			return;
+		}
+
+		// works with multi line selections, but doesn't indent correctly :/
+		return diff_paste_back(
+            this.working_on_snippet_editor,
             this.working_on_snippet_range,
-            data.code_block,
+            "\n" + data.code_block + "\n"
         );
-    }
+
+	}
 
     private handleStopClicked() {
         return this.cancellationTokenSource.cancel();
