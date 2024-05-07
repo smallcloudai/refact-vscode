@@ -31,6 +31,7 @@ import {
 	type RequestPrompts,
 	type ReceivePromptsError,
 	type ReceivePrompts,
+	type RequestPreviewFiles,
 } from "refact-chat-js/dist/events";
 
 
@@ -500,6 +501,20 @@ export class ChatTab {
         }).catch(() => ({}));
     }
 
+    async handlePreviewFileRequest(payload: {id: string, query: string}) {
+        fetchAPI
+            .getAtCommandPreview(payload.query)
+            .then((res) => {
+                const message: ReceiveAtCommandPreview = {
+                    type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
+                    payload: { id: payload.id, preview: res },
+                };
+
+                this.web_panel.webview.postMessage(message);
+            })
+            .catch(() => ({}));
+    }
+
     async handleEvents({ type, ...data }: any) {
         switch (type) {
 
@@ -574,6 +589,12 @@ export class ChatTab {
               const action: RequestPrompts = data;
               return this.handleCustomPromptsRequest(action.payload.id);
             }
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_PREVIEW_FILES: {
+				const acton: RequestPreviewFiles = data;
+				return this.handlePreviewFileRequest(acton.payload);
+			}
+
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
             // // handled in sidebar.ts
             // }
@@ -585,7 +606,7 @@ export class ChatTab {
         }
     }
 
-    	async handleCustomPromptsRequest(id: string) {
+    async handleCustomPromptsRequest(id: string) {
         return fetchAPI.get_prompt_customization().then((data) => {
           const message: ReceivePrompts = {
 				    type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS,
@@ -624,6 +645,7 @@ export class ChatTab {
             this.chat_id,
         );
     }
+
     private async handleDiffPasteBack(data: {code_block: string}) {
         if (!this.working_on_snippet_editor) {
             return;
