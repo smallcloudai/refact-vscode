@@ -17,6 +17,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cancelToken: vscode.CancellationToken
     )
     {
+
+        if(document.uri.scheme === "comment") {
+            return [];
+        }
+
         let state = estate.state_of_document(document);
         if (state) {
             if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
