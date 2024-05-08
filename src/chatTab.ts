@@ -672,10 +672,13 @@ export class ChatTab {
 			return;
 		}
 
-		// works with multi line selections, but doesn't indent correctly :/
+        const start = this.working_on_snippet_range.start;
+        const startOfLine = new vscode.Position(start.line, 0);
+        const range = new vscode.Range(startOfLine, this.working_on_snippet_range.end);
+
 		return diff_paste_back(
             this.working_on_snippet_editor,
-            this.working_on_snippet_range,
+            range,
             "\n" + data.code_block + "\n"
         );
 
