@@ -264,6 +264,18 @@ export class ChatTab {
 
     }
 
+    trimIndent(code: string) {
+        const regexp = /^\s*/;
+        const indent = code.match(regexp)?.[0].replace("\n", "") ?? "";
+        const withOutIndent = code.split("\n").map(line => {
+            return line.replace(indent, "");
+        });
+        const result = withOutIndent.join("\n");
+        console.log("trimIndent");
+        console.log({code, result});
+        return result;
+    }
+
     getSnippetFromEditor(): Snippet {
         // if(!this.working_on_snippet_code) { return; }
         const language = vscode.window.activeTextEditor?.document.languageId ?? "";
@@ -273,13 +285,16 @@ export class ChatTab {
         const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
         const fileName = basename(filePath);
 
+
+        const indentedCode = this.trimIndent(code);
+
         this.working_on_snippet_editor = vscode.window.activeTextEditor;
         this.working_on_snippet_range = selection;
-        this.working_on_snippet_code = code;
+        this.working_on_snippet_code = indentedCode;
         this.working_on_snippet_column = this.working_on_snippet_editor?.viewColumn;
 
         return {
-            code,
+            code: indentedCode,
             language,
             path: filePath,
             basename: fileName
