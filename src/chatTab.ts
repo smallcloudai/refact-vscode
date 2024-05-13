@@ -509,15 +509,6 @@ export class ChatTab {
 
             this.web_panel.webview.postMessage(message);
         }).catch(() => ({}));
-
-        fetchAPI.getAtCommandPreview(payload.query).then(res => {
-            const message: ReceiveAtCommandPreview = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
-                payload: {id: payload.id, preview: res}
-            };
-
-            this.web_panel.webview.postMessage(message);
-        }).catch(() => ({}));
     }
 
     async handlePreviewFileRequest(payload: {id: string, query: string}) {
