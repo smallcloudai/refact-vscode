@@ -265,15 +265,14 @@ export class ChatTab {
     }
 
     trimIndent(code: string) {
-        const regexp = /^\s*/;
-        const indent = code.match(regexp)?.[0].replace("\n", "") ?? "";
-        const withOutIndent = code.split("\n").map(line => {
-            return line.replace(indent, "");
+        const tabSettings = vscode.workspace.getConfiguration("editor").get<number>("tabSize") ?? 4;
+        const spaces = " ".repeat(tabSettings);
+        const spacedCode = code.replace(/^\t+/gm, (match) => {
+            return match.replace(/\t/g, spaces);
         });
-        const result = withOutIndent.join("\n");
-        console.log("trimIndent");
-        console.log({code, result});
-        return result;
+        const regexp = new RegExp(`^${spaces}`, "gm");
+        const indented = spacedCode.replace(regexp, "");
+        return indented;
     }
 
     getSnippetFromEditor(): Snippet {
@@ -685,16 +684,26 @@ export class ChatTab {
 			const snippet = new vscode.SnippetString(data.code_block);
 			vscode.window.activeTextEditor?.insertSnippet(snippet, range);
 			return;
-		}
+		};
 
-        const start = this.working_on_snippet_range.start;
-        const startOfLine = new vscode.Position(start.line, 0);
+        // indent block
+        const startOfLine = new vscode.Position(this.working_on_snippet_range.start.line, 0);
+        const endOfLine = new vscode.Position(this.working_on_snippet_range.start.line + 1, 0);
+        const firstLineRange = new vscode.Range(startOfLine, endOfLine);
+        const spaceRegex = /^[ \t]+/;
+        const selectedLine = this.working_on_snippet_editor.document.getText(
+            firstLineRange
+        );
+        const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
+        const code = "\n" + data.code_block + "\n";
+        const indentedCode = code.replace(/\n/mg, "\n" + indent);
+
         const range = new vscode.Range(startOfLine, this.working_on_snippet_range.end);
 
 		return diff_paste_back(
             this.working_on_snippet_editor,
             range,
-            "\n" + data.code_block + "\n"
+            indentedCode
         );
 
 	}
