@@ -110,6 +110,7 @@ export async function streamlined_login()
     // fetchH2 thinks it should reuse the session used for login, even though the IP address is not the same!!!
     await fetchAPI.wait_until_all_requests_finished();
     await fetchH2.disconnectAll();
+    update_default_settings();
     return "OK";
 }
 
@@ -126,8 +127,14 @@ export function inference_login_force_retry()
     _last_inference_login_ts = 0;
 }
 
+export async function inference_login(): Promise<boolean> {
+    return _inference_login().then(res => {
+        if(res) { update_default_settings(); }
+        return res;
+    });
+}
 
-export async function inference_login(): Promise<boolean>
+async function _inference_login(): Promise<boolean>
 {
     let addr = vscode.workspace.getConfiguration().get("refactai.addressURL");
     if (addr !== "Refact") {
@@ -234,3 +241,48 @@ export async function inference_login(): Promise<boolean>
     }
     return _last_inference_login_cached_result;
 }
+
+export function update_default_settings(
+    user_plan: string = global.user_active_plan,
+    context: vscode.ExtensionContext = global.global_context
+) {
+    const stateKey = "refactai.configSettingsForPlan";
+    type SettingState = {
+        version: string;
+        plan: string;
+    };
+
+    const hasAst = vscode.workspace.getConfiguration().get<boolean>("refactai.ast");
+    const hasVecDB = vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb");
+
+
+    const nextState: SettingState = {
+        version: context.extension.packageJSON.version ?? "",
+        plan: user_plan,
+    };
+
+    context.globalState.setKeysForSync([stateKey]);
+    const state = context.globalState.get<SettingState>(stateKey);
+
+    if(state && state.plan === user_plan) {
+        // do nothing
+        return;
+    }
+
+    // ast for everybody
+    if (!hasAst) {
+        vscode.workspace.getConfiguration().update("refactai.ast", true, vscode.ConfigurationTarget.Global);
+    }
+
+    // vecdb for paid users
+    if (user_plan !== "FREE" && !hasVecDB) {
+		vscode.workspace.getConfiguration().update("refactai.vecdb", true, vscode.ConfigurationTarget.Global);
+	}
+
+    context.globalState.update(stateKey, nextState);
+
+    // clean up with this
+    // context.globalState.update(stateKey, undefined);
+
+}
+

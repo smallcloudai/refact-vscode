@@ -164,7 +164,7 @@
 				"refactai.ast": {
 					"type": "boolean",
 					"description": "Enable syntax parsing (experimental, works only for popular languages).",
-					"default": false,
+					"default": true,
 					"order": 10
 				},
 				"refactai.xDebug": {
