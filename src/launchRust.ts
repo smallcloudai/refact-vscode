@@ -124,6 +124,9 @@ export class RustBinaryBlob
             }
             if( vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
                 new_cmdline.push("--ast");
+                const limit = vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
+                // set the limit
+                new_cmdline.push(`--ast-index-max-files ${limit}`)
             }
 
             let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");

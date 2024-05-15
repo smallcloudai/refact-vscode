@@ -731,3 +731,62 @@ export async function get_prompt_customization(): Promise<CustomPromptsResponse>
     return json;
 
 }
+
+type AstStatus = {
+	files_unparsed: number;
+	files_total: number;
+	ast_index_files_total: number;
+	ast_index_symbols_total: number;
+	state: "idle" | "parsing" | "indexing";
+};
+
+async function fetch_ast_status() {
+    const url = rust_url("/v1/ast-status");
+    if(!url) {
+        return Promise.reject("ast-status no rust binary working, very strange");
+    }
+
+    const request = new fetchH2.Request(url, {
+        method: "GET",
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    });
+
+    const response = await fetchH2.fetch(request);
+    if (response.status!== 200) {
+      console.log([`${url} http status`, response.status]);
+      return Promise.reject(`ast status bad status ${response.status}:[${response.statusText}]`);
+    }
+
+    const json = await response.json();
+    console.log(["successful ast-status", json]);
+    return json as AstStatus;
+}
+
+export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number) {
+    const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
+
+    fetch_ast_status()
+        .then(res => {
+            if(res.ast_index_files_total > limit) {
+                statusbar.statusbar_spinner(false);
+                statusbar.set_socket_error(false, `Ast file limit reached`);
+                return;
+            }
+            if(res.state === "parsing" || res.state === "indexing") {
+                if(statusbar.spinner === false) {
+                    statusbar.statusbar_spinner(true);
+                }
+                setTimeout(() => maybe_show_ast_status(statusbar, limit), 500);
+                return;
+            } else {
+                statusbar.statusbar_spinner(false);
+                return;
+            }
+        })
+        .catch((err) => {
+            // show error ?
+            console.log(err);
+        });
+}
