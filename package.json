@@ -164,13 +164,19 @@
 				"refactai.ast": {
 					"type": "boolean",
 					"description": "Enable syntax parsing (experimental, works only for popular languages).",
-					"default": false,
+					"default": true,
 					"order": 10
+				},
+				"refactai.astFileLimit": {
+					"type": "number",
+					"description": "Limit the size of AST files to avoid memory issues.",
+					"default": 15000,
+					"order": 11
 				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
-					"order": 11
+					"order": 12
 				}
 			}
 		},

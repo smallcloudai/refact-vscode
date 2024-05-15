@@ -333,7 +333,9 @@ export function activate(context: vscode.ExtensionContext)
     global.rust_binary_blob = new launchRust.RustBinaryBlob(
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
     );
-    global.rust_binary_blob.settings_changed();  // async function will finish later
+    global.rust_binary_blob
+		.settings_changed() // async function will finish later
+		.then(() => fetchAPI.maybe_show_ast_status());
 
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
@@ -421,6 +423,16 @@ export function activate(context: vscode.ExtensionContext)
         }
         if (e.affectsConfiguration("refactai.apiKey")) {
             global.side_panel?.goto_main();
+        }
+
+        if (
+            e.affectsConfiguration("refactai.ast") ||
+            e.affectsConfiguration("refactai.astFileLimt")
+        )  {
+            const hasAst = vscode.workspace.getConfiguration().get<boolean>("refactai.ast");
+            if (hasAst) {
+                fetchAPI.maybe_show_ast_status();
+            }
         }
     });
 
