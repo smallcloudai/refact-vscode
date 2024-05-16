@@ -4,6 +4,7 @@ import * as userLogin from "./userLogin";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
 import * as fetchH2 from 'fetch-h2';
+import { AstStatus } from './fetchAPI';
 
 
 let _website_message = "";
@@ -152,15 +153,15 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    ast_update_status(status: "indexing" | "parsing", files_unparsed: number, files_total: number) {
-        this.menu.text = `$(sync~spin) Refact.ai`;
-        this.menu.backgroundColor = undefined;
-        if(status === "parsing") {
-            this.menu.tooltip = `Parsing ast for ${files_unparsed} of ${files_total} files`;
-        } else {
-            this.menu.tooltip = `Ast indexing ${files_total}`;
-        }
-    }
+	ast_update_status(status: AstStatus) {
+		this.menu.text = `$(sync~spin) Refact.ai`;
+		this.menu.backgroundColor = undefined;
+		if (status.state === "parsing") {
+			this.menu.tooltip = `Parsing ast files: ${status.files_total - status.files_unparsed} / ${status.files_total}`;
+		} else {
+			this.menu.tooltip = `Ast indexing ${status.ast_index_files_total}`;
+		}
+	}
 
 }
 
