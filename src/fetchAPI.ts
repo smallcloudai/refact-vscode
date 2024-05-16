@@ -737,11 +737,12 @@ export type AstStatus = {
 	files_total: number;
 	ast_index_files_total: number;
 	ast_index_symbols_total: number;
-	state: "idle" | "parsing" | "indexing";
+	state: "starting" | "parsing" | "indexing" | "done";
 };
 
-async function fetch_ast_status() {
-
+async function fetch_ast_status()
+{
+    await new Promise(resolve => setTimeout(resolve, 2000));
     const url = rust_url("/v1/ast-status");
     if(!url) {
         return Promise.reject("ast-status no rust binary working, very strange");
@@ -773,6 +774,7 @@ export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = globa
     const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
     if(timeout) {
         clearTimeout(timeout);
+        timeout = undefined;
     }
 
     fetch_ast_status()
@@ -782,13 +784,14 @@ export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = globa
                 statusbar.ast_status_limit_reached(res.ast_index_files_total, limit);
                 return;
             }
-            if(res.state === "parsing" || res.state === "indexing") {
+            console.log("res.state", res.state);
+            if(res.state === "starting" || res.state === "parsing" || res.state === "indexing") {
                 console.log("ast parsing or indexing");
                 statusbar.ast_update_status(res);
                 timeout = setTimeout(() => maybe_show_ast_status(statusbar, limit), 250);
                 return;
             } else {
-                console.log("ast status complete");
+                console.log("ast status complete, stop");
                 statusbar.statusbar_spinner(false);
                 return;
             }
