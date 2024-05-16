@@ -783,13 +783,15 @@ async function fetch_ast_status() {
     return json as AstStatus;
 }
 
-export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number) {
+export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number)
+{
+    statusbar.ast_warning = false;
     const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
 
     fetch_ast_status()
         .then(res => {
-            if(res.ast_index_files_total > limit) {
-                console.log("ast_index_files_total > limit");
+            let hit_the_limit = res.ast_index_files_total >= limit;
+            if(hit_the_limit) {
                 statusbar.ast_status_limit_reached(res.ast_index_files_total, limit);
                 return;
             }
