@@ -732,31 +732,13 @@ export async function get_prompt_customization(): Promise<CustomPromptsResponse>
 
 }
 
-type AstStatus = {
+export type AstStatus = {
 	files_unparsed: number;
 	files_total: number;
 	ast_index_files_total: number;
 	ast_index_symbols_total: number;
 	state: "idle" | "parsing" | "indexing";
 };
-
-// TODO add test statuses
-
-// const pasrsing: AstStatus = {
-// 	files_unparsed: 0,
-// 	files_total: 0,
-// 	ast_index_files_total: 0,
-// 	ast_index_symbols_total: 0,
-// 	state: "parsing",
-// }
-
-// const limitReached: AstStatus = {
-// 	files_unparsed: 0,
-// 	files_total: 0,
-// 	ast_index_files_total: 30000,
-// 	ast_index_symbols_total: 0,
-// 	state: "idle",
-// };
 
 async function fetch_ast_status() {
 
@@ -802,8 +784,8 @@ export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = globa
             }
             if(res.state === "parsing" || res.state === "indexing") {
                 console.log("ast parsing or indexing");
-                statusbar.ast_update_status(res.state, res.files_unparsed, res.files_total);
-                timeout = setTimeout(() => maybe_show_ast_status(statusbar, limit), 100);
+                statusbar.ast_update_status(res);
+                timeout = setTimeout(() => maybe_show_ast_status(statusbar, limit), 250);
                 return;
             } else {
                 console.log("ast status complete");
