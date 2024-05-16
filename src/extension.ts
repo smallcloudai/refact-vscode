@@ -558,7 +558,7 @@ export async function status_bar_clicked()
 
     if (global.status_bar.ast_warning) {
         selection = await vscode.window.showInformationMessage(
-            "AST limit reached, you can disable AST in settings or increase the limit.",
+            "AST file number limit reached, you can increase the limit in settings or disable AST.",
             "Open Settings",
         );
         if (selection === "Open Settings") {

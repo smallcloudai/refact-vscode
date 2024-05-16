@@ -72,7 +72,7 @@ export class StatusBarMenu {
             this.menu.text = `$(sync~spin) Refact.ai`;
             this.menu.backgroundColor = undefined;
         } else if (this.ast_warning) {
-            this.menu.text = `$(debug-disconnect) Files limit hit`;
+            this.menu.text = `$(debug-disconnect) Files limit`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
         } else if (this.have_completion_success) {
             this.menu.text = `$(codify-logo) Refact.ai`;
