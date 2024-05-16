@@ -157,19 +157,19 @@
 				},
 				"refactai.vecdb": {
 					"type": "boolean",
-					"description": "Enable embedded vecdb for search (experimental)",
+					"description": "Enable embedded vector database (VecDB) for search (experimental)",
 					"default": false,
 					"order": 9
 				},
 				"refactai.ast": {
 					"type": "boolean",
-					"description": "Enable syntax parsing (experimental, works only for popular languages).",
+					"description": "Enable Abstract Syntax Tree (AST) parser, works only for popular languages. Makes \"@definition\" and \"@references\" commands work in chat, and helps code completion.",
 					"default": true,
 					"order": 10
 				},
 				"refactai.astFileLimit": {
 					"type": "number",
-					"description": "Limit the size of AST files to avoid memory issues.",
+					"description": "Limit the number of files for AST to process, to avoid memory issues. Increase if you have a large project and sufficient memory.",
 					"default": 15000,
 					"order": 11
 				},

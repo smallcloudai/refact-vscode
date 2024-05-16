@@ -269,8 +269,7 @@ export function activate(context: vscode.ExtensionContext)
     global.open_chat_tabs = [];
     global.toolbox_command_disposables = [];
 
-
-    context.subscriptions.push(vscode.commands.registerCommand(global.status_bar.command, status_bar_clicked));
+    context.subscriptions.push(vscode.commands.registerCommand("refactaicmd.statusBarClick", status_bar_clicked));
 
     codeLens.save_provider(new codeLens.LensProvider());
     if (codeLens.global_provider) {
@@ -561,6 +560,14 @@ export async function status_bar_clicked()
             "Welcome to Refact.ai 👋",
             "Open Panel (F1)",
         );
+    } else if (global.status_bar.ast_warning) {
+        selection = await vscode.window.showInformationMessage(
+            "AST limit reached, you can disable AST in settings or increase the limit.",
+            "Open Settings",
+        );
+        if (selection === "Open Settings") {
+            //
+        }
     } else {
         let document_filename = editor.document.fileName;
         let access_level = await privacy.get_file_access(document_filename);

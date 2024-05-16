@@ -24,10 +24,10 @@ export function set_inference_message(msg: string)
 
 export class StatusBarMenu {
     menu: any = {};
-    command: string = 'refactaicmd.statusBarClick';
     socketerror: boolean = false;
     socketerror_msg: string = '';
     spinner: boolean = false;
+    ast_warning: boolean = false;
     last_url: string = "";
     last_model_name: string = "";
     have_completion_success: boolean = false;
@@ -36,7 +36,7 @@ export class StatusBarMenu {
     createStatusBarBlock(context: vscode.ExtensionContext)
     {
         const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-        item.command = this.command;
+        item.command = "refactaicmd.statusBarClick";
 
         context.subscriptions.push(item);
         item.text = `$(codify-logo) Refact.ai`;
@@ -70,6 +70,9 @@ export class StatusBarMenu {
         } else if (this.spinner) {
             this.menu.text = `$(sync~spin) Refact.ai`;
             this.menu.backgroundColor = undefined;
+        } else if (this.ast_warning) {
+            this.menu.text = `$(debug-disconnect) Files limit hit`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
         } else if (this.have_completion_success) {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
@@ -145,9 +148,8 @@ export class StatusBarMenu {
     }
 
     ast_status_limit_reached(count: number, limit: number) {
-        this.menu.text = `$(refact-icon-privacy) Refact.ai`;
-        this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-        this.menu.tooltip = `Ast file limit of ${limit} reached, ${count} files found`;
+        this.ast_warning  = true;
+        this.choose_color();
     }
 
     ast_update_status(status: "indexing" | "parsing", files_unparsed: number, files_total: number) {
