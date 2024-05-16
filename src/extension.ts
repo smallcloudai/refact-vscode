@@ -555,19 +555,20 @@ export async function status_bar_clicked()
         return;
     }
     let selection: string | undefined;
-    if (!editor) {
-        selection = await vscode.window.showInformationMessage(
-            "Welcome to Refact.ai 👋",
-            "Open Panel (F1)",
-        );
-    } else if (global.status_bar.ast_warning) {
+
+    if (global.status_bar.ast_warning) {
         selection = await vscode.window.showInformationMessage(
             "AST limit reached, you can disable AST in settings or increase the limit.",
             "Open Settings",
         );
         if (selection === "Open Settings") {
-            //
+            await vscode.commands.executeCommand("workbench.action.openSettings", "refactai.astFileLimit");
         }
+    } else if (!editor) {
+        selection = await vscode.window.showInformationMessage(
+            "Welcome to Refact.ai 👋",
+            "Open Panel (F1)",
+        );
     } else {
         let document_filename = editor.document.fileName;
         let access_level = await privacy.get_file_access(document_filename);
