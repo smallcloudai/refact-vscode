@@ -783,25 +783,27 @@ async function fetch_ast_status() {
     return json as AstStatus;
 }
 
+let timeout: NodeJS.Timeout | undefined;
+
 export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number)
 {
     statusbar.ast_warning = false;
     const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
+    if(timeout) {
+        clearTimeout(timeout);
+    }
 
     fetch_ast_status()
         .then(res => {
-            let hit_the_limit = res.ast_index_files_total >= limit;
+            const hit_the_limit = res.ast_index_files_total >= limit;
             if(hit_the_limit) {
                 statusbar.ast_status_limit_reached(res.ast_index_files_total, limit);
                 return;
             }
             if(res.state === "parsing" || res.state === "indexing") {
                 console.log("ast parsing or indexing");
-                // if(statusbar.spinner === false) {
-                //     statusbar.statusbar_spinner(true);
-                // }
                 statusbar.ast_update_status(res.state, res.files_unparsed, res.files_total);
-                setTimeout(() => maybe_show_ast_status(statusbar, limit), 500);
+                timeout = setTimeout(() => maybe_show_ast_status(statusbar, limit), 100);
                 return;
             } else {
                 console.log("ast status complete");
