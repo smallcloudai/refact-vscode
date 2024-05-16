@@ -740,7 +740,26 @@ type AstStatus = {
 	state: "idle" | "parsing" | "indexing";
 };
 
+// TODO add test statuses
+
+// const pasrsing: AstStatus = {
+// 	files_unparsed: 0,
+// 	files_total: 0,
+// 	ast_index_files_total: 0,
+// 	ast_index_symbols_total: 0,
+// 	state: "parsing",
+// }
+
+// const limitReached: AstStatus = {
+// 	files_unparsed: 0,
+// 	files_total: 0,
+// 	ast_index_files_total: 30000,
+// 	ast_index_symbols_total: 0,
+// 	state: "idle",
+// };
+
 async function fetch_ast_status() {
+
     const url = rust_url("/v1/ast-status");
     if(!url) {
         return Promise.reject("ast-status no rust binary working, very strange");
@@ -770,17 +789,20 @@ export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = globa
     fetch_ast_status()
         .then(res => {
             if(res.ast_index_files_total > limit) {
-                statusbar.statusbar_spinner(false);
-                statusbar.set_socket_error(false, `Ast file limit reached`);
+                console.log("ast_index_files_total > limit");
+                statusbar.ast_status_limit_reached(res.ast_index_files_total, limit);
                 return;
             }
             if(res.state === "parsing" || res.state === "indexing") {
-                if(statusbar.spinner === false) {
-                    statusbar.statusbar_spinner(true);
-                }
+                console.log("ast parsing or indexing");
+                // if(statusbar.spinner === false) {
+                //     statusbar.statusbar_spinner(true);
+                // }
+                statusbar.ast_update_status(res.state, res.files_unparsed, res.files_total);
                 setTimeout(() => maybe_show_ast_status(statusbar, limit), 500);
                 return;
             } else {
+                console.log("ast status complete");
                 statusbar.statusbar_spinner(false);
                 return;
             }
