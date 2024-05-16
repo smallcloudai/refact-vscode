@@ -143,6 +143,23 @@ export class StatusBarMenu {
         this.have_completion_success = true;
         this.choose_color();
     }
+
+    ast_status_limit_reached(count: number, limit: number) {
+        this.menu.text = `$(refact-icon-privacy) Refact.ai`;
+        this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+        this.menu.tooltip = `Ast file limit of ${limit} reached, ${count} files found`;
+    }
+
+    ast_update_status(status: "indexing" | "parsing", files_unparsed: number, files_total: number) {
+        this.menu.text = `$(sync~spin) Refact.ai`;
+        this.menu.backgroundColor = undefined;
+        if(status === "parsing") {
+            this.menu.tooltip = `Parsing ast for ${files_unparsed} of ${files_total} files`;
+        } else {
+            this.menu.tooltip = `Ast indexing ${files_total}`;
+        }
+    }
+
 }
 
 
