@@ -157,9 +157,10 @@ export class StatusBarMenu {
 		this.menu.text = `$(sync~spin) Refact.ai`;
 		this.menu.backgroundColor = undefined;
 		if (status.state === "parsing") {
-			this.menu.tooltip = `Parsing ast files: ${status.files_total - status.files_unparsed} / ${status.files_total}`;
+			this.menu.text += `: Parsing files: ${status.files_total - status.files_unparsed} / ${status.files_total}`;
 		} else {
-			this.menu.tooltip = `Ast indexing ${status.ast_index_files_total}`;
+			this.menu.text += `: indexing`;
+            this.menu.tooltip = `Indexing ${status.ast_index_files_total} files`;
 		}
 	}
 
