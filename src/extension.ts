@@ -436,15 +436,6 @@ export function activate(context: vscode.ExtensionContext)
         }
     });
 
-    const fsWatcher = vscode.workspace.createFileSystemWatcher("**");
-    context.subscriptions.push(fsWatcher.onDidChange(e => {
-        if (e.fsPath.endsWith(".git/logs/HEAD")) {
-            fetchAPI.ast_force_reindex().catch((err) => console.log(err));
-        } else {
-			fetchAPI.ast_index_file(e).catch((err) => console.log(err));
-        }
-    }));
-    context.subscriptions.push(fsWatcher);
 
     first_run_message(context);
 
