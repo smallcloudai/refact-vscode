@@ -74,6 +74,7 @@ export class StatusBarMenu {
         } else if (this.ast_warning) {
             this.menu.text = `$(debug-disconnect) Files limit`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+            this.menu.tooltip = "Click to make changes in settings";
         } else if (this.have_completion_success) {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
@@ -154,16 +155,16 @@ export class StatusBarMenu {
     }
 
 	ast_update_status(status: AstStatus) {
-		this.menu.text = `$(sync~spin) Refact.ai`;
+		// this.menu.text = `$(sync~spin) Refact.ai`;
+		this.menu.text = `$(sync~spin) `;
 		this.menu.backgroundColor = undefined;
 		if (status.state === "parsing") {
-			this.menu.text += `: Parsing files: ${status.files_total - status.files_unparsed} / ${status.files_total}`;
+			this.menu.text += `Parsing ${status.files_total - status.files_unparsed} / ${status.files_total}`;
 		} else {
-			this.menu.text += `: indexing`;
+			this.menu.text += `Indexing`;
             this.menu.tooltip = `Indexing ${status.ast_index_files_total} files`;
 		}
 	}
-
 }
 
 

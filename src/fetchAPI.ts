@@ -518,13 +518,19 @@ export function fetch_chat_promise(
     }
     let ctx = inference_context(third_party);
     let json_messages = [];
-    let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
-    if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
-        json_messages.push({
-            "role": "system",
-            "content": default_system_prompt,
-        });
-    }
+    // "refactai.defaultSystemPrompt": {
+    //     "type": "string",
+    //     "markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
+    //     "default": "",
+    //     "order": 8
+    // },
+    // let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
+    // if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
+    //     json_messages.push({
+    //         "role": "system",
+    //         "content": default_system_prompt,
+    //     });
+    // }
     for (let i=0; i<messages.length; i++) {
         json_messages.push({
             "role": messages[i][0],
@@ -742,7 +748,6 @@ export type AstStatus = {
 
 async function fetch_ast_status()
 {
-    await new Promise(resolve => setTimeout(resolve, 2000));
     const url = rust_url("/v1/ast-status");
     if(!url) {
         return Promise.reject("ast-status no rust binary working, very strange");

@@ -563,7 +563,7 @@ export async function status_bar_clicked()
             "Open Settings",
         );
         if (selection === "Open Settings") {
-            await vscode.commands.executeCommand("workbench.action.openSettings", "refactai.astFileLimit");
+            await vscode.commands.executeCommand("workbench.action.openSettings", "@ext:smallcloud.codify");
         }
     } else if (!editor) {
         selection = await vscode.window.showInformationMessage(
