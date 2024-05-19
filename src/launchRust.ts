@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from './userLogin';
+import * as fetchAPI from "./fetchAPI";
 import { join } from 'path';
 import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
@@ -225,6 +226,7 @@ export class RustBinaryBlob
         }
         status_bar.choose_color();
         global.side_panel?.update_webview();
+        fetchAPI.maybe_show_ast_status();
     }
 
     public async ping()
