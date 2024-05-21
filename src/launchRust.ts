@@ -192,7 +192,7 @@ export class RustBinaryBlob
         await this.stop_lsp();
         await fetchH2.disconnectAll();
         global.have_caps = false;
-        status_bar.choose_color();
+        global.status_bar.choose_color();
     }
 
     public async read_caps()
@@ -219,12 +219,13 @@ export class RustBinaryBlob
             global.chat_models = Object.keys(json["code_chat_models"]);
             global.chat_default_model = json["code_chat_default_model"] || "";
             global.have_caps = true;
+            global.status_bar.set_socket_error(false, "");
         } catch (e) {
             global.chat_models = [];
             global.have_caps = false;
             console.log(["read_caps:", e]);
         }
-        status_bar.choose_color();
+        global.status_bar.choose_color();
         global.side_panel?.update_webview();
         fetchAPI.maybe_show_ast_status();
     }
