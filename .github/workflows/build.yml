@@ -16,7 +16,6 @@ on:
           options:
             - Refact
             - Juniper
-            - debug
 
 jobs:
   dist:
