@@ -5,16 +5,16 @@
     "contributes": {
         "configuration": {
             "title": "AVA"
+        },
+        "icons": {
+            "codify-logo": {
+                "default": {
+                    "fontCharacter": "\\e888"
+                }
+            }
         }
     },
     "submenus": {
         "label": "AVA Privacy"
-    },
-    "icons": {
-        "codify-logo": {
-            "default": {
-                "fontCharacter": "\\e888"
-            }
-        }
     }
 }
