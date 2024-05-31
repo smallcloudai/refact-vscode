@@ -7,6 +7,12 @@ on:
   # Trigger the workflow on any pull request
   pull_request:
   workflow_dispatch:
+    inputs:
+        display_name:
+          description: 'Whitelabel'
+          required: true
+          default: 'Refact'
+          options: ['Refact', 'Juniper']
 
 jobs:
   dist:
@@ -63,8 +69,15 @@ jobs:
         run: |
           npm install
           npm install -g @vscode/vsce
+          
+      - name: Update package.json for Whitelabel
+        if: ${{ github.event.inputs.display_name != 'Refact' }}
+        run: |
+          WHITELABEL_FILE="./whitelabel/${{ github.event.inputs.display_name }}.json"
+          jq --slurpfile whitelabel $WHITELABEL_FILE '. * $whitelabel[0]' package.json > temp.json && mv temp.json package.json
+        shell: bash
 
-      - name: Pakckage VSCE extension
+      - name: Package VSCE extension
         run: |
           chmod +x ./assets/refact-lsp*
           vsce package --target ${{ matrix.code-target }}

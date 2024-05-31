@@ -1,0 +1,20 @@
+{
+    "displayName": "AVA",
+    "description": "AVA - Advanced Virtual Assistant",
+    "homepage": "https://google.com",
+    "contributes": {
+        "configuration": {
+            "title": "AVA"
+        }
+    },
+    "submenus": {
+        "label": "AVA Privacy"
+    },
+    "icons": {
+        "codify-logo": {
+            "default": {
+                "fontCharacter": "\\e888"
+            }
+        }
+    }
+}
