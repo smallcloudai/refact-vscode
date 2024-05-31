@@ -12,7 +12,11 @@ on:
           description: 'Whitelabel'
           required: true
           default: 'Refact'
-          options: ['Refact', 'Juniper']
+          type: choice
+          options:
+            - Refact
+            - Juniper
+            - debug
 
 jobs:
   dist:
@@ -69,7 +73,7 @@ jobs:
         run: |
           npm install
           npm install -g @vscode/vsce
-          
+
       - name: Update package.json for Whitelabel
         if: ${{ github.event.inputs.display_name != 'Refact' }}
         run: |
