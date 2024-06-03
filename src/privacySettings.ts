@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 import * as privacy from "./privacy";
+import * as strings from "./strings";
 
 type Rule = {
     value: number;
@@ -26,14 +27,14 @@ export class PrivacySettings {
           value: 1,
           name: "Level 1",
           short_description:
-            "Refact uses AI models hosted at Refact cloud, or your self-hosting server.",
+            `${strings.app_name} uses AI models hosted at ${strings.app_name} cloud, or your self-hosting server.`,
           long_description:
-            "Data will be sent to Refact servers only. We don't collect datasets on the server side. If you use a self-hosting server, your data will be sent only to your server.",
+            `Data will be sent to ${strings.app_name} servers only. We don't collect datasets on the server side. If you use a self-hosting server, your data will be sent only to your server.`,
         },
         {
           value: 2,
           name: "Level 2",
-          short_description: "Refact is allowed to use any model, including 3rd party",
+          short_description: `${strings.app_name} is allowed to use any model, including 3rd party`,
           long_description: "Data could be sent also to a 3rd party model.",
         },
       ];
@@ -50,7 +51,7 @@ export class PrivacySettings {
     public static render(context: any) {
         const panel = vscode.window.createWebviewPanel(
             "refact-privacy-tab",
-            "Refact.ai Privacy Settings",
+            `${strings.app_name} Privacy Settings`,
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -170,7 +171,7 @@ export class PrivacySettings {
                     <div class="refactcss-privacy__overrides overrides">
                         <div class="overrides__header">
                             <div class="overrides__path">Path</div>
-                            <div class="overrides__selector">Refact Access</div>
+                            <div class="overrides__selector">${strings.app_name} Access</div>
                             <div class="overrides__action"></div>
                         </div>
                         <div class="overrides__body">

@@ -1,9 +1,7 @@
 {
-    "name": "ava",
     "displayName": "AVA",
     "description": "AVA - Advanced Virtual Assistant",
     "homepage": "https://google.com",
-    "publisher": "juniper",
     "icon": "./whitelabel/Juniper/logo.png",
     "viewsContainers": {
         "activitybar": [

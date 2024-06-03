@@ -1,6 +1,7 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
+import * as strings from "./strings";
 import {
     EVENT_NAMES_TO_STATISTIC,
   } from "refact-chat-js/dist/events";
@@ -74,7 +75,7 @@ export class StatisticTab {
                 <meta http-equiv="Content-Security-Policy" script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
-                <title>Refact.ai Chat</title>
+                <title>${strings.app_name} Chat</title>
                 <link href="${styleMainUri}" rel="stylesheet">
                 <link href="${styleOverride}" rel="stylesheet">
             </head>

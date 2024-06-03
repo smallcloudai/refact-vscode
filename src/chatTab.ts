@@ -6,6 +6,7 @@ import * as crlf from "./crlf";
 import * as estate from "./estate";
 import ChatHistoryProvider, { Chat } from "./chatHistory";
 import { basename } from "path";
+import * as strings from "./strings";
 
 const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdiff/
 
@@ -186,7 +187,7 @@ export class ChatTab {
 
         const panel = vscode.window.createWebviewPanel(
             "refact-chat-tab",
-            truncate(`Refact.ai ${chat_title}`, 24),
+            truncate(`${strings.app_name} ${chat_title}`, 24),
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -852,7 +853,7 @@ export class ChatTab {
                 } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
-                <title>Refact.ai Chat</title>
+                <title>${strings.app_name}</title>
                 <link href="${styleMainUri}" rel="stylesheet">
                 <link href="${styleOverride}" rel="stylesheet">
             </head>

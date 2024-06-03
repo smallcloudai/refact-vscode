@@ -14,6 +14,7 @@ import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
 import { RefactConsoleProvider } from './rconsoleProvider';
 import * as rconsoleCommands from "./rconsoleCommands";
+import * as strings from "./strings";
 
 import * as os from 'os';
 import * as path from 'path';
@@ -545,7 +546,7 @@ export async function status_bar_clicked()
     let selection: string | undefined;
     if (!editor) {
         selection = await vscode.window.showInformationMessage(
-            "Welcome to Refact.ai 👋",
+            `Welcome to ${strings.app_name} 👋`,
             "Open Panel (F1)",
         );
     } else {

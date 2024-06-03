@@ -10,6 +10,7 @@ import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
+import * as strings from "./strings";
 import {
 	EVENT_NAMES_FROM_CHAT,
 	EVENT_NAMES_FROM_STATISTIC,
@@ -499,7 +500,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     <div class="refact-welcome__whole" style="display: none">
                         <div class="refact-welcome__menu">
                             <div class="refact-welcome__container">
-                                <div class="refact-welcome__lead">Refact plugin initial setup:</div>
+                                <div class="refact-welcome__lead">${strings.app_name} plugin initial setup:</div>
 
                                 <label class="refact-welcome__select" data-type="personal">
                                     <div class="refact-welcome__content">
