@@ -77,22 +77,14 @@ jobs:
         if: ${{ github.event.inputs.display_name != 'Refact' }}
         run: |
           echo "Display Name: ${{ github.event.inputs.display_name }}"
-          WHITELABEL_FILE="./whitelabel/${{ github.event.inputs.display_name }}/package.json"
+          WHITELABEL_FILE="./whitelabel/${{ github.event.inputs.display_name }}/replace.json"
           echo "Whitelabel File: $WHITELABEL_FILE"
           cat $WHITELABEL_FILE
           jq --slurpfile whitelabel $WHITELABEL_FILE '. * $whitelabel[0]' package.json > temp.json && mv temp.json package.json
           cat package.json
-          STRINGS_FILE="./whitelabel/${{ github.event.inputs.display_name }}/strings.txt"
+          STRINGS_FILE="./whitelabel/${{ github.event.inputs.display_name }}/strings"
           DESTINATION="./src/strings.ts"
-          if [ -f "$STRINGS_FILE" ]; then
-            echo "Copying $STRINGS_FILE to $DESTINATION"
-            cp -f $STRINGS_FILE $DESTINATION
-            echo "Contents of $DESTINATION:"
-            cat $DESTINATION
-          else
-            echo "Error: $STRINGS_FILE does not exist."
-            exit 1
-          fi
+          cp -f $STRINGS_FILE $DESTINATION
         shell: bash
 
       - name: Package VSCE extension
