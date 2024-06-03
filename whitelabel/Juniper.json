@@ -4,7 +4,7 @@
     "description": "AVA - Advanced Virtual Assistant",
     "homepage": "https://google.com",
     "publisher": "juniper",
-    "icon": "Juniper.png",
+    "icon": "./whitelabel/Juniper.png",
     "viewsContainers": {
         "activitybar": [
             {
