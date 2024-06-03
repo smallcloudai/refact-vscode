@@ -4,6 +4,7 @@ import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
 import * as usabilityHints from "./usabilityHints";
 import * as statusBar from "./statusBar";
+import * as strings from "./strings";
 
 
 export function get_address(): string
@@ -22,7 +23,7 @@ export async function login_message()
 
 export async function welcome_message()
 {
-    let selection = await vscode.window.showInformationMessage("Welcome to Refact.ai!\nPress login to start.", "Login");
+    let selection = await vscode.window.showInformationMessage(`Welcome to ${strings.app_name}!\nPress login to start.`, "Login");
     if(selection === "Login") {
         await vscode.commands.executeCommand('workbench.view.extension.refact-toolbox-pane');
     }
