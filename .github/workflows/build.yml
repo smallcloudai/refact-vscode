@@ -82,6 +82,7 @@ jobs:
           cat $WHITELABEL_FILE
           jq --slurpfile whitelabel $WHITELABEL_FILE '. * $whitelabel[0]' package.json > temp.json && mv temp.json package.json
           cat package.json
+          cp -f ./whitelabel/${{ github.event.inputs.display_name }}/strings ./src/strings.ts
         shell: bash
 
       - name: Package VSCE extension
