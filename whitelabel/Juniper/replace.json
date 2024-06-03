@@ -11,45 +11,19 @@
             }
         ]
     },
-    "commands": [
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        },
-        {
-            "category": "AVA"
-        }
-    ],
     "contributes": {
         "configuration": {
             "title": "AVA"
         },
+        "views": {
+			"ava-toolbox-pane": [
+				{
+					"type": "webview",
+					"id": "refactai-toolbox",
+					"name": "AVA"
+				}
+			]
+		},
         "icons": {
             "codify-logo": {
                 "default": {
