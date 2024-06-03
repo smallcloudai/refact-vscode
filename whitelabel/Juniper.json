@@ -4,6 +4,50 @@
     "description": "AVA - Advanced Virtual Assistant",
     "homepage": "https://google.com",
     "publisher": "juniper",
+    "icon": "Juniper.png",
+    "viewsContainers": {
+        "activitybar": [
+            {
+                "id": "refact-toolbox-pane",
+                "title": "AVA"
+            }
+        ]
+    },
+    "commands": [
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        },
+        {
+            "category": "AVA"
+        }
+    ],
     "contributes": {
         "configuration": {
             "title": "AVA"
