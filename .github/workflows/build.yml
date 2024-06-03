@@ -84,9 +84,15 @@ jobs:
           cat package.json
           STRINGS_FILE="./whitelabel/${{ github.event.inputs.display_name }}/strings.txt"
           DESTINATION="./src/strings.ts"
-          echo "Copying $STRINGS_FILE to $DESTINATION"
-          cp -f $STRINGS_FILE $DESTINATION
-          cat $DESTINATION
+          if [ -f "$STRINGS_FILE" ]; then
+            echo "Copying $STRINGS_FILE to $DESTINATION"
+            cp -f $STRINGS_FILE $DESTINATION
+            echo "Contents of $DESTINATION:"
+            cat $DESTINATION
+          else
+            echo "Error: $STRINGS_FILE does not exist."
+            exit 1
+          fi
         shell: bash
 
       - name: Package VSCE extension
