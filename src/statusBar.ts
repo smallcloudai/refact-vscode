@@ -4,6 +4,7 @@ import * as userLogin from "./userLogin";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
 import * as fetchH2 from 'fetch-h2';
+import * as strings from "./strings";
 
 
 let _website_message = "";
@@ -39,7 +40,7 @@ export class StatusBarMenu {
         item.command = this.command;
 
         context.subscriptions.push(item);
-        item.text = `$(codify-logo) Refact.ai`;
+        item.text = `$(codify-logo) ${strings.app_name}`;
         item.tooltip = `Settings`;
         item.show();
 
@@ -51,11 +52,11 @@ export class StatusBarMenu {
     choose_color()
     {
         if (this.access_level === 0) {
-            this.menu.text = `$(refact-icon-privacy) Refact.ai`;
+            this.menu.text = `$(refact-icon-privacy) ${strings.app_name}`;
             this.menu.backgroundColor = undefined;
-            this.menu.tooltip = `Refact can't access this file because of the privacy rules`;
+            this.menu.tooltip = `${strings.app_name} can't access this file because of the privacy rules`;
         } else if (this.socketerror) {
-            this.menu.text = `$(debug-disconnect) Refact.ai`;
+            this.menu.text = `$(debug-disconnect) ${strings.app_name}`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             if (this.socketerror_msg.indexOf("no model") !== -1) {
                 this.menu.tooltip = `Either an outage on the server side, or your settings might be outdated:\n${this.socketerror_msg}`;
@@ -63,15 +64,15 @@ export class StatusBarMenu {
                 this.menu.tooltip = `Cannot reach the server:\n` + this.socketerror_msg;
             }
         } else if (!global.have_caps) {
-            this.menu.text = `$(codify-logo) Refact.ai`;
+            this.menu.text = `$(codify-logo) ${strings.app_name}`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
             let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
             this.menu.tooltip = `Inference server is currently unavailable\nAttempting to reach '${reach}'`;
         } else if (this.spinner) {
-            this.menu.text = `$(sync~spin) Refact.ai`;
+            this.menu.text = `$(sync~spin) ${strings.app_name}`;
             this.menu.backgroundColor = undefined;
         } else if (this.have_completion_success) {
-            this.menu.text = `$(codify-logo) Refact.ai`;
+            this.menu.text = `$(codify-logo) ${strings.app_name}`;
             this.menu.backgroundColor = undefined;
             let msg: string = "";
             let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
@@ -90,14 +91,14 @@ export class StatusBarMenu {
             }
             this.menu.tooltip = msg;
         } else if (!userLogin.secret_api_key()) {
-            this.menu.text = `$(account) Refact.ai`;
+            this.menu.text = `$(account) ${strings.app_name}`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
             this.menu.tooltip = _website_message || `Click to login`;
         } else {
-            this.menu.text = `$(codify-logo) Refact.ai`;
+            this.menu.text = `$(codify-logo) ${strings.app_name}`;
             this.menu.backgroundColor = undefined;
             let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
-            this.menu.tooltip = _website_message || _inference_message || `Refact Plugin\nCommunicating with server '${reach}'`;
+            this.menu.tooltip = _website_message || _inference_message || `${strings.app_name} Plugin\nCommunicating with server '${reach}'`;
         }
     }
 
