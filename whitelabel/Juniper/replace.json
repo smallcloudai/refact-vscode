@@ -3,18 +3,19 @@
     "description": "AVA - Advanced Virtual Assistant",
     "homepage": "https://google.com",
     "icon": "./whitelabel/Juniper/logo.png",
-    "viewsContainers": {
-        "activitybar": [
-            {
-                "id": "refact-toolbox-pane",
-                "title": "AVA"
-            }
-        ]
-    },
     "contributes": {
         "configuration": {
             "title": "AVA"
         },
+        "viewsContainers": {
+			"activitybar": [
+				{
+					"id": "refact-toolbox-pane",
+					"title": "AVA",
+					"icon": "$(codify-logo)"
+				}
+			]
+		},
         "views": {
 			"refact-toolbox-pane": [
 				{
