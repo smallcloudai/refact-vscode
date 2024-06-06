@@ -436,8 +436,8 @@ export class ChatTab {
             this.web_panel.webview.postMessage({
             type,
               payload: {
-                  id,
                   ...json,
+                  id,
               },
             });
         };
