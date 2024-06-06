@@ -151,13 +151,13 @@
 				},
 				"refactai.vecdb": {
 					"type": "boolean",
-					"description": "Enable embedded vector database (VecDB) for search (experimental)",
+					"markdownDescription": "Enable more relevant code completions using your codebase context and @workspace command in chat.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
 					"default": false,
 					"order": 9
 				},
 				"refactai.ast": {
 					"type": "boolean",
-					"description": "Enable Abstract Syntax Tree (AST) parser, works only for popular languages. Makes \"@definition\" and \"@references\" commands work in chat, and helps code completion.",
+					"markdownDescription": "Enable context-aware chat supporting codebase references: @definition, @references, @symbols-at.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) nand [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
 					"default": true,
 					"order": 10
 				},
