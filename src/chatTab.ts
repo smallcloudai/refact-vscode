@@ -32,6 +32,7 @@ import {
 	type ReceivePromptsError,
 	type ReceivePrompts,
 	type RequestPreviewFiles,
+    type ChatMessage
 } from "refact-chat-js/dist/events";
 
 
@@ -85,7 +86,7 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_here_t
 export class ChatTab {
   // public static current_tab: ChatTab | undefined;
     private _disposables: vscode.Disposable[] = [];
-    public messages: [string, string][] = [];
+    public messages: ChatMessages = [];
     public cancellationTokenSource: vscode.CancellationTokenSource;
     public working_on_attach_filename: string = "";
     public working_on_attach_code: string = "";
@@ -97,7 +98,7 @@ export class ChatTab {
     public model_to_thirdparty: { [key: string]: boolean } = {};
     private default_chat_model: undefined|string;
 
-    public get_messages(): [string, string][] {
+    public get_messages(): ChatMessages {
         return this.messages;
     }
 
@@ -217,7 +218,7 @@ export class ChatTab {
 
     async restoreChat(chat: {
         id: string;
-        messages: [string, string][];
+        messages: ChatMessages,
         title?: string;
         model: string;
     }, appendSnippet = false) {
@@ -396,8 +397,8 @@ export class ChatTab {
         id: string;
         model: string;
         title: string;
-        messages: [string, string][];
-        // messages: ChatMessages;
+        // messages: [string, string][];
+        messages: ChatMessages;
         attach_file?: boolean;
     }): Promise<void> {
         this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
@@ -429,7 +430,7 @@ export class ChatTab {
         await fetchAPI.wait_until_all_requests_finished();
         const handle_response = (json: any) => {
             if (typeof json !== "object") {
-            return;
+              return;
             }
 
             const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
@@ -453,26 +454,23 @@ export class ChatTab {
         //TODO: find out what this is for?
         const third_party = this.model_to_thirdparty[model];
 
-        const formattedMessages = this.messages.map<[string, string]>(
-            ([role, content]) => {
-            if (
-                role === "context_file" &&
-                typeof content !== "string"
-            ) {
-                return [role, JSON.stringify(content)];
+        const formattedMessages = this.messages.map((message:ChatMessage) => {
+            if (message[0] === "context_file" && typeof message[1] !== "string") {
+                return [message[0], JSON.stringify(message[1])];
             }
-            return [role, content];
-            }
-        );
+            
+            return message;
+        }) as ChatMessages;
 
 
-
+        const tools = await fetchAPI.get_tools();
         const chat_promise = fetchAPI.fetch_chat_promise(
             this.cancellationTokenSource.token,
             "chat-tab",
             formattedMessages,
             model,
-            third_party
+            third_party,
+            tools
         );
 
         return request.supply_stream(...chat_promise);
@@ -560,6 +558,7 @@ export class ChatTab {
 
             case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
                 const { id, model, messages, title } = data.payload;
+
                 return this.chatHistoryProvider.save_messages_list(
                     id,
                     messages,
@@ -719,7 +718,7 @@ export class ChatTab {
         editor: vscode.TextEditor | undefined,
         attach_default: boolean,
         use_model: string,
-        messages: [string, string][],
+        messages: ChatMessages,
         append_snippet_to_input: boolean = false,
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
@@ -741,7 +740,7 @@ export class ChatTab {
         editor: vscode.TextEditor | undefined,
         attach_default: boolean,
         use_model: string,
-        messages: [string, string][],
+        messages: ChatMessages,
         append_snippet_to_input: boolean = false
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;

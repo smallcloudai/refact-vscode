@@ -16,6 +16,7 @@ import {
 	FIM_EVENT_NAMES,
 } from "refact-chat-js/dist/events";
 import { getKeyBindingForChat } from "./getKeybindings";
+import { ChatMessages } from "refact-chat-js/dist/events";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -27,7 +28,7 @@ export async function open_chat_tab(
     editor: vscode.TextEditor | undefined,
     attach_default: boolean,   // checkbox set on start, means attach the current file
     model: string,
-    messages: [string, string][],
+    messages: ChatMessages,
     chat_id: string,
     append_snippet_to_input: boolean = false,
 ): Promise<chatTab.ChatTab|undefined> {

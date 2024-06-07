@@ -4,6 +4,7 @@ import * as rconsoleCommands from "./rconsoleCommands";
 import * as sidebar from "./sidebar";
 import * as chatTab from "./chatTab";
 import { v4 as uuidv4 } from 'uuid';
+import { ChatMessages } from 'refact-chat-js/dist/events';
 
 export class MyCommentAuthorInformation implements vscode.CommentAuthorInformation {
     name: string;
@@ -426,7 +427,7 @@ export class RefactConsoleProvider {
     }
 
     async activate_chat(
-        messages: [string, string][],
+        messages: rconsoleCommands.Messages,
         question: string,
     ) {
         console.log(`activate_chat question.length=${question.length}`);
@@ -441,7 +442,7 @@ export class RefactConsoleProvider {
 
         const id = uuidv4();
 
-        const messagesWithQuestion = appendQuestion(question, messages);
+        const messagesWithQuestion: ChatMessages = appendQuestion(question, messages) as ChatMessages;
 
 
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
@@ -482,7 +483,7 @@ export class RefactConsoleProvider {
     }
 }
 
-function appendQuestion(question: string, messages: [string, string][]): [string, string][] {
+function appendQuestion(question: string, messages: rconsoleCommands.Messages): rconsoleCommands.Messages {
     if(messages.length === 0) {
         return [["user", question]];
     }

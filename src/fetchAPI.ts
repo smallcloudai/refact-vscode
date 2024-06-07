@@ -504,9 +504,10 @@ export function fetch_code_completion(
 export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
-    messages: ChatMessages,
+    messages: ChatMessages | [string, string][],
     model: string,
     third_party: boolean = false,
+    tools: AtToolResponse = [],
 ): [Promise<fetchH2.Response>, string, string]
 {
     let url = rust_url("/v1/chat");
@@ -518,6 +519,7 @@ export function fetch_chat_promise(
     if (!apiKey) {
         return [Promise.reject("No API key"), "chat", ""];
     }
+
     let ctx = inference_context(third_party);
     let json_messages = [];
     // "refactai.defaultSystemPrompt": {
@@ -536,7 +538,7 @@ export function fetch_chat_promise(
     for (let i=0; i<messages.length; i++) {
         const toolCalls = messages[i][0] === "assistant" && messages[i][2] ? {tool_calls: messages[i][2]} : {};
         let content = messages[i][1];
-        if(typeof content !== "string") {
+        if(typeof content !== "string" && content !== null) {
             content = JSON.stringify(content);
         }
         json_messages.push({
@@ -552,6 +554,7 @@ export function fetch_chat_promise(
             "max_new_tokens": 1000,
         },
         "stream": true,
+        tools
     });
     const headers = {
         "Content-Type": "application/json",
@@ -814,3 +817,54 @@ export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = globa
             console.log(err);
         });
 }
+
+type AtParamDict = {
+    name: string;
+    type: string;
+    description: string;
+};
+  
+type AtToolFunction = {
+    name: string;
+    description: string;
+    parameters: AtParamDict[];
+    parameters_required: string[];
+};
+  
+type AtToolCommand = {
+    function: AtToolFunction;
+    type: "function";
+};
+
+type AtToolResponse = AtToolCommand[];
+
+export async function get_tools(notes: boolean = false): Promise<AtToolResponse> {
+    const url = rust_url("/v1/at-tools-available");
+    
+    if (!url) {
+        return Promise.reject("unable to get tools url");
+    }
+	const request = new fetchH2.Request(url, {
+        method: "GET",
+        redirect: "follow",
+		cache: "no-cache",
+		referrer: "no-referrer",
+    });
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["tools response http status", response.status]);
+        return Promise.reject("unable to get available tools");
+    }
+
+    const json: AtToolResponse = await response.json();
+
+    const tools = notes 
+    ? json.filter((tool) => tool.function.name === "note_to_self")
+    : json.filter((tool) => tool.function.name !== "note_to_self");
+
+    return tools;
+
+}
+

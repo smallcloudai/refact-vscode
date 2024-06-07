@@ -1,13 +1,18 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 
+import {
+    type ChatMessages,
+    isUserMessage,
+} from "refact-chat-js/dist/events";
+
 const MAX_HISTORY_LENGTH = 150;
 
 
 export type Chat = {
     chat_id: string; // Unique identifier for each chat
     chat_title: string;
-    messages: [string, string][]; // role, content
+    messages: ChatMessages; // role, content
     time: Date;
     chatModel: string;
 };
@@ -60,7 +65,7 @@ export default class ChatHistoryProvider {
 
     public async save_messages_list(
         chat_id: string,
-        messages: [string, string][],
+        messages: ChatMessages,
         chatModel: string,
         title?: string
     ) {
@@ -95,8 +100,9 @@ export default class ChatHistoryProvider {
     {
         let first_question = "";
         for (let i = 0; i < chat.messages.length; i++) {
-            if (chat.messages[i][0] === "user") {
-                first_question = chat.messages[i][1];
+            const message = chat.messages[i]
+            if (isUserMessage(message)) {
+                first_question = message[1];
                 break;
             }
         }
