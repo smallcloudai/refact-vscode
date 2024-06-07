@@ -855,7 +855,9 @@ export async function get_tools(notes: boolean = false): Promise<AtToolResponse>
 
     if (!response.ok) {
         console.log(["tools response http status", response.status]);
-        return Promise.reject("unable to get available tools");
+        
+        // return Promise.reject("unable to get available tools");
+        return [];
     }
 
     const json: AtToolResponse = await response.json();
