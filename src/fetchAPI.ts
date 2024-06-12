@@ -16,6 +16,7 @@ import {
     type CustomPromptsResponse,
     AssistantMessage,
     ChatMessages,
+    ToolMessage,
 } from "refact-chat-js/dist/events";
 
 
@@ -536,10 +537,25 @@ export function fetch_chat_promise(
     //     });
     // }
     for (let i=0; i<messages.length; i++) {
-        const toolCalls = messages[i][0] === "assistant" && messages[i][2] ? {tool_calls: messages[i][2]} : {};
-        let content = messages[i][1];
-        if(typeof content !== "string" && content !== null) {
-            content = JSON.stringify(content);
+        if(messages[i][0] === "tool") {
+            const message = messages[i] as ToolMessage;
+            json_messages.push({
+                role: message[0],
+                content: message[1].content,
+                tool_call_id: message[1].tool_call_id
+            });
+        } else {
+
+            const toolCalls = messages[i][0] === "assistant" && messages[i][2] ? {tool_calls: messages[i][2]} : {};
+            let content = messages[i][1];
+            if(typeof content !== "string" && content !== null) {
+                content = JSON.stringify(content);
+            }
+            json_messages.push({
+                "role": messages[i][0],
+                "content": content,
+                ...toolCalls,
+            });
         }
         json_messages.push({
             "role": messages[i][0],
