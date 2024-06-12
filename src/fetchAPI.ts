@@ -557,11 +557,6 @@ export function fetch_chat_promise(
                 ...toolCalls,
             });
         }
-        json_messages.push({
-            "role": messages[i][0],
-            "content": content,
-            ...toolCalls,
-        });
     }
     const body = JSON.stringify({
         "messages": json_messages,
