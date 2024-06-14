@@ -568,7 +568,6 @@ export function fetch_chat_promise(
             "max_new_tokens": 1000,
         },
         "stream": true,
-        tools
         ...maybeTools
     });
 
