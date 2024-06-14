@@ -558,6 +558,9 @@ export function fetch_chat_promise(
             });
         }
     }
+
+    // an empty tools array causes issues
+    const maybeTools = tools.length > 0 ? {tools} : {};
     const body = JSON.stringify({
         "messages": json_messages,
         "model": model,
@@ -566,7 +569,9 @@ export function fetch_chat_promise(
         },
         "stream": true,
         tools
+        ...maybeTools
     });
+
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
