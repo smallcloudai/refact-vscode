@@ -746,11 +746,11 @@ export type AstStatus = {
 	state: "starting" | "parsing" | "indexing" | "done";
 };
 
-async function fetch_ast_status()
+async function fetch_rag_status()
 {
-    const url = rust_url("/v1/ast-status");
+    const url = rust_url("/v1/rag-status");
     if(!url) {
-        return Promise.reject("ast-status no rust binary working, very strange");
+        return Promise.reject("rag-status no rust binary working, very strange");
     }
 
     const request = new fetchH2.Request(url, {
@@ -763,40 +763,43 @@ async function fetch_ast_status()
     const response = await fetchH2.fetch(request);
     if (response.status!== 200) {
       console.log([`${url} http status`, response.status]);
-      return Promise.reject(`ast status bad status ${response.status}:[${response.statusText}]`);
+      return Promise.reject(`rag status bad status ${response.status}:[${response.statusText}]`);
     }
 
     const json = await response.json();
-    console.log(["successful ast-status", json]);
-    return json as AstStatus;
+    console.log(["successful rag-status", json]);
+    return json;
 }
 
 let timeout: NodeJS.Timeout | undefined;
 
-export function maybe_show_ast_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number)
-{
+export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number) {
     statusbar.ast_warning = false;
     const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
-    if(timeout) {
+
+    if (timeout) {
         clearTimeout(timeout);
         timeout = undefined;
     }
 
-    fetch_ast_status()
+    fetch_rag_status()
         .then(res => {
-            const hit_the_limit = res.ast_index_files_total >= limit;
-            if(hit_the_limit) {
-                statusbar.ast_status_limit_reached(res.ast_index_files_total, limit);
+            console.log("rag status", res);
+            const hit_the_limit = res.ast.ast_index_files_total >= limit;
+            if (hit_the_limit) {
+                statusbar.ast_status_limit_reached(res.ast.ast_index_files_total, limit);
                 return;
             }
-            console.log("res.state", res.state);
-            if(res.state === "starting" || res.state === "parsing" || res.state === "indexing") {
-                console.log("ast parsing or indexing");
-                statusbar.ast_update_status(res);
-                timeout = setTimeout(() => maybe_show_ast_status(statusbar, limit), 250);
+            if(res.vecdb.vec_db_error !== '') {
+                statusBar.vecdb_error(res.vecdb.vec_db_error);
+            }
+            if (res.ast.state === "starting" || res.ast.state === "parsing" || res.ast.state === "indexing" || res.vecdb.state === "starting" || res.vecdb.state === "parsing") {
+                console.log("ast or vecdb parsing or indexing");
+                statusbar.update_status(res);
+                timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 250);
                 return;
             } else {
-                console.log("ast status complete, stop");
+                console.log("ast and vecdb status complete, stop");
                 statusbar.statusbar_spinner(false);
                 return;
             }

@@ -29,6 +29,7 @@ export class StatusBarMenu {
     socketerror_msg: string = '';
     spinner: boolean = false;
     ast_warning: boolean = false;
+    vecdb_warning: string = "";
     last_url: string = "";
     last_model_name: string = "";
     have_completion_success: boolean = false;
@@ -75,6 +76,10 @@ export class StatusBarMenu {
             this.menu.text = `$(debug-disconnect) Files limit`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = "Click to make changes in settings";
+        } else if (this.vecdb_warning !== '') {
+            this.menu.text = `$(debug-disconnect) Refact.ai`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+            this.menu.tooltip = this.vecdb_warning;
         } else if (this.have_completion_success) {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
@@ -150,21 +155,49 @@ export class StatusBarMenu {
     }
 
     ast_status_limit_reached(count: number, limit: number) {
-        this.ast_warning  = true;
+        this.ast_warning = true;
         this.choose_color();
     }
 
-	ast_update_status(status: AstStatus) {
-		// this.menu.text = `$(sync~spin) Refact.ai`;
-		this.menu.text = `$(sync~spin) `;
-		this.menu.backgroundColor = undefined;
-		if (status.state === "parsing") {
-			this.menu.text += `Parsing ${status.files_total - status.files_unparsed} / ${status.files_total}`;
-		} else {
-			this.menu.text += `Indexing`;
-            this.menu.tooltip = `Indexing ${status.ast_index_files_total} files`;
-		}
-	}
+    vecdb_error(error: string) {
+        this.vecdb_warning = error;
+        this.choose_color();
+    }
+
+    // ast_update_status(status: AstStatus) {
+    //     // this.menu.text = `$(sync~spin) Refact.ai`;
+    //     this.menu.text = `$(sync~spin) `;
+    //     this.menu.backgroundColor = undefined;
+    //     if (status.state === "parsing") {
+    //         this.menu.text += `Parsing ${status.files_total - status.files_unparsed} / ${status.files_total}`;
+    //     } else {
+    //         this.menu.text += `Indexing`;
+    //         this.menu.tooltip = `Indexing ${status.ast_index_files_total} files`;
+    //     }
+    // }
+
+    update_status(status) {
+        this.menu.text = `$(sync~spin) `;
+        this.menu.backgroundColor = undefined;
+    
+        if (status.ast.state === "parsing" || status.ast.state === "indexing") {
+            this.menu.text += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
+            if (status.ast.state === "parsing") {
+                this.menu.text += `(${status.ast.files_total - status.ast.files_unparsed} / ${status.ast.files_total}) `;
+            } else {
+                this.menu.tooltip = `Indexing ${status.ast.ast_index_files_total} files`;
+            }
+        }
+    
+        if (status.vecdb.state === "parsing") {
+            this.menu.text += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} `;
+            if (status.vecdb.state === "parsing") {
+                this.menu.text += `(${status.vecdb.files_total - status.vecdb.files_unprocessed} / ${status.vecdb.files_total}) `;
+            } else {
+                this.menu.tooltip += ` | Vectors: ${status.vecdb.vectors_made_since_start}`;
+            }
+        }
+    }
 }
 
 

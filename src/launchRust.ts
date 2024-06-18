@@ -227,7 +227,7 @@ export class RustBinaryBlob
         }
         global.status_bar.choose_color();
         global.side_panel?.update_webview();
-        fetchAPI.maybe_show_ast_status();
+        fetchAPI.maybe_show_rag_status();
     }
 
     public async ping()
@@ -354,6 +354,31 @@ export class RustBinaryBlob
         this.lsp_socket.connect(DEBUG_LSP_PORT);
     }
 
+    async rag_status() {
+        try {
+            let url = this.rust_url();
+            if (!url) {
+                return Promise.reject("rag status no rust binary working, very strange");
+            }
+            url += "v1/rag-status";
+            let req = new fetchH2.Request(url, {
+                method: "GET",
+                redirect: "follow",
+                cache: "no-cache",
+                referrer: "no-referrer",
+            });
+            let resp = await fetchH2.fetch(req, { timeout: 5000 });
+            if (resp.status !== 200) {
+                console.log(["rag status http status", resp.status]);
+                return Promise.reject("rag status bad status");
+            }
+            let rag_status = await resp.json();
+            return rag_status;
+        } catch (e) {
+            console.log(["ping error:", e]);
+        }
+        return false;
+    }
 
     async fetch_toolbox_config(): Promise<ToolboxConfig> {
       const rust_url = this.rust_url();
