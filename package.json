@@ -167,10 +167,16 @@
 					"default": 15000,
 					"order": 11
 				},
+				"refactai.astLightMode": {
+					"type": "boolean",
+					"description": "Low memory mode for AST, references to symbols are not stored in memory.",
+					"default": false,
+					"order": 12
+				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
-					"order": 12
+					"order": 13
 				}
 			}
 		},

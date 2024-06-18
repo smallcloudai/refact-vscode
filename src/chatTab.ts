@@ -129,7 +129,6 @@ export class ChatTab {
         }));
 
         this._disposables.push(this.web_panel.onDidDispose(this.dispose));
-
     }
 
     async focus() {
@@ -458,7 +457,7 @@ export class ChatTab {
             if (message[0] === "context_file" && typeof message[1] !== "string") {
                 return [message[0], JSON.stringify(message[1])];
             }
-            
+
             return message;
         }) as ChatMessages;
 
@@ -803,7 +802,7 @@ export class ChatTab {
         const message: UpdateConfigMessage = {
             type: EVENT_NAMES_TO_CONFIG.UPDATE,
             payload: {
-                features: { vecdb, ast}
+                features: { vecdb, ast }
             }
         };
         this.web_panel.webview.postMessage(message);

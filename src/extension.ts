@@ -333,7 +333,7 @@ export function activate(context: vscode.ExtensionContext)
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
     );
     global.rust_binary_blob
-		.settings_changed() // async function will finish later
+        .settings_changed() // async function will finish later
         .then(() => fetchAPI.maybe_show_rag_status());
 
     global.side_panel = new sidebar.PanelWebview(context);
@@ -373,11 +373,11 @@ export function activate(context: vscode.ExtensionContext)
 
     const home = path.posix.format(path.parse(os.homedir()));
     const toolbox_config_file_posix_path = path.posix.join(
-		home,
-		".cache",
-		"refact",
-		"customization.yaml"
-	);
+        home,
+        ".cache",
+        "refact",
+        "customization.yaml"
+    );
 
     const toolbox_config_file_uri = vscode.Uri.file(toolbox_config_file_posix_path);
 
@@ -401,26 +401,28 @@ export function activate(context: vscode.ExtensionContext)
     vscode.workspace.onDidChangeConfiguration(e => {
         // TODO: update commands here?
         if (
-			e.affectsConfiguration("refactai.infurl") ||
-			e.affectsConfiguration("refactai.addressURL") ||
-			e.affectsConfiguration("refactai.xDebug") ||
-			e.affectsConfiguration("refactai.apiKey") ||
-			e.affectsConfiguration("refactai.insecureSSL") ||
-			e.affectsConfiguration("refactai.ast") ||
-			e.affectsConfiguration("refactai.vecdb") ||
-			e.affectsConfiguration("refactai.astFileLimit")
-		) {
-			if (config_debounce) {
-				clearTimeout(config_debounce);
-			}
-			config_debounce = setTimeout(() => {
-				fill_no_user();
-				if (global.rust_binary_blob) {
-					global.rust_binary_blob.settings_changed();
-				}
-				userLogin.inference_login();
-			}, 1000);
-		}
+            e.affectsConfiguration("refactai.infurl") ||
+            e.affectsConfiguration("refactai.addressURL") ||
+            e.affectsConfiguration("refactai.xDebug") ||
+            e.affectsConfiguration("refactai.apiKey") ||
+            e.affectsConfiguration("refactai.insecureSSL") ||
+            e.affectsConfiguration("refactai.ast") ||
+            e.affectsConfiguration("refactai.astLightMode") ||
+            e.affectsConfiguration("refactai.vecdb") ||
+            e.affectsConfiguration("refactai.astFileLimit")
+        ) {
+            if (config_debounce) {
+                clearTimeout(config_debounce);
+            }
+            config_debounce = setTimeout(() => {
+                fill_no_user();
+                if (global.rust_binary_blob) {
+                    global.rust_binary_blob.settings_changed();
+                }
+                userLogin.inference_login();
+            }, 1000);
+        }
+
         if (e.affectsConfiguration("refactai.apiKey")) {
             global.side_panel?.goto_main();
         }
