@@ -4,7 +4,7 @@ import * as userLogin from "./userLogin";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
 import * as fetchH2 from 'fetch-h2';
-import { AstStatus } from './fetchAPI';
+import { RagStatus } from './fetchAPI';
 
 
 let _website_message = "";
@@ -22,13 +22,13 @@ export function set_inference_message(msg: string)
     _inference_message = msg;
 }
 
-
 export class StatusBarMenu {
     menu: any = {};
     socketerror: boolean = false;
     socketerror_msg: string = '';
     spinner: boolean = false;
     ast_warning: boolean = false;
+    vecdb_warning: string = "";
     last_url: string = "";
     last_model_name: string = "";
     have_completion_success: boolean = false;
@@ -75,6 +75,10 @@ export class StatusBarMenu {
             this.menu.text = `$(debug-disconnect) Files limit`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = "Click to make changes in settings";
+        } else if (this.vecdb_warning !== '') {
+            this.menu.text = `$(debug-disconnect) Refact.ai`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+            this.menu.tooltip = this.vecdb_warning;
         } else if (this.have_completion_success) {
             this.menu.text = `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
@@ -150,21 +154,58 @@ export class StatusBarMenu {
     }
 
     ast_status_limit_reached(count: number, limit: number) {
-        this.ast_warning  = true;
+        this.ast_warning = true;
         this.choose_color();
     }
 
-	ast_update_status(status: AstStatus) {
-		// this.menu.text = `$(sync~spin) Refact.ai`;
-		this.menu.text = `$(sync~spin) `;
-		this.menu.backgroundColor = undefined;
-		if (status.state === "parsing") {
-			this.menu.text += `Parsing ${status.files_total - status.files_unparsed} / ${status.files_total}`;
-		} else {
-			this.menu.text += `Indexing`;
-            this.menu.tooltip = `Indexing ${status.ast_index_files_total} files`;
-		}
-	}
+    vecdb_error(error: string) {
+        this.vecdb_warning = error;
+        this.choose_color();
+    }
+
+    update_status(status: RagStatus) {
+        this.menu.text = `$(codify-logo)$(sync~spin) `;
+        this.menu.backgroundColor = undefined;
+        this.menu.tooltip = '';
+    
+        let status_text = '';
+    
+        if (status.ast && !["done", "idle"].includes(status.ast.state)) {
+            if (status.ast.state === "parsing") {
+                const ast_parsed_qty = status.ast.files_total - status.ast.files_unparsed;
+                status_text += `AST: Parsing ${ast_parsed_qty}/${status.ast.files_total} `;
+            } else if (status.ast.state === "indexing") {
+                status_text += `AST: Indexing ${status.ast.ast_index_files_total}`;
+            } else {
+                status_text += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
+            }
+        }
+    
+        if (status.vecdb && !["done", "idle"].includes(status.vecdb.state)) {
+            const vecdb_parsed_qty = status.vecdb.files_total - status.vecdb.files_unprocessed;
+            status_text += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} ${vecdb_parsed_qty}/${status.vecdb.files_total} `;
+        }
+    
+        if (status_text === '') {
+            this.choose_color();
+        } else {
+            this.menu.text += status_text.trim();
+        }
+    
+        if (status.ast) {
+            const ast_tooltip = `AST Index files: ${status.ast.ast_index_files_total}\n` +
+                                `AST Index Symbols: ${status.ast.ast_index_symbols_total}`;
+            this.menu.tooltip += this.menu.tooltip ? `\n\n${ast_tooltip}` : ast_tooltip;
+        }
+    
+        if (status.vecdb) {
+            const vecdb_tooltip = `Requests Made: ${status.vecdb.requests_made_since_start}\n` +
+                                  `Vectors Made: ${status.vecdb.vectors_made_since_start}\n` +
+                                  `DB Size: ${status.vecdb.db_size}\n` +
+                                  `DB Cache Size: ${status.vecdb.db_cache_size}`;
+            this.menu.tooltip += this.menu.tooltip ? `\n\n${vecdb_tooltip}` : vecdb_tooltip;
+        }
+    }    
 }
 
 
