@@ -4,7 +4,7 @@ import * as userLogin from "./userLogin";
 import * as privacy from "./privacy";
 import { PrivacySettings } from './privacySettings';
 import * as fetchH2 from 'fetch-h2';
-import { AstStatus } from './fetchAPI';
+import { RagStatus } from './fetchAPI';
 
 
 let _website_message = "";
@@ -176,25 +176,28 @@ export class StatusBarMenu {
     //     }
     // }
 
-    update_status(status) {
+    update_status(status: RagStatus) {
         this.menu.text = `$(sync~spin) `;
         this.menu.backgroundColor = undefined;
     
-        if (status.ast.state === "parsing" || status.ast.state === "indexing") {
-            this.menu.text += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
-            if (status.ast.state === "parsing") {
-                this.menu.text += `(${status.ast.files_total - status.ast.files_unparsed} / ${status.ast.files_total}) `;
-            } else {
-                this.menu.tooltip = `Indexing ${status.ast.ast_index_files_total} files`;
+        if (status.ast) {
+            if (status.ast.state === "parsing" || status.ast.state === "indexing") {
+                this.menu.text += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
+                if (status.ast.state === "parsing") {
+                    this.menu.text += `(${status.ast.files_total - status.ast.files_unparsed} / ${status.ast.files_total}) `;
+                } else {
+                    this.menu.tooltip = `Indexing ${status.ast.ast_index_files_total} files`;
+                }
             }
         }
-    
-        if (status.vecdb.state === "parsing") {
-            this.menu.text += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} `;
+        if (status.vecdb) {
             if (status.vecdb.state === "parsing") {
-                this.menu.text += `(${status.vecdb.files_total - status.vecdb.files_unprocessed} / ${status.vecdb.files_total}) `;
-            } else {
-                this.menu.tooltip += ` | Vectors: ${status.vecdb.vectors_made_since_start}`;
+                this.menu.text += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} `;
+                if (status.vecdb.state === "parsing") {
+                    this.menu.text += `(${status.vecdb.files_total - status.vecdb.files_unprocessed} / ${status.vecdb.files_total}) `;
+                } else {
+                    this.menu.tooltip += ` | Vectors: ${status.vecdb.vectors_made_since_start}`;
+                }
             }
         }
     }

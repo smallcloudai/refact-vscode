@@ -746,6 +746,28 @@ export type AstStatus = {
 	state: "starting" | "parsing" | "indexing" | "done";
 };
 
+export interface RagStatus {
+    ast: {
+        files_unparsed: number;
+        files_total: number;
+        ast_index_files_total: number;
+        ast_index_symbols_total: number;
+        state: string;
+    } | null;
+    ast_alive: string | null;
+    vecdb: {
+        files_unprocessed: number;
+        files_total: number;
+        requests_made_since_start: number;
+        vectors_made_since_start: number;
+        db_size: number;
+        db_cache_size: number;
+        state: string;
+    } | null;
+    vecdb_alive: string | null;
+    vec_db_error: string;
+}
+
 async function fetch_rag_status()
 {
     const url = rust_url("/v1/rag-status");
@@ -783,17 +805,23 @@ export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = globa
     }
 
     fetch_rag_status()
-        .then(res => {
+        .then((res: RagStatus) => {
             console.log("rag status", res);
-            const hit_the_limit = res.ast.ast_index_files_total >= limit;
-            if (hit_the_limit) {
-                statusbar.ast_status_limit_reached(res.ast.ast_index_files_total, limit);
-                return;
+
+            if (res.ast) {
+                const hit_the_limit = res.ast.ast_index_files_total >= limit;
+                if (hit_the_limit) {
+                    statusbar.ast_status_limit_reached(res.ast.ast_index_files_total, limit);
+                    return;
+                }
             }
-            if(res.vecdb.vec_db_error !== '') {
-                statusBar.vecdb_error(res.vecdb.vec_db_error);
+
+            if (res.vec_db_error !== '') {
+                statusbar.vecdb_error(res.vec_db_error);
             }
-            if (res.ast.state === "starting" || res.ast.state === "parsing" || res.ast.state === "indexing" || res.vecdb.state === "starting" || res.vecdb.state === "parsing") {
+
+            if ((res.ast && (res.ast.state === "starting" || res.ast.state === "parsing" || res.ast.state === "indexing")) ||
+                (res.vecdb && (res.vecdb.state === "starting" || res.vecdb.state === "parsing"))) {
                 console.log("ast or vecdb parsing or indexing");
                 statusbar.update_status(res);
                 timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 250);
