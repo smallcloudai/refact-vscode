@@ -795,6 +795,49 @@ async function fetch_rag_status()
 
 let timeout: NodeJS.Timeout | undefined;
 
+// export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number) {
+//     statusbar.ast_warning = false;
+//     const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
+
+//     if (timeout) {
+//         clearTimeout(timeout);
+//         timeout = undefined;
+//     }
+
+//     fetch_rag_status()
+//         .then((res: RagStatus) => {
+//             console.log("rag status", res);
+
+//             if (res.ast) {
+//                 const hit_the_limit = res.ast.ast_index_files_total >= limit;
+//                 if (hit_the_limit) {
+//                     statusbar.ast_status_limit_reached(res.ast.ast_index_files_total, limit);
+//                     return;
+//                 }
+//             }
+
+//             if (res.vec_db_error !== '') {
+//                 statusbar.vecdb_error(res.vec_db_error);
+//             }
+
+//             if ((res.ast && (res.ast.state === "starting" || res.ast.state === "parsing" || res.ast.state === "indexing")) ||
+//                 (res.vecdb && (res.vecdb.state === "starting" || res.vecdb.state === "parsing"))) {
+//                 console.log("ast or vecdb parsing or indexing");
+//                 statusbar.update_status(res);
+//                 timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 250);
+//                 return;
+//             } else {
+//                 console.log("ast and vecdb status complete, stop");
+//                 statusbar.statusbar_spinner(false);
+//                 return;
+//             }
+//         })
+//         .catch((err) => {
+//             // show error ?
+//             console.log(err);
+//         });
+// }
+
 export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number) {
     statusbar.ast_warning = false;
     const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
@@ -820,20 +863,17 @@ export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = globa
                 statusbar.vecdb_error(res.vec_db_error);
             }
 
-            if ((res.ast && (res.ast.state === "starting" || res.ast.state === "parsing" || res.ast.state === "indexing")) ||
-                (res.vecdb && (res.vecdb.state === "starting" || res.vecdb.state === "parsing"))) {
+            if ((res.ast && ["starting", "parsing", "indexing"].includes(res.ast.state)) ||
+                (res.vecdb && ["starting", "parsing"].includes(res.vecdb.state))) {
                 console.log("ast or vecdb parsing or indexing");
                 statusbar.update_status(res);
-                timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 250);
-                return;
+                timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 1000);
             } else {
                 console.log("ast and vecdb status complete, stop");
                 statusbar.statusbar_spinner(false);
-                return;
             }
         })
         .catch((err) => {
-            // show error ?
             console.log(err);
         });
 }

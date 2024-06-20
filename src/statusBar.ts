@@ -163,47 +163,41 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    // ast_update_status(status: AstStatus) {
-    //     // this.menu.text = `$(sync~spin) Refact.ai`;
-    //     this.menu.text = `$(sync~spin) `;
-    //     this.menu.backgroundColor = undefined;
-    //     if (status.state === "parsing") {
-    //         this.menu.text += `Parsing ${status.files_total - status.files_unparsed} / ${status.files_total}`;
-    //     } else {
-    //         this.menu.text += `Indexing`;
-    //         this.menu.tooltip = `Indexing ${status.ast_index_files_total} files`;
-    //     }
-    // }
-
     update_status(status: RagStatus) {
-        this.menu.text = `$(codify-logo) $(sync~spin) `;
+        this.menu.text = `$(codify-logo)$(sync~spin) `;
         this.menu.backgroundColor = undefined;
+        this.menu.tooltip = '';
     
-        if (status.ast) {
-            if (status.ast.state === "parsing" || status.ast.state === "indexing") {
-                this.menu.text += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
-                if (status.ast.state === "parsing") {
-                    this.menu.text += `(${((status.ast.files_total - status.ast.files_unparsed) / status.ast.files_total * 100).toFixed(2)}%) `;
-                    this.menu.tooltip += `Parsed ${status.ast.files_unparsed} / ${status.ast.ast_index_files_total} files` + "\n";
-                } else {
-                    this.menu.text += `(${((status.ast.ast_index_files_total - status.ast.files_total) / status.ast.ast_index_files_total * 100).toFixed(2)}%) `;
-                    this.menu.tooltip += `Indexed ${status.ast.ast_index_files_total} files / ${status.ast.ast_index_symbols_total} symbols` + "\n";
-                }
-            }
+        let statusText = '';
+
+        if (status.ast && !["done", "idle"].includes(status.ast.state)) {
+            const astParsedPercentage = status.ast.files_total > 0
+                ? ((status.ast.files_total - status.ast.files_unparsed) / status.ast.files_total) * 100
+                : 0;
+            statusText += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} ${astParsedPercentage.toFixed(0)}% `;
         }
+    
+        if (status.vecdb && !["done", "idle"].includes(status.vecdb.state)) {
+            const vecdbParsedPercentage = status.vecdb.files_total > 0
+                ? ((status.vecdb.files_total - status.vecdb.files_unprocessed) / status.vecdb.files_total) * 100
+                : 0;
+            statusText += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} ${vecdbParsedPercentage.toFixed(0)}% `;
+        }
+    
+        if (statusText === '') {
+            this.choose_color();
+        } else {
+            this.menu.text += statusText.trim();
+        }
+    
         if (status.vecdb) {
-            if (status.vecdb.state === "parsing") {
-                this.menu.text += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} `;
-                if (status.vecdb.state === "parsing") {
-                    this.menu.text += `(${((status.vecdb.files_total - status.vecdb.files_unprocessed) / status.vecdb.files_total * 100).toFixed(2)}%) `;
-                }
-                this.menu.tooltip +=`Requests Made: ${status.vecdb.requests_made_since_start}, ` + "\n" +
-                        `Vectors Made: ${status.vecdb.vectors_made_since_start}, ` + "\n" +
-                        `DB Size: ${status.vecdb.db_size}, ` + "\n" +
-                        `DB Cache Size: ${status.vecdb.db_cache_size}`;
-            }
+            const vecdbTooltip = `Requests Made: ${status.vecdb.requests_made_since_start}\n` +
+                                 `Vectors Made: ${status.vecdb.vectors_made_since_start}\n` +
+                                 `DB Size: ${status.vecdb.db_size}\n` +
+                                 `DB Cache Size: ${status.vecdb.db_cache_size}`;
+            this.menu.tooltip += this.menu.tooltip ? `\n\n${vecdbTooltip}` : vecdbTooltip;
         }
-    }
+    };
 }
 
 
