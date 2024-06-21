@@ -169,12 +169,18 @@ export class StatusBarMenu {
         this.menu.tooltip = '';
     
         let statusText = '';
-
+    
         if (status.ast && !["done", "idle"].includes(status.ast.state)) {
-            const astParsedPercentage = status.ast.files_total > 0
-                ? ((status.ast.files_total - status.ast.files_unparsed) / status.ast.files_total) * 100
-                : 0;
-            statusText += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} ${astParsedPercentage.toFixed(0)}% `;
+            if (status.ast.state === "parsing") {
+                const astParsedPercentage = status.ast.files_total > 0
+                    ? ((status.ast.files_total - status.ast.files_unparsed) / status.ast.files_total) * 100
+                    : 0;
+                statusText += `AST: Parsing ${astParsedPercentage.toFixed(0)}% `;
+            } else if (status.ast.state === "indexing") {
+                statusText += `AST: Indexing `;
+            } else {
+                statusText += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
+            }
         }
     
         if (status.vecdb && !["done", "idle"].includes(status.vecdb.state)) {
@@ -190,6 +196,12 @@ export class StatusBarMenu {
             this.menu.text += statusText.trim();
         }
     
+        if (status.ast) {
+            const astTooltip = `AST Index files: ${status.ast.ast_index_files_total}\n` +
+                                `AST Index Symbols: ${status.ast.ast_index_symbols_total}`;
+            this.menu.tooltip += this.menu.tooltip ? `\n\n${astTooltip}` : astTooltip;
+        }
+    
         if (status.vecdb) {
             const vecdbTooltip = `Requests Made: ${status.vecdb.requests_made_since_start}\n` +
                                  `Vectors Made: ${status.vecdb.vectors_made_since_start}\n` +
@@ -197,7 +209,7 @@ export class StatusBarMenu {
                                  `DB Cache Size: ${status.vecdb.db_cache_size}`;
             this.menu.tooltip += this.menu.tooltip ? `\n\n${vecdbTooltip}` : vecdbTooltip;
         }
-    };
+    }    
 }
 
 
