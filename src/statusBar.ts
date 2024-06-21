@@ -168,46 +168,42 @@ export class StatusBarMenu {
         this.menu.backgroundColor = undefined;
         this.menu.tooltip = '';
     
-        let statusText = '';
+        let status_text = '';
     
         if (status.ast && !["done", "idle"].includes(status.ast.state)) {
             if (status.ast.state === "parsing") {
-                const astParsedPercentage = status.ast.files_total > 0
-                    ? ((status.ast.files_total - status.ast.files_unparsed) / status.ast.files_total) * 100
-                    : 0;
-                statusText += `AST: Parsing ${astParsedPercentage.toFixed(0)}% `;
+                const ast_parsed_qty = status.ast.files_total - status.ast.files_unparsed;
+                status_text += `AST: Parsing ${ast_parsed_qty}/${status.ast.files_total} `;
             } else if (status.ast.state === "indexing") {
-                statusText += `AST: Indexing `;
+                status_text += `AST: Indexing ${status.ast.ast_index_files_total}`;
             } else {
-                statusText += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
+                status_text += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
             }
         }
     
         if (status.vecdb && !["done", "idle"].includes(status.vecdb.state)) {
-            const vecdbParsedPercentage = status.vecdb.files_total > 0
-                ? ((status.vecdb.files_total - status.vecdb.files_unprocessed) / status.vecdb.files_total) * 100
-                : 0;
-            statusText += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} ${vecdbParsedPercentage.toFixed(0)}% `;
+            const vecdb_parsed_qty = status.vecdb.files_total - status.vecdb.files_unprocessed;
+            status_text += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} ${vecdb_parsed_qty}/${status.vecdb.files_total} `;
         }
     
-        if (statusText === '') {
+        if (status_text === '') {
             this.choose_color();
         } else {
-            this.menu.text += statusText.trim();
+            this.menu.text += status_text.trim();
         }
     
         if (status.ast) {
-            const astTooltip = `AST Index files: ${status.ast.ast_index_files_total}\n` +
+            const ast_tooltip = `AST Index files: ${status.ast.ast_index_files_total}\n` +
                                 `AST Index Symbols: ${status.ast.ast_index_symbols_total}`;
-            this.menu.tooltip += this.menu.tooltip ? `\n\n${astTooltip}` : astTooltip;
+            this.menu.tooltip += this.menu.tooltip ? `\n\n${ast_tooltip}` : ast_tooltip;
         }
     
         if (status.vecdb) {
-            const vecdbTooltip = `Requests Made: ${status.vecdb.requests_made_since_start}\n` +
-                                 `Vectors Made: ${status.vecdb.vectors_made_since_start}\n` +
-                                 `DB Size: ${status.vecdb.db_size}\n` +
-                                 `DB Cache Size: ${status.vecdb.db_cache_size}`;
-            this.menu.tooltip += this.menu.tooltip ? `\n\n${vecdbTooltip}` : vecdbTooltip;
+            const vecdb_tooltip = `Requests Made: ${status.vecdb.requests_made_since_start}\n` +
+                                  `Vectors Made: ${status.vecdb.vectors_made_since_start}\n` +
+                                  `DB Size: ${status.vecdb.db_size}\n` +
+                                  `DB Cache Size: ${status.vecdb.db_cache_size}`;
+            this.menu.tooltip += this.menu.tooltip ? `\n\n${vecdb_tooltip}` : vecdb_tooltip;
         }
     }    
 }
