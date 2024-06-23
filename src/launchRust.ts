@@ -354,7 +354,8 @@ export class RustBinaryBlob
         this.lsp_socket.connect(DEBUG_LSP_PORT);
     }
 
-    async rag_status() {
+    async rag_status()
+    {
         try {
             let url = this.rust_url();
             if (!url) {

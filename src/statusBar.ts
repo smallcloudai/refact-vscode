@@ -177,12 +177,6 @@ export class StatusBarMenu {
     update_rag_status(status: RagStatus)
     {
         this.rag_status = '';
-        if (status.vecdb) {
-            console.log(["VECDB", status.vecdb.state]);
-        }
-        if (status.ast) {
-            console.log(["AST", status.ast.state]);
-        }
         if (status.vecdb && !["done", "idle"].includes(status.vecdb.state)) {
             const vecdb_parsed_qty = status.vecdb.files_total - status.vecdb.files_unprocessed;
             this.rag_status = `$(sync~spin) VecDB ${vecdb_parsed_qty}/${status.vecdb.files_total}`;

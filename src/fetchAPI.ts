@@ -831,8 +831,6 @@ export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = globa
 
     fetch_rag_status()
         .then((res: RagStatus) => {
-            console.log("rag status", res);
-
             if (res.ast) {
                 const hit_the_limit = res.ast.ast_index_files_total >= limit;
                 if (hit_the_limit) {
