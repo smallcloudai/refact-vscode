@@ -850,7 +850,7 @@ export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = globa
                 (res.vecdb && ["starting", "parsing"].includes(res.vecdb.state)))
             {
                 console.log("ast or vecdb is still indexing");
-                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 250);
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 700);
             } else {
                 console.log("ast and vecdb status complete, slowdown poll");
                 statusbar.statusbar_spinner(false);
