@@ -885,7 +885,7 @@ type AtToolCommand = {
 type AtToolResponse = AtToolCommand[];
 
 export async function get_tools(notes: boolean = false): Promise<AtToolResponse> {
-    const url = rust_url("/v1/at-tools-available");
+    const url = rust_url("/v1/tools");
 
     if (!url) {
         return Promise.reject("unable to get tools url");
@@ -913,6 +913,4 @@ export async function get_tools(notes: boolean = false): Promise<AtToolResponse>
         json.filter((tool) => tool.function.name !== "note_to_self");
 
     return tools;
-
 }
-
