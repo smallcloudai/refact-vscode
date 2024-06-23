@@ -375,7 +375,7 @@ export class RustBinaryBlob
             let rag_status = await resp.json();
             return rag_status;
         } catch (e) {
-            console.log(["ping error:", e]);
+            console.log(["rag status error:", e]);
         }
         return false;
     }

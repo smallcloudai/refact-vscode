@@ -33,6 +33,8 @@ export class StatusBarMenu {
     last_model_name: string = "";
     have_completion_success: boolean = false;
     access_level: number = -1;
+    rag_status: string = "";
+    rag_tootip: string = "";
 
     createStatusBarBlock(context: vscode.ExtensionContext)
     {
@@ -80,7 +82,7 @@ export class StatusBarMenu {
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = this.vecdb_warning;
         } else if (this.have_completion_success) {
-            this.menu.text = `$(codify-logo) Refact.ai`;
+            this.menu.text = this.rag_status || `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
             let msg: string = "";
             let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
@@ -89,12 +91,18 @@ export class StatusBarMenu {
             }
             if (this.last_model_name) {
                 if (msg) {
-                    msg += "\n";
+                    msg += "\n\n";
                 }
                 msg += `Last used model:\n 🧠 ${this.last_model_name}`;
             }
+            if (this.rag_tootip) {
+                if (msg) {
+                    msg += "\n\n";
+                }
+                msg += `${this.rag_tootip}`;
+            }
             if (_website_message || _inference_message) {
-                msg += "\n";
+                msg += "\n\n";
                 msg += _website_message || _inference_message;
             }
             this.menu.tooltip = msg;
@@ -103,10 +111,13 @@ export class StatusBarMenu {
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
             this.menu.tooltip = _website_message || `Click to login`;
         } else {
-            this.menu.text = `$(codify-logo) Refact.ai`;
+            this.menu.text = this.rag_status || `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
             let reach = global.rust_binary_blob ? global.rust_binary_blob.attemping_to_reach() : "";
             this.menu.tooltip = _website_message || _inference_message || `Refact Plugin\nCommunicating with server '${reach}'`;
+            if (this.rag_tootip) {
+                this.menu.tooltip += `\n\n${this.rag_tootip}`;
+            }
         }
     }
 
@@ -163,49 +174,53 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    update_status(status: RagStatus) {
-        this.menu.text = `$(codify-logo)$(sync~spin) `;
-        this.menu.backgroundColor = undefined;
-        this.menu.tooltip = '';
-    
-        let status_text = '';
-    
+    update_rag_status(status: RagStatus)
+    {
+        this.rag_status = '';
+        if (status.vecdb) {
+            console.log(["VECDB", status.vecdb.state]);
+        }
+        if (status.ast) {
+            console.log(["AST", status.ast.state]);
+        }
+        if (status.vecdb && !["done", "idle"].includes(status.vecdb.state)) {
+            const vecdb_parsed_qty = status.vecdb.files_total - status.vecdb.files_unprocessed;
+            this.rag_status = `$(sync~spin) VecDB ${vecdb_parsed_qty}/${status.vecdb.files_total}`;
+        }
         if (status.ast && !["done", "idle"].includes(status.ast.state)) {
             if (status.ast.state === "parsing") {
                 const ast_parsed_qty = status.ast.files_total - status.ast.files_unparsed;
-                status_text += `AST: Parsing ${ast_parsed_qty}/${status.ast.files_total} `;
+                this.rag_status = `$(sync~spin) Parsing ${ast_parsed_qty}/${status.ast.files_total} `;
             } else if (status.ast.state === "indexing") {
-                status_text += `AST: Indexing ${status.ast.ast_index_files_total}`;
-            } else {
-                status_text += `AST: ${status.ast.state.charAt(0).toUpperCase() + status.ast.state.slice(1)} `;
+                this.rag_status = `$(sync~spin) Indexing AST`;
+            } else if (status.ast.state === "starting") {
+                this.rag_status = `$(sync~spin) Starting`;
             }
         }
-    
-        if (status.vecdb && !["done", "idle"].includes(status.vecdb.state)) {
-            const vecdb_parsed_qty = status.vecdb.files_total - status.vecdb.files_unprocessed;
-            status_text += `VecDB: ${status.vecdb.state.charAt(0).toUpperCase() + status.vecdb.state.slice(1)} ${vecdb_parsed_qty}/${status.vecdb.files_total} `;
-        }
-    
-        if (status_text === '') {
-            this.choose_color();
-        } else {
-            this.menu.text += status_text.trim();
-        }
-    
+
+        let rag_tootip = '';
         if (status.ast) {
-            const ast_tooltip = `AST Index files: ${status.ast.ast_index_files_total}\n` +
-                                `AST Index Symbols: ${status.ast.ast_index_symbols_total}`;
-            this.menu.tooltip += this.menu.tooltip ? `\n\n${ast_tooltip}` : ast_tooltip;
+            rag_tootip +=
+                `AST files: ${status.ast.ast_index_files_total}\n` +
+                `AST symbols: ${status.ast.ast_index_symbols_total}\n\n`
+            ;
+        } else {
+            rag_tootip += "AST turned off\n\n";
         }
-    
         if (status.vecdb) {
-            const vecdb_tooltip = `Requests Made: ${status.vecdb.requests_made_since_start}\n` +
-                                  `Vectors Made: ${status.vecdb.vectors_made_since_start}\n` +
-                                  `DB Size: ${status.vecdb.db_size}\n` +
-                                  `DB Cache Size: ${status.vecdb.db_cache_size}`;
-            this.menu.tooltip += this.menu.tooltip ? `\n\n${vecdb_tooltip}` : vecdb_tooltip;
+            rag_tootip +=
+                `VecDB Size: ${status.vecdb.db_size}\n` +
+                `VecDB Cache: ${status.vecdb.db_cache_size}\n` +
+                `VecDB this session API calls: ${status.vecdb.requests_made_since_start}\n` +
+                `VecDB this session vectors requested: ${status.vecdb.vectors_made_since_start}\n\n`
+            ;
+        } else {
+            rag_tootip += "VecDB turned off\n\n";
         }
-    }    
+        this.rag_tootip = rag_tootip.trim();
+
+        this.choose_color();
+    }
 }
 
 
