@@ -244,7 +244,46 @@
 			},
 			{
 				"command": "refactaicmd.openPromptCustomizationPage",
-				"title": "Open Prompt Customization Page",
+				"title": "Open Prompt Customization Page"
+			},
+			{
+				"command": "refactaicmd.cmd_shorter",
+				"title": "Make code shorter",
+				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.cmd_bugs",
+				"title": "Find and fix bugs",
+				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.cmd_improve",
+				"title": "Try to improve code block",
+				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.cmd_comment",
+				"title": "Comment each line",
+				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.cmd_typehints",
+				"title": "Add type hints",
+				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.cmd_naming",
+				"title": "Improve variable names",
+				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.cmd_explain",
+				"title": "Explain code",
+				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.cmd_typos",
+				"title": "Try to fix typos",
 				"category": "Refact.ai"
 			}
 		],
@@ -257,6 +296,44 @@
 				{
 					"group": "z_commands",
 					"command": "refactaicmd.callChat"
+				},
+				{
+					"submenu": "refact-menu",
+					"group": "z_commands"
+				}
+			],
+			"refact-menu": [
+				{
+					"command": "refactaicmd.cmd_shorter",
+					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.cmd_bugs",
+					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.cmd_improve",
+					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.cmd_comment",
+					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.cmd_typehints",
+					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.cmd_naming",
+					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.cmd_explain",
+					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.cmd_typos",
+					"group": "refact-item.all"
 				}
 			],
 			"refact-access-menu": [
@@ -288,6 +365,10 @@
 			{
 				"label": "Refact.ai Privacy",
 				"id": "refact-access-menu"
+			},
+			{
+				"label": "Refact.ai",
+				"id": "refact-menu"
 			}
 		],
 		"keybindings": [
