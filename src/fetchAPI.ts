@@ -510,7 +510,7 @@ export function fetch_chat_promise(
     messages: ChatMessages | [string, string][],
     model: string,
     third_party: boolean = false,
-    tools: AtToolResponse = [],
+    tools: AtToolCommand[] | null = null,
 ): [Promise<fetchH2.Response>, string, string]
 {
     let url = rust_url("/v1/chat");
@@ -562,7 +562,7 @@ export function fetch_chat_promise(
     }
 
     // an empty tools array causes issues
-    const maybeTools = tools.length > 0 ? {tools} : {};
+    const maybeTools = tools && tools.length > 0 ? {tools} : {};
     const body = JSON.stringify({
         "messages": json_messages,
         "model": model,
@@ -886,7 +886,7 @@ type AtToolResponse = AtToolCommand[];
 
 export async function get_tools(notes: boolean = false): Promise<AtToolResponse> {
     const url = rust_url("/v1/tools");
-
+    
     if (!url) {
         return Promise.reject("unable to get tools url");
     }
@@ -896,6 +896,7 @@ export async function get_tools(notes: boolean = false): Promise<AtToolResponse>
 		cache: "no-cache",
 		referrer: "no-referrer",
     });
+
 
     const response = await fetchH2.fetch(request);
 

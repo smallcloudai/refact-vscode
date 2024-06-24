@@ -32,7 +32,11 @@ import {
 	type ReceivePromptsError,
 	type ReceivePrompts,
 	type RequestPreviewFiles,
-    type ChatMessage
+    type ChatMessage,
+    RequestTools,
+    ToolCommand,
+    RecieveTools,
+    QuestionFromChat
 } from "refact-chat-js/dist/events";
 
 
@@ -392,13 +396,15 @@ export class ChatTab {
         title,
         messages,
         attach_file,
+        tools = null,
     }: {
         id: string;
         model: string;
-        title: string;
+        title?: string;
         // messages: [string, string][];
         messages: ChatMessages;
         attach_file?: boolean;
+        tools: ToolCommand[] | null;
     }): Promise<void> {
         this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
         // const file = attach_file && this.getActiveFileInfo();
@@ -462,7 +468,6 @@ export class ChatTab {
         }) as ChatMessages;
 
 
-        const tools = await fetchAPI.get_tools();
         const chat_promise = fetchAPI.fetch_chat_promise(
             this.cancellationTokenSource.token,
             "chat-tab",
@@ -527,8 +532,9 @@ export class ChatTab {
 
             case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
                 // Note: context_file will be a different format
-                const { id, messages, title, model, attach_file } = data.payload;
-                return this.handleChatQuestion({ id, model, title, messages, attach_file });
+                const payload: QuestionFromChat["payload"] = data.payload;
+                const { id, messages, title, model, attach_file, tools } = payload;
+                return this.handleChatQuestion({ id, model, title, messages, attach_file, tools  });
             }
 
             case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
@@ -603,6 +609,12 @@ export class ChatTab {
 				return this.handlePreviewFileRequest(acton.payload);
 			}
 
+            case EVENT_NAMES_FROM_CHAT.REQUEST_TOOLS: {
+                const action: RequestTools = data;
+                console.log("TOOLS REQUEST")
+                return this.handleToolRequest(action.payload.id);
+            }
+
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
             // // handled in sidebar.ts
             // }
@@ -612,6 +624,25 @@ export class ChatTab {
             // }
 
         }
+    }
+
+    async handleToolRequest(id: string) {
+
+        fetchAPI.get_tools().then((res) => {
+            const action: RecieveTools = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
+                payload: { id, tools: res },
+            };
+            console.log(action)
+            this.web_panel.webview.postMessage(action);
+        }).catch((err) => {
+            console.log(err)
+            const action: RecieveTools = {
+                type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
+                payload: { id, tools: [] },
+            };
+            this.web_panel.webview.postMessage(action);
+        });
     }
 
     async handleCustomPromptsRequest(id: string) {
