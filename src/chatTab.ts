@@ -404,7 +404,7 @@ export class ChatTab {
         // messages: [string, string][];
         messages: ChatMessages;
         attach_file?: boolean;
-        tools: ToolCommand[] | null;
+        tools?: ToolCommand[] | null;
     }): Promise<void> {
         this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
         // const file = attach_file && this.getActiveFileInfo();
