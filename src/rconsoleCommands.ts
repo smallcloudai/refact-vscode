@@ -4,6 +4,7 @@ import * as fetchAPI from "./fetchAPI";
 import * as chatTab from "./chatTab";
 import * as estate from "./estate";
 import { f1_pressed } from './extension';
+import { RefactConsoleProvider } from './rconsoleProvider';
 
 
 export type ThreadCallback = (role: string, answer: string) => void;
@@ -356,6 +357,11 @@ export async function register_commands(): Promise<void> {
                 async (args, doc_uri, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
                     if (!model_name) {
                         [model_name,] = await chatTab.chat_model_get();
+                    }
+                    const editor = vscode.window.activeTextEditor;
+                    if(editor) {
+                        const provider = new RefactConsoleProvider(editor, model_name);
+                        provider.activate_cmd(cmd,'')
                     }
                     f1_pressed();
                 }
