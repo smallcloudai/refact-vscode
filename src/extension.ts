@@ -219,7 +219,7 @@ async function login_clicked()
 }
 
 
-async function f1_pressed()
+export async function f1_pressed()
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {

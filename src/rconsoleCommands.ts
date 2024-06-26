@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as fetchAPI from "./fetchAPI";
 import * as chatTab from "./chatTab";
 import * as estate from "./estate";
+import { f1_pressed } from './extension';
 
 
 export type ThreadCallback = (role: string, answer: string) => void;
@@ -351,7 +352,16 @@ export async function register_commands(): Promise<void> {
                     _run_command(cmd, args, doc_uri, model_name, update_thread_callback, end_thread_callback);
                 }
             );
+            let c = vscode.commands.registerCommand('refactaicmd.' + cmd,
+                async (args, doc_uri, model_name: string, update_thread_callback: ThreadCallback, end_thread_callback: ThreadEndCallback) => {
+                    if (!model_name) {
+                        [model_name,] = await chatTab.chat_model_get();
+                    }
+                    f1_pressed();
+                }
+            );
             global.toolbox_command_disposables.push(d);
+            global.toolbox_command_disposables.push(c);
         }
     } catch (e) {
         console.log(["register_commands error"]);

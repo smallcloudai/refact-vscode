@@ -247,42 +247,42 @@
 				"title": "Open Prompt Customization Page"
 			},
 			{
-				"command": "refactaicmd.cmd_shorter",
+				"command": "refactaicmd.shorter",
 				"title": "Make code shorter",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.cmd_bugs",
+				"command": "refactaicmd.bugs",
 				"title": "Find and fix bugs",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.cmd_improve",
+				"command": "refactaicmd.improve",
 				"title": "Try to improve code block",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.cmd_comment",
+				"command": "refactaicmd.comment",
 				"title": "Comment each line",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.cmd_typehints",
+				"command": "refactaicmd.typehints",
 				"title": "Add type hints",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.cmd_naming",
+				"command": "refactaicmd.naming",
 				"title": "Improve variable names",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.cmd_explain",
+				"command": "refactaicmd.explain",
 				"title": "Explain code",
 				"category": "Refact.ai"
 			},
 			{
-				"command": "refactaicmd.cmd_typos",
+				"command": "refactaicmd.typos",
 				"title": "Try to fix typos",
 				"category": "Refact.ai"
 			}
@@ -304,36 +304,40 @@
 			],
 			"refact-menu": [
 				{
-					"command": "refactaicmd.cmd_shorter",
+					"command": "refactaicmd.shorter",
 					"group": "refact-item.all"
 				},
 				{
-					"command": "refactaicmd.cmd_bugs",
+					"command": "refactaicmd.bugs",
 					"group": "refact-item.all"
 				},
 				{
-					"command": "refactaicmd.cmd_improve",
+					"command": "refactaicmd.improve",
 					"group": "refact-item.all"
 				},
 				{
-					"command": "refactaicmd.cmd_comment",
+					"command": "refactaicmd.comment",
 					"group": "refact-item.all"
 				},
 				{
-					"command": "refactaicmd.cmd_typehints",
+					"command": "refactaicmd.typehints",
 					"group": "refact-item.all"
 				},
 				{
-					"command": "refactaicmd.cmd_naming",
+					"command": "refactaicmd.naming",
 					"group": "refact-item.all"
 				},
 				{
-					"command": "refactaicmd.cmd_explain",
+					"command": "refactaicmd.explain",
 					"group": "refact-item.all"
 				},
 				{
-					"command": "refactaicmd.cmd_typos",
+					"command": "refactaicmd.typos",
 					"group": "refact-item.all"
+				},
+				{
+					"command": "refactaicmd.openPromptCustomizationPage",
+					"group": "refact-item.cust"
 				}
 			],
 			"refact-access-menu": [
