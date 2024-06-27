@@ -358,12 +358,12 @@ export async function register_commands(): Promise<void> {
                     if (!model_name) {
                         [model_name,] = await chatTab.chat_model_get();
                     }
+                    f1_pressed();
                     const editor = vscode.window.activeTextEditor;
                     if(editor) {
                         const provider = new RefactConsoleProvider(editor, model_name);
-                        provider.activate_cmd(cmd,'')
+                        provider.activate_cmd_context(cmd);
                     }
-                    f1_pressed();
                 }
             );
             global.toolbox_command_disposables.push(d);

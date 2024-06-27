@@ -409,6 +409,15 @@ export class RefactConsoleProvider {
         await this.hints_and_magic_tabs(e);
     }
 
+    async activate_cmd_context(
+        cmd: string
+    ) {
+        this.hint_mode = false;
+        vscode.commands.executeCommand("setContext", "refactaicmd.openSidebarButtonEnabled", false);
+        this.reset_thread();
+        this.activate_cmd(cmd, '');
+        return;
+    }
 
     activate_cmd(
         cmd: string,
