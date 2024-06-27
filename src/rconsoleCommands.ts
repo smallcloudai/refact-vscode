@@ -358,7 +358,7 @@ export async function register_commands(): Promise<void> {
                     if (!model_name) {
                         [model_name,] = await chatTab.chat_model_get();
                     }
-                    f1_pressed();
+                    f1_pressed(false);
                     const editor = vscode.window.activeTextEditor;
                     if(editor) {
                         const provider = new RefactConsoleProvider(editor, model_name);

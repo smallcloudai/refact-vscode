@@ -219,7 +219,7 @@ async function login_clicked()
 }
 
 
-export async function f1_pressed()
+export async function f1_pressed(open = true)
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
@@ -228,7 +228,7 @@ export async function f1_pressed()
             rollback_and_regen(editor);
             return;
         }
-        if (state) {
+        if (state && open) {
             // rconsoleProvider.open_refact_console_between_lines(editor);
             RefactConsoleProvider.open_between_lines(editor);
         }
