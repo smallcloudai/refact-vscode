@@ -299,6 +299,7 @@
 				},
 				{
 					"submenu": "refact-menu",
+					"when": "editorHasSelection",
 					"group": "z_commands"
 				}
 			],
@@ -334,10 +335,6 @@
 				{
 					"command": "refactaicmd.typos",
 					"group": "refact-item.all"
-				},
-				{
-					"command": "refactaicmd.openPromptCustomizationPage",
-					"group": "refact-item.cust"
 				}
 			],
 			"refact-access-menu": [
