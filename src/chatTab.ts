@@ -611,8 +611,11 @@ export class ChatTab {
 
             case EVENT_NAMES_FROM_CHAT.REQUEST_TOOLS: {
                 const action: RequestTools = data;
-                console.log("TOOLS REQUEST")
                 return this.handleToolRequest(action.payload.id);
+            }
+
+            case EVENT_NAMES_FROM_CHAT.OPEN_SETTINGS: {
+                return this.handleOpenSettings();
             }
 
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
@@ -624,6 +627,10 @@ export class ChatTab {
             // }
 
         }
+    }
+
+    async handleOpenSettings() {
+        return vscode.commands.executeCommand("workbench.action.openSettings", "refactai");
     }
 
     async handleToolRequest(id: string) {
