@@ -232,9 +232,8 @@ export class ChatTab {
         this.chat_id = chat.id;
         return new Promise<void>((resolve) => {
             const disposables: vscode.Disposable[] = [];
-            const restore = (event: { type: string }) => {
-                if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
-
+            const restore = (event: { type: string, payload: { id?: string } }) => {
+                if (event.type === EVENT_NAMES_FROM_CHAT.READY && event.payload.id === this.chat_id ) {
                     const action: RestoreChat = {
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
                         payload: {
