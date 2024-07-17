@@ -270,6 +270,9 @@ export class ChatTab {
     }
 
     trimIndent(code: string) {
+        if(/^\s/.test(code) === false) { return code; }
+        const lastLine = code.split("\n").slice(-1)[0];
+        if(/^\s/.test(lastLine) === false) { return code; }
         const tabSettings = vscode.workspace.getConfiguration("editor").get<number>("tabSize") ?? 4;
         const spaces = " ".repeat(tabSettings);
         const spacedCode = code.replace(/^\t+/gm, (match) => {
