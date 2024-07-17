@@ -304,11 +304,11 @@ export class ChatTab {
         };
     }
 
-    sendSnippetToChat() {
+    sendSnippetToChat(id?: string) {
         const snippet = this.getSnippetFromEditor();
         const action: ChatSetSelectedSnippet = {
             type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
-            payload: { id: this.chat_id, snippet }
+            payload: { id: id || this.chat_id, snippet }
         };
         this.web_panel.webview.postMessage(action);
     }
@@ -578,6 +578,7 @@ export class ChatTab {
             case EVENT_NAMES_FROM_CHAT.READY: {
                 const { id } = data.payload;
                 this.chat_id = id;
+                this.sendSnippetToChat(id);
                 return this.postActiveFileInfo(id);
             }
 
