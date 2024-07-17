@@ -33,6 +33,7 @@ import {
 	type ReceivePrompts,
 	type RequestPreviewFiles,
     type ChatMessage,
+    type SetChatModel,
     RequestTools,
     ToolCommand,
     RecieveTools,
@@ -578,6 +579,7 @@ export class ChatTab {
             case EVENT_NAMES_FROM_CHAT.READY: {
                 const { id } = data.payload;
                 this.chat_id = id;
+                this.setChatModel(id);
                 this.sendSnippetToChat(id);
                 return this.postActiveFileInfo(id);
             }
@@ -634,6 +636,16 @@ export class ChatTab {
         return vscode.commands.executeCommand("workbench.action.openSettings", "refactai");
     }
 
+    async setChatModel(id: string) {
+        const [model] = await chat_model_get();
+        const message: SetChatModel = {
+            type: EVENT_NAMES_TO_CHAT.SET_CHAT_MODEL,
+            payload: {id, model}
+        };
+
+        this.web_panel.webview.postMessage(message);
+    }
+
     async handleToolRequest(id: string) {
 
         fetchAPI.get_tools().then((res) => {
@@ -641,10 +653,8 @@ export class ChatTab {
                 type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
                 payload: { id, tools: res },
             };
-            console.log(action)
             this.web_panel.webview.postMessage(action);
         }).catch((err) => {
-            console.log(err)
             const action: RecieveTools = {
                 type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
                 payload: { id, tools: [] },
