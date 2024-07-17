@@ -736,8 +736,8 @@ export class ChatTab {
             firstLineRange
         );
         const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
-        const code = "\n" + data.code_block + "\n";
-        const indentedCode = code.replace(/\n/mg, "\n" + indent);
+        const needsNewLine = data.code_block.endsWith("\n") === false;
+        const indentedCode = (indent + data.code_block).replace(/\n/gm, "\n" + indent) + (needsNewLine ? "\n" : "");
 
         const range = new vscode.Range(startOfLine, this.working_on_snippet_range.end);
 
