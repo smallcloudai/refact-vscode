@@ -364,7 +364,7 @@ export class ChatTab {
     }
 
     getActiveFileInfo(): Partial<FileInfo> | null {
-        if(vscode.window.activeTextEditor?.document.uri.scheme === "comment") {
+        if(vscode.window.activeTextEditor?.document.uri.scheme !== "file") {
             return null;
         }
         const file_path =
