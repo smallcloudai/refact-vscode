@@ -12,6 +12,7 @@ import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
 import {
 	EVENT_NAMES_FROM_CHAT,
+	EVENT_NAMES_FROM_SETUP,
 	EVENT_NAMES_FROM_STATISTIC,
 	FIM_EVENT_NAMES,
 } from "refact-chat-js/dist/events";
@@ -404,6 +405,28 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
             break;
         }
+        case "setup_host": {
+            const { host } = data.payload;
+            if (host.type === "cloud") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', host.sendCorrectedCodeSnippets, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
+            } else if (host.type === "self") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
+            } else if (host.type === "enterprise") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
+            }
+            break;
+        }
+        case "open_external_url": {
+            await vscode.env.openExternal(vscode.Uri.parse(data.payload.url));
+            break;
+        }
         case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
         case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
         case FIM_EVENT_NAMES.BACK:
@@ -449,18 +472,28 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     private async html_main_screen(webview: vscode.Webview)
     {
-        const scriptUri1 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
-            );
-        const scriptUri2 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.js")
-            );
-        const styleMainUri1 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
-            );
-        const styleMainUri2 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.css")
-            );
+        const extensionUri = this._context.extensionUri;
+        const vecdb = vscode.workspace
+			.getConfiguration()
+			?.get<boolean>("refactai.vecdb") ?? false;
+
+        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
+
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
+        );
+
+        const styleMainUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "style.css")
+        );
+
+        const styleOverride = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "custom-theme.css")
+        );
+
+        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
+        const scaling = fontSize < 14 ? "90%" : "100%";
+
         const nonce = this.getNonce();
         const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
         let telemetry_code = '';
@@ -475,186 +508,47 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const open_chat_hotkey = await getKeyBindingForChat();
 
         return `<!DOCTYPE html>
-                <html lang="en">
-                <head>
+            <html lang="en" class="light">
+            <head>
                 <meta charset="UTF-8">
                 <!--
                     Use a content security policy to only allow loading images from https or from our extension directory,
                     and only allow scripts that have a specific nonce.
+                    TODO: remove  unsafe-inline if posable
                 -->
-                <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="Content-Security-Policy" content="style-src ${
+                  webview.cspSource
+                } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
-                <title>Main Toolbox</title>
-                <link href="${styleMainUri1}" rel="stylesheet">
-                <link href="${styleMainUri2}" rel="stylesheet">
+                <title>Refact.ai Chat</title>
+                <link href="${styleMainUri}" rel="stylesheet">
+                <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div id="sidebar" class="sidebar">
-                    <div class="chat-panel">
-                        <button tabindex="-1" id="chat-new">
-                            <?xml version="1.0" ?>
-                            <svg height="1657.973px" style="enable-background:new 0 0 1692 1657.973;" version="1.1" viewBox="0 0 1692 1657.973" width="1692px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="comment"><g><path d="M1216.598,1657.973c-15.035,0-29.926-4.822-41.984-14.746l-439.527-361.254H158.332    C71.515,1281.973,0,1209.012,0,1120.074V160.168C0,71.627,71.515,0.973,158.332,0.973h1374.836    c87.743,0,158.832,70.655,158.832,159.195v959.909c0,88.938-71.089,161.896-158.832,161.896H1282v309.93    c0,25.561-14.415,48.826-37.528,59.744C1235.479,1655.892,1226.173,1657.973,1216.598,1657.973z M158.332,132.973    c-13.953,0-25.332,11.52-25.332,27.195v959.906c0,15.805,11.615,29.898,25.332,29.898H758.77c15.311,0,29.89,4.95,41.715,14.674    L1150,1451.998v-236.699c0-36.49,30.096-65.326,66.586-65.326h316.582c14.123,0,26.832-14.639,26.832-29.896V160.168    c0-15.146-12.457-27.195-26.832-27.195H158.332z"/></g></g><g id="Layer_1"/></svg>
-                            New&nbsp;Chat
-                            <span class="sidebar__hotkey">${open_chat_hotkey}</span>
-                        </button>
-                    </div>
-                    <div class="chat-history">
-                        <div class="chat-history-list"></div>
-                    </div>
+                <div id="refact-chat"></div>
 
-                    <div class="refact-welcome__whole" style="display: none">
-                        <div class="refact-welcome__menu">
-                            <div class="refact-welcome__container">
-                                <div class="refact-welcome__lead">Refact plugin initial setup:</div>
+                <script nonce="${nonce}" src="${scriptUri}"></script>
 
-                                <label class="refact-welcome__select" data-type="personal">
-                                    <div class="refact-welcome__content">
-                                        <div class="refact-welcome__inlinewrap">
-                                            <input type="radio" class="refact-welcome__radio" value="personal" name="account-type" />
-                                            <span>Cloud</span>
-                                        </div>
-                                        <div class="refact-welcome__desc">
-                                            <ul>
-                                                <li>Easy to start</li>
-                                                <li>Free tier</li>
-                                                <li>You can opt-in for code snippets collection to help this open source project, off by default</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label class="refact-welcome__select" data-type="self-hosting">
-                                    <div class="refact-welcome__content">
-                                        <div class="refact-welcome__inlinewrap">
-                                            <input type="radio" class="refact-welcome__radio" value="self-hosting" name="account-type" />
-                                            <span>Self-hosting</span>
-                                        </div>
-                                        <div class="refact-welcome__desc">
-                                            <ul>
-                                                <li>Uses your own server</li>
-                                                <li>Your code never leaves your control</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label class="refact-welcome__select" data-type="enterprise">
-                                <div class="refact-welcome__content">
-                                    <div class="refact-welcome__inlinewrap">
-                                        <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />
-                                        <span>Enterprise</span>
-                                    </div>
-                                    <div class="refact-welcome__desc">
-                                        <ul>
-                                            <li>Doesn't connect to a public cloud</li>
-                                            <li>Uses your private server only</li>
-                                            <li>Sends telemetry and code snippets to your private server</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                </label>
-                                <div class="refact-welcome__actions">
-                                    <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="refact-welcome__enterprise refact-welcome__subscreen">
-                            <div classs="refact-welcome__note">You should have corporate endpoint URL and personal API key. Please contact your system administrator.</div>
-                            <div>
-                                <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__enterendpoint refact-welcome__input" placeholder="http://x.x.x.x:8008/" type="text" name="endpoint_address" value="${existing_address}">
-                            </div>
-                            <div>
-                                <label class="refact-welcome__label">API Key</label>
-                                <input class="refact-welcome__apikey_enterprise refact-welcome__input" type="text" name="api_key" value="${api_key}">
-                            </div>
-                            <div class="refact-welcome__error-enterprise">Please enter API key</div>
-                            <div class="refact-welcome__actions">
-                                <button data-target="enterprise" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
-                            </div>
-                        </div>
-
-                        <div class="refact-welcome__personal refact-welcome__subscreen">
-                            <h2>Cloud Inference</h2>
-                            <div class="refact-welcome__or">Quick login via website:</div>
-                            <button class="refact-welcome__refact">
-                                Login / Create Account
-                            </button>
-                            <!--div class="refact-welcome__or">or</div-->
-                            <div>
-                                <label class="refact-welcome__label">Alternatively, paste an existing Refact API Key here:</label>
-                                <input class="refact-welcome__apikey_refact refact-welcome__input" type="text" name="api_key" value="${api_key}">
-                            </div>
-                            <div class="refact-welcome__error-refact">Please Login / Create Account or enter API key</div>
-                            <div class="refact-welcome__telemetry">
-                                <p>Help Refact collect a dataset of corrected code completions!
-                                This will help to improve code suggestions more to your preferences, and it also will improve code suggestions for everyone else.
-                                Hey, we're not an evil corporation!</p>
-                                <label><input class="refact-welcome__telemetrycode" type="checkbox" id="telemetrycode" name="telemetrycode" value="true" ${telemetry_code}>Send corrected code snippets.</label>
-                                <p>Basic telemetry is always on when using cloud inference, but it only sends errors and counters.
-                                <a href="https://github.com/smallcloudai/refact-lsp/blob/main/README.md#telemetry">How telemetry works in open source refact-lsp</a></p>
-                            </div>
-                            <div class="refact-welcome__actions">
-                                <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__next refact-welcome__next_refact">Next&nbsp;&nbsp;&rsaquo;</button>
-                            </div>
-                        </div>
-
-                        <div class="refact-welcome__selfhosted refact-welcome__subscreen">
-                            <div>
-                                <div classs="refact-welcome__note">A great option for self-hosting is <a href="https://github.com/smallcloudai/refact/">Refact docker</a>.
-                                It can serve completion and chat models, has graphical user interface to set it up, and it can fine-tune code on your codebase.
-                                A typical endpoint address is http://127.0.0.1:8008/<br/>
-                                But this plugin might work with a variety of servers, report your experience on discord!</div>
-                                <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" name="endpoint_address" value="${existing_address}">
-                            </div>
-                            <div class="refact-welcome__actions">
-                                <button data-target="selfhosted" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__savebutton refact-welcome__savebutton--selfhosted">Save</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sidebar-controls">
-                        <div class="sidebar-controls-inner">
-                            <div class="sidebar-inline sidebar-account">
-                                <div class="sidebar-logged"><b><span></span></b></div>
-                                <div class="sidebar-coins">
-                                <div class="sidebar-coin"></div><span>0</span></div>
-                            </div>
-                            <div class="sidebar-inline">
-                                <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
-                            </div>
-                            <div class="sidebar-buttons">
-                                <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
-                                <button tabindex="-1" id="fim-debug">FIM</button>
-                                <button tabindex="-1" id="statistic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill="rgba(255, 255, 255, 0.5)" d="M396.8 352h22.4c6.4 0 12.8-6.4 12.8-12.8V108.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v230.4c0 6.4 6.4 12.8 12.8 12.8zm-192 0h22.4c6.4 0 12.8-6.4 12.8-12.8V140.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v198.4c0 6.4 6.4 12.8 12.8 12.8zm96 0h22.4c6.4 0 12.8-6.4 12.8-12.8V204.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v134.4c0 6.4 6.4 12.8 12.8 12.8zM496 400H48V80c0-8.8-7.2-16-16-16H16C7.2 64 0 71.2 0 80v336c0 17.7 14.3 32 32 32h464c8.8 0 16-7.2 16-16v-16c0-8.8-7.2-16-16-16zm-387.2-48h22.4c6.4 0 12.8-6.4 12.8-12.8v-70.4c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v70.4c0 6.4 6.4 12.8 12.8 12.8z"/></svg></button>
-                                <button tabindex="-1" id="privacy"><span></span></button>
-                                <button tabindex="-1" id="settings"><i></i><span></span></button>
-                                <button tabindex="-1" id="keys"><span></span></button>
-                            </div>
-                            <div class="sidebar-inline">
-                                <button tabindex="-1" id="profile"><span></span>Your Account</button>
-                                <button tabindex="-1" id="report_bugs"><span></span>Report Bug</button>
-                                <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <script nonce="${nonce}" src="${scriptUri1}"></script>
-                <script nonce="${nonce}" src="${scriptUri2}"></script>
-                <script>
-                    window.onload = function() {
-                        const vscode = acquireVsCodeApi();
-                        sidebar_general_script(vscode);
-                        chat_history_script(vscode);
-                    }
+                <script nonce="${nonce}">
+                window.onload = function() {
+                    const root = document.getElementById("refact-chat")
+                    RefactChat.renderApp(root, {
+                        host: "vscode",
+                        tabbed: true,
+                        themeProps: {
+                            accentColor: "gray",
+                            scaling: "${scaling}",
+                        },
+                        features: {
+                            vecdb: ${vecdb},
+                            ast: ${ast},
+                        }
+                    })
+                }
                 </script>
-                </body>
-                </html>`;
+            </body>
+            </html>`;
     }
 
     getNonce() {
