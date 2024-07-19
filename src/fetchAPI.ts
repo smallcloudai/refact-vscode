@@ -781,6 +781,7 @@ export interface RagStatus {
         ast_index_files_total: number;
         ast_index_symbols_total: number;
         state: string;
+        ast_max_files_hit: boolean;
     } | null;
     ast_alive: string | null;
     vecdb: {
@@ -791,6 +792,7 @@ export interface RagStatus {
         db_size: number;
         db_cache_size: number;
         state: string;
+        vecdb_max_files_hit: boolean;
     } | null;
     vecdb_alive: string | null;
     vec_db_error: string;
@@ -822,10 +824,8 @@ async function fetch_rag_status()
 
 let ragstat_timeout: NodeJS.Timeout | undefined;
 
-export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = global.status_bar, maybeLimit?: number) {
-    statusbar.ast_warning = false;
-    const limit = maybeLimit ?? vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
-
+export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = global.status_bar)
+{
     if (ragstat_timeout) {
         clearTimeout(ragstat_timeout);
         ragstat_timeout = undefined;
@@ -833,14 +833,20 @@ export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = globa
 
     fetch_rag_status()
         .then((res: RagStatus) => {
-            if (res.ast) {
-                const hit_the_limit = res.ast.ast_index_files_total >= limit;
-                if (hit_the_limit) {
-                    statusbar.ast_status_limit_reached(res.ast.ast_index_files_total, limit);
-                    ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 5000);
-                    return;
-                }
+            if (res.ast && res.ast.ast_max_files_hit) {
+                statusbar.ast_status_limit_reached();
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+                return;
             }
+
+            if (res.vecdb && res.vecdb.vecdb_max_files_hit) {
+                statusbar.vecdb_status_limit_reached();
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+                return;
+            }
+
+            statusbar.ast_limit_hit = false;
+            statusbar.vecdb_limit_hit = false;
 
             if (res.vec_db_error !== '') {
                 statusbar.vecdb_error(res.vec_db_error);
@@ -850,17 +856,17 @@ export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = globa
                 (res.vecdb && ["starting", "parsing"].includes(res.vecdb.state)))
             {
                 console.log("ast or vecdb is still indexing");
-                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 700);
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 700);
             } else {
                 console.log("ast and vecdb status complete, slowdown poll");
                 statusbar.statusbar_spinner(false);
-                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 5000);
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
             }
             statusbar.update_rag_status(res);
         })
         .catch((err) => {
             console.log("fetch_rag_status", err);
-            ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar, limit), 5000);
+            ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
         });
 }
 
@@ -886,7 +892,7 @@ type AtToolResponse = AtToolCommand[];
 
 export async function get_tools(notes: boolean = false): Promise<AtToolResponse> {
     const url = rust_url("/v1/tools");
-    
+
     if (!url) {
         return Promise.reject("unable to get tools url");
     }

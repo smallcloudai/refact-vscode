@@ -27,7 +27,8 @@ export class StatusBarMenu {
     socketerror: boolean = false;
     socketerror_msg: string = '';
     spinner: boolean = false;
-    ast_warning: boolean = false;
+    ast_limit_hit: boolean = false;
+    vecdb_limit_hit: boolean = false;
     vecdb_warning: string = "";
     last_url: string = "";
     last_model_name: string = "";
@@ -73,8 +74,12 @@ export class StatusBarMenu {
         } else if (this.spinner) {
             this.menu.text = `$(sync~spin) Refact.ai`;
             this.menu.backgroundColor = undefined;
-        } else if (this.ast_warning) {
-            this.menu.text = `$(debug-disconnect) Files limit`;
+        } else if (this.ast_limit_hit) {
+            this.menu.text = `$(debug-disconnect) AST files limit`;
+            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+            this.menu.tooltip = "Click to make changes in settings";
+        } else if (this.vecdb_limit_hit) {
+            this.menu.text = `$(debug-disconnect) VecDB files limit`;
             this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
             this.menu.tooltip = "Click to make changes in settings";
         } else if (this.vecdb_warning !== '') {
@@ -164,8 +169,13 @@ export class StatusBarMenu {
         this.choose_color();
     }
 
-    ast_status_limit_reached(count: number, limit: number) {
-        this.ast_warning = true;
+    ast_status_limit_reached() {
+        this.ast_limit_hit = true;
+        this.choose_color();
+    }
+
+    vecdb_status_limit_reached() {
+        this.vecdb_limit_hit = true;
         this.choose_color();
     }
 

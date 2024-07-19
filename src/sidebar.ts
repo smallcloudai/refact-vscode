@@ -395,7 +395,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "save_telemetry_settings": {
-            await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
+            // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
             break;
         }
         case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
@@ -458,9 +458,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const nonce = this.getNonce();
         const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
         let telemetry_code = '';
-        if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
-            telemetry_code = 'checked';
-        }
+        // if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
+        //     telemetry_code = 'checked';
+        // }
         let existing_address = vscode.workspace.getConfiguration().get("refactai.addressURL");
         if (typeof existing_address !== "string" || (typeof existing_address === "string" && !existing_address.match(/^https?:\/\//))) {
             existing_address = "";

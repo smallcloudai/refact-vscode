@@ -122,12 +122,15 @@ export class RustBinaryBlob
 
             if (vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
                 new_cmdline.push("--vecdb");
+                const vecdb_limit = vscode.workspace.getConfiguration().get<number>("refactai.vecdbFileLimit") ?? 15000;
+                new_cmdline.push(`--vecdb-max-files`);
+                new_cmdline.push(`${vecdb_limit}`);
             }
             if (vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
                 new_cmdline.push("--ast");
-                const limit = vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
-                new_cmdline.push(`--ast-index-max-files`);
-                new_cmdline.push(`${limit}`);
+                const ast_limit = vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
+                new_cmdline.push(`--ast-max-files`);
+                new_cmdline.push(`${ast_limit}`);
                 const light = vscode.workspace.getConfiguration().get<number>("refactai.astLightMode") ?? false;
                 if (light) {
                     new_cmdline.push(`--ast-light-mode`);

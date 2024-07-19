@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "3.2.110",
+	"version": "3.2.111",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -137,40 +137,40 @@
 					"default": "",
 					"order": 4
 				},
-				"refactai.telemetryCodeSnippets": {
-					"type": "boolean",
-					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
-					"default": false,
-					"order": 6
-				},
 				"refactai.pauseCompletion": {
 					"type": "boolean",
 					"description": "Pause automatic code suggestions. Manual activation still works.",
 					"default": false,
 					"order": 7
 				},
-				"refactai.vecdb": {
-					"type": "boolean",
-					"markdownDescription": "Enable more relevant code completions using your codebase context and @workspace command in chat.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
-					"default": true,
-					"order": 9
-				},
 				"refactai.ast": {
 					"type": "boolean",
-					"markdownDescription": "Enable context-aware chat supporting codebase references: @definition, @references, @symbols-at.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) nand [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"markdownDescription": "Enable context-aware code completion and chat, adds defintion() and references() functions for a chat model, and @definition, @references commands for you to add context manually.\n\nRAG works better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) nand [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
 					"default": true,
-					"order": 10
+					"order": 8
 				},
 				"refactai.astFileLimit": {
 					"type": "number",
 					"description": "Limit the number of files for AST to process, to avoid memory issues. Increase if you have a large project and sufficient memory.",
 					"default": 15000,
-					"order": 11
+					"order": 9
 				},
 				"refactai.astLightMode": {
 					"type": "boolean",
-					"description": "Low memory mode for AST, references to symbols are not stored in memory.",
+					"description": "Low memory mode for AST, references to symbols are not stored in memory. Check if you have a really big project.",
 					"default": false,
+					"order": 10
+				},
+				"refactai.vecdb": {
+					"type": "boolean",
+					"markdownDescription": "Enable vector database. This adds the ability for a chat model to perform a semantic search in your codebase, and the @workspace command for you to add context manually.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"default": true,
+					"order": 11
+				},
+				"refactai.vecdbFileLimit": {
+					"type": "number",
+					"description": "Limit the number of files for VecDB to process. Increase if you have a lot of files.",
+					"default": 15000,
 					"order": 12
 				},
 				"refactai.xDebug": {

@@ -408,8 +408,9 @@ export function activate(context: vscode.ExtensionContext)
             e.affectsConfiguration("refactai.insecureSSL") ||
             e.affectsConfiguration("refactai.ast") ||
             e.affectsConfiguration("refactai.astLightMode") ||
+            e.affectsConfiguration("refactai.astFileLimit") ||
             e.affectsConfiguration("refactai.vecdb") ||
-            e.affectsConfiguration("refactai.astFileLimit")
+            e.affectsConfiguration("refactai.vecdbFileLimit")
         ) {
             if (config_debounce) {
                 clearTimeout(config_debounce);
@@ -430,7 +431,8 @@ export function activate(context: vscode.ExtensionContext)
         if (
             e.affectsConfiguration("refactai.ast") ||
             e.affectsConfiguration("refactai.astFileLimit") ||
-            e.affectsConfiguration("refactai.vecdb")
+            e.affectsConfiguration("refactai.vecdb") ||
+            e.affectsConfiguration("refactai.vecdbFileLimit")
         )  {
             const hasAst = vscode.workspace.getConfiguration().get<boolean>("refactai.ast");
             if(hasAst) {
@@ -564,9 +566,9 @@ export async function status_bar_clicked()
     }
     let selection: string | undefined;
 
-    if (global.status_bar.ast_warning) {
+    if (global.status_bar.ast_limit_hit || global.status_bar.vecdb_limit_hit) {
         selection = await vscode.window.showInformationMessage(
-            "AST file number limit reached, you can increase the limit in settings or disable AST.",
+            "AST or VecDB file number limit reached, you can increase the limit in settings if your computer has enough memory, or disable these features.",
             "Open Settings",
         );
         if (selection === "Open Settings") {
