@@ -5,7 +5,7 @@ import * as storeVersions from "./storeVersions";
 import * as privacy from "./privacy";
 import * as fetchAPI from "./fetchAPI";
 import * as fetchH2 from 'fetch-h2';
-import { FimDebugData } from 'refact-chat-js/dist/events';
+import { FimDebugData, fim } from 'refact-chat-js/dist/events';
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -230,7 +230,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
     maybeSendFIMData(data: FimDebugData | null) {
         if(data === null) { return; }
         global.fim_data_cache = data;
-        global.side_panel?.fim_debug?.sendFIMData(data);
+        global.side_panel?._view?.webview.postMessage(fim.receive(data));
     }
 }
 

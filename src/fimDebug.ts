@@ -1,6 +1,8 @@
+// TODO: delete this file
+
 import * as vscode from "vscode";
 
-import * as Events from "refact-chat-js/dist/events";
+import {fim, type FimDebugData} from "refact-chat-js/dist/events";
 
 export const VIEW_TYPE = "fim-debug";
 
@@ -44,40 +46,55 @@ export class FimDebug {
         }
     }
 
-    sendFIMData(data: Events.FimDebugData) {
-        const event: Events.ReceiveFIMDebugData = {
-            type: Events.FIM_EVENT_NAMES.DATA_RECEIVE,
-            payload: data
-        };
+    sendFIMData(data: FimDebugData) {
+        const event = fim.receive(data);
+        // const event: Events.ReceiveFIMDebugData = {
+        //     type: Events.FIM_EVENT_NAMES.DATA_RECEIVE,
+        //     payload: data
+        // };
 
         this.web_panel.webview.postMessage(event);
     }
 
     sendFIMError(message: string) {
-        const event: Events.ReceiveFIMDebugError = {
-            type: Events.FIM_EVENT_NAMES.DATA_ERROR,
-            payload: {message: message},
-        };
+        const event = fim.error(message);
+        // const event: Events.ReceiveFIMDebugError = {
+        //     type: Events.FIM_EVENT_NAMES.DATA_ERROR,
+        //     payload: {message: message},
+        // };
 
         this.web_panel.webview.postMessage(event);
     }
 
 	handleEvents(e: unknown) {
-        if(!Events.isFIMAction(e)) {
-            return;
-        }
-
-        if(Events.isReadyMessageFromFIMDebug(e)) {
+        console.log("FIM event", e);
+        if(!e || typeof e !== "object") { return; }
+        if(!("type" in e)) { return; }
+        if(e.type === fim.ready.type) {
             return this.handleReadyMessage();
         }
-
-        if(Events.isRequestFIMData(e)) {
+        if(e.type === fim.request.type) {
             if(global.fim_data_cache) {
                 return this.sendFIMData(global.fim_data_cache);
             } else {
                 return this.sendFIMError("No FIM data found, please make a completion");
             }
         }
+        // if(!Events.isFIMAction(e)) {
+        //     return;
+        // }
+
+        // if(Events.isReadyMessageFromFIMDebug(e)) {
+        //     return this.handleReadyMessage();
+        // }
+
+        // if(Events.isRequestFIMData(e)) {
+        //     if(global.fim_data_cache) {
+        //         return this.sendFIMData(global.fim_data_cache);
+        //     } else {
+        //         return this.sendFIMError("No FIM data found, please make a completion");
+        //     }
+        // }
 
 	}
 

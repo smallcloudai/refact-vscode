@@ -13,10 +13,9 @@ import { v4 as uuidv4 } from "uuid";
 import {
 	EVENT_NAMES_FROM_CHAT,
 	EVENT_NAMES_FROM_STATISTIC,
-	FIM_EVENT_NAMES,
 } from "refact-chat-js/dist/events";
 import { getKeyBindingForChat } from "./getKeybindings";
-import { ChatMessages } from "refact-chat-js/dist/events";
+import { ChatMessages, fim } from "refact-chat-js/dist/events";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -112,10 +111,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this.js2ts_message = this.js2ts_message.bind(this);
     }
 
-    handleEvents(data: any) {
-        if(!this._view) { return; }
-        return composeHandlers(this.chat?.handleEvents, this.js2ts_message)(data);
-    }
+    // handleEvents(data: any) {
+    //     if(!this._view) { return; }
+    //     return composeHandlers(this.chat?.handleEvents, this.js2ts_message)(data);
+    // }
 
     public make_sure_have_chat_history_provider()
     {
@@ -439,7 +438,90 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    private async html_main_screen(webview: vscode.Webview)
+    private handleEvents(e: unknown) {
+        console.log("sidebar event", e);
+        if(!e || typeof e !== "object") { return; }
+        if(!("type" in e)) { return; }
+        // FIM Data from IDE
+        if(e.type === fim.ready.type || e.type === fim.request.type) {
+            if(global.fim_data_cache) {
+                const event = fim.receive(global.fim_data_cache);
+                this._view?.webview.postMessage(event);
+            } else {
+                const event = fim.error("No FIM data found, please make a completion");
+                this._view?.webview.postMessage(event);
+            }
+        }
+    }
+
+    private async html_main_screen(webview: vscode.Webview) {
+        const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
+
+        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
+
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._context.extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
+        );
+
+        const styleMainUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._context.extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "style.css")
+        );
+
+        const styleOverride = webview.asWebviewUri(
+            vscode.Uri.joinPath(this._context.extensionUri, "assets", "custom-theme.css")
+        );
+
+        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
+        const scaling = fontSize < 14 ? "90%" : "100%";
+
+        const nonce = this.getNonce();
+
+        return `<!DOCTYPE html>
+            <html lang="en" class="light">
+                <head>
+                    <meta charset="UTF-8">
+                    <!--
+                        Use a content security policy to only allow loading images from https or from our extension directory,
+                        and only allow scripts that have a specific nonce.
+                        TODO: remove  unsafe-inline if posable
+                    -->
+                    <meta http-equiv="Content-Security-Policy" content="style-src ${
+                        webview.cspSource
+                    } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+
+                    <title>Refact.ai Chat</title>
+                    <link href="${styleMainUri}" rel="stylesheet">
+                    <link href="${styleOverride}" rel="stylesheet">
+                </head>
+                <body>
+                    <div id="refact-chat"></div>
+
+                    <script nonce="${nonce}" src="${scriptUri}"></script>
+
+                    <script nonce="${nonce}">
+                        window.onload = function() {
+                            const root = document.getElementById("refact-chat")
+                            RefactChat.render(root, {
+                                host: "vscode",
+                                tabbed: false,
+                                themeProps: {
+                                    accentColor: "gray",
+                                    scaling: "${scaling}",
+                                },
+                                features: {
+                                    vecdb: ${vecdb},
+                                    ast: ${ast},
+                                }
+                            })
+                        }
+                    </script>
+                </body>
+            </html>`;
+
+    }
+
+    private async _html_main_screen(webview: vscode.Webview)
     {
         const extensionUri = this._context.extensionUri;
         const vecdb = vscode.workspace
