@@ -1,5 +1,6 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
+// TODO: delete this file
 import * as vscode from "vscode";
 import {
     EVENT_NAMES_TO_STATISTIC,

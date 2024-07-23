@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+// TODO: delete this file
 function sidebar_general_script(vscode) {
     const telemetry_optin = document.querySelector('#telemetrycode');
     telemetry_optin && telemetry_optin.addEventListener('change',()=> {
