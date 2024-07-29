@@ -13,6 +13,7 @@ import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
 import { RefactConsoleProvider } from './rconsoleProvider';
+import { QuickActionProvider } from "./quickProvider";
 import * as rconsoleCommands from "./rconsoleCommands";
 
 import * as os from 'os';
@@ -278,6 +279,28 @@ export function activate(context: vscode.ExtensionContext)
 
     const comp = new completionProvider.MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
+    
+    const quickProvider = new QuickActionProvider();
+    vscode.languages.registerCodeActionsProvider({pattern: "**"},quickProvider,
+        {
+            providedCodeActionKinds: [
+            //   vscode.CodeActionKind.RefactorRewrite,
+              vscode.CodeActionKind.QuickFix,
+            ],
+        }
+    );
+    context.subscriptions.push(quickProvider);
+
+    for (const action of QuickActionProvider.actions) {
+        context.subscriptions.push(
+          // use the same id which we used in the command field 
+          // of the code actions
+          vscode.commands.registerCommand(
+            `my-shiny-extension.${action.id}`,
+            (args) => QuickActionProvider.handleAction(args)
+          )
+        );
+    }
 
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
