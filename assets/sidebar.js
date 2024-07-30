@@ -1,126 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 function sidebar_general_script(vscode) {
-    // let presets = document.querySelectorAll(".presets li");
-    const body = document.querySelector("body");
-    const sidebar = document.querySelector("#sidebar");
-    // const toolbox = document.querySelector(".toolbox");
-    // const toolboxSearch = document.querySelector("#toolbox-search");
-    // const toolboxList = document.querySelector(".toolbox-list");
-    let longthink_filters;
-    // let editor_inform_how_many_lines_selected = 0;
-    // let editor_inform_file_access_level = 0;
-    let function_bookmarks = [];
-
-    // toolboxSearch.addEventListener("focus", (event) => {
-    //     on_how_many_lines_selected();
-    // });
-
-    const welcome_selects = document.querySelectorAll(".refact-welcome__select");
-    welcome_selects.forEach((select) => {
-        select.addEventListener("click", () => {
-            welcome_selects.forEach((other_select) => {
-                other_select.classList.remove('refact-welcome__select--selected');
-                other_select.querySelector('.refact-welcome__radio').checked = false;
-            });
-            select.classList.add('refact-welcome__select--selected');
-            select.querySelector('.refact-welcome__radio').checked = true;
-        });
-    });
-
-    const welcome_next_button = document.querySelector('.refact-welcome__next');
-    welcome_next_button.addEventListener("click", () => {
-        const selection_type = document.querySelector('.refact-welcome__select--selected').querySelector('.refact-welcome__radio').value;
-        change_welcome_subscreen(selection_type);
-    });
-
     const telemetry_optin = document.querySelector('#telemetrycode');
     telemetry_optin && telemetry_optin.addEventListener('change',()=> {
         vscode.postMessage({
             type: "save_telemetry_settings",
             code: document.querySelector('.refact-welcome__telemetrycode').checked
-        });
-    });
-    const next_button_refact = document.querySelector('.refact-welcome__next_refact');
-    next_button_refact.addEventListener("click", () => {
-        const enter_apikey = document.querySelector('.refact-welcome__apikey_refact');
-        const error_message = document.querySelector('.refact-welcome__error-refact');
-        if (enter_apikey.value && enter_apikey.value !== '') {
-            enter_apikey.style.borderColor = 'var(--secondary)';
-            error_message.style.display = 'none';
-            vscode.postMessage({
-                type: "button_refact_save",
-                refact_api_key: enter_apikey.value,
-            });
-        } else {
-            enter_apikey.style.borderColor = 'var(--vscode-editorError-foreground)';
-            error_message.style.display = 'block';
-        }
-    });
-
-    const selfhosting_input = document.querySelector('.refact-welcome__endpoint');
-    selfhosting_input.addEventListener("change",() => {
-        if(selfhosting_input.value === '') {
-            selfhosting_input.value = 'http://127.0.0.1:8008';
-        }
-    });
-
-    function change_welcome_subscreen(selection_type) {
-        document.querySelector('.refact-welcome__menu').style.display = "none";
-        switch (selection_type) {
-            case "enterprise":
-                document.querySelector('.refact-welcome__enterprise').classList.toggle('refact-welcome__subscreen--selected');
-                break;
-            case "personal":
-                document.querySelector('.refact-welcome__personal').classList.toggle('refact-welcome__subscreen--selected');
-                break;
-            case "self-hosting":
-                document.querySelector('.refact-welcome__selfhosted').classList.toggle('refact-welcome__subscreen--selected');
-                break;
-        }
-    }
-
-    const save_selfhosted = document.querySelector('.refact-welcome__savebutton--selfhosted');
-    save_selfhosted.addEventListener("click", () => {
-        const endpoint = document.querySelector('.refact-welcome__endpoint');
-        vscode.postMessage({
-            type: "save_selfhosted",
-            endpoint: endpoint.value,
-        });
-    });
-
-    const save_enterprise = document.querySelector('.refact-welcome__savebutton--enterprise');
-    save_enterprise.addEventListener("click", () => {
-        const enter_endpoint = document.querySelector('.refact-welcome__enterendpoint');
-        const enter_apikey = document.querySelector('.refact-welcome__apikey_enterprise');
-        const error_message = document.querySelector('.refact-welcome__error-enterprise');
-        if (enter_apikey.value && enter_apikey.value !== '') {
-            enter_apikey.style.borderColor = 'var(--secondary)';
-            error_message.style.display = 'none';
-            vscode.postMessage({
-                type: "save_enterprise",
-                endpoint: enter_endpoint.value,
-                apikey: enter_apikey.value,
-            });
-        } else {
-            enter_apikey.style.borderColor = 'var(--vscode-editorError-foreground)';
-            error_message.style.display = 'block';
-        }
-    });
-
-    const back_buttons = document.querySelectorAll('.refact-welcome__back');
-    back_buttons.forEach(button => {
-        button.addEventListener('click', function(event) {
-            const button_target = event.target.dataset.target;
-            let panels = document.querySelectorAll(".refact-welcome__subpanel");
-            switch (button_target) {
-                default:
-                    const screens = document.querySelectorAll(".refact-welcome__subscreen");
-                    screens.forEach((screen) => {
-                        screen.classList.remove('refact-welcome__subscreen--selected');
-                    });
-                    document.querySelector('.refact-welcome__menu').style.display = "block";
-                    break;
-            }
         });
     });
 
@@ -180,27 +64,6 @@ function sidebar_general_script(vscode) {
     refreshButton.addEventListener("click", () => {
         vscode.postMessage({ type: "js2ts_refresh_login" });
     });
-
-    function check_bookmarked_functions(data) {
-        const keys = Object.keys(data);
-        keys.forEach((key) => {
-            let bookmark = {};
-            if (function_bookmarks[key]) {
-                bookmark = {
-                    ...data[key],
-                    'is_bookmarked': true
-                };
-            }
-            else {
-                bookmark = {
-                    ...data[key],
-                    'is_bookmarked': false
-                };
-            }
-            data[key] = bookmark;
-        });
-        return data;
-    }
 
     window.addEventListener("message", (event) => {
         const message = event.data;
