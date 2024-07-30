@@ -1,4 +1,9 @@
 import * as vscode from 'vscode';
+import * as sidebar from "./sidebar";
+import {
+	type ChatMessages,
+    type ChatMessage
+} from "refact-chat-js/dist/events";
 export class QuickActionProvider implements vscode.CodeActionProvider {
 
     provideCodeActions(
@@ -11,13 +16,12 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             return;
         }
         const quickActions = [];
-        // prepare the code actions for the above actions
         for (const action of QuickActionProvider.actions) {
             const quickAction = new vscode.CodeAction(action.title, action.kind);
             quickAction.command = {
-            command: `my-shiny-extension.${action.id}`,
-            title: action.title,
-            arguments: [action.id],
+                command: `refactcmd.${action.id}`,
+                title: action.title,
+                arguments: [action.id,context.diagnostics.map(diagnostic => diagnostic.message).join('\n')],
             };
 
             quickActions.push(quickAction);
@@ -26,29 +30,57 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         return quickActions;
     }
 
-    public static handleAction(actionId: string) {
-        console.log(`handleAction for ${actionId}`);
+    public static async handleAction(actionId: string, diagnosticMessage: string) {
+        if (actionId === 'fix') {
+            const editor = vscode.window.activeTextEditor;
+            if (editor) {
+                if (global.side_panel && !global.side_panel._view) {
+                    await vscode.commands.executeCommand(sidebar.default.viewType + ".focus");
+                } else if (global.side_panel && global.side_panel._view && !global.side_panel?._view?.visible) {
+                    global.side_panel._view.show();
+                }
+                let attach_default = !!vscode.window.activeTextEditor;
+                let chat = await sidebar.open_chat_tab(
+                    diagnosticMessage,
+                    editor,
+                    true,
+                    "",
+                    [],
+                    "",
+                    true,
+                );
+                if (!chat) {
+                    return;
+                }
+                await new Promise(r => setTimeout(r, 200));
+                const questionData = {
+                    id: chat.chat_id,
+                    model: "",
+                    title: diagnosticMessage + " Fix",
+                    messages: [
+                        ["user", diagnosticMessage] as ChatMessage,
+                    ] as ChatMessages,
+                    attach_file: false,
+                    tools: null
+                };                
+                chat.handleChatQuestion(questionData).then(() => {
+                    console.log("Chat question handled successfully.");
+                }).catch((error) => {
+                    console.error("Error handling chat question:", error);
+                });
+            }
+        }
     }
 
     public static readonly actions = [
         {
-          id: 'rephrase',
-          title: 'Rephrase selected text',
-          kind: vscode.CodeActionKind.QuickFix,
-        },
-        {
-          id: 'headlines',
-          title: 'Suggest headlines',
+          id: 'fix',
+          title: 'Fix this problem',
           kind: vscode.CodeActionKind.QuickFix,
         },
         // {
         //   id: 'professional',
         //   title: 'Rewrite in professional tone',
-        //   kind: vscode.CodeActionKind.RefactorRewrite,
-        // },
-        // {
-        //   id: 'casual',
-        //   title: 'Rewrite in casual tone',
         //   kind: vscode.CodeActionKind.RefactorRewrite,
         // },
     ];
