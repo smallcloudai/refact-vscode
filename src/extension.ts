@@ -185,41 +185,6 @@ async function code_lens_clicked(arg0: any)
     }
 }
 
-
-let global_autologin_timer: NodeJS.Timeout|undefined = undefined;
-
-
-async function login_clicked()
-{
-    if (userLogin.secret_api_key()) {
-        global.streamlined_login_countdown = -1;
-        return;
-    }
-    global.streamlined_login_ticket = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
-    userLogin.inference_login_force_retry();
-    await vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}&utm_source=plugin&utm_medium=vscode&utm_campaign=login`));
-    let i = 0;
-    // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
-    if (global_autologin_timer) {
-        clearInterval(global_autologin_timer);
-    }
-    global_autologin_timer = setInterval(() => {
-        let have_key = !!userLogin.secret_api_key();
-        global.streamlined_login_countdown = 10 - (i % 10);
-        if (!have_key && i % 10 === 0) {
-            userLogin.streamlined_login();
-        }
-        global.side_panel?.update_webview();  // shows countdown
-        if (have_key || i === 200) {
-            global.streamlined_login_countdown = -1;
-            clearInterval(global_autologin_timer);
-            return;
-        }
-        i++;
-    }, 1000);
-}
-
-
 async function f1_pressed()
 {
     let editor = vscode.window.activeTextEditor;
@@ -370,11 +335,6 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(settingsCommand);
 
-    let login = vscode.commands.registerCommand('refactaicmd.login', () => {
-        login_clicked();
-    });
-
-    context.subscriptions.push(login);
     let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
         context.globalState.update('codifyFirstRun', false);
         global.api_key = '';
