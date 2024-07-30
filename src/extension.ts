@@ -293,11 +293,9 @@ export function activate(context: vscode.ExtensionContext)
 
     for (const action of QuickActionProvider.actions) {
         context.subscriptions.push(
-          // use the same id which we used in the command field 
-          // of the code actions
           vscode.commands.registerCommand(
-            `my-shiny-extension.${action.id}`,
-            (args) => QuickActionProvider.handleAction(args)
+            `refactcmd.${action.id}`,
+            (actionId: string, diagnosticMessage: string) => QuickActionProvider.handleAction(actionId, diagnosticMessage)
           )
         );
     }
