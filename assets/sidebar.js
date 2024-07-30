@@ -64,31 +64,6 @@ function sidebar_general_script(vscode) {
         }
     });
 
-    function change_provider_subscreen(selection_type) {
-        const screens = document.querySelectorAll(".refact-welcome__subscreen");
-        screens.forEach((screen) => {
-            screen.classList.remove('refact-welcome__subscreen--selected');
-        });
-        switch (selection_type) {
-            case "refact":
-                document.querySelector('[data-provider="refact"]').classList.toggle('refact-welcome__subpanel--selected');
-                break;
-            case "huggingface":
-                document.querySelector('[data-provider="huggingface"]').classList.toggle('refact-welcome__subpanel--selected');
-                break;
-        }
-    }
-
-    function reset_everything_about_commands() {
-        current_history = 0;
-        command_mode = false;
-        history_mode = false;
-        let active = document.querySelector(".item-selected");
-        if (active) {
-            active.classList.remove("item-selected");
-        }
-    }
-
     function change_welcome_subscreen(selection_type) {
         document.querySelector('.refact-welcome__menu').style.display = "none";
         switch (selection_type) {
@@ -132,89 +107,6 @@ function sidebar_general_script(vscode) {
         }
     });
 
-    const button_refact = document.querySelector('.refact-welcome__refact');
-    const api_input = document.querySelector('.refact-welcome__apikey_refact');
-    button_refact.addEventListener("click", () => {
-        start_input_animation();
-        vscode.postMessage({
-            type: "button_refact_open_streamlined",
-        });
-    });
-
-    let timer_started = false;
-    function start_input_animation() {
-        const loading_text = 'Fetching API Key ';
-        const animation_frames = ['/', '|', '\\', '-'];
-        let index = 0;
-
-        function update_placeholder() {
-          const frame = animation_frames[index];
-          api_input.placeholder = ` ${loading_text} ${frame} `;
-          index = (index + 1) % animation_frames.length;
-        }
-
-        if(!timer_started) {
-            api_input.loading_interval = setInterval(update_placeholder, 100);
-            setTimeout(stop_input_animation, 30000);
-            timer_started = true;
-        }
-    }
-
-    function stop_input_animation() {
-        clearInterval(api_input.loading_interval);
-        api_input.placeholder = '';
-        timer_started = false;
-    }
-
-    // body.addEventListener("keyup", (event) => {
-    //     event.preventDefault();
-    //     if (event.key === "Enter") {
-    //         let selected_in_list = document.querySelector(".item-selected");  // one in list, always present
-    //         let single_page = document.querySelector(".item-active");  // single page
-    //         if (toolboxSearch.value.endsWith("?")) {
-    //             let intent = toolboxSearch.value;
-    //             vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
-    //         }
-    //         else if (single_page) {
-    //             let intent = toolboxSearch.value;
-    //             history.splice(0, 0, intent);
-    //             vscode.postMessage({
-    //                 type: "function_activated",
-    //                 intent: intent,
-    //                 data_function: active.dataset.function, // this a string containing json
-    //             });
-    //         } else if (selected_in_list) {
-    //             let intent = toolboxSearch.value;
-    //             history.splice(0, 0, intent);
-    //             vscode.postMessage({
-    //                 type: "function_activated",
-    //                 intent: intent,
-    //                 data_function: selected_in_list.dataset.function, // this a string containing json
-    //             });
-    //         } else {
-    //             let intent = toolboxSearch.value;
-    //             vscode.postMessage({ type: "open_new_chat", question: intent, chat_empty: false, chat_model: "" });
-    //         }
-    //         reset_everything_about_commands();
-    //         toolboxSearch.value = '';
-    //         vscode.postMessage({
-    //             type: "focus_back_to_editor",
-    //         });
-    //         toolbox_update_likes();
-    //     }
-    //     if (event.key === "Escape") {
-    //         event.preventDefault();
-    //         let active = document.querySelector(".item-active");
-    //         if (active) {
-    //             active.classList.remove("item-active");
-    //         } else {
-    //             vscode.postMessage({
-    //                 type: "focus_back_to_editor",
-    //             });
-    //         }
-    //     }
-    // });
-
     const back_buttons = document.querySelectorAll('.refact-welcome__back');
     back_buttons.forEach(button => {
         button.addEventListener('click', function(event) {
@@ -232,16 +124,6 @@ function sidebar_general_script(vscode) {
         });
     });
 
-    // back_to_welcome.addEventListener("click", (event) => {
-    //     const back_target =
-    //     document.querySelector('.refact-welcome__back').style.display = "none";
-    //     document.querySelector('.refact-welcome__menu').style.display = "block";
-    //     const screens = document.querySelectorAll(".refact-welcome__subscreen");
-    //     screens.forEach((screen) => {
-    //         screen.classList.remove('refact-welcome__subscreen--selected');
-    //     });
-    // });
-
     const chat_new = document.querySelector("#chat-new");
     chat_new.addEventListener("click", () => {
         vscode.postMessage({ type: "open_new_chat", question: '', chat_empty: true, chat_model: "" });
@@ -252,10 +134,6 @@ function sidebar_general_script(vscode) {
         vscode.postMessage({ type: "open_statistic" });
         vscode.postMessage({ type: "receive_statistic_data" });
     });
-    // const chatHistoryButton = document.querySelector("#history");
-    // chatHistoryButton.addEventListener("click", () => {
-    //     vscode.postMessage({ type: "open_chat_history" });
-    // });
 
     const settingsButton = document.querySelector("#settings");
     settingsButton.addEventListener("click", () => {
@@ -323,138 +201,6 @@ function sidebar_general_script(vscode) {
         });
         return data;
     }
-
-    // function function_tag(function_name) {
-    //     let result = false;
-    //     longthink_filters.forEach((item) => {
-    //         if (function_name.toLowerCase().endsWith(item.toLowerCase())) {
-    //             result = item;
-    //         }
-    //     });
-    //     return result;
-    // }
-
-    // let current_filter = "";
-    // function renderTags(data) {
-    //     const filters_bar = document.querySelector('.toolbox-tags');
-    //     filters_bar.innerHTML = "";
-    //     if (data.length > 0) {
-    //         data.forEach((item) => {
-    //             const filter = document.createElement("div");
-    //             filter.classList.add("toolbox-tag");
-    //             filter.dataset.title = item;
-    //             filter.innerHTML = item;
-    //             filters_bar.appendChild(filter);
-    //         });
-    //     }
-    //     const tags = document.querySelectorAll('.toolbox-tag');
-    //     tags.forEach((item) => {
-    //         item.addEventListener('click', function (event) {
-    //             if (current_filter !== this.dataset.title) {
-    //                 tags.forEach((item) => {
-    //                     item.classList.remove("toolbox-tag-inactive");
-    //                     item.classList.add("toolbox-tag-inactive");
-    //                 });
-    //                 this.classList.remove('toolbox-tag-inactive');
-    //                 const tag = this.dataset.title;
-    //                 const filterItems = document.querySelectorAll(".toolbox-item");
-    //                 const itemsArray = Array.from(filterItems);
-    //                 filterItems.forEach(item => {
-    //                     item.style.display = 'none';
-    //                 });
-    //                 const filteredDivs = itemsArray.filter(div => {
-    //                     div.querySelector('.toolbox-function').innerHTML = tag;
-    //                     const tags = div.dataset.tags_filter;
-    //                     if (tags) {
-    //                         const all_tags = JSON.parse(div.dataset.tags_filter);
-    //                         if (all_tags.includes(tag)) {
-    //                             return div;
-    //                         }
-    //                     }
-    //                 });
-    //                 filteredDivs.forEach(div => {
-    //                     div.style.display = 'block';
-    //                 });
-    //                 current_filter = this.dataset.title;
-    //             }
-    //             else {
-    //                 current_filter = "";
-    //                 tags.forEach((item) => {
-    //                     item.classList.remove("toolbox-tag-inactive");
-    //                 });
-    //                 const filterItems = document.querySelectorAll(".toolbox-item");
-    //                 const itemsArray = Array.from(filterItems);
-
-    //                 const filteredDivs = itemsArray.filter(div => {
-    //                     const tags = JSON.parse(div.dataset.tags_filter);
-    //                     if (tags) {
-    //                         if (tags.length > 1) {
-    //                             div.querySelector('.toolbox-function').innerHTML = 'Multiple';
-    //                         }
-    //                         if (tags.length === 1) {
-    //                             div.querySelector('.toolbox-function').innerHTML = tags[0];
-    //                         }
-    //                         return div;
-    //                     }
-    //                 });
-    //                 filteredDivs.forEach(div => {
-    //                     div.style.display = 'block';
-    //                 });
-    //                 filterItems.forEach(item => item.style.display = 'block');
-    //             }
-    //         });
-    //     });
-    // }
-
-    // function on_how_many_lines_selected() {
-    //     const toolboxItems = document.querySelectorAll(".toolbox-item");
-    //     toolboxItems.forEach((item) => {
-    //         let function_dict = JSON.parse(item.dataset.function);
-    //         let run = item.querySelector(".toolbox-run");
-    //         let content_run = item.querySelector(".toolbox-content-actions .toolbox-run");
-    //         let notice = item.querySelector(".toolbox-notice");
-    //         let selection_within_limits = (
-    //             editor_inform_how_many_lines_selected >= function_dict.selected_lines_min &&
-    //             editor_inform_how_many_lines_selected <= function_dict.selected_lines_max);
-    //         let good_access_level = true;
-    //         let access_level_msg = "";
-    //         if (editor_inform_file_access_level === -1) {
-    //             good_access_level = false;
-    //         }
-    //         if (editor_inform_file_access_level === 0) {
-    //             good_access_level = false;
-    //             access_level_msg = "Privacy: access to this file is restricted.";
-    //         }
-    //         if (editor_inform_file_access_level === 1 && function_dict.third_party) {
-    //             good_access_level = false;
-    //             access_level_msg = "Privacy: this function uses a third party API, which is not allowed for this file.";
-    //         }
-    //         if (!good_access_level) {
-    //             run.classList.add('toolbox-run-disabled');
-    //             content_run.classList.add('toolbox-run-disabled');
-    //             if (access_level_msg) {
-    //                 notice.style.display = 'inline-flex';
-    //                 notice.innerHTML = access_level_msg;
-    //             } else {
-    //                 notice.style.display = 'none';
-    //             }
-    //         } else if (
-    //             !function_dict.function_name.includes("free-chat") &&
-    //             function_dict.supports_selection === 1 &&
-    //             function_dict.supports_highlight === 0 &&
-    //             !selection_within_limits
-    //         ) {
-    //             run.classList.add('toolbox-run-disabled');
-    //             content_run.classList.add('toolbox-run-disabled');
-    //             notice.style.display = 'inline-flex';
-    //             notice.innerHTML = `Please select ${function_dict.selected_lines_min}-${function_dict.selected_lines_max} lines of code.`;
-    //         } else {
-    //             run.classList.remove('toolbox-run-disabled');
-    //             content_run.classList.remove('toolbox-run-disabled');
-    //             notice.style.display = 'none';
-    //         }
-    //     });
-    // }
 
     window.addEventListener("message", (event) => {
         const message = event.data;

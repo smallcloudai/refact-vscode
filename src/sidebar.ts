@@ -304,36 +304,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
             break;
         }
-        case "button_hf_save": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
-            break;
-        }
-        case "button_refact_save": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
-            break;
-        }
-        case "button_refact_open_streamlined": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-            vscode.commands.executeCommand('refactaicmd.login');
-            break;
-        }
-        case "save_enterprise": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
-            break;
-        }
-        case "save_selfhosted": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
-            break;
-        }
         case "privacy": {
             vscode.commands.executeCommand("refactaicmd.privacySettings");
             break;
