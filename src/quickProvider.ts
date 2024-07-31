@@ -2,7 +2,8 @@ import * as vscode from 'vscode';
 import * as sidebar from "./sidebar";
 import {
 	type ChatMessages,
-    type ChatMessage
+    type ChatMessage,
+    type ToolCommand
 } from "refact-chat-js/dist/events";
 export class QuickActionProvider implements vscode.CodeActionProvider {
 
@@ -21,16 +22,22 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             quickAction.command = {
                 command: `refactcmd.${action.id}`,
                 title: action.title,
-                arguments: [action.id,context.diagnostics.map(diagnostic => diagnostic.message).join('\n')],
+                arguments: [
+                    action.id, 
+                    {
+                        line: range.start.line + 1,
+                        end: range.end.line + 1,
+                        message: context.diagnostics.map(diagnostic => diagnostic.message).join('\n')
+                    }
+                ],
             };
-
             quickActions.push(quickAction);
         }
 
         return quickActions;
     }
 
-    public static async handleAction(actionId: string, diagnosticMessage: string) {
+    public static async handleAction(actionId: string, diagnostics: any) {
         if (actionId === 'fix') {
             const editor = vscode.window.activeTextEditor;
             if (editor) {
@@ -41,7 +48,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 }
                 let attach_default = !!vscode.window.activeTextEditor;
                 let chat = await sidebar.open_chat_tab(
-                    diagnosticMessage,
+                    diagnostics.message,
                     editor,
                     true,
                     "",
@@ -56,9 +63,9 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 const questionData = {
                     id: chat.chat_id,
                     model: "",
-                    title: diagnosticMessage + " Fix",
+                    title: diagnostics.message + " Fix",
                     messages: [
-                        ["user", diagnosticMessage] as ChatMessage,
+                        ["user", `@file ${editor.document.uri.path}:${diagnostics.line}-${diagnostics.end} \nMake code to fix error:\n \`\`\`${diagnostics.message}\`\`\``] as ChatMessage,
                     ] as ChatMessages,
                     attach_file: false,
                     tools: null
