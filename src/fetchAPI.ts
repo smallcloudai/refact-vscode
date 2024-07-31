@@ -17,6 +17,9 @@ import {
     AssistantMessage,
     ChatMessages,
     ToolMessage,
+    DiffChunk,
+    DiffAppliedStateResponse,
+    DiffOperationResponse,
 } from "refact-chat-js/dist/events";
 
 
@@ -920,4 +923,53 @@ export async function get_tools(notes: boolean = false): Promise<AtToolResponse>
         json.filter((tool) => tool.function.name !== "note_to_self");
 
     return tools;
+}
+
+export async function get_diff_state(chunks: DiffChunk[]): Promise<DiffAppliedStateResponse> {
+    const url = rust_url("/v1/diff-state");
+
+    if (!url) {
+        return Promise.reject("unable to get applied diffs url");
+    }
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        body: JSON.stringify({ chunks }),
+    });
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["applied-diffs response http status", response.status]);
+        return Promise.reject("unable to get applied diffs");
+    
+    }
+
+    const json: DiffAppliedStateResponse = await response.json();
+
+    return json;
+}
+
+export async function send_chunks_to_diff_apply(chunks: DiffChunk[], to_apply: boolean[]): Promise<DiffOperationResponse> {
+    const url = rust_url("/v1/diff-apply");
+
+    if (!url) {
+        return Promise.reject("unable to get applied diffs url");
+    }
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        body: JSON.stringify({ chunks, apply: to_apply }),
+    });
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["applied-diffs response http status", response.status]);
+        return Promise.reject("unable to apply applied diffs");
+    }
+
+    const json: DiffOperationResponse = await response.json();
+
+    return json;
 }

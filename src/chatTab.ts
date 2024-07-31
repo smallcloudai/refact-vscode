@@ -37,7 +37,14 @@ import {
     RequestTools,
     ToolCommand,
     RecieveTools,
-    QuestionFromChat
+    QuestionFromChat,
+    RequestDiffAppliedChunks,
+    RequestDiffOpperation,
+    DiffChunk,
+    RecieveDiffAppliedChunks,
+    RecieveDiffAppliedChunksError,
+    RecieveDiffOpperationResult,
+    RecieveDiffOpperationError
 } from "refact-chat-js/dist/events";
 
 
@@ -624,6 +631,17 @@ export class ChatTab {
                 return this.handleOpenSettings();
             }
 
+            case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_APPLIED_CHUNKS: {
+                const action: RequestDiffAppliedChunks = data;
+                return this.handleAppliedChunksRequest(action.payload.id, action.payload.diff_id, action.payload.chunks);
+            
+            }
+
+            case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_OPPERATION: {
+                const action: RequestDiffOpperation = data;
+                return this.handleDiffOperation(action.payload.id, action.payload.diff_id, action.payload.chunks, action.payload.toApply);
+            }
+
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
             // // handled in sidebar.ts
             // }
@@ -633,6 +651,55 @@ export class ChatTab {
             // }
 
         }
+    }
+
+    async handleDiffOperation(id: string, diff_id: string, chunks: DiffChunk[], to_apply: boolean[]) {
+        fetchAPI.send_chunks_to_diff_apply(chunks, to_apply).then((res) => {
+            const action: RecieveDiffOpperationResult = {
+                type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_OPPERATION_RESULT,
+                payload: {
+                    id: id,
+                    diff_id,
+                    fuzzy_results: res.fuzzy_results,
+                    state: res.state,
+                }
+            };
+
+            this.web_panel.webview.postMessage(action);
+        }).catch((err: string) => {
+            const action: RecieveDiffOpperationError = {
+                type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_OPPERATION_ERROR,
+                payload: {
+                  id,
+                  diff_id,
+                  reason: err
+                },
+              };
+            this.web_panel.webview.postMessage(action);
+        });
+    }
+
+    async handleAppliedChunksRequest(id: string, diff_id: string, chunks: DiffChunk[]) {
+        fetchAPI.get_diff_state(chunks).then((diff_state) => {
+            const action: RecieveDiffAppliedChunks = {
+                type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_APPLIED_CHUNKS,
+                payload: {
+                    id: id,
+                    diff_id,
+                    applied_chunks: diff_state.state,
+                    can_apply: diff_state.can_apply,
+                }
+            };
+
+            this.web_panel.webview.postMessage(action);
+        }).catch((err: string) => {
+            const action: RecieveDiffAppliedChunksError = {
+              type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_APPLIED_CHUNKS_ERROR,
+              payload: { id, diff_id, reason: err },
+            };
+
+            this.web_panel.webview.postMessage(action);
+        });
     }
 
     async handleOpenSettings() {
