@@ -238,12 +238,14 @@ export class ChatTab {
         const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
         // TODO: fix cast this
         const messages = chat.messages as ChatMessages;
-        this.chat_id = chat.id;
+        // this.chat_id = chat.id;
         return new Promise<void>((resolve) => {
             const disposables: vscode.Disposable[] = [];
-            const restore = (event: { type: string }) => {
-                console.log('----- RESTORE CHAT EVENT',event);
+            const restore = (event: { type: string, payload: {id: string} }) => {
+                console.log('----- READY CHAT EVENT',event);
                 if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
+                    this.chat_id = event.payload.id;
+                    console.log("\n### CHAT READY ####");
                     const action: RestoreChat = {
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
                         payload: {
@@ -258,12 +260,16 @@ export class ChatTab {
                         }
                     };
 
-                    this.web_panel.webview.postMessage(action);
+                    // console.log({action});
+                    if(chat.messages.length > 0) {
+                        this.web_panel.webview.postMessage(action);
+                    }
 
                     this.postActiveFileInfo();
                     this.toggleAttachFile(!!this.working_on_snippet_code);
                     this.sendTokenCountToChat();
                     disposables.forEach((d) => d.dispose());
+                    // ask the question here?
                     resolve();
                 }
             };
