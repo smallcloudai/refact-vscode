@@ -46,7 +46,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 } else if (global.side_panel && global.side_panel._view && !global.side_panel?._view?.visible) {
                     global.side_panel._view.show();
                 }
-                let attach_default = !!vscode.window.activeTextEditor;
+                // let attach_default = !!vscode.window.activeTextEditor;
                 let chat = await sidebar.open_chat_tab(
                     diagnostics.message,
                     editor,
@@ -59,7 +59,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 if (!chat) {
                     return;
                 }
-                await new Promise(r => setTimeout(r, 200));
+                await new Promise(r => setTimeout(r, 250));
                 const questionData = {
                     id: chat.chat_id,
                     model: "",
@@ -82,14 +82,15 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
     public static readonly actions = [
         {
           id: 'fix',
-          title: 'Fix this problem',
+          title: 'Refact.ai: Fix this problem',
           kind: vscode.CodeActionKind.QuickFix,
         },
         // {
-        //   id: 'professional',
-        //   title: 'Rewrite in professional tone',
+        //   id: 'fixthis',
+        //   title: 'Refact.ai: Rewrite this problem',
         //   kind: vscode.CodeActionKind.RefactorRewrite,
         // },
+        
     ];
 
     dispose() {
