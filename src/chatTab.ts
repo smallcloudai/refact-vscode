@@ -234,8 +234,8 @@ export class ChatTab {
         return new Promise<void>((resolve) => {
             const disposables: vscode.Disposable[] = [];
             const restore = (event: { type: string }) => {
+                console.log('----- RESTORE CHAT EVENT',event);
                 if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
-
                     const action: RestoreChat = {
                         type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
                         payload: {
@@ -259,7 +259,7 @@ export class ChatTab {
                     resolve();
                 }
             };
-
+            
             this.web_panel.webview.onDidReceiveMessage(
                 restore,
                 undefined,
@@ -620,9 +620,9 @@ export class ChatTab {
                 return this.handleToolRequest(action.payload.id);
             }
 
-            case EVENT_NAMES_FROM_CHAT.OPEN_SETTINGS: {
-                return this.handleOpenSettings();
-            }
+            // case EVENT_NAMES_FROM_CHAT.OPEN_SETTINGS: {
+            //     return this.handleOpenSettings();
+            // }
 
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
             // // handled in sidebar.ts
@@ -781,8 +781,7 @@ export class ChatTab {
         if (!free_floating_tab) {
             console.log("no chat found!");
             return;
-        }
-
+        } 
         await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages, append_snippet_to_input);
     }
 
@@ -798,7 +797,6 @@ export class ChatTab {
         if (!context) {
             return;
         }
-
         // TODO: find out if this is this needed any more?
         let code_snippet = "";
         this.working_on_snippet_range = undefined;
@@ -823,10 +821,8 @@ export class ChatTab {
             model: use_model,
             messages,
             title: question,
-        };
-
+        }
         return this.restoreChat(chat, append_snippet_to_input);
-
     }
 
     // public dispose()
