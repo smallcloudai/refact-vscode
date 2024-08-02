@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as sidebar from "./sidebar";
 import {
@@ -23,7 +24,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 command: `refactcmd.${action.id}`,
                 title: action.title,
                 arguments: [
-                    action.id, 
+                    action.id,
                     {
                         line: range.start.line + 1,
                         end: range.end.line + 1,
@@ -60,16 +61,17 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                     return;
                 }
                 await new Promise(r => setTimeout(r, 250));
+                const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix this problem:\n\n\`\`\`\n${diagnostics.message}\n\`\`\``;
                 const questionData = {
                     id: chat.chat_id,
                     model: "",
                     title: diagnostics.message + " Fix",
                     messages: [
-                        ["user", `@file ${editor.document.uri.path}:${diagnostics.line}-${diagnostics.end} \nMake code to fix error:\n \`\`\`${diagnostics.message}\`\`\``] as ChatMessage,
+                        ["user", query_text] as ChatMessage,
                     ] as ChatMessages,
                     attach_file: false,
                     tools: null
-                };                
+                };
                 chat.handleChatQuestion(questionData).then(() => {
                     console.log("Chat question handled successfully.");
                 }).catch((error) => {
@@ -90,7 +92,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         //   title: 'Refact.ai: Rewrite this problem',
         //   kind: vscode.CodeActionKind.RefactorRewrite,
         // },
-        
+
     ];
 
     dispose() {
