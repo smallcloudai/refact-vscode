@@ -44,7 +44,8 @@ import {
     RecieveDiffAppliedChunks,
     RecieveDiffAppliedChunksError,
     RecieveDiffOpperationResult,
-    RecieveDiffOpperationError
+    RecieveDiffOpperationError,
+    OpenFile
 } from "refact-chat-js/dist/events";
 
 
@@ -642,6 +643,12 @@ export class ChatTab {
                 return this.handleDiffOperation(action.payload.id, action.payload.diff_id, action.payload.chunks, action.payload.toApply);
             }
 
+            case EVENT_NAMES_FROM_CHAT.OPEN_FILE: {
+                console.log("OPEN FILE")
+                const action: OpenFile = data;
+                return this.handleOpenFile(action.payload.file);
+            }
+
             // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
             // // handled in sidebar.ts
             // }
@@ -651,6 +658,15 @@ export class ChatTab {
             // }
 
         }
+    }
+
+    async handleOpenFile(file: ChatContextFile) {
+        const uri = vscode.Uri.file(file.file_name);
+        const document = await vscode.workspace.openTextDocument(uri);
+        const postition = new vscode.Position(file.line1, 0);
+        const editor = await vscode.window.showTextDocument(document);
+        const range = new vscode.Range(postition, postition);
+        editor.revealRange(range);
     }
 
     async handleDiffOperation(id: string, diff_id: string, chunks: DiffChunk[], to_apply: boolean[]) {
