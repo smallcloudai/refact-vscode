@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as sidebar from "./sidebar";
+import * as fetchAPI from "./fetchAPI";
 import {
 	type ChatMessages,
     type ChatMessage,
@@ -61,7 +62,8 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                     return;
                 }
                 await new Promise(r => setTimeout(r, 250));
-                const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix this problem:\n\n\`\`\`\n${diagnostics.message}\n\`\`\``;
+                const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix the following problem, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${diagnostics.message}\n\`\`\``;
+                let tools = await fetchAPI.get_tools();
                 const questionData = {
                     id: chat.chat_id,
                     model: "",
@@ -70,7 +72,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                         ["user", query_text] as ChatMessage,
                     ] as ChatMessages,
                     attach_file: false,
-                    tools: null
+                    tools: tools,
                 };
                 chat.handleChatQuestion(questionData).then(() => {
                     console.log("Chat question handled successfully.");
