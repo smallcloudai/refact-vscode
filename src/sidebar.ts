@@ -36,25 +36,31 @@ export async function open_chat_tab(
         global.side_panel.chat = null;
     }
 
-    if (global.side_panel && global.side_panel._view) {
-        // TODO: check this
-        let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
+    console.log({side_panel: !!global.side_panel})
+    console.log({view: !!global.side_panel?._view});
 
-        let context: vscode.ExtensionContext | undefined = global.global_context;
-        if (!context) {
-            return;
+
+     // FIX: view can be false when open a new chat.
+        if (global.side_panel && global.side_panel._view) {
+            // TODO: check this
+            let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
+
+            let context: vscode.ExtensionContext | undefined = global.global_context;
+            if (!context) {
+                return;
+            }
+            global.side_panel.goto_chat(chat);  // changes html
+            await chatTab.ChatTab.clear_and_repopulate_chat(
+                question,
+                editor,
+                attach_default,
+                model,
+                messages,
+                append_snippet_to_input,
+            );
+            return chat;
         }
-        global.side_panel.goto_chat(chat);  // changes html
-        await chatTab.ChatTab.clear_and_repopulate_chat(
-            question,
-            editor,
-            attach_default,
-            model,
-            messages,
-            append_snippet_to_input,
-        );
-        return chat;
-    }
+
     return;
 }
 
