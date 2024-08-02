@@ -5,7 +5,8 @@ import * as fetchAPI from "./fetchAPI";
 import {
 	type ChatMessages,
     type ChatMessage,
-    type ToolCommand
+    type ToolCommand,
+    isReadyMessage,
 } from "refact-chat-js/dist/events";
 export class QuickActionProvider implements vscode.CodeActionProvider {
 
@@ -43,14 +44,16 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         if (actionId === 'fix') {
             const editor = vscode.window.activeTextEditor;
             if (editor) {
+
                 if (global.side_panel && !global.side_panel._view) {
                     await vscode.commands.executeCommand(sidebar.default.viewType + ".focus");
                 } else if (global.side_panel && global.side_panel._view && !global.side_panel?._view?.visible) {
                     global.side_panel._view.show();
+                    
                 }
-                // let attach_default = !!vscode.window.activeTextEditor;
+   
                 let chat = await sidebar.open_chat_tab(
-                    diagnostics.message,
+                    "",
                     editor,
                     true,
                     "",
@@ -58,27 +61,35 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                     "",
                     true,
                 );
+                // can be undefined when opening from filemanger
                 if (!chat) {
                     return;
                 }
-                await new Promise(r => setTimeout(r, 250));
+                // await new Promise(r => setTimeout(r, 250));
                 const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix the following problem, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${diagnostics.message}\n\`\`\``;
                 let tools = await fetchAPI.get_tools();
-                const questionData = {
-                    id: chat.chat_id,
-                    model: "",
-                    title: diagnostics.message + " Fix",
-                    messages: [
-                        ["user", query_text] as ChatMessage,
-                    ] as ChatMessages,
-                    attach_file: false,
-                    tools: tools,
-                };
-                chat.handleChatQuestion(questionData).then(() => {
-                    console.log("Chat question handled successfully.");
-                }).catch((error) => {
-                    console.error("Error handling chat question:", error);
-                });
+
+                const disposables: vscode.Disposable[] = [];
+                disposables.push(chat.web_panel.webview.onDidReceiveMessage((event) => {
+                    if(isReadyMessage(event)) {
+                        const questionData = {
+                            id: event.payload.id,
+                            model: "",
+                            title: diagnostics.message + " Fix",
+                            messages: [
+                                ["user", query_text] as ChatMessage,
+                            ] as ChatMessages,
+                            attach_file: false,
+                            tools: tools,
+                        };
+                        chat?.handleChatQuestion(questionData).then(() => {
+                            console.log("Chat question handled successfully.");
+                        }).catch((error) => {
+                            console.error("Error handling chat question:", error);
+                        });
+                        disposables.forEach(d => d.dispose());
+                    }
+                }, this, disposables));
             }
         }
     }
