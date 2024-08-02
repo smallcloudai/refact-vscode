@@ -259,7 +259,7 @@ export class ChatTab {
                     resolve();
                 }
             };
-            
+
             this.web_panel.webview.onDidReceiveMessage(
                 restore,
                 undefined,
@@ -478,7 +478,7 @@ export class ChatTab {
             formattedMessages,
             model,
             third_party,
-            tools
+            tools,
         );
 
         return request.supply_stream(...chat_promise);
@@ -781,7 +781,7 @@ export class ChatTab {
         if (!free_floating_tab) {
             console.log("no chat found!");
             return;
-        } 
+        }
         await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages, append_snippet_to_input);
     }
 
