@@ -55,7 +55,9 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix the following problem, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${diagnostics.message}\n\`\`\``;
+        const snippet = diagnostics.message || chat.getSnippetFromEditor().code;
+
+        const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix the following problem, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${snippet}\n\`\`\``;
         let tools = await fetchAPI.get_tools();
         const questionData = {
             id: chat.chat_id,
