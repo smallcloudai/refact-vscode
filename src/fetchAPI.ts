@@ -20,6 +20,8 @@ import {
     DiffChunk,
     DiffAppliedStateResponse,
     DiffOperationResponse,
+    type DiffMessage,
+    formatMessagesForLsp
 } from "refact-chat-js/dist/events";
 
 
@@ -527,7 +529,7 @@ export function fetch_chat_promise(
     }
 
     let ctx = inference_context(third_party);
-    let json_messages = [];
+    let json_messages = formatMessagesForLsp(messages);
     // "refactai.defaultSystemPrompt": {
     //     "type": "string",
     //     "markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
@@ -541,28 +543,6 @@ export function fetch_chat_promise(
     //         "content": default_system_prompt,
     //     });
     // }
-    for (let i=0; i<messages.length; i++) {
-        if(messages[i][0] === "tool") {
-            const message = messages[i] as ToolMessage;
-            json_messages.push({
-                role: message[0],
-                content: message[1].content,
-                tool_call_id: message[1].tool_call_id
-            });
-        } else {
-
-            const toolCalls = messages[i][0] === "assistant" && messages[i][2] ? {tool_calls: messages[i][2]} : {};
-            let content = messages[i][1];
-            if(typeof content !== "string" && content !== null) {
-                content = JSON.stringify(content);
-            }
-            json_messages.push({
-                "role": messages[i][0],
-                "content": content,
-                ...toolCalls,
-            });
-        }
-    }
 
     // an empty tools array causes issues
     const maybeTools = tools && tools.length > 0 ? {tools} : {};
@@ -580,6 +560,8 @@ export function fetch_chat_promise(
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
     };
+
+    console.log({json_messages})
     let req = new fetchH2.Request(url, {
         method: "POST",
         headers: headers,
