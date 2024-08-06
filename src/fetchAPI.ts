@@ -529,7 +529,8 @@ export function fetch_chat_promise(
     }
 
     let ctx = inference_context(third_party);
-    let json_messages = formatMessagesForLsp(messages);
+    // TODO: this shouldn't need to be cast to ChatMessages, it'll be removed in an updated
+    let json_messages = formatMessagesForLsp(messages as ChatMessages);
     // "refactai.defaultSystemPrompt": {
     //     "type": "string",
     //     "markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
