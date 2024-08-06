@@ -44,6 +44,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                         {
                             line: range.start.line + 1,
                             end: range.end.line + 1,
+                            prompt: action.prompt,
                         }
                     ],
                 };
@@ -74,7 +75,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         const questionData = {
             id: chat.chat_id,
             model: "", // FIX: should be last model used ?
-            title: diagnostics.message + " Fix",
+            title: "Fix " + diagnostics.message,
             messages: [
                 ["user", query_text] as ChatMessage,
             ] as ChatMessages,
@@ -89,7 +90,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         });
     }
 
-    private static async loadChatSelection(editor: vscode.TextEditor, diagnostics: any, selected_text: string) {
+    private static async loadChatSelection(editor: vscode.TextEditor, diagnostics: any, selected_text: string, action: string) {
         let chat = await sidebar.open_chat_tab(
             "",
             editor,
@@ -104,12 +105,15 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to rewrite following code, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${selected_text}\n\`\`\``;
+        let query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() ${diagnostics.prompt}, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${selected_text}\n\`\`\``;
+        if(action === 'explain' || action === 'summarize') {
+            query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\n${diagnostics.prompt}\n\n\`\`\`\n${selected_text}\n\`\`\``;
+        }
         let tools = await fetchAPI.get_tools();
         const questionData = {
             id: chat.chat_id,
             model: "", // FIX: should be last model used ?
-            title: selected_text + " Rewrite",
+            title: action.charAt(0).toUpperCase() + ' ' + action.slice(1) + selected_text,
             messages: [
                 ["user", query_text] as ChatMessage,
             ] as ChatMessages,
@@ -161,7 +165,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                         break;
                     }
                 }
-                this.loadChatSelection(editor, diagnostics, selected_text);
+                this.loadChatSelection(editor, diagnostics, selected_text, actionId);
             }
         }
     }
@@ -173,9 +177,58 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
           kind: vscode.CodeActionKind.QuickFix,
         },
         {
-          id: 'rewrite',
-          title: 'Refact.ai: Rewrite this',
+          id: 'bugs',
+          title: 'Refact.ai: Find and fix bugs',
           kind: vscode.CodeActionKind.RefactorRewrite,
+          prompt: "find and fix bugs in selected code",
+        },
+        {
+          id: 'comment',
+          title: 'Refact.ai: Comment each line',
+          kind: vscode.CodeActionKind.RefactorRewrite,
+          prompt: "comment each line using correct language syntax",
+        },
+        {
+          id: 'explain',
+          title: 'Refact.ai: Explain code',
+          kind: vscode.CodeActionKind.Refactor,
+          prompt: "short explanation of selected code",
+        },
+        {
+          id: 'improve',
+          title: 'Refact.ai: Rewrite code to improve it',
+          kind: vscode.CodeActionKind.RefactorRewrite,
+          prompt: "rewrite selected code to more efficient and imporove it",
+        },
+        {
+          id: 'naming',
+          title: 'Refact.ai: Improve variable names',
+          kind: vscode.CodeActionKind.RefactorRewrite,
+          prompt: "improve variable names using correct naming convention for this language",
+        },
+        {
+          id:'shorter',
+          title: 'Refact.ai: Make code shorter',
+          kind: vscode.CodeActionKind.RefactorRewrite,
+          prompt: "make selected code shorter and readable",
+        },
+        {
+          id:'summarize',
+          title: 'Refact.ai: Summarize code in 1 paragraph',
+          kind: vscode.CodeActionKind.Refactor,
+          prompt: "summarize selected code in 1 paragraph",
+        },
+        {
+          id: 'typehints',
+          title: 'Refact.ai: Add type hints',
+          kind: vscode.CodeActionKind.RefactorRewrite,
+          prompt: "add type hints to selected code if it's allowed in this language",
+        },
+        {
+          id: 'typos',
+          title: 'Refact.ai: Fix typos',
+          kind: vscode.CodeActionKind.RefactorRewrite,
+          prompt: "fix typos in selected code",
         },
     ];
 
