@@ -507,13 +507,13 @@ export class ChatTab {
                     message: error,
                 },
             });
-        } else {
+        } else if (this.cancellationTokenSource.token.isCancellationRequested === false) {
             this.web_panel.webview.postMessage({
                 type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
                 payload: { id },
             });
-            this.sendTokenCountToChat();
         }
+        this.sendTokenCountToChat();
     }
 
     async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; trigger: string | null; number: number }) {
