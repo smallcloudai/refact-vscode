@@ -665,13 +665,15 @@ export class ChatTab {
         }
     }
 
-    async handleOpenFile(file: {file_name:string, line: number}) {
+    async handleOpenFile(file: {file_name:string, line?: number}) {
         const uri = vscode.Uri.file(file.file_name);
         const document = await vscode.workspace.openTextDocument(uri);
-        const position = new vscode.Position(file.line, 0);
-        const editor = await vscode.window.showTextDocument(document);
-        const range = new vscode.Range(position, position);
-        editor.revealRange(range);
+        if(file.line !== undefined) {
+            const position = new vscode.Position(file.line ?? 0, 0);
+            const editor = await vscode.window.showTextDocument(document);
+            const range = new vscode.Range(position, position);
+            editor.revealRange(range);
+        }
     }
 
     async handleDiffOperation(id: string, diff_id: string, chunks: DiffChunk[], to_apply: boolean[]) {
