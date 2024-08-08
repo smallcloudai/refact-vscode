@@ -310,24 +310,40 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         case "button_refact_save": {
+            const canProceed = await this.saveSettingsIfNeeded();
+            if (!canProceed) {
+                return;
+            }
             await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
             break;
         }
         case "button_refact_open_streamlined": {
+            const canProceed = await this.saveSettingsIfNeeded();
+            if (!canProceed) {
+                return;
+            }
             await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
             vscode.commands.executeCommand('refactaicmd.login');
             break;
         }
         case "save_enterprise": {
+            const canProceed = await this.saveSettingsIfNeeded();
+            if (!canProceed) {
+                return;
+            }
             await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
             break;
         }
         case "save_selfhosted": {
+            const canProceed = await this.saveSettingsIfNeeded();
+            if (!canProceed) {
+                return;
+            }
             await this.delete_old_settings();
             await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
             await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
@@ -418,6 +434,25 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             break;
         }
         }
+    }
+
+    public async saveSettingsIfNeeded() {
+        const settingsDocument = vscode.workspace.textDocuments.find(doc =>
+            doc.uri.path.endsWith('settings.json') && doc.isDirty
+        );
+        if (settingsDocument) {
+            const save = await vscode.window.showWarningMessage(
+                'The settings file has unsaved changes. Please save the file before continuing.',
+                'Save', 'Cancel'
+            );
+            if (save === 'Save') {
+                await settingsDocument.save();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
     public update_webview()
