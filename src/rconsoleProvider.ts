@@ -442,7 +442,7 @@ export class RefactConsoleProvider {
 
         const id = uuidv4();
 
-        const messagesWithQuestion: ChatMessages = appendQuestion(question, messages) as ChatMessages;
+        // const messagesWithQuestion: ChatMessages = appendQuestion(question, messages) as ChatMessages;
 
 
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
@@ -450,7 +450,8 @@ export class RefactConsoleProvider {
             this.editor,
             false,
             this.model_name,
-            messagesWithQuestion,
+            [],
+            // messagesWithQuestion,
             id,
         );
         if (!chat) {

@@ -13,39 +13,31 @@ const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdi
 import { open_chat_tab } from "./sidebar";
 
 import {
-	EVENT_NAMES_FROM_CHAT,
-	EVENT_NAMES_TO_CHAT,
+	// EVENT_NAMES_FROM_CHAT,
+	// EVENT_NAMES_TO_CHAT,
 	EVENT_NAMES_TO_CONFIG,
-	type ChatSetSelectedSnippet,
-	type ReceiveAtCommandCompletion,
-	type ReceiveAtCommandPreview,
+	// type ChatSetSelectedSnippet,
+	// type ReceiveAtCommandCompletion,
+	// type ReceiveAtCommandPreview,
 	type Snippet,
 	type ChatContextFile,
-	type ToggleActiveFile,
-	type RestoreChat,
-	type ActiveFileInfo,
+	// type ToggleActiveFile,
+	// type RestoreChat,
+	// type ActiveFileInfo,
 	type ChatMessages,
-	type ReceiveTokenCount,
+	// type ReceiveTokenCount,
 	type FileInfo,
 	type UpdateConfigMessage,
-	type RequestPrompts,
-	type ReceivePromptsError,
-	type ReceivePrompts,
-	type RequestPreviewFiles,
+	// type RequestPrompts,
+	// type ReceivePromptsError,
+	// type ReceivePrompts,
+	// type RequestPreviewFiles,
     type ChatMessage,
-    type SetChatModel,
-    RequestTools,
+    // type SetChatModel,
+    // RequestTools,
     ToolCommand,
-    RecieveTools,
-    QuestionFromChat,
-    RequestDiffAppliedChunks,
-    RequestDiffOpperation,
-    DiffChunk,
-    RecieveDiffAppliedChunks,
-    RecieveDiffAppliedChunksError,
-    RecieveDiffOpperationResult,
-    RecieveDiffOpperationError,
-    type OpenFile
+    // RecieveTools,
+    // QuestionFromChat
 } from "refact-chat-js/dist/events";
 
 
@@ -234,52 +226,46 @@ export class ChatTab {
         title?: string;
         model: string;
     }, appendSnippet = false) {
-        const [model] = chat.model ? [chat.model] : await chat_model_get();
-        const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
-        // TODO: fix cast this
-        const messages = chat.messages as ChatMessages;
+        // const [model] = chat.model ? [chat.model] : await chat_model_get();
+        // const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
+        // // TODO: fix cast this
+        // const messages = chat.messages as ChatMessages;
         // this.chat_id = chat.id;
-        return new Promise<void>((resolve) => {
-            const disposables: vscode.Disposable[] = [];
-            const restore = (event: { type: string, payload: {id: string} }) => {
-                console.log('----- READY CHAT EVENT',event);
-                if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
-                    this.chat_id = event.payload.id;
-                    console.log("\n### CHAT READY ####");
-                    const action: RestoreChat = {
-                        type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                        payload: {
-                          id: this.chat_id,
-                          chat: {
-                            ...chat,
-                            messages,
-                            attach_file: !!snippet,
-                            model
-                          },
-                          snippet
-                        }
-                    };
+        // return new Promise<void>((resolve) => {
+        //     const disposables: vscode.Disposable[] = [];
+        //     const restore = (event: { type: string }) => {
+        //         if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
 
-                    // console.log({action});
-                    if(chat.messages.length > 0) {
-                        this.web_panel.webview.postMessage(action);
-                    }
+        //             const action: RestoreChat = {
+        //                 type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
+        //                 payload: {
+        //                   id: this.chat_id,
+        //                   chat: {
+        //                     ...chat,
+        //                     messages,
+        //                     attach_file: !!snippet,
+        //                     model
+        //                   },
+        //                   snippet
+        //                 }
+        //             };
 
-                    this.postActiveFileInfo();
-                    this.toggleAttachFile(!!this.working_on_snippet_code);
-                    this.sendTokenCountToChat();
-                    disposables.forEach((d) => d.dispose());
-                    // ask the question here?
-                    resolve();
-                }
-            };
+        //             this.web_panel.webview.postMessage(action);
 
-            this.web_panel.webview.onDidReceiveMessage(
-                restore,
-                undefined,
-                disposables
-            );
-        });
+        //             this.postActiveFileInfo();
+        //             this.toggleAttachFile(!!this.working_on_snippet_code);
+        //             this.sendTokenCountToChat();
+        //             disposables.forEach((d) => d.dispose());
+        //             resolve();
+        //         }
+        //     };
+
+        //     this.web_panel.webview.onDidReceiveMessage(
+        //         restore,
+        //         undefined,
+        //         disposables
+        //     );
+        // });
 
     }
 
@@ -323,33 +309,33 @@ export class ChatTab {
     }
 
     sendSnippetToChat(id?: string) {
-        const snippet = this.getSnippetFromEditor();
-        const action: ChatSetSelectedSnippet = {
-            type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
-            payload: { id: id || this.chat_id, snippet }
-        };
-        this.web_panel.webview.postMessage(action);
+        // const snippet = this.getSnippetFromEditor();
+        // const action: ChatSetSelectedSnippet = {
+        //     type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
+        //     payload: { id: id || this.chat_id, snippet }
+        // };
+        // this.web_panel.webview.postMessage(action);
     }
 
     toggleAttachFile(attach_file: boolean) {
-        const action: ToggleActiveFile = {
-            type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
-            payload: { id: this.chat_id, attach_file, }
-        };
+        // const action: ToggleActiveFile = {
+        //     type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
+        //     payload: { id: this.chat_id, attach_file, }
+        // };
 
-        this.web_panel.webview.postMessage(action);
+        // this.web_panel.webview.postMessage(action);
     }
 
     sendTokenCountToChat() {
-        const action: ReceiveTokenCount = {
-            type: EVENT_NAMES_TO_CHAT.RECEIVE_TOKEN_COUNT,
-            payload: {
-                id: this.chat_id,
-                tokens: global.user_logged_in ? global.user_metering_balance : null
-            }
-        };
+        // const action: ReceiveTokenCount = {
+        //     type: EVENT_NAMES_TO_CHAT.RECEIVE_TOKEN_COUNT,
+        //     payload: {
+        //         id: this.chat_id,
+        //         tokens: global.user_logged_in ? global.user_metering_balance : null
+        //     }
+        // };
 
-        this.web_panel.webview.postMessage(action);
+        // this.web_panel.webview.postMessage(action);
     }
 
     // createNewChat() {
@@ -360,21 +346,21 @@ export class ChatTab {
     // }
 
     postActiveFileInfo(id = this.chat_id) {
-        const file = this.getActiveFileInfo();
-        if(file === null) {
-            const action: ActiveFileInfo = {
-                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
-                payload: { id, file: { can_paste: false } },
-            };
-            this.web_panel.webview.postMessage(action);
-        } else {
-            const action: ActiveFileInfo = {
-                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
-                payload: { id, file },
-            };
+        // const file = this.getActiveFileInfo();
+        // if(file === null) {
+        //     const action: ActiveFileInfo = {
+        //         type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+        //         payload: { id, file: { can_paste: false } },
+        //     };
+        //     this.web_panel.webview.postMessage(action);
+        // } else {
+        //     const action: ActiveFileInfo = {
+        //         type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+        //         payload: { id, file },
+        //     };
 
-            this.web_panel.webview.postMessage(action);
-        }
+        //     this.web_panel.webview.postMessage(action);
+        // }
     }
 
     getActiveFileInfo(): Partial<FileInfo> | null {
@@ -424,245 +410,245 @@ export class ChatTab {
         attach_file?: boolean;
         tools?: ToolCommand[] | null;
     }): Promise<void> {
-        this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
-        // const file = attach_file && this.getActiveFileInfo();
+        // // this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
+        // // const file = attach_file && this.getActiveFileInfo();
 
-        // TODO: confirm if context files are no longer sent
-        // if (file) {
-        //     const message: [string, string] = ["context_file", JSON.stringify([file])];
-        //     const tail = messages.splice(-1, 1, message);
-        //     tail.map((m) => messages.push(m));
+        // // TODO: confirm if context files are no longer sent
+        // // if (file) {
+        // //     const message: [string, string] = ["context_file", JSON.stringify([file])];
+        // //     const tail = messages.splice(-1, 1, message);
+        // //     tail.map((m) => messages.push(m));
+        // // }
+        // this.chat_id = id;
+        // this.messages = messages;
+        // this.cancellationTokenSource =
+        //     new vscode.CancellationTokenSource();
+        // if (model) {
+        //     await chat_model_set(model, ""); // successfully used model, save it
+        // } else if(this.default_chat_model) {
+        //     await chat_model_set(this.default_chat_model, "");
         // }
-        this.chat_id = id;
-        this.messages = messages;
-        this.cancellationTokenSource =
-            new vscode.CancellationTokenSource();
-        if (model) {
-            await chat_model_set(model, ""); // successfully used model, save it
-        } else if(this.default_chat_model) {
-            await chat_model_set(this.default_chat_model, "");
-        }
 
-        await this.chatHistoryProvider.save_messages_list(
-            this.chat_id,
-            this.messages,
-            model,
-            title
-        );
+        // await this.chatHistoryProvider.save_messages_list(
+        //     this.chat_id,
+        //     this.messages,
+        //     model,
+        //     title
+        // );
 
-        await fetchAPI.wait_until_all_requests_finished();
-        const handle_response = (json: any) => {
-            if (typeof json !== "object") {
-              return;
-            }
+        // await fetchAPI.wait_until_all_requests_finished();
+        // const handle_response = (json: any) => {
+        //     if (typeof json !== "object") {
+        //       return;
+        //     }
 
-            const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
-            this.web_panel.webview.postMessage({
-            type,
-              payload: {
-                  ...json,
-                  id,
-              },
-            });
-        };
+        //     const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
+        //     this.web_panel.webview.postMessage({
+        //     type,
+        //       payload: {
+        //           ...json,
+        //           id,
+        //       },
+        //     });
+        // };
 
-        const request = new fetchAPI.PendingRequest(
-            undefined,
-            this.cancellationTokenSource.token
-        );
-        request.set_streaming_callback(
-            handle_response,
-            (error?: string) => this.handleStreamEnd(id, error),
-        );
-        //TODO: find out what this is for?
-        const third_party = this.model_to_thirdparty[model];
+        // const request = new fetchAPI.PendingRequest(
+        //     undefined,
+        //     this.cancellationTokenSource.token
+        // );
+        // request.set_streaming_callback(
+        //     handle_response,
+        //     (error?: string) => this.handleStreamEnd(id, error),
+        // );
+        // //TODO: find out what this is for?
+        // const third_party = this.model_to_thirdparty[model];
 
-        const formattedMessages = this.messages.map((message:ChatMessage) => {
-            if (message[0] === "context_file" && typeof message[1] !== "string") {
-                return [message[0], JSON.stringify(message[1])];
-            }
+        // const formattedMessages = this.messages.map((message:ChatMessage) => {
+        //     if (message[0] === "context_file" && typeof message[1] !== "string") {
+        //         return [message[0], JSON.stringify(message[1])];
+        //     }
 
-            return message;
-        }) as ChatMessages;
+        //     return message;
+        // }) as ChatMessages;
 
 
-        const chat_promise = fetchAPI.fetch_chat_promise(
-            this.cancellationTokenSource.token,
-            "chat-tab",
-            formattedMessages,
-            model,
-            third_party,
-            tools,
-        );
+        // const chat_promise = fetchAPI.fetch_chat_promise(
+        //     this.cancellationTokenSource.token,
+        //     "chat-tab",
+        //     formattedMessages,
+        //     model,
+        //     third_party,
+        //     tools
+        // );
 
-        return request.supply_stream(...chat_promise);
+        // return request.supply_stream(...chat_promise);
     }
 
     handleStreamEnd(id: string = this.chat_id, error?: string) {
-        if (error) {
-            this.web_panel.webview.postMessage({
-                type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
-                payload: {
-                    id,
-                    message: error,
-                },
-            });
-        } else if (this.cancellationTokenSource.token.isCancellationRequested === false) {
-            this.web_panel.webview.postMessage({
-                type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
-                payload: { id },
-            });
-        }
-        this.sendTokenCountToChat();
+        // if (error) {
+        //     this.web_panel.webview.postMessage({
+        //         type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+        //         payload: {
+        //             id,
+        //             message: error,
+        //         },
+        //     });
+        // } else {
+        //     this.web_panel.webview.postMessage({
+        //         type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+        //         payload: { id },
+        //     });
+        //     this.sendTokenCountToChat();
+        // }
     }
 
     async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; trigger: string | null; number: number }) {
-        fetchAPI.getAtCommands(
-            payload.trigger ?? payload.query,
-            payload.trigger ? payload.trigger.length : payload.cursor,
-            payload.number
-        ).then((res) => {
-            const message: ReceiveAtCommandCompletion = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
-                payload: { id: payload.id, ...res },
-            };
+        // fetchAPI.getAtCommands(
+        //     payload.trigger ?? payload.query,
+        //     payload.trigger ? payload.trigger.length : payload.cursor,
+        //     payload.number
+        // ).then((res) => {
+        //     const message: ReceiveAtCommandCompletion = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
+        //         payload: { id: payload.id, ...res },
+        //     };
 
-            this.web_panel.webview.postMessage(message);
-        }).catch(() => ({}));
+        //     this.web_panel.webview.postMessage(message);
+        // }).catch(() => ({}));
     }
 
     async handlePreviewFileRequest(payload: {id: string, query: string}) {
-        fetchAPI
-            .getAtCommandPreview(payload.query)
-            .then((res) => {
-                const message: ReceiveAtCommandPreview = {
-                    type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
-                    payload: { id: payload.id, preview: res },
-                };
+        // fetchAPI
+        //     .getAtCommandPreview(payload.query)
+        //     .then((res) => {
+        //         const message: ReceiveAtCommandPreview = {
+        //             type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
+        //             payload: { id: payload.id, preview: res },
+        //         };
 
-                this.web_panel.webview.postMessage(message);
-            })
-            .catch(() => ({}));
+        //         this.web_panel.webview.postMessage(message);
+        //     })
+        //     .catch(() => ({}));
     }
 
     async handleEvents({ type, ...data }: any) {
-        switch (type) {
+        // switch (type) {
 
-            case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
-                // Note: context_file will be a different format
-                const payload: QuestionFromChat["payload"] = data.payload;
-                const { id, messages, title, model, attach_file, tools } = payload;
-                return this.handleChatQuestion({ id, model, title, messages, attach_file, tools  });
-            }
+        //     case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
+        //         // Note: context_file will be a different format
+        //         const payload: QuestionFromChat["payload"] = data.payload;
+        //         const { id, messages, title, model, attach_file, tools } = payload;
+        //         return this.handleChatQuestion({ id, model, title, messages, attach_file, tools  });
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
-                return fetchAPI
-                    .get_caps()
-                    .then((caps) => {
-                        this.default_chat_model = caps.code_chat_default_model;
-                        return this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
-                            payload: {
-                                id: data.payload.id,
-                                caps,
-                            },
-                        });
-                    })
-                    .catch((err) => {
-                        return this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
-                            payload: {
-                                id: data.payload.id,
-                                message: err.message,
-                            },
-                        });
-                    });
-            }
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
+        //         return fetchAPI
+        //             .get_caps()
+        //             .then((caps) => {
+        //                 this.default_chat_model = caps.code_chat_default_model;
+        //                 return this.web_panel.webview.postMessage({
+        //                     type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
+        //                     payload: {
+        //                         id: data.payload.id,
+        //                         caps,
+        //                     },
+        //                 });
+        //             })
+        //             .catch((err) => {
+        //                 return this.web_panel.webview.postMessage({
+        //                     type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
+        //                     payload: {
+        //                         id: data.payload.id,
+        //                         message: err.message,
+        //                     },
+        //                 });
+        //             });
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
-                const { id, model, messages, title } = data.payload;
+        //     case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
+        //         const { id, model, messages, title } = data.payload;
 
-                return this.chatHistoryProvider.save_messages_list(
-                    id,
-                    messages,
-                    model,
-                    title
-                );
-            }
-            case EVENT_NAMES_FROM_CHAT.STOP_STREAMING: {
-                return this.handleStopClicked();
-            }
+        //         return this.chatHistoryProvider.save_messages_list(
+        //             id,
+        //             messages,
+        //             model,
+        //             title
+        //         );
+        //     }
+        //     case EVENT_NAMES_FROM_CHAT.STOP_STREAMING: {
+        //         return this.handleStopClicked();
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.READY: {
-                const { id } = data.payload;
-                this.chat_id = id;
-                this.setChatModel(id);
-                this.sendSnippetToChat(id);
-                return this.postActiveFileInfo(id);
-            }
+        //     case EVENT_NAMES_FROM_CHAT.READY: {
+        //         const { id } = data.payload;
+        //         this.chat_id = id;
+        //         this.setChatModel(id);
+        //         this.sendSnippetToChat(id);
+        //         return this.postActiveFileInfo(id);
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.SEND_TO_SIDE_BAR: {
-                return this.handleSendToSideBar();
-            }
+        //     case EVENT_NAMES_FROM_CHAT.SEND_TO_SIDE_BAR: {
+        //         return this.handleSendToSideBar();
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.NEW_FILE: {
-                const value = data.payload.content;
-                return this.handleOpenNewFile(value);
-            }
+        //     case EVENT_NAMES_FROM_CHAT.NEW_FILE: {
+        //         const value = data.payload.content;
+        //         return this.handleOpenNewFile(value);
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
-                const value = data.payload.content;
-                return this.handleDiffPasteBack({ code_block: value });
-            }
+        //     case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
+        //         const value = data.payload.content;
+        //         return this.handleDiffPasteBack({ code_block: value });
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
-                return this.handleAtCommandCompletion(data.payload);
-            }
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
+        //         return this.handleAtCommandCompletion(data.payload);
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_PROMPTS: {
-              const action: RequestPrompts = data;
-              return this.handleCustomPromptsRequest(action.payload.id);
-            }
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_PROMPTS: {
+        //       const action: RequestPrompts = data;
+        //       return this.handleCustomPromptsRequest(action.payload.id);
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_PREVIEW_FILES: {
-				const acton: RequestPreviewFiles = data;
-				return this.handlePreviewFileRequest(acton.payload);
-			}
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_PREVIEW_FILES: {
+		// 		const acton: RequestPreviewFiles = data;
+		// 		return this.handlePreviewFileRequest(acton.payload);
+		// 	}
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_TOOLS: {
-                const action: RequestTools = data;
-                return this.handleToolRequest(action.payload.id);
-            }
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_TOOLS: {
+        //         const action: RequestTools = data;
+        //         return this.handleToolRequest(action.payload.id);
+        //     }
 
             // case EVENT_NAMES_FROM_CHAT.OPEN_SETTINGS: {
             //     return this.handleOpenSettings();
             // }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_APPLIED_CHUNKS: {
-                const action: RequestDiffAppliedChunks = data;
-                return this.handleAppliedChunksRequest(action.payload.id, action.payload.diff_id, action.payload.chunks);
+            // case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_APPLIED_CHUNKS: {
+            //     const action: RequestDiffAppliedChunks = data;
+            //     return this.handleAppliedChunksRequest(action.payload.id, action.payload.diff_id, action.payload.chunks);
             
-            }
-
-            case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_OPPERATION: {
-                const action: RequestDiffOpperation = data;
-                return this.handleDiffOperation(action.payload.id, action.payload.diff_id, action.payload.chunks, action.payload.toApply);
-            }
-
-            case EVENT_NAMES_FROM_CHAT.OPEN_FILE: {
-                const action: OpenFile = data;
-                return this.handleOpenFile(action.payload.file);
-            }
-
-            // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
-            // // handled in sidebar.ts
             // }
 
-            // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB: {
-            //  // handled in sidebar.ts
+            // case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_OPPERATION: {
+            //     const action: RequestDiffOpperation = data;
+            //     return this.handleDiffOperation(action.payload.id, action.payload.diff_id, action.payload.chunks, action.payload.toApply);
             // }
 
-        }
+            // case EVENT_NAMES_FROM_CHAT.OPEN_FILE: {
+            //     const action: OpenFile = data;
+            //     return this.handleOpenFile(action.payload.file);
+            // }
+
+        //     // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
+        //     // // handled in sidebar.ts
+        //     // }
+
+        //     // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB: {
+        //     //  // handled in sidebar.ts
+        //     // }
+
+        // }
     }
 
     async handleOpenFile(file: {file_name:string, line?: number}) {
@@ -730,48 +716,48 @@ export class ChatTab {
     }
 
     async setChatModel(id: string) {
-        const [model] = await chat_model_get();
-        const message: SetChatModel = {
-            type: EVENT_NAMES_TO_CHAT.SET_CHAT_MODEL,
-            payload: {id, model}
-        };
+        // const [model] = await chat_model_get();
+        // const message: SetChatModel = {
+        //     type: EVENT_NAMES_TO_CHAT.SET_CHAT_MODEL,
+        //     payload: {id, model}
+        // };
 
-        this.web_panel.webview.postMessage(message);
+        // this.web_panel.webview.postMessage(message);
     }
 
     async handleToolRequest(id: string) {
 
-        fetchAPI.get_tools().then((res) => {
-            const action: RecieveTools = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
-                payload: { id, tools: res },
-            };
-            this.web_panel.webview.postMessage(action);
-        }).catch((err) => {
-            const action: RecieveTools = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
-                payload: { id, tools: [] },
-            };
-            this.web_panel.webview.postMessage(action);
-        });
+        // fetchAPI.get_tools().then((res) => {
+        //     const action: RecieveTools = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
+        //         payload: { id, tools: res },
+        //     };
+        //     this.web_panel.webview.postMessage(action);
+        // }).catch((err) => {
+        //     const action: RecieveTools = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
+        //         payload: { id, tools: [] },
+        //     };
+        //     this.web_panel.webview.postMessage(action);
+        // });
     }
 
     async handleCustomPromptsRequest(id: string) {
-        return fetchAPI.get_prompt_customization().then((data) => {
-          const message: ReceivePrompts = {
-				    type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS,
-				    payload: { id, prompts: data.system_prompts },
-			    };
+        // return fetchAPI.get_prompt_customization().then((data) => {
+        //   const message: ReceivePrompts = {
+		// 		    type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS,
+		// 		    payload: { id, prompts: data.system_prompts },
+		// 	    };
 
-          return this.web_panel.webview.postMessage(message);
+        //   return this.web_panel.webview.postMessage(message);
 
-        }).catch((err: string) => {
-            const message: ReceivePromptsError = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS_ERROR,
-                payload: { id, error: `Prompts: ${err}` },
-            };
-            return this.web_panel.webview.postMessage(message);
-        });
+        // }).catch((err: string) => {
+        //     const message: ReceivePromptsError = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS_ERROR,
+        //         payload: { id, error: `Prompts: ${err}` },
+        //     };
+        //     return this.web_panel.webview.postMessage(message);
+        // });
     }
 
     async handleSendToSideBar() {
@@ -911,8 +897,10 @@ export class ChatTab {
             model: use_model,
             messages,
             title: question,
-        }
-        return this.restoreChat(chat, append_snippet_to_input);
+        };
+
+        // return this.restoreChat(chat, append_snippet_to_input);
+
     }
 
     // public dispose()

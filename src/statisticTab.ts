@@ -2,9 +2,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 // TODO: delete this file
 import * as vscode from "vscode";
-import {
-    EVENT_NAMES_TO_STATISTIC,
-  } from "refact-chat-js/dist/events";
+// import {
+//     EVENT_NAMES_TO_STATISTIC,
+//   } from "refact-chat-js/dist/events";
 import * as fetchAPI from "./fetchAPI";
 import { v4 as uuidv4 } from "uuid";
 
@@ -18,27 +18,27 @@ export class StatisticTab {
     }
 
     private handleEvents(message: any) {
-        switch (message.type) {
-          case EVENT_NAMES_TO_STATISTIC.REQUEST_STATISTIC_DATA: {
-            return fetchAPI
-              .get_statistic_data()
-              .then((data) => {
-                return this.web_panel.webview.postMessage({
-                  type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA,
-                  payload: data,
-                });
-              })
-              .catch((err) => {
-                return this.web_panel.webview.postMessage({
-                  type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR,
-                  payload: {
-                    message: err,
-                  },
-                });
-              });
-          }
+        // switch (message.type) {
+        //   case EVENT_NAMES_TO_STATISTIC.REQUEST_STATISTIC_DATA: {
+        //     return fetchAPI
+        //       .get_statistic_data()
+        //       .then((data) => {
+        //         return this.web_panel.webview.postMessage({
+        //           type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA,
+        //           payload: data,
+        //         });
+        //       })
+        //       .catch((err) => {
+        //         return this.web_panel.webview.postMessage({
+        //           type: EVENT_NAMES_TO_STATISTIC.RECEIVE_STATISTIC_DATA_ERROR,
+        //           payload: {
+        //             message: err,
+        //           },
+        //         });
+        //       });
+        //   }
 
-        }
+        // }
     }
 
     dispose() {
