@@ -450,7 +450,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             const { host } = e.payload;
             if (host.type === "cloud") {
                 await this.delete_old_settings();
-                // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', host.sendCorrectedCodeSnippets, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', host.sendCorrectedCodeSnippets, vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
             } else if (host.type === "self") {

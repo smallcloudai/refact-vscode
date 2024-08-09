@@ -137,6 +137,12 @@
 					"default": "",
 					"order": 4
 				},
+				"refactai.telemetryCodeSnippets": {
+					"type": "boolean",
+					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
+					"default": false,
+					"order": 6
+				},
 				"refactai.pauseCompletion": {
 					"type": "boolean",
 					"description": "Pause automatic code suggestions. Manual activation still works.",
