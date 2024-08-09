@@ -14,15 +14,12 @@ import { getKeyBindingForChat } from "./getKeybindings";
 import {
     ChatMessages,
     fim,
+    isOpenExternalUrl,
     // type FileInfo,
     // setFileInfo,
     // type Snippet,
     // setSelectedSnippet,
-    ideOpenFile,
-    ideDiffPasteBackAction,
-    ideNewFileAction,
-    ideOpenHotKeys,
-    ideOpenSettingsAction,
+    isSetupHost,
 } from "refact-chat-js/dist/events";
 
 type Handler = ((data: any) => void) | undefined;
@@ -381,28 +378,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
             break;
         }
-        case "setup_host": {
-            const { host } = data.payload;
-            if (host.type === "cloud") {
-                await this.delete_old_settings();
-                await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', host.sendCorrectedCodeSnippets, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
-            } else if (host.type === "self") {
-                await this.delete_old_settings();
-                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
-            } else if (host.type === "enterprise") {
-                await this.delete_old_settings();
-                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
-                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
-            }
-            break;
-        }
-        case "open_external_url": {
-            await vscode.env.openExternal(vscode.Uri.parse(data.payload.url));
-            break;
-        }
         // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
         // case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
         // case FIM_EVENT_NAMES.BACK:
@@ -446,10 +421,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    private handleEvents(e: unknown) {
+    private async handleEvents(e: unknown) {
         console.log("sidebar event", e);
-        if(!e || typeof e !== "object") { return; }
-        if(!("type" in e)) { return; }
+        if(!e || typeof e !== "object") { 
+            return;
+        }
+        if(!("type" in e)) { 
+            return;
+        }
         // FIM Data from IDE
         if(e.type === fim.ready.type || e.type === fim.request.type) {
             if(global.fim_data_cache) {
@@ -461,11 +440,35 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }
 
-        if(e.type === ideOpenFile.type) {
+        /*if(e.type === ideOpenFile.type) {
             const action = e as ReturnType<typeof ideOpenFile>;
             return this.handleOpenFile(action.payload);
+        }*/
+
+        if (isSetupHost(e)) {
+            console.log("setup host");
+            const { host } = e.payload;
+            if (host.type === "cloud") {
+                await this.delete_old_settings();
+                // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', host.sendCorrectedCodeSnippets, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
+            } else if (host.type === "self") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
+            } else if (host.type === "enterprise") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
+            }
         }
 
+        if (isOpenExternalUrl(e)) {
+            await vscode.env.openExternal(vscode.Uri.parse(e.payload.url));
+        }
+
+        /*
         if(e.type === ideDiffPasteBackAction.type) {
             // diff paste back
            return  console.log("TODO: diff paste back");
@@ -490,7 +493,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if(e.type === ideOpenSettingsAction.type) {
             return vscode.commands.executeCommand("workbench.action.openSettings", "refactai");
         }
-
+        */
         
 
         // TODO: handle sending these 
