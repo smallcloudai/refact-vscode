@@ -12,7 +12,6 @@ import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
 import {
 	EVENT_NAMES_FROM_CHAT,
-	EVENT_NAMES_FROM_SETUP,
 	EVENT_NAMES_FROM_STATISTIC,
 	FIM_EVENT_NAMES,
 } from "refact-chat-js/dist/events";
@@ -501,27 +500,29 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             <body>
                 <div id="refact-chat"></div>
 
-                <script nonce="${nonce}" src="${scriptUri}"></script>
-
                 <script nonce="${nonce}">
+                const config = {
+                    host: "vscode",
+                    tabbed: true,
+                    themeProps: {
+                        accentColor: "gray",
+                        scaling: "${scaling}",
+                        hasBackground: false
+                    },
+                    features: {
+                        vecdb: ${vecdb},
+                        ast: ${ast},
+                    },
+                    apiKey: "${apiKey}",
+                    addressURL: "${addressURL}"
+                };
+                window.__INITIAL_STATE = config;
                 window.onload = function() {
-                    const root = document.getElementById("refact-chat")
-                    RefactChat.renderApp(root, {
-                        host: "vscode",
-                        tabbed: true,
-                        themeProps: {
-                            accentColor: "gray",
-                            scaling: "${scaling}",
-                        },
-                        features: {
-                            vecdb: ${vecdb},
-                            ast: ${ast},
-                        },
-                        apiKey: "${apiKey}",
-                        addressURL: "${addressURL}"
-                    })
+                    const root = document.getElementById("refact-chat");
+                    RefactChat.render(root, config);
                 }
                 </script>
+                <script nonce="${nonce}" src="${scriptUri}"></script>
             </body>
             </html>`;
     }
