@@ -14,6 +14,7 @@ import { getKeyBindingForChat } from "./getKeybindings";
 import {
     ChatMessages,
     fim,
+    isLogOut,
     isOpenExternalUrl,
     // type FileInfo,
     // setFileInfo,
@@ -464,6 +465,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }
 
+        if (isLogOut(e)) {
+            await this.delete_old_settings();
+        }
+
         if (isOpenExternalUrl(e)) {
             await vscode.env.openExternal(vscode.Uri.parse(e.payload.url));
         }
@@ -543,7 +548,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
 
         const nonce = this.getNonce();
-        const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
         let telemetry_code = '';
         // if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
         //     telemetry_code = 'checked';
