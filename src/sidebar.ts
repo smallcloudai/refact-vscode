@@ -507,7 +507,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     themeProps: {
                         accentColor: "gray",
                         scaling: "${scaling}",
-                        hasBackground: false
+                        hasBackground: false,
+                        appearance: "dark"
                     },
                     features: {
                         vecdb: ${vecdb},
