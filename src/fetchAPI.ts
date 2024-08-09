@@ -544,11 +544,33 @@ export function fetch_chat_promise(
     //         "content": default_system_prompt,
     //     });
     // }
+    // for (let i=0; i<messages.length; i++) {
+    //     if(messages[i][0] === "tool") {
+    //         const message = messages[i] as ToolMessage;
+    //         json_messages.push({
+    //             role: message[0],
+    //             content: message[1].content,
+    //             tool_call_id: message[1].tool_call_id
+    //         });
+    //     } else {
+
+    //         const toolCalls = messages[i][0] === "assistant" && messages[i][2] ? {tool_calls: messages[i][2]} : {};
+    //         let content = messages[i][1];
+    //         if(typeof content !== "string" && content !== null) {
+    //             content = JSON.stringify(content);
+    //         }
+    //         json_messages.push({
+    //             "role": messages[i][0],
+    //             "content": content,
+    //             ...toolCalls,
+    //         });
+    //     }
+    // }
 
     // an empty tools array causes issues
     const maybeTools = tools && tools.length > 0 ? {tools} : {};
     const body = JSON.stringify({
-        "messages": json_messages,
+        "messages": [], //json_messages,
         "model": model,
         "parameters": {
             "max_new_tokens": 1000,
@@ -690,7 +712,7 @@ export async function getAtCommandPreview(query: string): Promise<ChatContextFil
       const jsonMessages = json.messages.map<ChatContextFileMessage>(
         ({ role, content }) => {
           const fileData = JSON.parse(content) as ChatContextFile[];
-          return [role, fileData];
+          return { role, content: fileData};
         }
       );
 

@@ -10,12 +10,20 @@ import ChatHistoryProvider from "./chatHistory";
 import { Chat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
-import {
-	EVENT_NAMES_FROM_CHAT,
-	EVENT_NAMES_FROM_STATISTIC,
-} from "refact-chat-js/dist/events";
 import { getKeyBindingForChat } from "./getKeybindings";
-import { ChatMessages, fim } from "refact-chat-js/dist/events";
+import {
+    ChatMessages,
+    fim,
+    // type FileInfo,
+    // setFileInfo,
+    // type Snippet,
+    // setSelectedSnippet,
+    ideOpenFile,
+    ideDiffPasteBackAction,
+    ideNewFileAction,
+    ideOpenHotKeys,
+    ideOpenSettingsAction,
+} from "refact-chat-js/dist/events";
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -250,7 +258,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         // console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
-        case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
+        // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
         case "open_chat_in_new_tab": {
             const chat_id = data?.chat_id || this.chat?.chat_id;
             // const chat_id = data.payload.id;
@@ -395,9 +403,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             await vscode.env.openExternal(vscode.Uri.parse(data.payload.url));
             break;
         }
-        case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
-        case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
-        case FIM_EVENT_NAMES.BACK:
+        // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
+        // case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
+        // case FIM_EVENT_NAMES.BACK:
         case "back-from-chat": {
             this.goto_main();
             this.chat = null;
@@ -452,76 +460,59 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 this._view?.webview.postMessage(event);
             }
         }
+
+        if(e.type === ideOpenFile.type) {
+            const action = e as ReturnType<typeof ideOpenFile>;
+            return this.handleOpenFile(action.payload);
+        }
+
+        if(e.type === ideDiffPasteBackAction.type) {
+            // diff paste back
+           return  console.log("TODO: diff paste back");
+        }
+
+        if(e.type === ideNewFileAction.type) {
+            const action = e as ReturnType<typeof ideNewFileAction>
+            return vscode.workspace.openTextDocument().then((document) => {
+                vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+                    .then((editor) => {
+                        editor.edit((editBuilder) => {
+                            editBuilder.insert(new vscode.Position(0, 0), action.payload);
+                        });
+                    });
+            });
+        }
+
+        if(e.type === ideOpenHotKeys.type) {
+            // open hot keys
+        }
+
+        if(e.type === ideOpenSettingsAction.type) {
+            return vscode.commands.executeCommand("workbench.action.openSettings", "refactai");
+        }
+
+        
+
+        // TODO: handle sending these 
+        /** 
+         *     type FileInfo, setFileInfo, type Snippet,  setSelectedSnippet,
+         */
     }
 
-    private async html_main_screen(webview: vscode.Webview) {
-        const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
-
-        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
-
-        const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
-        );
-
-        const styleMainUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "style.css")
-        );
-
-        const styleOverride = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "custom-theme.css")
-        );
-
-        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
-        const scaling = fontSize < 14 ? "90%" : "100%";
-
-        const nonce = this.getNonce();
-
-        return `<!DOCTYPE html>
-            <html lang="en" class="light">
-                <head>
-                    <meta charset="UTF-8">
-                    <!--
-                        Use a content security policy to only allow loading images from https or from our extension directory,
-                        and only allow scripts that have a specific nonce.
-                        TODO: remove  unsafe-inline if posable
-                    -->
-                    <meta http-equiv="Content-Security-Policy" content="style-src ${
-                        webview.cspSource
-                    } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
-                    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-
-                    <title>Refact.ai Chat</title>
-                    <link href="${styleMainUri}" rel="stylesheet">
-                    <link href="${styleOverride}" rel="stylesheet">
-                </head>
-                <body>
-                    <div id="refact-chat"></div>
-
-                    <script nonce="${nonce}" src="${scriptUri}"></script>
-
-                    <script nonce="${nonce}">
-                        window.onload = function() {
-                            const root = document.getElementById("refact-chat")
-                            RefactChat.render(root, {
-                                host: "vscode",
-                                tabbed: false,
-                                themeProps: {
-                                    accentColor: "gray",
-                                    scaling: "${scaling}",
-                                },
-                                features: {
-                                    vecdb: ${vecdb},
-                                    ast: ${ast},
-                                }
-                            })
-                        }
-                    </script>
-                </body>
-            </html>`;
-
+    async handleOpenFile(file: {file_name:string, line?: number}) {
+        const uri = vscode.Uri.file(file.file_name);
+        const document = await vscode.workspace.openTextDocument(uri);
+        if(file.line !== undefined) {
+            const position = new vscode.Position(file.line ?? 0, 0);
+            const editor = await vscode.window.showTextDocument(document);
+            const range = new vscode.Range(position, position);
+            editor.revealRange(range);
+        }
     }
+    
 
-    private async _html_main_screen(webview: vscode.Webview)
+
+    private async html_main_screen(webview: vscode.Webview)
     {
         const extensionUri = this._context.extensionUri;
         const vecdb = vscode.workspace

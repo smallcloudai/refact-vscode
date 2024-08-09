@@ -23,7 +23,7 @@ import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
 import { fileURLToPath } from 'url';
 import { ChatTab } from './chatTab';
-import { FimDebugData } from 'refact-chat-js/dist/events';
+import { FimDebugData } from 'refact-chat-js/dist/events/index.js';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
