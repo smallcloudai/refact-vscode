@@ -29,8 +29,9 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                     arguments: [
                         action.id,
                         {
-                            line: range.start.line + 1,
-                            end: range.end.line + 1,
+                            line: range.start.line,
+                            end: range.end.line,
+                            line_text: document.lineAt(range.start.line).text.trim(),
                             message: context.diagnostics.map(diagnostic => diagnostic.message).join('\n')
                         }
                     ],
@@ -70,7 +71,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix the following problem, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${diagnostics.message}\n\`\`\``;
+        const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix the following problem:\n\`\`\`\n${diagnostics.message}\n\`\`\`\n at line \n\`\`\`\n${diagnostics.line_text}\n\`\`\`\n then tell if the generated patch is good in one sentence:`;
         let tools = await fetchAPI.get_tools();
         const questionData = {
             id: chat.chat_id,
@@ -105,9 +106,9 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             return;
         }
 
-        let query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() ${diagnostics.prompt}, then tell if the generated patch is good in one sentence:\n\n\`\`\`\n${selected_text}\n\`\`\``;
+        let query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to ${diagnostics.prompt}:\n\`\`\`\n${selected_text}\n\`\`\`\n then tell if the generated patch is good in one sentence:\n`;
         if(action === 'explain' || action === 'summarize') {
-            query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\n${diagnostics.prompt}\n\n\`\`\`\n${selected_text}\n\`\`\``;
+            query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\n${diagnostics.prompt}: \n\n\`\`\`\n${selected_text}\n\`\`\``;
         }
         let tools = await fetchAPI.get_tools();
         const questionData = {
