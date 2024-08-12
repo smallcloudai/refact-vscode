@@ -45,6 +45,15 @@ export class RustBinaryBlob
         return 1;
     }
 
+    public get_port(): number {
+        let xdebug = this.x_debug();
+        if (xdebug) {
+            return 8001;
+        } else {
+            return this.port;
+        }
+    }
+
     public rust_url(): string
     {
         let xdebug = this.x_debug();

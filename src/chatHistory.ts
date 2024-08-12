@@ -100,9 +100,9 @@ export default class ChatHistoryProvider {
     {
         let first_question = "";
         for (let i = 0; i < chat.messages.length; i++) {
-            const message = chat.messages[i]
+            const message = chat.messages[i];
             if (isUserMessage(message)) {
-                first_question = message[1];
+                first_question = message.content;
                 break;
             }
         }
