@@ -15,7 +15,7 @@ import { open_chat_tab } from "./sidebar";
 import {
 	// EVENT_NAMES_FROM_CHAT,
 	// EVENT_NAMES_TO_CHAT,
-	EVENT_NAMES_TO_CONFIG,
+	// EVENT_NAMES_TO_CONFIG,
 	// type ChatSetSelectedSnippet,
 	// type ReceiveAtCommandCompletion,
 	// type ReceiveAtCommandPreview,
@@ -27,7 +27,7 @@ import {
 	type ChatMessages,
 	// type ReceiveTokenCount,
 	type FileInfo,
-	type UpdateConfigMessage,
+	// type UpdateConfigMessage,
 	// type RequestPrompts,
 	// type ReceivePromptsError,
 	// type ReceivePrompts,
@@ -120,7 +120,7 @@ export class ChatTab {
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
           this.postActiveFileInfo();
           this.sendSnippetToChat();
-        }));
+        })); 
 
         this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
           this.postActiveFileInfo();
@@ -916,22 +916,22 @@ export class ChatTab {
     // }
 
     handleSettingsChange() {
-        const vecdb =
-            vscode.workspace
-                .getConfiguration()
-                ?.get<boolean>("refactai.vecdb") ?? false;
+        // const vecdb =
+        //     vscode.workspace
+        //         .getConfiguration()
+        //         ?.get<boolean>("refactai.vecdb") ?? false;
 
-        const ast =
-            vscode.workspace
-                .getConfiguration()
-                ?.get<boolean>("refactai.ast") ?? false;
-        const message: UpdateConfigMessage = {
-            type: EVENT_NAMES_TO_CONFIG.UPDATE,
-            payload: {
-                features: { vecdb, ast }
-            }
-        };
-        this.web_panel.webview.postMessage(message);
+        // const ast =
+        //     vscode.workspace
+        //         .getConfiguration()
+        //         ?.get<boolean>("refactai.ast") ?? false;
+        // const message: UpdateConfigMessage = {
+        //     type: EVENT_NAMES_TO_CONFIG.UPDATE,
+        //     payload: {
+        //         features: { vecdb, ast }
+        //     }
+        // };
+        // this.web_panel.webview.postMessage(message);
     }
 
 

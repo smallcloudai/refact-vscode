@@ -474,13 +474,13 @@ export class RefactConsoleProvider {
         // }));
 
         await new Promise(r => setTimeout(r, 200));
-        await chat.handleChatQuestion({
-			id: chat.chat_id,
-			model: this.model_name,
-			title: question,
-			messages: messagesWithQuestion,
-			attach_file: false,
-		});
+        // await chat.handleChatQuestion({
+		// 	id: chat.chat_id,
+		// 	model: this.model_name,
+		// 	title: question,
+		// 	messages: messagesWithQuestion,
+		// 	attach_file: false,
+		// });
     }
 }
 

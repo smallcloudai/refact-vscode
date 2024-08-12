@@ -12,7 +12,7 @@ import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
 import { getKeyBindingForChat } from "./getKeybindings";
 import {
-    ChatMessages,
+    type ChatMessages,
     fim,
     isLogOut,
     isOpenExternalUrl,
@@ -20,8 +20,16 @@ import {
     // setFileInfo,
     // type Snippet,
     // setSelectedSnippet,
+    updateConfig,
     isSetupHost,
+    type FileInfo,
+    setFileInfo,
+    type Snippet,
+    setSelectedSnippet,
+    type InitialState
 } from "refact-chat-js/dist/events";
+import { basename } from "path";
+
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -109,12 +117,34 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     public fim_debug: fimDebug.FimDebug | null = null;
     public chatHistoryProvider: ChatHistoryProvider|undefined;
 
+    _disposables: vscode.Disposable[] = [];
+
     public static readonly viewType = "refactai-toolbox";
 
     constructor(private readonly _context: any) {
         this.chatHistoryProvider = undefined;
         this.address = "";
         this.js2ts_message = this.js2ts_message.bind(this);
+
+        this.handleEvents = this.handleEvents.bind(this);
+
+        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
+            this.postActiveFileInfo();
+            this.sendSnippetToChat();
+          })); 
+  
+        this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
+           this.postActiveFileInfo();
+           this.sendSnippetToChat();
+        }));
+
+        this._disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
+            if(event.affectsConfiguration("refactai.vecdb") || event.affectsConfiguration("refactai.ast")) {
+                this.handleSettingsChange();
+            }
+        }));
+
+        // TODO: theme changes.
     }
 
     // handleEvents(data: any) {
@@ -122,6 +152,110 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //     return composeHandlers(this.chat?.handleEvents, this.js2ts_message)(data);
     // }
 
+    sendSnippetToChat() {
+        const snippet = this.getSnippetFromEditor();
+        if(!snippet) { return; }
+        const message = setSelectedSnippet(snippet);
+        this._view?.webview.postMessage(message);
+    }
+
+    trimIndent(code: string) {
+        if(/^\s/.test(code) === false) { return code; }
+        const lastLine = code.split("\n").slice(-1)[0];
+        if(/^\s/.test(lastLine) === false) { return code; }
+        const tabSettings = vscode.workspace.getConfiguration("editor").get<number>("tabSize") ?? 4;
+        const spaces = " ".repeat(tabSettings);
+        const spacedCode = code.replace(/^\t+/gm, (match) => {
+            return match.replace(/\t/g, spaces);
+        });
+        const regexp = new RegExp(`^${spaces}`, "gm");
+        const indented = spacedCode.replace(regexp, "");
+        return indented;
+    }
+
+    getSnippetFromEditor(): Snippet {
+        // if(!this.working_on_snippet_code) { return; }
+        const language = vscode.window.activeTextEditor?.document.languageId ?? "";
+        const isEmpty = vscode.window.activeTextEditor?.selection.isEmpty ?? true;
+        const selection = vscode.window.activeTextEditor?.selection;
+        const code = isEmpty ? "" : vscode.window.activeTextEditor?.document.getText(selection) ?? "";
+        const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
+        const fileName = basename(filePath);
+
+
+        const indentedCode = this.trimIndent(code);
+
+        return {
+            code: indentedCode,
+            language,
+            path: filePath,
+            basename: fileName
+        };
+    }
+
+    postActiveFileInfo() {
+        const file = this.getActiveFileInfo();
+        if(file === null) {
+            const message = setFileInfo({  name: "",
+                line1: null,
+                line2: null,
+                can_paste: false,
+                path: "",
+                cursor: null
+            });
+            this._view?.webview.postMessage(message);
+        } else {
+            const message = setFileInfo(file);
+            this._view?.webview.postMessage(message);
+        }
+    }
+
+    getActiveFileInfo(): FileInfo | null {
+        if(vscode.window.activeTextEditor?.document.uri.scheme !== "file") {
+            return null;
+        }
+        const file_path =
+			vscode.window.activeTextEditor?.document.fileName || "";
+        const file_name = basename(file_path);
+        const file_content = vscode.window.activeTextEditor?.document.getText() || "";
+        const start = vscode.window.activeTextEditor?.selection.start;
+        const end = vscode.window.activeTextEditor?.selection.end;
+        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
+        const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
+        const can_paste = vscode.window.activeTextEditor?.document.uri.scheme === "file";
+
+        const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
+            ? { line1: start.line + 1, line2: end.line + 1 }
+            : { line1:  1, line2: lineCount + 1 };
+
+        const file = {
+            name: file_name,
+            content: file_content,
+            path: file_path,
+            usefulness: 100,
+            cursor,
+            can_paste,
+            ...maybeLineInfo,
+        };
+
+        return file;
+    }
+
+    handleSettingsChange() {
+        const vecdb =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.vecdb") ?? false;
+
+        const ast =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.ast") ?? false;
+        const message = updateConfig({features: {vecdb, ast}});
+        this._view?.webview.postMessage(message);
+    }
+
+    // This can go
     public make_sure_have_chat_history_provider()
     {
         if (!this.chatHistoryProvider) {
@@ -132,6 +266,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return this.chatHistoryProvider;
     }
 
+    // This can be deleted
     public new_chat(view: vscode.WebviewView, chat_id: string)
     {
         if (chat_id === "" || chat_id === undefined) {
@@ -503,7 +638,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         // TODO: handle sending these 
         /** 
-         *     type FileInfo, setFileInfo, type Snippet,  setSelectedSnippet,
+         *     type FileInfo, setFileInfo, type Snippet,  setSelectedSnippet, updateConfig
          */
     }
 
@@ -517,11 +652,55 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             editor.revealRange(range);
         }
     }
+
+    getColorTheme(): "light" | "dark" {
+        switch(vscode.window.activeColorTheme.kind) {
+            case vscode.ColorThemeKind.Light: return "light";
+            case vscode.ColorThemeKind.HighContrastLight: return "light";
+            default: return "dark";
+        }
+    }
     
 
+    crateInitialState(): Partial<InitialState> {
+        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
+        const scaling = fontSize < 14 ? "90%" : "100%";
+        const activeColorTheme = this.getColorTheme();
+        const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
+        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
+        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
+        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? ""; 
+        const port = global.rust_binary_blob?.get_port() ?? 8001;
+
+        const config: InitialState["config"] = {
+            host: "vscode",
+            tabbed: false,
+            themeProps: {
+                accentColor: "gray",
+                scaling,
+                hasBackground: false,
+                appearance: activeColorTheme,
+            },
+            features: {
+                vecdb,
+                ast,
+            },
+            apiKey,
+            addressURL,
+            lspPort: port,
+        };
+        // TODO: add messages for send_immediately
+
+        // TODO: migrate history, here?
+
+        return {
+            config,
+        };
+    }
 
     private async html_main_screen(webview: vscode.Webview)
     {
+        // TODO: add send immediately flag for context menu and toolbar
         const extensionUri = this._context.extensionUri;
         const vecdb = vscode.workspace
 			.getConfiguration()
@@ -559,6 +738,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         const open_chat_hotkey = await getKeyBindingForChat();
 
+        const port = global.rust_binary_blob?.get_port() ?? 8001;
+
+        const initialState = this.crateInitialState();
+
         return `<!DOCTYPE html>
             <html lang="en" class="light">
             <head>
@@ -581,6 +764,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div id="refact-chat"></div>
 
                 <script nonce="${nonce}">
+                window.__INITIAL_STATE__ = ${JSON.stringify(initialState)};
                 const config = {
                     host: "vscode",
                     tabbed: true,
@@ -595,7 +779,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         ast: ${ast},
                     },
                     apiKey: "${apiKey}",
-                    addressURL: "${addressURL}"
+                    addressURL: "${addressURL}",
+                    lspPort: "${port}"
                 };
                 window.__INITIAL_STATE = config;
                 window.onload = function() {
