@@ -26,9 +26,16 @@ import {
     setFileInfo,
     type Snippet,
     setSelectedSnippet,
-    type InitialState
+    type InitialState,
+    ideOpenHotKeys,
+    ideOpenFile,
+    ideNewFileAction,
+    ideOpenSettingsAction,
+    ideDiffPasteBackAction,
+    ideOpenChatInNewTab,
 } from "refact-chat-js/dist/events";
 import { basename } from "path";
+import { diff_paste_back } from "./chatTab";
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -576,11 +583,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }
 
-        /*if(e.type === ideOpenFile.type) {
-            const action = e as ReturnType<typeof ideOpenFile>;
-            return this.handleOpenFile(action.payload);
-        }*/
-
         if (isSetupHost(e)) {
             console.log("setup host");
             const { host } = e.payload;
@@ -608,13 +610,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             await vscode.env.openExternal(vscode.Uri.parse(e.payload.url));
         }
 
-        /*
-        if(e.type === ideDiffPasteBackAction.type) {
-            // diff paste back
-           return  console.log("TODO: diff paste back");
-        }
 
-        if(e.type === ideNewFileAction.type) {
+        if(ideNewFileAction.match(e)) {
             const action = e as ReturnType<typeof ideNewFileAction>
             return vscode.workspace.openTextDocument().then((document) => {
                 vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
@@ -626,21 +623,52 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             });
         }
 
-        if(e.type === ideOpenHotKeys.type) {
-            // open hot keys
+        if(ideOpenHotKeys.match(e)) {
+            // return vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "refact.ai");
         }
 
-        if(e.type === ideOpenSettingsAction.type) {
+        if(ideOpenSettingsAction.match(e)) {
             return vscode.commands.executeCommand("workbench.action.openSettings", "refactai");
         }
-        */
-        
 
-        // TODO: handle sending these 
-        /** 
-         *     type FileInfo, setFileInfo, type Snippet,  setSelectedSnippet, updateConfig
-         */
+        if(ideOpenFile.match(e)) {
+            return this.handleOpenFile(e.payload);
+        }
+
+        if(ideDiffPasteBackAction.match(e)) {
+            return this.handleDiffPasteBack(e.payload);
+        }
+
+        if(ideOpenChatInNewTab.match(e)) {
+            const thread = e.payload
+            // TODO: open chat in a new tab, with the thread in the initial state.
+        }
     }
+
+    private async handleDiffPasteBack(code_block: string) {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) { return; }
+        const selection = editor.selection;
+        const startOfLine = new vscode.Position(selection.start.line, 0);
+        const endOfLine = new vscode.Position(selection.start.line + 1, 0);
+        const firstLineRange = new vscode.Range(startOfLine, endOfLine);
+        const spaceRegex = /^[ \t]+/;
+        const selectedLine = editor.document.getText(
+            firstLineRange
+        );
+        const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
+        const needsNewLine = code_block.endsWith("\n") === false;
+        const indentedCode = (indent + code_block).replace(/\n/gm, "\n" + indent) + (needsNewLine ? "\n" : "");
+
+        const range = new vscode.Range(startOfLine, selection.end);
+
+		return diff_paste_back(
+            editor,
+            range,
+            indentedCode
+        );
+
+	}
 
     async handleOpenFile(file: {file_name:string, line?: number}) {
         const uri = vscode.Uri.file(file.file_name);
