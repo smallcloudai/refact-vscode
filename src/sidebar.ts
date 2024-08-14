@@ -573,7 +573,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return;
         }
         // FIM Data from IDE
-        if(e.type === fim.ready.type || e.type === fim.request.type) {
+        if(fim.ready.match(e)|| fim.request.match(e)) {
             if(global.fim_data_cache) {
                 const event = fim.receive(global.fim_data_cache);
                 this._view?.webview.postMessage(event);
@@ -624,7 +624,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideOpenHotKeys.match(e)) {
-            // return vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "refact.ai");
+            return vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "refact.ai");
         }
 
         if(ideOpenSettingsAction.match(e)) {
