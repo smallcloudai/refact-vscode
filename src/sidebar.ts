@@ -690,7 +690,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
     
 
-    crateInitialState(): Partial<InitialState> {
+    async createInitialState(): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
         const scaling = fontSize < 14 ? "90%" : "100%";
         const activeColorTheme = this.getColorTheme();
@@ -699,6 +699,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? ""; 
         const port = global.rust_binary_blob?.get_port() ?? 8001;
+        const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
 
         const config: InitialState["config"] = {
             host: "vscode",
@@ -712,6 +713,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             features: {
                 vecdb,
                 ast,
+            },
+            keyBindings: {
+                completeManual,
             },
             apiKey,
             addressURL,
@@ -730,12 +734,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     {
         // TODO: add send immediately flag for context menu and toolbar
         const extensionUri = this._context.extensionUri;
-        const vecdb = vscode.workspace
-			.getConfiguration()
-			?.get<boolean>("refactai.vecdb") ?? false;
-
-        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
-
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
         );
@@ -748,14 +746,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             vscode.Uri.joinPath(extensionUri, "assets", "custom-theme.css")
         );
 
-        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
-        const scaling = fontSize < 14 ? "90%" : "100%";
-
-        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
-        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
-
         const nonce = this.getNonce();
-        let telemetry_code = '';
         // if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
         //     telemetry_code = 'checked';
         // }
@@ -764,11 +755,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             existing_address = "";
         }
 
-        const open_chat_hotkey = await getKeyBindingForChat();
-
-        const port = global.rust_binary_blob?.get_port() ?? 8001;
-
-        const initialState = this.crateInitialState();
+        const initialState = await this.createInitialState();
 
         return `<!DOCTYPE html>
             <html lang="en" class="light">
@@ -792,28 +779,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div id="refact-chat"></div>
 
                 <script nonce="${nonce}">
-                window.__INITIAL_STATE__ = ${JSON.stringify(initialState)};
-                const config = {
-                    host: "vscode",
-                    tabbed: true,
-                    themeProps: {
-                        accentColor: "gray",
-                        scaling: "${scaling}",
-                        hasBackground: false,
-                        appearance: "dark"
-                    },
-                    features: {
-                        vecdb: ${vecdb},
-                        ast: ${ast},
-                    },
-                    apiKey: "${apiKey}",
-                    addressURL: "${addressURL}",
-                    lspPort: "${port}"
-                };
-                window.__INITIAL_STATE = config;
+                const initialState = ${JSON.stringify(initialState)};
+                window.__INITIAL_STATE__ = initialState;
                 window.onload = function() {
                     const root = document.getElementById("refact-chat");
-                    RefactChat.render(root, config);
+                    RefactChat.render(root, initialState.config);
                 }
                 </script>
                 <script nonce="${nonce}" src="${scriptUri}"></script>
