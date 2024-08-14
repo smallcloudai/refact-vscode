@@ -84,7 +84,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             tools: tools,
         };
             
-        chat.handleChatQuestion(questionData).then(() => {
+        await chat.handleChatQuestion(questionData).then(() => {
             console.log("Chat question handled successfully.");
         }).catch((error) => {
             console.error("Error handling chat question:", error);
@@ -122,7 +122,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             tools: tools,
         };
             
-        chat.handleChatQuestion(questionData).then(() => {
+        await chat.handleChatQuestion(questionData).then(() => {
             console.log("Chat question handled successfully.");
         }).catch((error) => {
             console.error("Error handling chat question:", error);
