@@ -169,7 +169,7 @@ export class ChatTab {
           global.side_panel?.goto_main();
         }
     }
-
+// here
     static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string, append_snippet_to_input: boolean) {
 
         const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
@@ -1157,7 +1157,7 @@ export function diff_paste_back(
     return last_affected_line;
 }
 
-function truncate(str: string, length: number): string {
+export function truncate(str: string, length: number): string {
   if (str.length <= length) {
     return str;
   }
