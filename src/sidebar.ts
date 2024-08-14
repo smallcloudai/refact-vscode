@@ -75,14 +75,14 @@ export async function open_chat_tab(
             model: model,    
         }
         global.side_panel.goto_chat(chat);  // changes html
-        await chatTab.ChatTab.clear_and_repopulate_chat(
-            question,
-            editor,
-            attach_default,
-            model,
-            messages,
-            append_snippet_to_input,
-        );
+        // await chatTab.ChatTab.clear_and_repopulate_chat(
+        //     question,
+        //     editor,
+        //     attach_default,
+        //     model,
+        //     messages,
+        //     append_snippet_to_input,
+        // );
         // return chat;
     }
     return;
