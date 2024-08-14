@@ -6,8 +6,8 @@ import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
 import * as fimDebug from './fimDebug';
 import { get_caps } from "./fetchAPI";
-import ChatHistoryProvider from "./chatHistory";
-import { Chat } from "./chatHistory";
+import ChatHistoryProvider, {convert_old_chat_to_new_chat} from "./chatHistory";
+import type { OldChat } from "./chatHistory";
 import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
 import { getKeyBindingForChat } from "./getKeybindings";
@@ -27,12 +27,14 @@ import {
     type Snippet,
     setSelectedSnippet,
     type InitialState,
+
     ideOpenHotKeys,
     ideOpenFile,
     ideNewFileAction,
     ideOpenSettingsAction,
     ideDiffPasteBackAction,
     ideOpenChatInNewTab,
+    ChatThread,
 } from "refact-chat-js/dist/events";
 import { basename } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -56,31 +58,33 @@ export async function open_chat_tab(
         global.side_panel.chat = null;
     }
 
-    console.log({side_panel: !!global.side_panel})
-    console.log({view: !!global.side_panel?._view});
+    if (global.side_panel && global.side_panel._view) {
+        // TODO: check this
+        // let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
 
-
-     // FIX: view can be false when open a new chat.
-        if (global.side_panel && global.side_panel._view) {
-            // TODO: check this
-            let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
-
-            let context: vscode.ExtensionContext | undefined = global.global_context;
-            if (!context) {
-                return;
-            }
-            global.side_panel.goto_chat(chat);  // changes html
-            await chatTab.ChatTab.clear_and_repopulate_chat(
-                question,
-                editor,
-                attach_default,
-                model,
-                messages,
-                append_snippet_to_input,
-            );
-            return chat;
+        // let context: vscode.ExtensionContext | undefined = global.global_context;
+        // if (!context) {
+        //     return;
+        // }
+        const chat: ChatThread =  {
+            id: uuidv4(),
+            messages: [
+                ...messages,
+                {role: "user", content: question},
+            ],
+            model: model,    
         }
-
+        global.side_panel.goto_chat(chat);  // changes html
+        await chatTab.ChatTab.clear_and_repopulate_chat(
+            question,
+            editor,
+            attach_default,
+            model,
+            messages,
+            append_snippet_to_input,
+        );
+        // return chat;
+    }
     return;
 }
 
@@ -128,7 +132,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public static readonly viewType = "refactai-toolbox";
 
-    constructor(private readonly _context: any) {
+    constructor(private readonly context: vscode.ExtensionContext) {
         this.chatHistoryProvider = undefined;
         this.address = "";
         this.js2ts_message = this.js2ts_message.bind(this);
@@ -267,7 +271,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     {
         if (!this.chatHistoryProvider) {
             this.chatHistoryProvider = new ChatHistoryProvider(
-                this._context,
+                this.context,
             );
         }
         return this.chatHistoryProvider;
@@ -305,7 +309,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         webviewView.webview.options = {
             enableScripts: true,
-            localResourceRoots: [this._context.extensionUri],
+            localResourceRoots: [this.context.extensionUri],
         };
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible) {
@@ -333,18 +337,25 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view.webview.html = await this.html_main_screen(this._view.webview);
         this.update_webview();
     }
-
-    public goto_chat(chat: chatTab.ChatTab)
+ 
+    // can change this to
+    public async goto_chat(chat_thread?: ChatThread)
     {
-        this.address = chat.chat_id;
+
+        // this.html_main_screen(this._view.webview);
+        // this.address = chat.chat_id;
         if (!this._view) {
             return;
         }
-        this._view.webview.html = chat.get_html_for_chat(
-            this._view.webview,
-            this._context.extensionUri
-        );
-        this.update_webview();
+        // this._view.webview.html = chat.get_html_for_chat(
+        //     this._view.webview,
+        //     this.context.extensionUri
+        // );
+
+        // Could throw?
+        const html = await this.html_main_screen(this._view.webview, chat_thread); 
+        this._view.webview.html = html;
+        // this.update_webview();
     }
 
     public goto_statistic(statistic: statisticTab.StatisticTab)
@@ -354,7 +365,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         this._view.webview.html = statistic.get_html_for_statistic(
             this._view.webview,
-            this._context.extensionUri,
+            this.context.extensionUri,
         );
         this.update_webview();
     }
@@ -363,7 +374,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) { return; }
         this._view.webview.html = fim.get_html(
             this._view.webview,
-            this._context.extensionUri
+            this.context.extensionUri
         );
         this.update_webview();
     }
@@ -410,7 +421,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 return openTab.focus();
             }
             // is extensionUri defined anywhere?
-            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this._context.extensionUri, true);
+            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this.context.extensionUri.toString(), true);
             this.chat = null;
             return this.goto_main();
         }
@@ -492,7 +503,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
             const caps = await get_caps();
 
-            let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
+            let chat: OldChat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
             if (!chat) {
                 console.log(`Chat ${chat_id} not found, cannot restore`);
                 break;
@@ -506,14 +517,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 					? chat.chatModel
 					: caps.code_chat_default_model;
 
-                await open_chat_tab(
-                    "",
-                    editor,
-                    true,
-                    model,
-                    chat.messages,
-                    chat_id,
-                );
+                // await open_chat_tab(
+                //     "",
+                //     editor,
+                //     true,
+                //     model,
+                //     chat.messages,
+                //     chat_id,
+                // );
             }
             break;
         }
@@ -640,7 +651,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideOpenChatInNewTab.match(e)) {
-            const thread = e.payload
+            // const thread = e.payload
             // TODO: open chat in a new tab, with the thread in the initial state.
         }
     }
@@ -690,7 +701,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
     
 
-    async createInitialState(): Promise<Partial<InitialState>> {
+    async createInitialState(thread?: ChatThread): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
         const scaling = fontSize < 14 ? "90%" : "100%";
         const activeColorTheme = this.getColorTheme();
@@ -700,6 +711,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? ""; 
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
+        // const oldHistory = this._context.globalState.get<OldChat[]>("refact_chat_history");
+        const maybeHistory = this.context.globalState.get<OldChat[]>("refact_chat_history") ?? [];
+
+        console.log({maybeHistory});
 
         const config: InitialState["config"] = {
             host: "vscode",
@@ -725,15 +740,44 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         // TODO: migrate history, here?
 
-        return {
+        const state: Partial<InitialState> = {
             config,
         };
+        if(maybeHistory.length > 0) {
+            state.history =  maybeHistory.map(convert_old_chat_to_new_chat).reduce<InitialState["history"]>((acc, cur) => {
+                return {
+                    ...acc,
+                    [cur.id]: cur
+                };
+            }, {});
+            this.context.globalState.update("refact_chat_history", []);
+        }
+
+        if(thread) {
+            const chat: InitialState["chat"] = {
+                streaming: false,
+                error: null,
+                prevent_send: true,
+                previous_message_length: thread.messages.length,
+                waiting_for_response: false,
+                use_tools: true,
+                cache: {},
+                system_prompt: {},
+                send_immediately: true,
+                thread,
+            };
+
+            state.chat = chat;
+            state.pages = [{name: "history"}, {name: "chat"}];
+        }
+
+        return state;
     }
 
-    private async html_main_screen(webview: vscode.Webview)
+    private async html_main_screen(webview: vscode.Webview, chat_thread?: ChatThread)
     {
         // TODO: add send immediately flag for context menu and toolbar
-        const extensionUri = this._context.extensionUri;
+        const extensionUri = this.context.extensionUri;
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
         );
@@ -755,7 +799,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             existing_address = "";
         }
 
-        const initialState = await this.createInitialState();
+        const initialState = await this.createInitialState(chat_thread);
 
         return `<!DOCTYPE html>
             <html lang="en" class="light">
@@ -783,6 +827,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 window.__INITIAL_STATE__ = initialState;
                 window.onload = function() {
                     const root = document.getElementById("refact-chat");
+                    // TODO: config no longer needs to passed to the component like this.np
                     RefactChat.render(root, initialState.config);
                 }
                 </script>

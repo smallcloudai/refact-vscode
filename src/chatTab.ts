@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import * as fetchAPI from "./fetchAPI";
 import * as crlf from "./crlf";
 import * as estate from "./estate";
-import ChatHistoryProvider, { Chat } from "./chatHistory";
+import ChatHistoryProvider, { OldChat } from "./chatHistory";
 import { basename } from "path";
 
 const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdiff/
@@ -150,20 +150,20 @@ export class ChatTab {
         global.open_chat_tabs = otherTabs;
     }
 
-    async getHistory(): Promise<Chat | undefined> {
+    async getHistory(): Promise<OldChat | undefined> {
         return this.chatHistoryProvider.lookup_chat(this.chat_id);
     }
 
     async saveToSideBar() {
         const history = await this.getHistory();
-        if(this.messages.length > 0) {
-          this.chatHistoryProvider.save_messages_list(
-            this.chat_id,
-            this.messages,
-            history?.chatModel || "",
-            history?.chat_title
-          );
-        }
+        // if(this.messages.length > 0) {
+        //   this.chatHistoryProvider.save_messages_list(
+        //     this.chat_id,
+        //     this.messages,
+        //     history?.chatModel || "",
+        //     history?.chat_title
+        //   );
+        // }
 
         if (!global.side_panel?.chat) {
           global.side_panel?.goto_main();
@@ -217,7 +217,7 @@ export class ChatTab {
 
         panel.webview.onDidReceiveMessage(tab.handleEvents);
 
-        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
+        // await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
     }
 
     async restoreChat(chat: {
@@ -766,9 +766,9 @@ export class ChatTab {
         let editor = vscode.window.activeTextEditor;
         const history = await this.getHistory();
 
-        if(!history) {
-            await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
-        }
+        // if(!history) {
+        //     await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
+        // }
 
         await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
 
