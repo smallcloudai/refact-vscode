@@ -41,9 +41,12 @@ declare global {
     var chat_models: string[];
     var chat_default_model: string;
     var have_caps: boolean;
+    // TODO: remove this.
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
+
+    var open_chat_panels: Record<string, vscode.WebviewPanel>;
 
     var toolbox_config: launchRust.ToolboxConfig | undefined;
     var toolbox_command_disposables: vscode.Disposable[];

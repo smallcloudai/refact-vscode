@@ -37,7 +37,7 @@ import {
     ChatThread,
 } from "refact-chat-js/dist/events";
 import { basename } from "path";
-import { diff_paste_back } from "./chatTab";
+import { diff_paste_back, truncate } from "./chatTab";
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -650,11 +650,37 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleDiffPasteBack(e.payload);
         }
 
-        if(ideOpenChatInNewTab.match(e)) {
-            // const thread = e.payload
-            // TODO: open chat in a new tab, with the thread in the initial state.
-        }
+        // if(ideOpenChatInNewTab.match(e)) {
+        //     return this.handleOpenInTab(e.payload);
+        // }
     }
+
+    // async handleOpenInTab(chat_thread: ChatThread) {
+    //     if(!this._view) {
+    //         // Can this._view be undefined?
+    //         return;
+    //     }
+
+    //     const panel = vscode.window.createWebviewPanel(
+    //         "refact-chat-tab",
+    //         truncate(`Refact.ai ${chat_thread.title}`, 24),
+    //         vscode.ViewColumn.One,
+    //         {
+    //             enableScripts: true,
+    //             retainContextWhenHidden: true,
+    //         }
+    //     );
+
+    //     // make the global tabs an object with chat id as the key.
+    //     const html = await this.html_main_screen(this._view.webview, chat_thread, true);
+    //     global.open_chat_panels[chat_thread.id] = panel;
+    //     panel.onDidDispose(() => {
+    //         delete global.open_chat_panels[chat_thread.id];
+    //     });
+    //     this.goto_main();
+    //     panel.webview.html = html;
+
+    // }
 
     private async handleDiffPasteBack(code_block: string) {
         const editor = vscode.window.activeTextEditor;
@@ -701,7 +727,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
     
 
-    async createInitialState(thread?: ChatThread): Promise<Partial<InitialState>> {
+    async createInitialState(thread?: ChatThread, tabbed = false): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
         const scaling = fontSize < 14 ? "90%" : "100%";
         const activeColorTheme = this.getColorTheme();
@@ -711,14 +737,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? ""; 
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
-        // const oldHistory = this._context.globalState.get<OldChat[]>("refact_chat_history");
         const maybeHistory = this.context.globalState.get<OldChat[]>("refact_chat_history") ?? [];
-
-        console.log({maybeHistory});
 
         const config: InitialState["config"] = {
             host: "vscode",
-            tabbed: false,
+            tabbed,
             themeProps: {
                 accentColor: "gray",
                 scaling,
@@ -736,9 +759,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             addressURL,
             lspPort: port,
         };
-        // TODO: add messages for send_immediately
-
-        // TODO: migrate history, here?
 
         const state: Partial<InitialState> = {
             config,
@@ -763,7 +783,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 use_tools: true,
                 cache: {},
                 system_prompt: {},
-                send_immediately: true,
+                send_immediately: !tabbed,
                 thread,
             };
 
@@ -774,7 +794,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return state;
     }
 
-    private async html_main_screen(webview: vscode.Webview, chat_thread?: ChatThread)
+    private async html_main_screen(webview: vscode.Webview, chat_thread?: ChatThread, tabbed?: boolean)
     {
         // TODO: add send immediately flag for context menu and toolbar
         const extensionUri = this.context.extensionUri;
@@ -799,7 +819,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             existing_address = "";
         }
 
-        const initialState = await this.createInitialState(chat_thread);
+        const initialState = await this.createInitialState(chat_thread, tabbed);
 
         return `<!DOCTYPE html>
             <html lang="en" class="light">
