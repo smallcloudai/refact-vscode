@@ -763,6 +763,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const state: Partial<InitialState> = {
             config,
         };
+        const file = this.getActiveFileInfo();
+        if(file) {
+            state.active_file = file;
+        }
+        const snippet = this.getSnippetFromEditor();
+        if(snippet) {
+            state.selected_snippet = snippet;
+        }
         if(maybeHistory.length > 0) {
             state.history =  maybeHistory.map(convert_old_chat_to_new_chat).reduce<InitialState["history"]>((acc, cur) => {
                 return {
