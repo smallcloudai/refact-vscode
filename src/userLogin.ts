@@ -23,6 +23,8 @@ export async function login_message()
 export async function welcome_message()
 {
     await vscode.commands.executeCommand('workbench.view.extension.refact-toolbox-pane');
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await vscode.commands.executeCommand('workbench.view.extension.refact-toolbox-pane');
     let selection = await vscode.window.showInformationMessage("Welcome to Refact.ai!\nPlease make initial setup in sidebar");
 }
 
