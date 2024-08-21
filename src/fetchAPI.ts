@@ -14,14 +14,10 @@ import {
 	type ChatContextFile,
 	isCustomPromptsResponse,
     type CustomPromptsResponse,
-    AssistantMessage,
     ChatMessages,
-    ToolMessage,
     DiffChunk,
     DiffAppliedStateResponse,
     DiffOperationResponse,
-    type DiffMessage,
-    formatMessagesForLsp
 } from "refact-chat-js/dist/events";
 
 
@@ -530,7 +526,7 @@ export function fetch_chat_promise(
 
     let ctx = inference_context(third_party);
     // TODO: this shouldn't need to be cast to ChatMessages, it'll be removed in an updated
-    let json_messages = formatMessagesForLsp(messages as ChatMessages);
+    // let json_messages = formatMessagesForLsp(messages as ChatMessages);
     // "refactai.defaultSystemPrompt": {
     //     "type": "string",
     //     "markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
@@ -584,7 +580,6 @@ export function fetch_chat_promise(
         "Authorization": `Bearer ${apiKey}`,
     };
 
-    console.log({json_messages})
     let req = new fetchH2.Request(url, {
         method: "POST",
         headers: headers,

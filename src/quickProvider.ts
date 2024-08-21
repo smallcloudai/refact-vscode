@@ -4,9 +4,6 @@ import * as sidebar from "./sidebar";
 import * as fetchAPI from "./fetchAPI";
 import {
 	type ChatMessages,
-    type ChatMessage,
-    type ToolCommand,
-    isReadyMessage,
 } from "refact-chat-js/dist/events";
 export class QuickActionProvider implements vscode.CodeActionProvider {
 
@@ -78,17 +75,19 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             model: "", // FIX: should be last model used ?
             title: "Fix " + diagnostics.message,
             messages: [
-                ["user", query_text] as ChatMessage,
+                {role: "user", content: query_text}
             ] as ChatMessages,
             attach_file: false,
             tools: tools,
         };
             
-        await chat.handleChatQuestion(questionData).then(() => {
-            console.log("Chat question handled successfully.");
-        }).catch((error) => {
-            console.error("Error handling chat question:", error);
-        });
+        // await chat.handleChatQuestion(questionData).then(() => {
+        //     console.log("Chat question handled successfully.");
+        // }).catch((error) => {
+        //     console.error("Error handling chat question:", error);
+        // });
+
+        global.side_panel?.goto_chat(questionData);
     }
 
     private static async loadChatSelection(editor: vscode.TextEditor, diagnostics: any, selected_text: string, action: string) {
@@ -115,18 +114,19 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             id: chat.chat_id,
             model: "", // FIX: should be last model used ?
             title: action.charAt(0).toUpperCase() + ' ' + action.slice(1) + selected_text,
-            messages: [
-                ["user", query_text] as ChatMessage,
-            ] as ChatMessages,
+            messages: [{role: "user", content: query_text}] as ChatMessages,
             attach_file: false,
             tools: tools,
         };
-            
-        await chat.handleChatQuestion(questionData).then(() => {
-            console.log("Chat question handled successfully.");
-        }).catch((error) => {
-            console.error("Error handling chat question:", error);
-        });
+
+        // await chat.handleChatQuestion(questionData).then(() => {
+        //     console.log("Chat question handled successfully.");
+        // }).catch((error) => {
+        //     console.error("Error handling chat question:", error);
+        // });
+
+                    
+        global.side_panel?.goto_chat(questionData);
     }
     
 
