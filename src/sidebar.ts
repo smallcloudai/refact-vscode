@@ -788,7 +788,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 prevent_send: true,
                 previous_message_length: thread.messages.length,
                 waiting_for_response: false,
-                use_tools: true,
+                tool_use: "agent",
                 cache: {},
                 system_prompt: {},
                 send_immediately: !tabbed,
