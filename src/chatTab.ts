@@ -1065,18 +1065,18 @@ export async function chat_model_set(chat_model: string, model_function: string)
     await context.globalState.update("chat_model_function", model_function);
 }
 
-export function backquote_backquote_backquote_remove_language_spec(code: string): string
-{
-    // this removes ```python or ```json or similar, assuming ``` itself is already not there
-    while (1) {
-        let first_char = code[0];
-        if (first_char === "\n") {
-            return code.substring(1);
-        }
-        if (first_char >= 'a' && first_char <= 'z' || first_char >= '0' && first_char <= '9') {
-            code = code.substring(1);
-            continue;
-        } else {
+export function backquote_backquote_backquote_remove_language_spec(code: string): string {
+    // this removes the language spec, assuming ``` itself is already not there
+    let i = 0;
+    while (i < code.length) {
+        let char = code[i];
+        if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
+            i++;
+        } 
+        else if (char === '\n') {
+            return code.substring(i + 1);
+        } 
+        else {
             break;
         }
     }
