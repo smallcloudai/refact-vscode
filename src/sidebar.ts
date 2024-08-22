@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as estate from "./estate";
 import * as userLogin from "./userLogin";
 import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
@@ -8,7 +7,6 @@ import * as fimDebug from './fimDebug';
 import { get_caps } from "./fetchAPI";
 import ChatHistoryProvider, {convert_old_chat_to_new_chat} from "./chatHistory";
 import type { OldChat } from "./chatHistory";
-import * as crlf from "./crlf";
 import { v4 as uuidv4 } from "uuid";
 import { getKeyBindingForChat } from "./getKeybindings";
 import {
@@ -36,8 +34,9 @@ import {
     ideOpenChatInNewTab,
     ChatThread,
 } from "refact-chat-js/dist/events";
-import { basename } from "path";
+import { basename, join } from "path";
 import { diff_paste_back, truncate } from "./chatTab";
+import { exec } from "child_process";
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -595,7 +594,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if (isSetupHost(e)) {
-            console.log("setup host");
             const { host } = e.payload;
             if (host.type === "cloud") {
                 await this.delete_old_settings();
@@ -610,6 +608,27 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 await this.delete_old_settings();
                 await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
+            } else if (host.type === "bring-your-own-key") {
+                if (global.rust_binary_blob === undefined) {
+                    console.error("no rust binary blob");
+                    return;
+                }
+                let command: string[] = [
+                    join(global.rust_binary_blob.asset_path, "refact-lsp"),
+                    "--save-byok-file",
+                ];
+                exec(command.join(" "), async (err, stdout, stderr) => {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+                    const path = stdout.trim();
+                    vscode.workspace.openTextDocument(path).then(doc => {
+                        vscode.window.showTextDocument(doc);
+                    });
+                    await vscode.workspace.getConfiguration().update('refactai.addressURL', path, vscode.ConfigurationTarget.Global);
+                    await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
+                });
             }
         }
 
