@@ -763,12 +763,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const state: Partial<InitialState> = {
             config,
         };
+
         const file = this.getActiveFileInfo();
-        if(file) {
-            state.active_file = file;
-        }
         const snippet = this.getSnippetFromEditor();
-        if(snippet) {
+        
+        if(snippet && file) {
+            state.active_file = file;
             state.selected_snippet = snippet;
         }
         if(maybeHistory.length > 0) {
