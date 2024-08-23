@@ -162,7 +162,7 @@ export class RustBinaryBlob
                 break;
             }
         }
-        global.side_panel?.update_webview();
+        global.side_panel?.handleSettingsChange();
     }
 
     public async launch()

@@ -409,7 +409,7 @@ export function activate(context: vscode.ExtensionContext)
         }
 
         if (e.affectsConfiguration("refactai.apiKey")) {
-            global.side_panel?.goto_main();
+            global.side_panel?.handleSettingsChange();
         }
 
         if (
