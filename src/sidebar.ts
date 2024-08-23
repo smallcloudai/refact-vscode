@@ -31,12 +31,11 @@ import {
     ideNewFileAction,
     ideOpenSettingsAction,
     ideDiffPasteBackAction,
-    ideOpenChatInNewTab,
     ChatThread,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
-import { diff_paste_back, truncate } from "./chatTab";
-import { exec } from "child_process";
+import { diff_paste_back } from "./chatTab";
+import { execFile } from "child_process";
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -617,7 +616,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     join(global.rust_binary_blob.asset_path, "refact-lsp"),
                     "--save-byok-file",
                 ];
-                exec(command.join(" "), async (err, stdout, stderr) => {
+                execFile(command[0], command.splice(1), async (err, stdout, stderr) => {
                     if (err) {
                         console.error(err);
                         return;
