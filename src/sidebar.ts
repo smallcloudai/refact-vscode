@@ -245,7 +245,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             vscode.workspace
                 .getConfiguration()
                 ?.get<boolean>("refactai.ast") ?? false;
-        const message = updateConfig({features: {vecdb, ast}});
+
+        
+        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
+        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? ""; 
+        const port = global.rust_binary_blob?.get_port() ?? 8001;
+
+        const message = updateConfig({
+            apiKey,
+            addressURL,
+            lspPort: port,
+            features: {vecdb, ast}
+        });
+
         this._view?.webview.postMessage(message);
     }
 
