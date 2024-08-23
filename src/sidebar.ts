@@ -57,31 +57,16 @@ export async function open_chat_tab(
     }
 
     if (global.side_panel && global.side_panel._view) {
-        // TODO: check this
-        // let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
-
-        // let context: vscode.ExtensionContext | undefined = global.global_context;
-        // if (!context) {
-        //     return;
-        // }
         const chat: ChatThread =  {
             id: uuidv4(),
-            messages: [
+            messages: question ? [
                 ...messages,
                 {role: "user", content: question},
-            ],
+            ] : [],
             model: model,    
-        }
+        }; 
         global.side_panel.goto_chat(chat);  // changes html
-        // await chatTab.ChatTab.clear_and_repopulate_chat(
-        //     question,
-        //     editor,
-        //     attach_default,
-        //     model,
-        //     messages,
-        //     append_snippet_to_input,
-        // );
-        // return chat;
+
     }
     return;
 }
@@ -809,7 +794,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 tool_use: "agent",
                 cache: {},
                 system_prompt: {},
-                send_immediately: !tabbed,
+                send_immediately: thread.messages.length > 0,
                 thread,
             };
 
