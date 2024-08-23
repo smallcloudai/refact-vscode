@@ -63,8 +63,8 @@ export async function open_chat_tab(
                 ...messages,
                 {role: "user", content: question},
             ] : [],
-            model: model,    
-        }; 
+            model: model,
+        };
         global.side_panel.goto_chat(chat);  // changes html
 
     }
@@ -125,8 +125,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
             this.postActiveFileInfo();
             this.sendSnippetToChat();
-          })); 
-  
+          }));
+
         this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
            this.postActiveFileInfo();
            this.sendSnippetToChat();
@@ -246,9 +246,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 .getConfiguration()
                 ?.get<boolean>("refactai.ast") ?? false;
 
-        
+
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
-        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? ""; 
+        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
         const port = global.rust_binary_blob?.get_port() ?? 8001;
 
         const message = updateConfig({
@@ -332,7 +332,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view.webview.html = await this.html_main_screen(this._view.webview);
         this.update_webview();
     }
- 
+
     // can change this to
     public async goto_chat(chat_thread?: ChatThread)
     {
@@ -348,7 +348,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         // );
 
         // Could throw?
-        const html = await this.html_main_screen(this._view.webview, chat_thread); 
+        const html = await this.html_main_screen(this._view.webview, chat_thread);
         this._view.webview.html = html;
         // this.update_webview();
     }
@@ -572,10 +572,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     private async handleEvents(e: unknown) {
         console.log("sidebar event", e);
-        if(!e || typeof e !== "object") { 
+        if(!e || typeof e !== "object") {
             return;
         }
-        if(!("type" in e)) { 
+        if(!("type" in e)) {
             return;
         }
         // FIM Data from IDE
@@ -612,6 +612,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 let command: string[] = [
                     join(global.rust_binary_blob.asset_path, "refact-lsp"),
                     "--save-byok-file",
+                    "--address-url", "xxx",
                 ];
                 execFile(command[0], command.splice(1), async (err, stdout, stderr) => {
                     if (err) {
@@ -740,7 +741,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             default: return "dark";
         }
     }
-    
+
 
     async createInitialState(thread?: ChatThread, tabbed = false): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
@@ -749,7 +750,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
-        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? ""; 
+        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
         const maybeHistory = this.context.globalState.get<OldChat[]>("refact_chat_history") ?? [];
@@ -781,7 +782,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         const file = this.getActiveFileInfo();
         const snippet = this.getSnippetFromEditor();
-        
+
         if(snippet && file) {
             state.active_file = file;
             state.selected_snippet = snippet;
