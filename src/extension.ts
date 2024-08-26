@@ -400,7 +400,7 @@ export function activate(context: vscode.ExtensionContext)
             }, 1000);
         }
 
-        if (e.affectsConfiguration("refactai.apiKey")) {
+        if (e.affectsConfiguration("refactai.apiKey") || e.affectsConfiguration("refactai.addressURL")) {
             global.side_panel?.handleSettingsChange();
         }
 
