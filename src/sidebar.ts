@@ -25,7 +25,7 @@ import {
     type Snippet,
     setSelectedSnippet,
     type InitialState,
-
+    newChatAction,
     ideOpenHotKeys,
     ideOpenFile,
     ideNewFileAction,
@@ -351,6 +351,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const html = await this.html_main_screen(this._view.webview, chat_thread);
         this._view.webview.html = html;
         // this.update_webview();
+    }
+
+    public async newChat()
+    {
+        const message = newChatAction();
+        this._view?.webview.postMessage(message);
     }
 
     public goto_statistic(statistic: statisticTab.StatisticTab)

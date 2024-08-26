@@ -69,15 +69,7 @@ async function pressed_call_chat(n = 0) {
         global.side_panel._view.show();
     }
 
-    await open_chat_tab(
-        "",
-        editor,
-        true,    // attach file default
-        "",      // model
-        [],      // messages
-        "",      // chat id
-        true,    // append snippet
-    );
+    global.side_panel?.newChat();
 }
 
 
