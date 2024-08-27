@@ -227,7 +227,7 @@ export async function stream_chat_without_visible_chat(
 
             if (largest_block) {
                 let last_affected_line = chatTab.diff_paste_back(
-                    editor,
+                    editor.document,
                     selected_range,
                     largest_block,
                 );

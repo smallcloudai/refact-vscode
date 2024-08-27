@@ -31,7 +31,9 @@ import {
     ideNewFileAction,
     ideOpenSettingsAction,
     ideDiffPasteBackAction,
+    ideDiffPreviewAction,
     ChatThread,
+    DiffPreviewResponse,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -672,6 +674,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleDiffPasteBack(e.payload);
         }
 
+        if (ideDiffPreviewAction.match(e)) {
+            return this.handleDiffPreview(e.payload);
+        }
+
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
@@ -722,12 +728,35 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const range = new vscode.Range(startOfLine, selection.end);
 
 		return diff_paste_back(
-            editor,
+            editor.document,
             range,
             indentedCode
         );
 
 	}
+
+    private async handleDiffPreview(response: DiffPreviewResponse) {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) { return; }
+
+        for (const change of response.results) {
+            if (change.file_name_edit !== null && change.file_text != null) {
+                const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_edit));
+                await vscode.window.showTextDocument(document);
+
+                const start = new vscode.Position(0, 0);
+                const end = new vscode.Position(document.lineCount, 0);
+                const range = new vscode.Range(start, end);
+
+                diff_paste_back(
+                    document,
+                    range,
+                    change.file_text
+                );
+            }
+        }
+	}
+
 
     async handleOpenFile(file: {file_name:string, line?: number}) {
         const uri = vscode.Uri.file(file.file_name);
