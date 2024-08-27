@@ -152,6 +152,12 @@
 					"default": false,
 					"order": 2
 				},
+				"refactai.submitChatWithShiftEnter": {
+					"type": "boolean",
+					"description": "Send chat messages with Shift+Enter instead of Enter.",
+					"default": false,
+					"order": 3
+				},
 				"refactai.completionMaxTokens": {
 					"type": "number",
 					"markdownDescription": "Maximum number of tokens to generate for code completion. Leave 0 if not sure.",
