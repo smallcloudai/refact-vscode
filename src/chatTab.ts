@@ -818,7 +818,7 @@ export class ChatTab {
         const range = new vscode.Range(startOfLine, this.working_on_snippet_range.end);
 
 		return diff_paste_back(
-            this.working_on_snippet_editor,
+            this.working_on_snippet_editor.document,
             range,
             indentedCode
         );
@@ -1109,11 +1109,11 @@ export function indent_so_diff_is_minimized(orig_code: string, code_block: strin
 }
 
 export function diff_paste_back(
-    editor: vscode.TextEditor,
+    document: vscode.TextDocument,
     dest_range: vscode.Range,
     new_code_block: string,
 ): number {
-    let state = estate.state_of_document(editor.document);
+    let state = estate.state_of_document(document);
     if (!state) {
         console.log("diff_paste_back: no state");
         return -1;
@@ -1127,10 +1127,10 @@ export function diff_paste_back(
     //     console.log("diff_paste_back: dest_range is empty");
     //     return -1;
     // }
-    let snippet_ofs0 = editor.document.offsetAt(dest_range.start);
-    let snippet_ofs1 = editor.document.offsetAt(dest_range.end);
+    let snippet_ofs0 = document.offsetAt(dest_range.start);
+    let snippet_ofs1 = document.offsetAt(dest_range.end);
     let code_block_clean = backquote_backquote_backquote_remove_language_spec(new_code_block);
-    let text = editor.document.getText();
+    let text = document.getText();
     let orig_text0 = text.substring(0, snippet_ofs0);
     let orig_text1 = text.substring(snippet_ofs1);
     let orig_code = text.substring(snippet_ofs0, snippet_ofs1);
