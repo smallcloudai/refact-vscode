@@ -205,7 +205,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     getActiveFileInfo(): FileInfo | null {
-        if(vscode.window.activeTextEditor?.document.uri.scheme !== "file") {
+        if(vscode.window.activeTextEditor?.document.uri.scheme !== "file" && vscode.window.activeTextEditor?.document.uri.scheme!== "vscode-userdata") {
             return null;
         }
         const file_path =
