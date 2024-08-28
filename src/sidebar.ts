@@ -643,7 +643,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             await vscode.env.openExternal(vscode.Uri.parse(e.payload.url));
         }
 
-
         if(ideNewFileAction.match(e)) {
             const action = e as ReturnType<typeof ideNewFileAction>
             return vscode.workspace.openTextDocument().then((document) => {
@@ -737,6 +736,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             const editor = await vscode.window.showTextDocument(document);
             const range = new vscode.Range(position, position);
             editor.revealRange(range);
+        } else {
+            await vscode.window.showTextDocument(document);
         }
     }
 
