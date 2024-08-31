@@ -942,7 +942,7 @@ export async function get_diff_state(chunks: DiffChunk[]): Promise<DiffAppliedSt
     if (!response.ok) {
         console.log(["applied-diffs response http status", response.status]);
         return Promise.reject("unable to get applied diffs");
-    
+
     }
 
     const json: DiffAppliedStateResponse = await response.json();
@@ -972,4 +972,32 @@ export async function send_chunks_to_diff_apply(chunks: DiffChunk[], to_apply: b
     const json: DiffOperationResponse = await response.json();
 
     return json;
+}
+
+export async function lsp_set_active_document(editor: vscode.TextEditor)
+{
+    let url = rust_url("/v1/lsp-set-active-document");
+    if (url) {
+        const post = JSON.stringify({
+            "uri": editor.document.uri.toString(),
+        });
+        const headers = {
+            "Content-Type": "application/json",
+        };
+        let req = new fetchH2.Request(url, {
+            method: "POST",
+            headers: headers,
+            body: post,
+            redirect: "follow",
+            cache: "no-cache",
+            referrer: "no-referrer"
+        });
+        fetchH2.fetch(req).then((response) => {
+            if (!response.ok) {
+                console.log(["lsp-set-active-document failed", response.status, response.statusText]);
+            } else {
+                console.log(["lsp-set-active-document success", response.status]);
+            }
+        });
+    }
 }

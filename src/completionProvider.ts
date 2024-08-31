@@ -189,7 +189,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             this.called_manually_count = 0;
         }
 
-        let temperature = 0.2
+        let temperature = 0.2;
         if (this.called_manually_count > 1) {
             temperature = 0.6;
         }
