@@ -306,11 +306,16 @@ export class RustBinaryBlob
                 reject("timeout");
             }, 5000);
         });
+        // HACK: sometimes on timeout it cannot lsp_dispose() properly (when it timeouts fast?),
+        // that leads to two processes running :/
+        // So we wait a bit, hope this will happen less often.
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         try {
             await Promise.race([this.lsp_client.onReady(), timeoutPromise]);
             console.log(`RUST /START`);
         } catch (e) {
             console.log(`RUST START PROBLEM e=${e}`);
+            // e=timeout might lead to the problem above
             this.lsp_dispose();
             return;
         }
