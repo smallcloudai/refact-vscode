@@ -54,24 +54,23 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
     }
 
     private static async loadChat(editor: vscode.TextEditor, diagnostics: any) {
-        let chat = await sidebar.open_chat_tab(
-            "",
-            editor,
-            true,
-            "",
-            [],
-            "",
-            true,
-        );
+        // let chat = await sidebar.open_chat_tab(
+        //     "",
+        //     editor,
+        //     true,
+        //     "",
+        //     [],
+        //     "",
+        //     true,
+        // );
         // chat will be undefined if side_panel._view is undefined
-        if (!chat) {
-            return;
-        }
-
+        // if (!chat) {
+        //     return;
+        // }
         const query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to fix the following problem:\n\`\`\`\n${diagnostics.message}\n\`\`\`\n at line \n\`\`\`\n${diagnostics.line_text}\n\`\`\`\n then tell if the generated patch is good in one sentence:`;
         let tools = await fetchAPI.get_tools();
         const questionData = {
-            id: chat.chat_id,
+            id: '',
             model: "", // FIX: should be last model used ?
             title: "Fix " + diagnostics.message,
             messages: [
@@ -91,19 +90,19 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
     }
 
     private static async loadChatSelection(editor: vscode.TextEditor, diagnostics: any, selected_text: string, action: string) {
-        let chat = await sidebar.open_chat_tab(
-            "",
-            editor,
-            true,
-            "",
-            [],
-            "",
-            true,
-        );
+        // let chat = await sidebar.open_chat_tab(
+        //     "",
+        //     editor,
+        //     true,
+        //     "",
+        //     [],
+        //     "",
+        //     true,
+        // );
         // chat will be undefined if side_panel._view is undefined
-        if (!chat) {
-            return;
-        }
+        // if (!chat) {
+        //     return;
+        // }
 
         let query_text = `@file ${editor.document.uri.path}:${diagnostics.line}\nUse patch() to ${diagnostics.prompt}:\n\`\`\`\n${selected_text}\n\`\`\`\n then tell if the generated patch is good in one sentence:\n`;
         if(action === 'explain' || action === 'summarize') {
@@ -111,7 +110,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         }
         let tools = await fetchAPI.get_tools();
         const questionData = {
-            id: chat.chat_id,
+            id: '',
             model: "", // FIX: should be last model used ?
             title: action.charAt(0).toUpperCase() + ' ' + action.slice(1) + selected_text,
             messages: [{role: "user", content: query_text}] as ChatMessages,
@@ -125,7 +124,6 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         //     console.error("Error handling chat question:", error);
         // });
 
-                    
         global.side_panel?.goto_chat(questionData);
     }
     
