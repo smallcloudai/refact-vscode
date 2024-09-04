@@ -215,7 +215,7 @@
 			{
 				"command": "refactaicmd.callChat",
 				"title": "Chat",
-				"key": "alt+c",
+				"key": "F1",
 				"category": "Refact.ai"
 			},
 			{
@@ -299,7 +299,7 @@
 		"keybindings": [
 			{
 				"command": "refactaicmd.activateToolbox",
-				"key": "F1"
+				"key": "alt+t"
 			},
 			{
 				"command": "refactaicmd.completionManual",
@@ -317,7 +317,7 @@
 			},
 			{
 				"command": "refactaicmd.callChat",
-				"key": "alt+c"
+				"key": "F1"
 			}
 		],
 		"viewsContainers": {
