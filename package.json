@@ -198,8 +198,13 @@
 				"title": "Close"
 			},
 			{
+				"command": "refactaicmd.activateToolboxDeprecated",
+				"title": "Activate Toolbox (deprecated)",
+				"category": "Refact.ai"
+			},
+			{
 				"command": "refactaicmd.activateToolbox",
-				"title": "Activate",
+				"title": "Activate (opens chat)",
 				"category": "Refact.ai"
 			},
 			{
@@ -298,7 +303,7 @@
 		],
 		"keybindings": [
 			{
-				"command": "refactaicmd.activateToolbox",
+				"command": "refactaicmd.activateToolboxDeprecated",
 				"key": "alt+t"
 			},
 			{

@@ -182,6 +182,11 @@ async function code_lens_clicked(arg0: any)
 
 async function f1_pressed()
 {
+    pressed_call_chat();
+}
+
+async function f1_deprecated()
+{
     let editor = vscode.window.activeTextEditor;
     if (editor) {
         let state = estate.state_of_editor(editor, "f1_pressed");
@@ -190,7 +195,6 @@ async function f1_pressed()
             return;
         }
         if (state) {
-            // rconsoleProvider.open_refact_console_between_lines(editor);
             RefactConsoleProvider.open_between_lines(editor);
         }
     }
@@ -239,7 +243,7 @@ export function activate(context: vscode.ExtensionContext)
 
     const comp = new completionProvider.MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
-    
+
     const quickProvider = new QuickActionProvider();
     vscode.languages.registerCodeActionsProvider({pattern: "**"},quickProvider,
         {
@@ -263,6 +267,7 @@ export function activate(context: vscode.ExtensionContext)
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
     let disposable3 = vscode.commands.registerCommand('refactaicmd.activateToolbox', f1_pressed);
+    let disposable8 = vscode.commands.registerCommand('refactaicmd.activateToolboxDeprecated', f1_deprecated);
     let disposable9 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride0', (uri:vscode.Uri) => {
         if (!uri || !uri.fsPath) {
             return;
@@ -297,11 +302,12 @@ export function activate(context: vscode.ExtensionContext)
         global.toolbox_command_disposables.forEach(d => d.dispose());
     });
 
+    context.subscriptions.push(disposable1);
+    context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
-    context.subscriptions.push(disposable1);
-    context.subscriptions.push(disposable2);
+    context.subscriptions.push(disposable8);
     context.subscriptions.push(disposable9);
     context.subscriptions.push(disposable10);
     context.subscriptions.push(disposable11);
@@ -577,6 +583,6 @@ export async function status_bar_clicked()
     } else if (selection === "Privacy Rules") {
         vscode.commands.executeCommand("refactaicmd.privacySettings");
     } else if (selection === "Open Panel (F1)") {
-        vscode.commands.executeCommand("refactaicmd.activateToolbox");
+        vscode.commands.executeCommand("refactaicmd.callChat");
     }
 }
