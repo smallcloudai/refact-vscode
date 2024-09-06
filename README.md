@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="Refact" src="images/refact-wide.png"/>
+  <img alt="Refact" src="https://github.com/user-attachments/assets/190a9e7b-fd0b-4546-9213-1f5571346c8b"/>
 </p>
 
 ---
@@ -49,4 +49,5 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 
 Connect with other developers who care about AI tools in our [**Discord community**](https://www.smallcloud.ai/discord). Ask questions, share your opinion, propose new features.
 
-Implement a feature you want, and contribute to the future of programming!
+Implement a feature you want, a![refact-wide](https://github.com/user-attachments/assets/c78d594d-2f60-465f-8594-930c2a99d7a4)
+nd contribute to the future of programming!
