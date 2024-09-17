@@ -451,7 +451,6 @@ export function fetch_code_completion(
     // api_fields.cursor_pos1 = -1;
     // api_fields.ts_req = Date.now();
     let use_ast = vscode.workspace.getConfiguration().get<boolean>("refactai.ast");
-    let use_ast_light_mode = vscode.workspace.getConfiguration().get<boolean>("refactai.astLightMode");
 
     const post = JSON.stringify({
         "model": model_name,
@@ -470,7 +469,6 @@ export function fetch_code_completion(
         },
         "no_cache": no_cache,
         "use_ast": use_ast,
-        "use_ast_light_mode": use_ast_light_mode,
         "client": `vscode-${client_version}`,
     });
     const headers = {

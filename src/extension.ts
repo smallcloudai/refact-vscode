@@ -389,7 +389,6 @@ export function activate(context: vscode.ExtensionContext)
             e.affectsConfiguration("refactai.apiKey") ||
             e.affectsConfiguration("refactai.insecureSSL") ||
             e.affectsConfiguration("refactai.ast") ||
-            e.affectsConfiguration("refactai.astLightMode") ||
             e.affectsConfiguration("refactai.astFileLimit") ||
             e.affectsConfiguration("refactai.vecdb") ||
             e.affectsConfiguration("refactai.vecdbFileLimit")

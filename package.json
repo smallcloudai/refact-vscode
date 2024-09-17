@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "5.0.100",
+	"version": "5.0.101",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -158,14 +158,8 @@
 				"refactai.astFileLimit": {
 					"type": "number",
 					"description": "Limit the number of files for AST to process, to avoid memory issues. Increase if you have a large project and sufficient memory.",
-					"default": 15000,
+					"default": 35000,
 					"order": 9
-				},
-				"refactai.astLightMode": {
-					"type": "boolean",
-					"description": "Low memory mode for AST, references to symbols are not stored in memory. Check if you have a really big project.",
-					"default": false,
-					"order": 10
 				},
 				"refactai.vecdb": {
 					"type": "boolean",
