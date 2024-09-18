@@ -1,21 +1,44 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as estate from "./estate";
 import * as userLogin from "./userLogin";
 import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
 import * as fimDebug from './fimDebug';
 import { get_caps } from "./fetchAPI";
-import ChatHistoryProvider from "./chatHistory";
-import { Chat } from "./chatHistory";
-import * as crlf from "./crlf";
+import ChatHistoryProvider, {convert_old_chat_to_new_chat} from "./chatHistory";
+import type { OldChat } from "./chatHistory";
 import { v4 as uuidv4 } from "uuid";
-import {
-	EVENT_NAMES_FROM_CHAT,
-	EVENT_NAMES_FROM_STATISTIC,
-	FIM_EVENT_NAMES,
-} from "refact-chat-js/dist/events";
 import { getKeyBindingForChat } from "./getKeybindings";
+import {
+    type ChatMessages,
+    fim,
+    isLogOut,
+    isOpenExternalUrl,
+    // type FileInfo,
+    // setFileInfo,
+    // type Snippet,
+    // setSelectedSnippet,
+    updateConfig,
+    isSetupHost,
+    type FileInfo,
+    setFileInfo,
+    type Snippet,
+    setSelectedSnippet,
+    type InitialState,
+    newChatAction,
+    ideOpenHotKeys,
+    ideOpenFile,
+    ideNewFileAction,
+    ideOpenSettingsAction,
+    ideDiffPasteBackAction,
+    ideDiffPreviewAction,
+    ChatThread,
+    DiffPreviewResponse,
+} from "refact-chat-js/dist/events";
+import { basename, join } from "path";
+import { diff_paste_back } from "./chatTab";
+import { execFile } from "child_process";
+
 
 type Handler = ((data: any) => void) | undefined;
 function composeHandlers(...eventHandlers: Handler[]) {
@@ -27,7 +50,7 @@ export async function open_chat_tab(
     editor: vscode.TextEditor | undefined,
     attach_default: boolean,   // checkbox set on start, means attach the current file
     model: string,
-    messages: [string, string][],
+    messages: ChatMessages,
     chat_id: string,
     append_snippet_to_input: boolean = false,
 ): Promise<chatTab.ChatTab|undefined> {
@@ -36,23 +59,16 @@ export async function open_chat_tab(
     }
 
     if (global.side_panel && global.side_panel._view) {
-        // TODO: check this
-        let chat: chatTab.ChatTab = global.side_panel.new_chat(global.side_panel._view, chat_id);
-
-        let context: vscode.ExtensionContext | undefined = global.global_context;
-        if (!context) {
-            return;
-        }
+        const chat: ChatThread =  {
+            id: uuidv4(),
+            messages: question ? [
+                ...messages,
+                {role: "user", content: question},
+            ] : [],
+            model: model,
+        };
         global.side_panel.goto_chat(chat);  // changes html
-        await chatTab.ChatTab.clear_and_repopulate_chat(
-            question,
-            editor,
-            attach_default,
-            model,
-            messages,
-            append_snippet_to_input,
-        );
-        return chat;
+
     }
     return;
 }
@@ -97,29 +113,168 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     public fim_debug: fimDebug.FimDebug | null = null;
     public chatHistoryProvider: ChatHistoryProvider|undefined;
 
+    _disposables: vscode.Disposable[] = [];
+
     public static readonly viewType = "refactai-toolbox";
 
-    constructor(private readonly _context: any) {
+    constructor(private readonly context: vscode.ExtensionContext) {
         this.chatHistoryProvider = undefined;
         this.address = "";
         this.js2ts_message = this.js2ts_message.bind(this);
+
+        this.handleEvents = this.handleEvents.bind(this);
+
+        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
+            this.postActiveFileInfo();
+            this.sendSnippetToChat();
+          }));
+
+        this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
+           this.postActiveFileInfo();
+           this.sendSnippetToChat();
+        }));
+
+        this._disposables.push(vscode.workspace.onDidChangeConfiguration(event => {
+            if(event.affectsConfiguration("refactai.vecdb") || event.affectsConfiguration("refactai.ast")) {
+                this.handleSettingsChange();
+            }
+        }));
+
+        // TODO: theme changes.
     }
 
-    handleEvents(data: any) {
-        if(!this._view) { return; }
-        return composeHandlers(this.chat?.handleEvents, this.js2ts_message)(data);
+    // handleEvents(data: any) {
+    //     if(!this._view) { return; }
+    //     return composeHandlers(this.chat?.handleEvents, this.js2ts_message)(data);
+    // }
+
+    sendSnippetToChat() {
+        const snippet = this.getSnippetFromEditor();
+        if(!snippet) { return; }
+        const message = setSelectedSnippet(snippet);
+        this._view?.webview.postMessage(message);
     }
 
+    trimIndent(code: string) {
+        if(/^\s/.test(code) === false) { return code; }
+        const lastLine = code.split("\n").slice(-1)[0];
+        if(/^\s/.test(lastLine) === false) { return code; }
+        const tabSettings = vscode.workspace.getConfiguration("editor").get<number>("tabSize") ?? 4;
+        const spaces = " ".repeat(tabSettings);
+        const spacedCode = code.replace(/^\t+/gm, (match) => {
+            return match.replace(/\t/g, spaces);
+        });
+        const regexp = new RegExp(`^${spaces}`, "gm");
+        const indented = spacedCode.replace(regexp, "");
+        return indented;
+    }
+
+    getSnippetFromEditor(): Snippet {
+        // if(!this.working_on_snippet_code) { return; }
+        const language = vscode.window.activeTextEditor?.document.languageId ?? "";
+        const isEmpty = vscode.window.activeTextEditor?.selection.isEmpty ?? true;
+        const selection = vscode.window.activeTextEditor?.selection;
+        const code = isEmpty ? "" : vscode.window.activeTextEditor?.document.getText(selection) ?? "";
+        const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
+        const fileName = basename(filePath);
+
+
+        const indentedCode = this.trimIndent(code);
+
+        return {
+            code: indentedCode,
+            language,
+            path: filePath,
+            basename: fileName
+        };
+    }
+
+    postActiveFileInfo() {
+        const file = this.getActiveFileInfo();
+        if(file === null) {
+            const message = setFileInfo({  name: "",
+                line1: null,
+                line2: null,
+                can_paste: false,
+                path: "",
+                cursor: null
+            });
+            this._view?.webview.postMessage(message);
+        } else {
+            const message = setFileInfo(file);
+            this._view?.webview.postMessage(message);
+        }
+    }
+
+    getActiveFileInfo(): FileInfo | null {
+        if(vscode.window.activeTextEditor?.document.uri.scheme !== "file" && vscode.window.activeTextEditor?.document.uri.scheme!== "vscode-userdata") {
+            return null;
+        }
+        const file_path =
+			vscode.window.activeTextEditor?.document.fileName || "";
+        const file_name = basename(file_path);
+        const file_content = vscode.window.activeTextEditor?.document.getText() || "";
+        const start = vscode.window.activeTextEditor?.selection.start;
+        const end = vscode.window.activeTextEditor?.selection.end;
+        const lineCount = vscode.window.activeTextEditor?.document.lineCount ?? 0;
+        const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
+        const can_paste = vscode.window.activeTextEditor?.document.uri.scheme === "file";
+
+        const maybeLineInfo = start !== undefined && end !== undefined && !start.isEqual(end)
+            ? { line1: start.line + 1, line2: end.line + 1 }
+            : { line1:  1, line2: lineCount + 1 };
+
+        const file = {
+            name: file_name,
+            content: file_content,
+            path: file_path,
+            usefulness: 100,
+            cursor,
+            can_paste,
+            ...maybeLineInfo,
+        };
+
+        return file;
+    }
+
+    handleSettingsChange() {
+        const vecdb =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.vecdb") ?? false;
+
+        const ast =
+            vscode.workspace
+                .getConfiguration()
+                ?.get<boolean>("refactai.ast") ?? false;
+
+
+        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
+        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
+        const port = global.rust_binary_blob?.get_port() ?? 8001;
+
+        const message = updateConfig({
+            apiKey,
+            addressURL,
+            lspPort: port,
+            features: {vecdb, ast}
+        });
+
+        this._view?.webview.postMessage(message);
+    }
+
+    // This can go
     public make_sure_have_chat_history_provider()
     {
         if (!this.chatHistoryProvider) {
             this.chatHistoryProvider = new ChatHistoryProvider(
-                this._context,
+                this.context,
             );
         }
         return this.chatHistoryProvider;
     }
 
+    // This can be deleted
     public new_chat(view: vscode.WebviewView, chat_id: string)
     {
         if (chat_id === "" || chat_id === undefined) {
@@ -151,7 +306,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         webviewView.webview.options = {
             enableScripts: true,
-            localResourceRoots: [this._context.extensionUri],
+            localResourceRoots: [this.context.extensionUri],
         };
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible) {
@@ -180,17 +335,30 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this.update_webview();
     }
 
-    public goto_chat(chat: chatTab.ChatTab)
+    // can change this to
+    public async goto_chat(chat_thread?: ChatThread)
     {
-        this.address = chat.chat_id;
+
+        // this.html_main_screen(this._view.webview);
+        // this.address = chat.chat_id;
         if (!this._view) {
             return;
         }
-        this._view.webview.html = chat.get_html_for_chat(
-            this._view.webview,
-            this._context.extensionUri
-        );
-        this.update_webview();
+        // this._view.webview.html = chat.get_html_for_chat(
+        //     this._view.webview,
+        //     this.context.extensionUri
+        // );
+
+        // Could throw?
+        const html = await this.html_main_screen(this._view.webview, chat_thread);
+        this._view.webview.html = html;
+        // this.update_webview();
+    }
+
+    public async newChat()
+    {
+        const message = newChatAction();
+        this._view?.webview.postMessage(message);
     }
 
     public goto_statistic(statistic: statisticTab.StatisticTab)
@@ -200,7 +368,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         this._view.webview.html = statistic.get_html_for_statistic(
             this._view.webview,
-            this._context.extensionUri,
+            this.context.extensionUri,
         );
         this.update_webview();
     }
@@ -209,7 +377,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (!this._view) { return; }
         this._view.webview.html = fim.get_html(
             this._view.webview,
-            this._context.extensionUri
+            this.context.extensionUri
         );
         this.update_webview();
     }
@@ -244,7 +412,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         // console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
-        case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
+        // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
         case "open_chat_in_new_tab": {
             const chat_id = data?.chat_id || this.chat?.chat_id;
             // const chat_id = data.payload.id;
@@ -256,7 +424,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 return openTab.focus();
             }
             // is extensionUri defined anywhere?
-            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this._context.extensionUri, true);
+            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this.context.extensionUri.toString(), true);
             this.chat = null;
             return this.goto_main();
         }
@@ -294,36 +462,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         case "button_hf_open_tokens": {
             vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
-            break;
-        }
-        case "button_hf_save": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "HF", vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.hf_api_key, vscode.ConfigurationTarget.Global);
-            break;
-        }
-        case "button_refact_save": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.refact_api_key, vscode.ConfigurationTarget.Global);
-            break;
-        }
-        case "button_refact_open_streamlined": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-            vscode.commands.executeCommand('refactaicmd.login');
-            break;
-        }
-        case "save_enterprise": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', data.apikey, vscode.ConfigurationTarget.Global);
-            break;
-        }
-        case "save_selfhosted": {
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', data.endpoint, vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
             break;
         }
         case "privacy": {
@@ -368,7 +506,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
             const caps = await get_caps();
 
-            let chat: Chat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
+            let chat: OldChat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
             if (!chat) {
                 console.log(`Chat ${chat_id} not found, cannot restore`);
                 break;
@@ -382,24 +520,24 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 					? chat.chatModel
 					: caps.code_chat_default_model;
 
-                await open_chat_tab(
-                    "",
-                    editor,
-                    true,
-                    model,
-                    chat.messages,
-                    chat_id,
-                );
+                // await open_chat_tab(
+                //     "",
+                //     editor,
+                //     true,
+                //     model,
+                //     chat.messages,
+                //     chat_id,
+                // );
             }
             break;
         }
         case "save_telemetry_settings": {
-            await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
+            // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
             break;
         }
-        case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
-        case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
-        case FIM_EVENT_NAMES.BACK:
+        // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
+        // case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
+        // case FIM_EVENT_NAMES.BACK:
         case "back-from-chat": {
             this.goto_main();
             this.chat = null;
@@ -440,214 +578,341 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    private async html_main_screen(webview: vscode.Webview)
-    {
-        const scriptUri1 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.js")
-            );
-        const scriptUri2 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.js")
-            );
-        const styleMainUri1 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "sidebar.css")
-            );
-        const styleMainUri2 = webview.asWebviewUri(
-            vscode.Uri.joinPath(this._context.extensionUri, "assets", "chat_history.css")
-            );
-        const nonce = this.getNonce();
-        const api_key = vscode.workspace.getConfiguration().get('refactai.apiKey');
-        let telemetry_code = '';
-        if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
-            telemetry_code = 'checked';
+    private async handleEvents(e: unknown) {
+        console.log("sidebar event", e);
+        if(!e || typeof e !== "object") {
+            return;
         }
+        if(!("type" in e)) {
+            return;
+        }
+        // FIM Data from IDE
+        if(fim.ready.match(e)|| fim.request.match(e)) {
+            if(global.fim_data_cache) {
+                const event = fim.receive(global.fim_data_cache);
+                this._view?.webview.postMessage(event);
+            } else {
+                const event = fim.error("No FIM data found, please make a completion");
+                this._view?.webview.postMessage(event);
+            }
+        }
+
+        if (isSetupHost(e)) {
+            const { host } = e.payload;
+            if (host.type === "cloud") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', host.sendCorrectedCodeSnippets, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
+            } else if (host.type === "self") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
+            } else if (host.type === "enterprise") {
+                await this.delete_old_settings();
+                await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
+                await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
+            } else if (host.type === "bring-your-own-key") {
+                if (global.rust_binary_blob === undefined) {
+                    console.error("no rust binary blob");
+                    return;
+                }
+                let command: string[] = [
+                    join(global.rust_binary_blob.asset_path, "refact-lsp"),
+                    "--save-byok-file",
+                    "--address-url", "xxx",
+                ];
+                execFile(command[0], command.splice(1), async (err, stdout, stderr) => {
+                    if (err) {
+                        console.error(err);
+                        return;
+                    }
+                    const path = stdout.trim();
+                    vscode.workspace.openTextDocument(path).then(doc => {
+                        vscode.window.showTextDocument(doc);
+                    });
+                    await vscode.workspace.getConfiguration().update('refactai.addressURL', path, vscode.ConfigurationTarget.Global);
+                    await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
+                });
+            }
+        }
+
+        if (isLogOut(e)) {
+            await this.delete_old_settings();
+        }
+
+        if (isOpenExternalUrl(e)) {
+            await vscode.env.openExternal(vscode.Uri.parse(e.payload.url));
+        }
+
+        if(ideNewFileAction.match(e)) {
+            const action = e as ReturnType<typeof ideNewFileAction>
+            return vscode.workspace.openTextDocument().then((document) => {
+                vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+                    .then((editor) => {
+                        editor.edit((editBuilder) => {
+                            editBuilder.insert(new vscode.Position(0, 0), action.payload);
+                        });
+                    });
+            });
+        }
+
+        if(ideOpenHotKeys.match(e)) {
+            return vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "refact.ai");
+        }
+
+        if(ideOpenSettingsAction.match(e)) {
+            return vscode.commands.executeCommand("workbench.action.openSettings", "refactai");
+        }
+
+        if(ideOpenFile.match(e)) {
+            return this.handleOpenFile(e.payload);
+        }
+
+        if(ideDiffPasteBackAction.match(e)) {
+            return this.handleDiffPasteBack(e.payload);
+        }
+
+        if (ideDiffPreviewAction.match(e)) {
+            return this.handleDiffPreview(e.payload);
+        }
+
+        // if(ideOpenChatInNewTab.match(e)) {
+        //     return this.handleOpenInTab(e.payload);
+        // }
+    }
+
+    // async handleOpenInTab(chat_thread: ChatThread) {
+    //     if(!this._view) {
+    //         // Can this._view be undefined?
+    //         return;
+    //     }
+
+    //     const panel = vscode.window.createWebviewPanel(
+    //         "refact-chat-tab",
+    //         truncate(`Refact.ai ${chat_thread.title}`, 24),
+    //         vscode.ViewColumn.One,
+    //         {
+    //             enableScripts: true,
+    //             retainContextWhenHidden: true,
+    //         }
+    //     );
+
+    //     // make the global tabs an object with chat id as the key.
+    //     const html = await this.html_main_screen(this._view.webview, chat_thread, true);
+    //     global.open_chat_panels[chat_thread.id] = panel;
+    //     panel.onDidDispose(() => {
+    //         delete global.open_chat_panels[chat_thread.id];
+    //     });
+    //     this.goto_main();
+    //     panel.webview.html = html;
+
+    // }
+
+    private async handleDiffPasteBack(code_block: string) {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) { return; }
+        const selection = editor.selection;
+        const startOfLine = new vscode.Position(selection.start.line, 0);
+        const endOfLine = new vscode.Position(selection.start.line + 1, 0);
+        const firstLineRange = new vscode.Range(startOfLine, endOfLine);
+        const spaceRegex = /^[ \t]+/;
+        const selectedLine = editor.document.getText(
+            firstLineRange
+        );
+        const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
+        const needsNewLine = code_block.endsWith("\n") === false;
+        const indentedCode = (indent + code_block).replace(/\n/gm, "\n" + indent) + (needsNewLine ? "\n" : "");
+
+        const range = new vscode.Range(startOfLine, selection.end);
+
+		return diff_paste_back(
+            editor.document,
+            range,
+            indentedCode
+        );
+
+	}
+
+    private async handleDiffPreview(response: DiffPreviewResponse) {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) { return; }
+
+        for (const change of response.results) {
+            if (change.file_name_edit !== null && change.file_text != null) {
+                const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_edit));
+                await vscode.window.showTextDocument(document);
+
+                const start = new vscode.Position(0, 0);
+                const end = new vscode.Position(document.lineCount, 0);
+                const range = new vscode.Range(start, end);
+
+                diff_paste_back(
+                    document,
+                    range,
+                    change.file_text
+                );
+            }
+        }
+	}
+
+
+    async handleOpenFile(file: {file_name:string, line?: number}) {
+        const uri = vscode.Uri.file(file.file_name);
+        const document = await vscode.workspace.openTextDocument(uri);
+        if(file.line !== undefined) {
+            const position = new vscode.Position(file.line ?? 0, 0);
+            const editor = await vscode.window.showTextDocument(document);
+            const range = new vscode.Range(position, position);
+            editor.revealRange(range);
+        } else {
+            await vscode.window.showTextDocument(document);
+        }
+    }
+
+    getColorTheme(): "light" | "dark" {
+        switch(vscode.window.activeColorTheme.kind) {
+            case vscode.ColorThemeKind.Light: return "light";
+            case vscode.ColorThemeKind.HighContrastLight: return "light";
+            default: return "dark";
+        }
+    }
+
+
+    async createInitialState(thread?: ChatThread, tabbed = false): Promise<Partial<InitialState>> {
+        const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
+        const scaling = fontSize < 14 ? "90%" : "100%";
+        const activeColorTheme = this.getColorTheme();
+        const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
+        const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
+        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
+        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
+        const port = global.rust_binary_blob?.get_port() ?? 8001;
+        const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
+        const maybeHistory = this.context.globalState.get<OldChat[]>("refact_chat_history") ?? [];
+
+        const config: InitialState["config"] = {
+            host: "vscode",
+            tabbed,
+            themeProps: {
+                accentColor: "gray",
+                scaling,
+                hasBackground: false,
+                appearance: activeColorTheme,
+            },
+            features: {
+                vecdb,
+                ast,
+            },
+            keyBindings: {
+                completeManual,
+            },
+            apiKey,
+            addressURL,
+            lspPort: port,
+        };
+
+        const state: Partial<InitialState> = {
+            config,
+        };
+
+        const file = this.getActiveFileInfo();
+        const snippet = this.getSnippetFromEditor();
+
+        if(snippet && file) {
+            state.active_file = file;
+            state.selected_snippet = snippet;
+        }
+        if(maybeHistory.length > 0) {
+            state.history =  maybeHistory.map(convert_old_chat_to_new_chat).reduce<InitialState["history"]>((acc, cur) => {
+                return {
+                    ...acc,
+                    [cur.id]: cur
+                };
+            }, {});
+            this.context.globalState.update("refact_chat_history", []);
+        }
+
+        if(thread) {
+            const chat: InitialState["chat"] = {
+                streaming: false,
+                error: null,
+                prevent_send: true,
+                waiting_for_response: false,
+                tool_use: "agent",
+                cache: {},
+                system_prompt: {},
+                send_immediately: thread.messages.length > 0,
+                thread,
+            };
+
+            state.chat = chat;
+            state.pages = [{name: "initial setup"}, {name: "history"}, {name: "chat"}];
+        }
+
+        return state;
+    }
+
+    private async html_main_screen(webview: vscode.Webview, chat_thread?: ChatThread, tabbed?: boolean)
+    {
+        // TODO: add send immediately flag for context menu and toolbar
+        const extensionUri = this.context.extensionUri;
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "index.umd.cjs")
+        );
+
+        const styleMainUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "node_modules", "refact-chat-js", "dist", "chat", "style.css")
+        );
+
+        const styleOverride = webview.asWebviewUri(
+            vscode.Uri.joinPath(extensionUri, "assets", "custom-theme.css")
+        );
+
+        const nonce = this.getNonce();
+        // if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
+        //     telemetry_code = 'checked';
+        // }
         let existing_address = vscode.workspace.getConfiguration().get("refactai.addressURL");
         if (typeof existing_address !== "string" || (typeof existing_address === "string" && !existing_address.match(/^https?:\/\//))) {
             existing_address = "";
         }
 
-        const open_chat_hotkey = await getKeyBindingForChat();
+        const initialState = await this.createInitialState(chat_thread, tabbed);
 
         return `<!DOCTYPE html>
-                <html lang="en">
-                <head>
+            <html lang="en" class="light">
+            <head>
                 <meta charset="UTF-8">
                 <!--
                     Use a content security policy to only allow loading images from https or from our extension directory,
                     and only allow scripts that have a specific nonce.
+                    TODO: remove  unsafe-inline if posable
                 -->
-                <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';"> -->
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="Content-Security-Policy" content="style-src ${
+                  webview.cspSource
+                } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
-                <title>Main Toolbox</title>
-                <link href="${styleMainUri1}" rel="stylesheet">
-                <link href="${styleMainUri2}" rel="stylesheet">
+                <title>Refact.ai Chat</title>
+                <link href="${styleMainUri}" rel="stylesheet">
+                <link href="${styleOverride}" rel="stylesheet">
             </head>
             <body>
-                <div id="sidebar" class="sidebar">
-                    <div class="chat-panel">
-                        <button tabindex="-1" id="chat-new">
-                            <?xml version="1.0" ?>
-                            <svg height="1657.973px" style="enable-background:new 0 0 1692 1657.973;" version="1.1" viewBox="0 0 1692 1657.973" width="1692px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="comment"><g><path d="M1216.598,1657.973c-15.035,0-29.926-4.822-41.984-14.746l-439.527-361.254H158.332    C71.515,1281.973,0,1209.012,0,1120.074V160.168C0,71.627,71.515,0.973,158.332,0.973h1374.836    c87.743,0,158.832,70.655,158.832,159.195v959.909c0,88.938-71.089,161.896-158.832,161.896H1282v309.93    c0,25.561-14.415,48.826-37.528,59.744C1235.479,1655.892,1226.173,1657.973,1216.598,1657.973z M158.332,132.973    c-13.953,0-25.332,11.52-25.332,27.195v959.906c0,15.805,11.615,29.898,25.332,29.898H758.77c15.311,0,29.89,4.95,41.715,14.674    L1150,1451.998v-236.699c0-36.49,30.096-65.326,66.586-65.326h316.582c14.123,0,26.832-14.639,26.832-29.896V160.168    c0-15.146-12.457-27.195-26.832-27.195H158.332z"/></g></g><g id="Layer_1"/></svg>
-                            New&nbsp;Chat
-                            <span class="sidebar__hotkey">${open_chat_hotkey}</span>
-                        </button>
-                    </div>
-                    <div class="chat-history">
-                        <div class="chat-history-list"></div>
-                    </div>
+                <div id="refact-chat"></div>
 
-                    <div class="refact-welcome__whole" style="display: none">
-                        <div class="refact-welcome__menu">
-                            <div class="refact-welcome__container">
-                                <div class="refact-welcome__lead">Refact plugin initial setup:</div>
-
-                                <label class="refact-welcome__select" data-type="personal">
-                                    <div class="refact-welcome__content">
-                                        <div class="refact-welcome__inlinewrap">
-                                            <input type="radio" class="refact-welcome__radio" value="personal" name="account-type" />
-                                            <span>Cloud</span>
-                                        </div>
-                                        <div class="refact-welcome__desc">
-                                            <ul>
-                                                <li>Easy to start</li>
-                                                <li>Free tier</li>
-                                                <li>You can opt-in for code snippets collection to help this open source project, off by default</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label class="refact-welcome__select" data-type="self-hosting">
-                                    <div class="refact-welcome__content">
-                                        <div class="refact-welcome__inlinewrap">
-                                            <input type="radio" class="refact-welcome__radio" value="self-hosting" name="account-type" />
-                                            <span>Self-hosting</span>
-                                        </div>
-                                        <div class="refact-welcome__desc">
-                                            <ul>
-                                                <li>Uses your own server</li>
-                                                <li>Your code never leaves your control</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </label>
-
-                                <label class="refact-welcome__select" data-type="enterprise">
-                                <div class="refact-welcome__content">
-                                    <div class="refact-welcome__inlinewrap">
-                                        <input type="radio" class="refact-welcome__radio" value="enterprise" name="account-type" />
-                                        <span>Enterprise</span>
-                                    </div>
-                                    <div class="refact-welcome__desc">
-                                        <ul>
-                                            <li>Doesn't connect to a public cloud</li>
-                                            <li>Uses your private server only</li>
-                                            <li>Sends telemetry and code snippets to your private server</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                </label>
-                                <div class="refact-welcome__actions">
-                                    <button class="refact-welcome__next">Next&nbsp;&nbsp;&rsaquo;</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="refact-welcome__enterprise refact-welcome__subscreen">
-                            <div classs="refact-welcome__note">You should have corporate endpoint URL and personal API key. Please contact your system administrator.</div>
-                            <div>
-                                <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__enterendpoint refact-welcome__input" placeholder="http://x.x.x.x:8008/" type="text" name="endpoint_address" value="${existing_address}">
-                            </div>
-                            <div>
-                                <label class="refact-welcome__label">API Key</label>
-                                <input class="refact-welcome__apikey_enterprise refact-welcome__input" type="text" name="api_key" value="${api_key}">
-                            </div>
-                            <div class="refact-welcome__error-enterprise">Please enter API key</div>
-                            <div class="refact-welcome__actions">
-                                <button data-target="enterprise" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__savebutton refact-welcome__savebutton--enterprise">Save</button>
-                            </div>
-                        </div>
-
-                        <div class="refact-welcome__personal refact-welcome__subscreen">
-                            <h2>Cloud Inference</h2>
-                            <div class="refact-welcome__or">Quick login via website:</div>
-                            <button class="refact-welcome__refact">
-                                Login / Create Account
-                            </button>
-                            <!--div class="refact-welcome__or">or</div-->
-                            <div>
-                                <label class="refact-welcome__label">Alternatively, paste an existing Refact API Key here:</label>
-                                <input class="refact-welcome__apikey_refact refact-welcome__input" type="text" name="api_key" value="${api_key}">
-                            </div>
-                            <div class="refact-welcome__error-refact">Please Login / Create Account or enter API key</div>
-                            <div class="refact-welcome__telemetry">
-                                <p>Help Refact collect a dataset of corrected code completions!
-                                This will help to improve code suggestions more to your preferences, and it also will improve code suggestions for everyone else.
-                                Hey, we're not an evil corporation!</p>
-                                <label><input class="refact-welcome__telemetrycode" type="checkbox" id="telemetrycode" name="telemetrycode" value="true" ${telemetry_code}>Send corrected code snippets.</label>
-                                <p>Basic telemetry is always on when using cloud inference, but it only sends errors and counters.
-                                <a href="https://github.com/smallcloudai/refact-lsp/blob/main/README.md#telemetry">How telemetry works in open source refact-lsp</a></p>
-                            </div>
-                            <div class="refact-welcome__actions">
-                                <button data-target="refact" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__next refact-welcome__next_refact">Next&nbsp;&nbsp;&rsaquo;</button>
-                            </div>
-                        </div>
-
-                        <div class="refact-welcome__selfhosted refact-welcome__subscreen">
-                            <div>
-                                <div classs="refact-welcome__note">A great option for self-hosting is <a href="https://github.com/smallcloudai/refact/">Refact docker</a>.
-                                It can serve completion and chat models, has graphical user interface to set it up, and it can fine-tune code on your codebase.
-                                A typical endpoint address is http://127.0.0.1:8008/<br/>
-                                But this plugin might work with a variety of servers, report your experience on discord!</div>
-                                <label class="refact-welcome__label">Endpoint Address</label>
-                                <input class="refact-welcome__endpoint refact-welcome__input" type="text" name="endpoint_address" value="${existing_address}">
-                            </div>
-                            <div class="refact-welcome__actions">
-                                <button data-target="selfhosted" class="refact-welcome__back">&lsaquo;&nbsp;&nbsp;Back</button>
-                                <button class="refact-welcome__savebutton refact-welcome__savebutton--selfhosted">Save</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="sidebar-controls">
-                        <div class="sidebar-controls-inner">
-                            <div class="sidebar-inline sidebar-account">
-                                <div class="sidebar-logged"><b><span></span></b></div>
-                                <div class="sidebar-coins">
-                                <div class="sidebar-coin"></div><span>0</span></div>
-                            </div>
-                            <div class="sidebar-inline">
-                                <div class="sidebar-plan"><span></span><button class="sidebar-plan-button"></button></div>
-                            </div>
-                            <div class="sidebar-buttons">
-                                <button tabindex="-1" id="logout" class=""><span></span>Logout</button>
-                                <button tabindex="-1" id="fim-debug">FIM</button>
-                                <button tabindex="-1" id="statistic"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2024 Fonticons, Inc.--><path fill="rgba(255, 255, 255, 0.5)" d="M396.8 352h22.4c6.4 0 12.8-6.4 12.8-12.8V108.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v230.4c0 6.4 6.4 12.8 12.8 12.8zm-192 0h22.4c6.4 0 12.8-6.4 12.8-12.8V140.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v198.4c0 6.4 6.4 12.8 12.8 12.8zm96 0h22.4c6.4 0 12.8-6.4 12.8-12.8V204.8c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v134.4c0 6.4 6.4 12.8 12.8 12.8zM496 400H48V80c0-8.8-7.2-16-16-16H16C7.2 64 0 71.2 0 80v336c0 17.7 14.3 32 32 32h464c8.8 0 16-7.2 16-16v-16c0-8.8-7.2-16-16-16zm-387.2-48h22.4c6.4 0 12.8-6.4 12.8-12.8v-70.4c0-6.4-6.4-12.8-12.8-12.8h-22.4c-6.4 0-12.8 6.4-12.8 12.8v70.4c0 6.4 6.4 12.8 12.8 12.8z"/></svg></button>
-                                <button tabindex="-1" id="privacy"><span></span></button>
-                                <button tabindex="-1" id="settings"><i></i><span></span></button>
-                                <button tabindex="-1" id="keys"><span></span></button>
-                            </div>
-                            <div class="sidebar-inline">
-                                <button tabindex="-1" id="profile"><span></span>Your Account</button>
-                                <button tabindex="-1" id="report_bugs"><span></span>Report Bug</button>
-                                <button tabindex="-1" id="discord" class=""><span></span>Discord</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <script nonce="${nonce}" src="${scriptUri1}"></script>
-                <script nonce="${nonce}" src="${scriptUri2}"></script>
-                <script>
-                    window.onload = function() {
-                        const vscode = acquireVsCodeApi();
-                        sidebar_general_script(vscode);
-                        chat_history_script(vscode);
-                    }
+                <script nonce="${nonce}">
+                const initialState = ${JSON.stringify(initialState)};
+                window.__INITIAL_STATE__ = initialState;
+                window.onload = function() {
+                    const root = document.getElementById("refact-chat");
+                    // TODO: config no longer needs to passed to the component like this.np
+                    RefactChat.render(root, initialState.config);
+                }
                 </script>
-                </body>
-                </html>`;
+                <script nonce="${nonce}" src="${scriptUri}"></script>
+            </body>
+            </html>`;
     }
 
     getNonce() {

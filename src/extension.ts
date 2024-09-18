@@ -13,6 +13,7 @@ import * as usabilityHints from "./usabilityHints";
 import * as privacy from "./privacy";
 import * as launchRust from "./launchRust";
 import { RefactConsoleProvider } from './rconsoleProvider';
+import { QuickActionProvider } from "./quickProvider";
 import * as rconsoleCommands from "./rconsoleCommands";
 
 import * as os from 'os';
@@ -22,7 +23,7 @@ import { Mode } from "./estate";
 import { open_chat_tab } from "./sidebar";
 import { fileURLToPath } from 'url';
 import { ChatTab } from './chatTab';
-import { FimDebugData } from 'refact-chat-js/dist/events';
+import { FimDebugData } from 'refact-chat-js/dist/events/index.js';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -40,9 +41,12 @@ declare global {
     var chat_models: string[];
     var chat_default_model: string;
     var have_caps: boolean;
+    // TODO: remove this.
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
+
+    var open_chat_panels: Record<string, vscode.WebviewPanel>;
 
     var toolbox_config: launchRust.ToolboxConfig | undefined;
     var toolbox_command_disposables: vscode.Disposable[];
@@ -65,15 +69,7 @@ async function pressed_call_chat(n = 0) {
         global.side_panel._view.show();
     }
 
-    await open_chat_tab(
-        "",
-        editor,
-        true,    // attach file default
-        "",      // model
-        [],      // messages
-        "",      // chat id
-        true,    // append snippet
-    );
+    global.side_panel?.newChat();
 }
 
 
@@ -184,42 +180,12 @@ async function code_lens_clicked(arg0: any)
     }
 }
 
-
-let global_autologin_timer: NodeJS.Timeout|undefined = undefined;
-
-
-async function login_clicked()
+async function f1_pressed()
 {
-    if (userLogin.secret_api_key()) {
-        global.streamlined_login_countdown = -1;
-        return;
-    }
-    global.streamlined_login_ticket = Math.random().toString(36).substring(2, 15) + '-' + Math.random().toString(36).substring(2, 15);
-    userLogin.inference_login_force_retry();
-    await vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/authentication?token=${global.streamlined_login_ticket}&utm_source=plugin&utm_medium=vscode&utm_campaign=login`));
-    let i = 0;
-    // Ten attempts to login, 30 seconds apart, will show successful login even if the user does nothing (it's faster if they try completion or similar)
-    if (global_autologin_timer) {
-        clearInterval(global_autologin_timer);
-    }
-    global_autologin_timer = setInterval(() => {
-        let have_key = !!userLogin.secret_api_key();
-        global.streamlined_login_countdown = 10 - (i % 10);
-        if (!have_key && i % 10 === 0) {
-            userLogin.streamlined_login();
-        }
-        global.side_panel?.update_webview();  // shows countdown
-        if (have_key || i === 200) {
-            global.streamlined_login_countdown = -1;
-            clearInterval(global_autologin_timer);
-            return;
-        }
-        i++;
-    }, 1000);
+    pressed_call_chat();
 }
 
-
-async function f1_pressed()
+async function f1_deprecated()
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
@@ -229,7 +195,6 @@ async function f1_pressed()
             return;
         }
         if (state) {
-            // rconsoleProvider.open_refact_console_between_lines(editor);
             RefactConsoleProvider.open_between_lines(editor);
         }
     }
@@ -269,8 +234,7 @@ export function activate(context: vscode.ExtensionContext)
     global.open_chat_tabs = [];
     global.toolbox_command_disposables = [];
 
-
-    context.subscriptions.push(vscode.commands.registerCommand(global.status_bar.command, status_bar_clicked));
+    context.subscriptions.push(vscode.commands.registerCommand("refactaicmd.statusBarClick", status_bar_clicked));
 
     codeLens.save_provider(new codeLens.LensProvider());
     if (codeLens.global_provider) {
@@ -280,9 +244,30 @@ export function activate(context: vscode.ExtensionContext)
     const comp = new completionProvider.MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
+    const quickProvider = new QuickActionProvider();
+    vscode.languages.registerCodeActionsProvider({pattern: "**"},quickProvider,
+        {
+            providedCodeActionKinds: [
+            //   vscode.CodeActionKind.RefactorRewrite,
+              vscode.CodeActionKind.QuickFix,
+            ],
+        }
+    );
+    context.subscriptions.push(quickProvider);
+
+    for (const action of QuickActionProvider.actions) {
+        context.subscriptions.push(
+          vscode.commands.registerCommand(
+            `refactcmd.${action.id}`,
+            (actionId: string, diagnosticMessage: string) => QuickActionProvider.handleAction(actionId, diagnosticMessage)
+          )
+        );
+    }
+
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
     let disposable3 = vscode.commands.registerCommand('refactaicmd.activateToolbox', f1_pressed);
+    let disposable8 = vscode.commands.registerCommand('refactaicmd.activateToolboxDeprecated', f1_deprecated);
     let disposable9 = vscode.commands.registerCommand('refactaicmd.addPrivacyOverride0', (uri:vscode.Uri) => {
         if (!uri || !uri.fsPath) {
             return;
@@ -317,11 +302,12 @@ export function activate(context: vscode.ExtensionContext)
         global.toolbox_command_disposables.forEach(d => d.dispose());
     });
 
+    context.subscriptions.push(disposable1);
+    context.subscriptions.push(disposable2);
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
-    context.subscriptions.push(disposable1);
-    context.subscriptions.push(disposable2);
+    context.subscriptions.push(disposable8);
     context.subscriptions.push(disposable9);
     context.subscriptions.push(disposable10);
     context.subscriptions.push(disposable11);
@@ -333,7 +319,9 @@ export function activate(context: vscode.ExtensionContext)
     global.rust_binary_blob = new launchRust.RustBinaryBlob(
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
     );
-    global.rust_binary_blob.settings_changed();  // async function will finish later
+    global.rust_binary_blob
+        .settings_changed() // async function will finish later
+        .then(() => fetchAPI.maybe_show_rag_status());
 
     global.side_panel = new sidebar.PanelWebview(context);
     let view = vscode.window.registerWebviewViewProvider(
@@ -348,11 +336,6 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(settingsCommand);
 
-    let login = vscode.commands.registerCommand('refactaicmd.login', () => {
-        login_clicked();
-    });
-
-    context.subscriptions.push(login);
     let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
         context.globalState.update('codifyFirstRun', false);
         global.api_key = '';
@@ -372,11 +355,11 @@ export function activate(context: vscode.ExtensionContext)
 
     const home = path.posix.format(path.parse(os.homedir()));
     const toolbox_config_file_posix_path = path.posix.join(
-		home,
-		".cache",
-		"refact",
-		"customization.yaml"
-	);
+        home,
+        ".cache",
+        "refact",
+        "customization.yaml"
+    );
 
     const toolbox_config_file_uri = vscode.Uri.file(toolbox_config_file_posix_path);
 
@@ -406,7 +389,9 @@ export function activate(context: vscode.ExtensionContext)
             e.affectsConfiguration("refactai.apiKey") ||
             e.affectsConfiguration("refactai.insecureSSL") ||
             e.affectsConfiguration("refactai.ast") ||
-            e.affectsConfiguration("refactai.vecdb")
+            e.affectsConfiguration("refactai.astFileLimit") ||
+            e.affectsConfiguration("refactai.vecdb") ||
+            e.affectsConfiguration("refactai.vecdbFileLimit")
         ) {
             if (config_debounce) {
                 clearTimeout(config_debounce);
@@ -419,10 +404,28 @@ export function activate(context: vscode.ExtensionContext)
                 userLogin.inference_login();
             }, 1000);
         }
-        if (e.affectsConfiguration("refactai.apiKey")) {
-            global.side_panel?.goto_main();
+
+        if (e.affectsConfiguration("refactai.apiKey") || e.affectsConfiguration("refactai.addressURL")) {
+            global.side_panel?.handleSettingsChange();
+        }
+
+        if (
+            e.affectsConfiguration("refactai.ast") ||
+            e.affectsConfiguration("refactai.astFileLimit") ||
+            e.affectsConfiguration("refactai.vecdb") ||
+            e.affectsConfiguration("refactai.vecdbFileLimit")
+        )  {
+            const hasAst = vscode.workspace.getConfiguration().get<boolean>("refactai.ast");
+            if(hasAst) {
+                fetchAPI.maybe_show_rag_status();
+            }
+            const hasVecdb = vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb");
+            if(hasVecdb) {
+                fetchAPI.maybe_show_rag_status();
+            }
         }
     });
+
 
     first_run_message(context);
 
@@ -543,7 +546,16 @@ export async function status_bar_clicked()
         return;
     }
     let selection: string | undefined;
-    if (!editor) {
+
+    if (global.status_bar.ast_limit_hit || global.status_bar.vecdb_limit_hit) {
+        selection = await vscode.window.showInformationMessage(
+            "AST or VecDB file number limit reached, you can increase the limit in settings if your computer has enough memory, or disable these features.",
+            "Open Settings",
+        );
+        if (selection === "Open Settings") {
+            await vscode.commands.executeCommand("workbench.action.openSettings", "@ext:smallcloud.codify");
+        }
+    } else if (!editor) {
         selection = await vscode.window.showInformationMessage(
             "Welcome to Refact.ai 👋",
             "Open Panel (F1)",
@@ -570,6 +582,6 @@ export async function status_bar_clicked()
     } else if (selection === "Privacy Rules") {
         vscode.commands.executeCommand("refactaicmd.privacySettings");
     } else if (selection === "Open Panel (F1)") {
-        vscode.commands.executeCommand("refactaicmd.activateToolbox");
+        vscode.commands.executeCommand("refactaicmd.callChat");
     }
 }

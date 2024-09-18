@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "3.1.123",
+	"version": "5.0.103",
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -149,28 +149,34 @@
 					"default": false,
 					"order": 7
 				},
-				"refactai.defaultSystemPrompt": {
-					"type": "string",
-					"markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
-					"default": "",
+				"refactai.ast": {
+					"type": "boolean",
+					"markdownDescription": "Enable context-aware code completion and chat, adds defintion() and references() functions for a chat model, and @definition, @references commands for you to add context manually.\n\nRAG works better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) nand [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"default": true,
 					"order": 8
+				},
+				"refactai.astFileLimit": {
+					"type": "number",
+					"description": "Limit the number of files for AST to process, to avoid memory issues. Increase if you have a large project and sufficient memory.",
+					"default": 35000,
+					"order": 9
 				},
 				"refactai.vecdb": {
 					"type": "boolean",
-					"description": "Enable embedded vecdb for search (experimental)",
-					"default": false,
-					"order": 9
+					"markdownDescription": "Enable vector database. This adds the ability for a chat model to perform a semantic search in your codebase, and the @workspace command for you to add context manually.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"default": true,
+					"order": 11
 				},
-				"refactai.ast": {
-					"type": "boolean",
-					"description": "Enable syntax parsing (experimental, works only for popular languages).",
-					"default": false,
-					"order": 10
+				"refactai.vecdbFileLimit": {
+					"type": "number",
+					"description": "Limit the number of files for VecDB to process. Increase if you have a lot of files.",
+					"default": 15000,
+					"order": 12
 				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
-					"order": 11
+					"order": 13
 				}
 			}
 		},
@@ -186,8 +192,13 @@
 				"title": "Close"
 			},
 			{
+				"command": "refactaicmd.activateToolboxDeprecated",
+				"title": "Activate Toolbox (deprecated)",
+				"category": "Refact.ai"
+			},
+			{
 				"command": "refactaicmd.activateToolbox",
-				"title": "Activate",
+				"title": "Activate (opens chat)",
 				"category": "Refact.ai"
 			},
 			{
@@ -203,7 +214,7 @@
 			{
 				"command": "refactaicmd.callChat",
 				"title": "Chat",
-				"key": "alt+c",
+				"key": "F1",
 				"category": "Refact.ai"
 			},
 			{
@@ -286,8 +297,8 @@
 		],
 		"keybindings": [
 			{
-				"command": "refactaicmd.activateToolbox",
-				"key": "F1"
+				"command": "refactaicmd.activateToolboxDeprecated",
+				"key": "alt+t"
 			},
 			{
 				"command": "refactaicmd.completionManual",
@@ -305,7 +316,7 @@
 			},
 			{
 				"command": "refactaicmd.callChat",
-				"key": "alt+c"
+				"key": "F1"
 			}
 		],
 		"viewsContainers": {
@@ -439,7 +450,7 @@
 		"fetch-h2": "^3.0.2",
 		"json5": "^2.2.3",
 		"marked": "^4.0.8",
-		"refact-chat-js": "^0.2.1-alpha.4",
+		"refact-chat-js": "~v2.0.0-alpha.12",
 		"uuid": "^9.0.1",
 		"vscode-languageclient": "^7.0.0"
 	},

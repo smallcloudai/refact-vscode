@@ -5,7 +5,7 @@ import * as storeVersions from "./storeVersions";
 import * as privacy from "./privacy";
 import * as fetchAPI from "./fetchAPI";
 import * as fetchH2 from 'fetch-h2';
-import { FimDebugData } from 'refact-chat-js/dist/events';
+import { FimDebugData, fim } from 'refact-chat-js/dist/events';
 
 
 export class MyInlineCompletionProvider implements vscode.InlineCompletionItemProvider
@@ -17,6 +17,11 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cancelToken: vscode.CancellationToken
     )
     {
+
+        if(document.uri.scheme === "comment") {
+            return [];
+        }
+
         let state = estate.state_of_document(document);
         if (state) {
             if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
@@ -184,7 +189,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             this.called_manually_count = 0;
         }
 
-        let temperature = 0.2
+        let temperature = 0.2;
         if (this.called_manually_count > 1) {
             temperature = 0.6;
         }
@@ -225,7 +230,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
     maybeSendFIMData(data: FimDebugData | null) {
         if(data === null) { return; }
         global.fim_data_cache = data;
-        global.side_panel?.fim_debug?.sendFIMData(data);
+        global.side_panel?._view?.webview.postMessage(fim.receive(data));
     }
 }
 

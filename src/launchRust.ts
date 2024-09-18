@@ -2,6 +2,7 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from './userLogin';
+import * as fetchAPI from "./fetchAPI";
 import { join } from 'path';
 import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
@@ -42,6 +43,15 @@ export class RustBinaryBlob
             return 0;
         }
         return 1;
+    }
+
+    public get_port(): number {
+        let xdebug = this.x_debug();
+        if (xdebug) {
+            return 8001;
+        } else {
+            return this.port;
+        }
     }
 
     public rust_url(): string
@@ -119,11 +129,17 @@ export class RustBinaryBlob
                 "--basic-telemetry",
             ];
 
-            if(vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
+            if (vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
                 new_cmdline.push("--vecdb");
+                const vecdb_limit = vscode.workspace.getConfiguration().get<number>("refactai.vecdbFileLimit") ?? 15000;
+                new_cmdline.push(`--vecdb-max-files`);
+                new_cmdline.push(`${vecdb_limit}`);
             }
-            if( vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
+            if (vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
                 new_cmdline.push("--ast");
+                const ast_limit = vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
+                new_cmdline.push(`--ast-max-files`);
+                new_cmdline.push(`${ast_limit}`);
             }
 
             let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");
@@ -142,7 +158,7 @@ export class RustBinaryBlob
                 break;
             }
         }
-        global.side_panel?.update_webview();
+        global.side_panel?.handleSettingsChange();
     }
 
     public async launch()
@@ -187,7 +203,7 @@ export class RustBinaryBlob
         await this.stop_lsp();
         await fetchH2.disconnectAll();
         global.have_caps = false;
-        status_bar.choose_color();
+        global.status_bar.choose_color();
     }
 
     public async read_caps()
@@ -214,13 +230,15 @@ export class RustBinaryBlob
             global.chat_models = Object.keys(json["code_chat_models"]);
             global.chat_default_model = json["code_chat_default_model"] || "";
             global.have_caps = true;
+            global.status_bar.set_socket_error(false, "");
         } catch (e) {
             global.chat_models = [];
             global.have_caps = false;
             console.log(["read_caps:", e]);
         }
-        status_bar.choose_color();
+        global.status_bar.choose_color();
         global.side_panel?.update_webview();
+        fetchAPI.maybe_show_rag_status();
     }
 
     public async ping()
@@ -284,11 +302,16 @@ export class RustBinaryBlob
                 reject("timeout");
             }, 5000);
         });
+        // HACK: sometimes on timeout it cannot lsp_dispose() properly (when it timeouts fast?),
+        // that leads to two processes running :/
+        // So we wait a bit, hope this will happen less often.
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         try {
             await Promise.race([this.lsp_client.onReady(), timeoutPromise]);
             console.log(`RUST /START`);
         } catch (e) {
             console.log(`RUST START PROBLEM e=${e}`);
+            // e=timeout might lead to the problem above
             this.lsp_dispose();
             return;
         }
@@ -347,6 +370,32 @@ export class RustBinaryBlob
         this.lsp_socket.connect(DEBUG_LSP_PORT);
     }
 
+    async rag_status()
+    {
+        try {
+            let url = this.rust_url();
+            if (!url) {
+                return Promise.reject("rag status no rust binary working, very strange");
+            }
+            url += "v1/rag-status";
+            let req = new fetchH2.Request(url, {
+                method: "GET",
+                redirect: "follow",
+                cache: "no-cache",
+                referrer: "no-referrer",
+            });
+            let resp = await fetchH2.fetch(req, { timeout: 5000 });
+            if (resp.status !== 200) {
+                console.log(["rag status http status", resp.status]);
+                return Promise.reject("rag status bad status");
+            }
+            let rag_status = await resp.json();
+            return rag_status;
+        } catch (e) {
+            console.log(["rag status error:", e]);
+        }
+        return false;
+    }
 
     async fetch_toolbox_config(): Promise<ToolboxConfig> {
       const rust_url = this.rust_url();

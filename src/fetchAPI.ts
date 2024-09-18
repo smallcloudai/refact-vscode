@@ -14,6 +14,10 @@ import {
 	type ChatContextFile,
 	isCustomPromptsResponse,
     type CustomPromptsResponse,
+    ChatMessages,
+    DiffChunk,
+    DiffAppliedStateResponse,
+    DiffOperationResponse,
 } from "refact-chat-js/dist/events";
 
 
@@ -502,9 +506,10 @@ export function fetch_code_completion(
 export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
-    messages: [string, string][],
+    messages: ChatMessages | [string, string][],
     model: string,
     third_party: boolean = false,
+    tools: AtToolCommand[] | null = null,
 ): [Promise<fetchH2.Response>, string, string]
 {
     let url = rust_url("/v1/chat");
@@ -516,33 +521,63 @@ export function fetch_chat_promise(
     if (!apiKey) {
         return [Promise.reject("No API key"), "chat", ""];
     }
+
     let ctx = inference_context(third_party);
-    let json_messages = [];
-    let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
-    if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
-        json_messages.push({
-            "role": "system",
-            "content": default_system_prompt,
-        });
-    }
-    for (let i=0; i<messages.length; i++) {
-        json_messages.push({
-            "role": messages[i][0],
-            "content": messages[i][1],
-        });
-    }
+    // TODO: this shouldn't need to be cast to ChatMessages, it'll be removed in an updated
+    // let json_messages = formatMessagesForLsp(messages as ChatMessages);
+    // "refactai.defaultSystemPrompt": {
+    //     "type": "string",
+    //     "markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
+    //     "default": "",
+    //     "order": 8
+    // },
+    // let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
+    // if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
+    //     json_messages.push({
+    //         "role": "system",
+    //         "content": default_system_prompt,
+    //     });
+    // }
+    // for (let i=0; i<messages.length; i++) {
+    //     if(messages[i][0] === "tool") {
+    //         const message = messages[i] as ToolMessage;
+    //         json_messages.push({
+    //             role: message[0],
+    //             content: message[1].content,
+    //             tool_call_id: message[1].tool_call_id
+    //         });
+    //     } else {
+
+    //         const toolCalls = messages[i][0] === "assistant" && messages[i][2] ? {tool_calls: messages[i][2]} : {};
+    //         let content = messages[i][1];
+    //         if(typeof content !== "string" && content !== null) {
+    //             content = JSON.stringify(content);
+    //         }
+    //         json_messages.push({
+    //             "role": messages[i][0],
+    //             "content": content,
+    //             ...toolCalls,
+    //         });
+    //     }
+    // }
+
+    // an empty tools array causes issues
+    const maybeTools = tools && tools.length > 0 ? {tools} : {};
     const body = JSON.stringify({
-        "messages": json_messages,
+        "messages": [], //json_messages,
         "model": model,
         "parameters": {
             "max_new_tokens": 1000,
         },
         "stream": true,
+        ...maybeTools
     });
+
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
     };
+
     let req = new fetchH2.Request(url, {
         method: "POST",
         headers: headers,
@@ -670,7 +705,7 @@ export async function getAtCommandPreview(query: string): Promise<ChatContextFil
       const jsonMessages = json.messages.map<ChatContextFileMessage>(
         ({ role, content }) => {
           const fileData = JSON.parse(content) as ChatContextFile[];
-          return [role, fileData];
+          return { role, content: fileData};
         }
       );
 
@@ -730,4 +765,237 @@ export async function get_prompt_customization(): Promise<CustomPromptsResponse>
 
     return json;
 
+}
+
+export type AstStatus = {
+	files_unparsed: number;
+	files_total: number;
+	ast_index_files_total: number;
+	ast_index_symbols_total: number;
+	state: "starting" | "parsing" | "indexing" | "done";
+};
+
+export interface RagStatus {
+    ast: {
+        files_unparsed: number;
+        files_total: number;
+        ast_index_files_total: number;
+        ast_index_symbols_total: number;
+        state: string;
+        ast_max_files_hit: boolean;
+    } | null;
+    ast_alive: string | null;
+    vecdb: {
+        files_unprocessed: number;
+        files_total: number;
+        requests_made_since_start: number;
+        vectors_made_since_start: number;
+        db_size: number;
+        db_cache_size: number;
+        state: string;
+        vecdb_max_files_hit: boolean;
+    } | null;
+    vecdb_alive: string | null;
+    vec_db_error: string;
+}
+
+async function fetch_rag_status()
+{
+    const url = rust_url("/v1/rag-status");
+    if(!url) {
+        return Promise.reject("rag-status no rust binary working, very strange");
+    }
+
+    const request = new fetchH2.Request(url, {
+        method: "GET",
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    });
+
+    const response = await fetchH2.fetch(request);
+    if (response.status!== 200) {
+      console.log([`${url} http status`, response.status]);
+      return Promise.reject(`rag status bad status ${response.status}:[${response.statusText}]`);
+    }
+
+    const json = await response.json();
+    return json;
+}
+
+let ragstat_timeout: NodeJS.Timeout | undefined;
+
+export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = global.status_bar)
+{
+    if (ragstat_timeout) {
+        clearTimeout(ragstat_timeout);
+        ragstat_timeout = undefined;
+    }
+
+    fetch_rag_status()
+        .then((res: RagStatus) => {
+            if (res.ast && res.ast.ast_max_files_hit) {
+                statusbar.ast_status_limit_reached();
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+                return;
+            }
+
+            if (res.vecdb && res.vecdb.vecdb_max_files_hit) {
+                statusbar.vecdb_status_limit_reached();
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+                return;
+            }
+
+            statusbar.ast_limit_hit = false;
+            statusbar.vecdb_limit_hit = false;
+
+            if (res.vec_db_error !== '') {
+                statusbar.vecdb_error(res.vec_db_error);
+            }
+
+            if ((res.ast && ["starting", "parsing", "indexing"].includes(res.ast.state)) ||
+                (res.vecdb && ["starting", "parsing"].includes(res.vecdb.state)))
+            {
+                console.log("ast or vecdb is still indexing");
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 700);
+            } else {
+                console.log("ast and vecdb status complete, slowdown poll");
+                statusbar.statusbar_spinner(false);
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+            }
+            statusbar.update_rag_status(res);
+        })
+        .catch((err) => {
+            console.log("fetch_rag_status", err);
+            ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+        });
+}
+
+type AtParamDict = {
+    name: string;
+    type: string;
+    description: string;
+};
+
+type AtToolFunction = {
+    name: string;
+    description: string;
+    parameters: AtParamDict[];
+    parameters_required: string[];
+};
+
+type AtToolCommand = {
+    function: AtToolFunction;
+    type: "function";
+};
+
+type AtToolResponse = AtToolCommand[];
+
+export async function get_tools(notes: boolean = false): Promise<AtToolResponse> {
+    const url = rust_url("/v1/tools");
+
+    if (!url) {
+        return Promise.reject("unable to get tools url");
+    }
+	const request = new fetchH2.Request(url, {
+        method: "GET",
+        redirect: "follow",
+		cache: "no-cache",
+		referrer: "no-referrer",
+    });
+
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["tools response http status", response.status]);
+
+        // return Promise.reject("unable to get available tools");
+        return [];
+    }
+
+    const json: AtToolResponse = await response.json();
+
+    const tools = notes ?
+        json.filter((tool) => tool.function.name === "note_to_self") :
+        json.filter((tool) => tool.function.name !== "note_to_self");
+
+    return tools;
+}
+
+export async function get_diff_state(chunks: DiffChunk[]): Promise<DiffAppliedStateResponse> {
+    const url = rust_url("/v1/diff-state");
+
+    if (!url) {
+        return Promise.reject("unable to get applied diffs url");
+    }
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        body: JSON.stringify({ chunks }),
+    });
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["applied-diffs response http status", response.status]);
+        return Promise.reject("unable to get applied diffs");
+
+    }
+
+    const json: DiffAppliedStateResponse = await response.json();
+
+    return json;
+}
+
+export async function send_chunks_to_diff_apply(chunks: DiffChunk[], to_apply: boolean[]): Promise<DiffOperationResponse> {
+    const url = rust_url("/v1/diff-apply");
+
+    if (!url) {
+        return Promise.reject("unable to get applied diffs url");
+    }
+
+    const request = new fetchH2.Request(url, {
+        method: "POST",
+        body: JSON.stringify({ chunks, apply: to_apply }),
+    });
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["applied-diffs response http status", response.status]);
+        return Promise.reject("unable to apply applied diffs");
+    }
+
+    const json: DiffOperationResponse = await response.json();
+
+    return json;
+}
+
+export async function lsp_set_active_document(editor: vscode.TextEditor)
+{
+    let url = rust_url("/v1/lsp-set-active-document");
+    if (url) {
+        const post = JSON.stringify({
+            "uri": editor.document.uri.toString(),
+        });
+        const headers = {
+            "Content-Type": "application/json",
+        };
+        let req = new fetchH2.Request(url, {
+            method: "POST",
+            headers: headers,
+            body: post,
+            redirect: "follow",
+            cache: "no-cache",
+            referrer: "no-referrer"
+        });
+        fetchH2.fetch(req).then((response) => {
+            if (!response.ok) {
+                console.log(["lsp-set-active-document failed", response.status, response.statusText]);
+            } else {
+                console.log(["lsp-set-active-document success", response.status]);
+            }
+        });
+    }
 }
