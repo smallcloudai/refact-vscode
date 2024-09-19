@@ -151,7 +151,7 @@
 				},
 				"refactai.ast": {
 					"type": "boolean",
-					"markdownDescription": "Enable context-aware code completion and chat, adds defintion() and references() functions for a chat model, and @definition, @references commands for you to add context manually.\n\nRAG works better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) nand [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"markdownDescription": "Enable context-aware code completion and chat, adds defintion() and references() functions for a chat model, and @definition, @references commands for you to add context manually.\n\nRAG works better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
 					"default": true,
 					"order": 8
 				},
