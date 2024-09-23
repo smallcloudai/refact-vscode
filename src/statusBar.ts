@@ -294,14 +294,14 @@ export async function send_network_problems_to_status_bar(
     } else {
         global.last_positive_result = Date.now();
     }
-    if (invalid_session || conn_refused) {
-        userLogin.inference_login_force_retry();
-        console.log(["INVALID_SESSION, ECONNREFUSED => inference_login_force_retry"]);
-    }
-    if (timedout) {
-        userLogin.inference_login_force_retry();
-        // console.log(["ETIMEDOUT => disconnectAll"]);
-    }
+    // if (invalid_session || conn_refused) {
+    //     userLogin.inference_login_force_retry();
+    //     console.log(["INVALID_SESSION, ECONNREFUSED => inference_login_force_retry"]);
+    // }
+    // if (timedout) {
+    //     userLogin.inference_login_force_retry();
+    //     // console.log(["ETIMEDOUT => disconnectAll"]);
+    // }
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";
     }
