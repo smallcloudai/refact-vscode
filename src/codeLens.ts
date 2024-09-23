@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as estate from "./estate";
+import * as fetchH2 from 'fetch-h2';
+import * as fetchAPI from "./fetchAPI";
 
 
 class ExperimentalLens extends vscode.CodeLens {
@@ -8,19 +10,13 @@ class ExperimentalLens extends vscode.CodeLens {
         range: vscode.Range,
         msg: string,
         arg0: string,
+        arg1: string,
     ) {
-        if (arg0.length > 0) {
-            super(range, {
-                title: msg,
-                command: 'refactaicmd.codeLensClicked',
-                arguments: [arg0]
-            });
-        } else {
-            super(range, {
-                title: msg,
-                command: ''
-            });
-        }
+        super(range, {
+            title: msg,
+            command: 'refactaicmd.codeLensClicked',
+            arguments: [arg0, arg1]
+        });
     }
 }
 
@@ -44,25 +40,46 @@ export class LensProvider implements vscode.CodeLensProvider
         if (!state) {
             return [];
         }
+
+        let customization = await fetchAPI.get_prompt_customization();
+
+        const url = fetchAPI.rust_url("/v1/code-lens");
+        const request = new fetchH2.Request(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ uri: document.uri.toString() }),
+        });
+
+        const response = await fetchH2.fetch(request);
         let lenses: vscode.CodeLens[] = [];
-        // console.log(["see code_lens_pos", state.diff_lens_pos]);
+        if (response.status !== 200) {
+            console.log([`${url} http status`, response.status]);
+        } else if ("code_lens" in customization) {
+            const custom_code_lens = customization["code_lens"] as { [key: string]: any };
+            const this_file_lens = await response.json();
+            if ("detail" in this_file_lens) {
+                console.log(["/v1/code-lens error", this_file_lens["detail"]]);
+            }
+            if ("code_lens" in this_file_lens) {
+                for (let item of this_file_lens["code_lens"]) {
+                    let range = new vscode.Range(item["line1"] - 1, 0, item["line2"] - 1, 0);
+                    for (const [key, lensdict] of Object.entries(custom_code_lens)) {
+                        lenses.push(new ExperimentalLens(range, lensdict["label"], `"CUSTOMLENS:${key}`, item["spath"]));
+                    }
+                }
+            }
+        }
+
         if (state.diff_lens_pos < document.lineCount) {
             let range = new vscode.Range(state.diff_lens_pos, 0, state.diff_lens_pos, 0);
-            lenses.push(new ExperimentalLens(range, "👍 Approve (Tab)", "APPROVE"));
-            lenses.push(new ExperimentalLens(range, "👎 Reject (Esc)", "REJECT"));
+            lenses.push(new ExperimentalLens(range, "👍 Approve (Tab)", "APPROVE", ""));
+            lenses.push(new ExperimentalLens(range, "👎 Reject (Esc)", "REJECT", ""));
             // lenses.push(new ExperimentalLens(range, "↻ Rerun \"" + estate.global_intent + "\" (F1)", "RERUN"));  // 🔃
-            // lenses.push(new ExperimentalLens(range, "🐶 Teach", "TEACH"));
         }
-        if (global.enable_longthink_completion && state.completion_lens_pos < document.lineCount) {
-            let range = new vscode.Range(state.completion_lens_pos, 0, state.completion_lens_pos, 0);
-            lenses.push(new ExperimentalLens(range, "👍 Accept (Tab)", "COMP_APPROVE"));
-            lenses.push(new ExperimentalLens(range, "👎 Reject (Esc)", "COMP_REJECT"));
-            lenses.push(new ExperimentalLens(range, "🤔 Think Longer (F1)", "COMP_THINK_LONGER"));
-            // lenses.push(new ExperimentalLens(range, "↻ Retry (F1)", "COMPLETION_RETRY"));
-            state.completion_reset_on_cursor_movement = true;
-        } else {
-            state.completion_reset_on_cursor_movement = false;
-        }
+
+        state.completion_reset_on_cursor_movement = false;
         return lenses;
     }
 }
