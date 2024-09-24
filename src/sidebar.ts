@@ -701,6 +701,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         const initialState = await this.createInitialState(chat_thread, tabbed);
+        let stringifiedInitialState = JSON.stringify(initialState);
+        stringifiedInitialState = stringifiedInitialState.replace("</script>", "</scr\"+\"ipt>");
 
         return `<!DOCTYPE html>
             <html lang="en" class="light">
@@ -724,7 +726,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div id="refact-chat"></div>
 
                 <script nonce="${nonce}">
-                const initialState = ${JSON.stringify(initialState)};
+                const initialState = ${stringifiedInitialState};
                 window.__INITIAL_STATE__ = initialState;
                 window.onload = function() {
                     const root = document.getElementById("refact-chat");
