@@ -24,6 +24,7 @@ import { open_chat_tab } from "./sidebar";
 import { fileURLToPath } from 'url';
 import { ChatTab } from './chatTab';
 import { FimDebugData } from 'refact-chat-js/dist/events/index.js';
+import { code_lens_execute } from './codeLens';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -146,7 +147,7 @@ async function pressed_tab()
 }
 
 
-async function code_lens_clicked(arg0: any)
+async function code_lens_clicked(arg0: any, arg1: any, range: vscode.Range)
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
@@ -175,7 +176,12 @@ async function code_lens_clicked(arg0: any)
         //     await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
         //     await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         } else {
-            console.log(["code_lens_clicked: can't do", arg0]);
+            // check if arg0 is started with 'CUSTOMLENS:'
+            if (arg0.startsWith('CUSTOMLENS:')) {
+                let custom_lens_name = arg0.substring("CUSTOMLENS:".length);
+                code_lens_execute(custom_lens_name, range);
+            }
+            // console.log(["code_lens_clicked: can't do", arg0]);
         }
     }
 }
