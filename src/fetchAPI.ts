@@ -649,92 +649,6 @@ export async function get_caps(): Promise<CapsResponse> {
   return json as CapsResponse;
 }
 
-export async function getAtCommands(query: string, cursor: number, amount: number): Promise<CommandCompletionResponse> {
-    const url = rust_url("/v1/at-command-completion");
-
-    const request = new fetchH2.Request(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query, cursor, top_n: amount }),
-    });
-
-    const response = await fetchH2.fetch(request);
-    if (response.status!== 200) {
-      console.log([`${url} http status`, response.status]);
-      return Promise.reject("get At Commands bad status");
-    }
-
-    const json = await response.json();
-
-    if("detail" in json) {
-        throw new Error("Command completion error: " + json.detail);
-    }
-
-    return json as CommandCompletionResponse;
-}
-
-export async function getAtCommandPreview(query: string): Promise<ChatContextFileMessage[]> {
-    const url = rust_url("/v1/at-command-preview");
-
-    const request = new fetchH2.Request(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({query})
-    });
-
-    const response = await fetchH2.fetch(request);
-
-    if (response.status!== 200) {
-      console.log([`${url} http status`, response.status]);
-      return Promise.reject("get at command preview bad status");
-    }
-
-    const json = await response.json();
-
-      if (!isCommandPreviewResponse(json) && !isDetailMessage(json)) {
-        throw new Error("Invalid response from command preview");
-      }
-      if (isDetailMessage(json)) {
-        return [];
-      }
-
-      const jsonMessages = json.messages.map<ChatContextFileMessage>(
-        ({ role, content }) => {
-          const fileData = JSON.parse(content) as ChatContextFile[];
-          return { role, content: fileData};
-        }
-      );
-
-      return jsonMessages;
-}
-
-export async function get_statistic_data(): Promise<{ data: string }> {
-    let url = rust_url("/v1/get-dashboard-plots");
-
-    if (!url) {
-      return Promise.reject("get-dashboard-plots doesn't work");
-    }
-    let req = new fetchH2.Request(url, {
-      method: "GET",
-      redirect: "follow",
-      cache: "no-cache",
-      referrer: "no-referrer",
-    });
-
-    let resp = await fetchH2.fetch(req);
-    if (resp.status !== 200) {
-        console.log(["get_dashboard_plots http status", resp.status]);
-        return Promise.reject("get_dashboard_plots");
-      }
-    let json = await resp.json();
-    console.log(["successful get_dashboard_plots", json]);
-    return json;
-  }
-
 export async function get_prompt_customization(): Promise<CustomPromptsResponse> {
     const url = rust_url("/v1/customization");
 
@@ -758,13 +672,7 @@ export async function get_prompt_customization(): Promise<CustomPromptsResponse>
 
     const json = await response.json();
 
-    if(!isCustomPromptsResponse(json)) {
-        console.log(["get_prompt_customization invalid json", json]);
-        return Promise.reject("unable to get prompt customization: data invalid");
-    }
-
     return json;
-
 }
 
 export type AstStatus = {
@@ -813,14 +721,23 @@ async function fetch_rag_status()
         referrer: "no-referrer",
     });
 
-    const response = await fetchH2.fetch(request);
-    if (response.status!== 200) {
-      console.log([`${url} http status`, response.status]);
-      return Promise.reject(`rag status bad status ${response.status}:[${response.statusText}]`);
+    try {
+        const response = await fetchH2.fetch(request);
+        if (response.status !== 200) {
+            console.log(["rag-status http status", response.status]);
+        }
+        const json = await response.json();
+        return json;
+    } catch (e) {
+        statusBar.send_network_problems_to_status_bar(
+            false,
+            "rag-status",
+            url,
+            e,
+            undefined
+        );
     }
-
-    const json = await response.json();
-    return json;
+    return Promise.reject("rag-status bad status");
 }
 
 let ragstat_timeout: NodeJS.Timeout | undefined;
