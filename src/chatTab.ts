@@ -1,10 +1,8 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as fetchAPI from "./fetchAPI";
 import * as crlf from "./crlf";
 import * as estate from "./estate";
-import ChatHistoryProvider, { OldChat } from "./chatHistory";
 import { basename } from "path";
 
 const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdiff/
@@ -20,7 +18,7 @@ import {
 	// type ReceiveAtCommandCompletion,
 	// type ReceiveAtCommandPreview,
 	type Snippet,
-	type ChatContextFile,
+	// type ChatContextFile,
 	// type ToggleActiveFile,
 	// type RestoreChat,
 	// type ActiveFileInfo,
@@ -32,7 +30,7 @@ import {
 	// type ReceivePromptsError,
 	// type ReceivePrompts,
 	// type RequestPreviewFiles,
-    type ChatMessage,
+    // type ChatMessage,
     // type SetChatModel,
     // RequestTools,
     ToolCommand,
@@ -109,7 +107,6 @@ export class ChatTab {
 
     public constructor(
         public web_panel: vscode.WebviewPanel | vscode.WebviewView,
-        public chatHistoryProvider: ChatHistoryProvider,
         public chat_id = ""
     ) {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -120,7 +117,7 @@ export class ChatTab {
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
           this.postActiveFileInfo();
           this.sendSnippetToChat();
-        })); 
+        }));
 
         this._disposables.push(vscode.window.onDidChangeTextEditorSelection(() => {
           this.postActiveFileInfo();
@@ -150,12 +147,8 @@ export class ChatTab {
         global.open_chat_tabs = otherTabs;
     }
 
-    async getHistory(): Promise<OldChat | undefined> {
-        return this.chatHistoryProvider.lookup_chat(this.chat_id);
-    }
-
     async saveToSideBar() {
-        const history = await this.getHistory();
+        // const history = await this.getHistory();
         // if(this.messages.length > 0) {
         //   this.chatHistoryProvider.save_messages_list(
         //     this.chat_id,
@@ -169,56 +162,56 @@ export class ChatTab {
           global.side_panel?.goto_main();
         }
     }
-// here
-    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string, append_snippet_to_input: boolean) {
 
-        const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
+    // static async open_chat_in_new_tab(chat_id: string, extensionUri: string, append_snippet_to_input: boolean)
+    // {
+    //     const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
 
-        const history = {
-            chat_id: "",
-            chatModel: "",
-            messages: [],
-            chat_title: "",
-            ...(savedHistory || {})
-        };
+    //     const history = {
+    //         chat_id: "",
+    //         chatModel: "",
+    //         messages: [],
+    //         chat_title: "",
+    //         ...(savedHistory || {})
+    //     };
 
-        const {
-            chatModel,
-            messages,
-            chat_title
-        } = history;
+    //     const {
+    //         chatModel,
+    //         messages,
+    //         chat_title
+    //     } = history;
 
 
-        const panel = vscode.window.createWebviewPanel(
-            "refact-chat-tab",
-            truncate(`Refact.ai ${chat_title}`, 24),
-            vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-            }
-        );
+    //     const panel = vscode.window.createWebviewPanel(
+    //         "refact-chat-tab",
+    //         truncate(`Refact.ai ${chat_title}`, 24),
+    //         vscode.ViewColumn.One,
+    //         {
+    //             enableScripts: true,
+    //             retainContextWhenHidden: true,
+    //         }
+    //     );
 
-        const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
+    //     const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
 
-        if (global.open_chat_tabs === undefined) {
-            // TODO: find out how this gets unset :/
-            global.open_chat_tabs = [tab];
-        } else {
-            global.open_chat_tabs.push(tab);
-        }
+    //     if (global.open_chat_tabs === undefined) {
+    //         // TODO: find out how this gets unset :/
+    //         global.open_chat_tabs = [tab];
+    //     } else {
+    //         global.open_chat_tabs.push(tab);
+    //     }
 
-        panel.onDidDispose(async () => {
-            await tab.saveToSideBar();
-            tab.dispose();
-        });
+    //     panel.onDidDispose(async () => {
+    //         await tab.saveToSideBar();
+    //         tab.dispose();
+    //     });
 
-        panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
+    //     panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
 
-        panel.webview.onDidReceiveMessage(tab.handleEvents);
+    //     panel.webview.onDidReceiveMessage(tab.handleEvents);
 
-        // await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
-    }
+    //     // await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
+    // }
 
     async restoreChat(chat: {
         id: string;
@@ -627,7 +620,7 @@ export class ChatTab {
             // case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_APPLIED_CHUNKS: {
             //     const action: RequestDiffAppliedChunks = data;
             //     return this.handleAppliedChunksRequest(action.payload.id, action.payload.diff_id, action.payload.chunks);
-            
+
             // }
 
             // case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_OPPERATION: {
@@ -760,85 +753,42 @@ export class ChatTab {
         // });
     }
 
-    async handleSendToSideBar() {
-        await vscode.commands.executeCommand("refactai-toolbox.focus");
+    // async handleSendToSideBar() {
+    //     await vscode.commands.executeCommand("refactai-toolbox.focus");
 
-        let editor = vscode.window.activeTextEditor;
-        const history = await this.getHistory();
+    //     let editor = vscode.window.activeTextEditor;
+    //     const history = await this.getHistory();
 
-        // if(!history) {
-        //     await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
-        // }
+    //     // if(!history) {
+    //     //     await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
+    //     // }
 
-        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+    //     await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
 
-        await open_chat_tab(
-            history?.chat_title || "",
-            editor,
-            false,
-            history?.chatModel || "",
-            this.messages,
-            this.chat_id,
-        );
-    }
+    //     await open_chat_tab(
+    //         history?.chat_title || "",
+    //         editor,
+    //         false,
+    //         history?.chatModel || "",
+    //         this.messages,
+    //         this.chat_id,
+    //     );
+    // }
 
-    private async handleDiffPasteBack(data: {code_block: string}) {
-		if (!this.working_on_snippet_editor) {
-			return;
-		}
-		await vscode.window.showTextDocument(
-			this.working_on_snippet_editor.document,
-			this.working_on_snippet_column
-		);
-		let state = estate.state_of_document(
-			this.working_on_snippet_editor.document
-		);
-		if (!state) {
-			return;
-		}
-		if (!this.working_on_snippet_range) {
-			const range = this.working_on_snippet_editor.selection;
-			const snippet = new vscode.SnippetString(data.code_block);
-			vscode.window.activeTextEditor?.insertSnippet(snippet, range);
-			return;
-		};
+    // private handleStopClicked() {
+    //     return this.cancellationTokenSource.cancel();
+    // }
 
-        // indent block
-        const startOfLine = new vscode.Position(this.working_on_snippet_range.start.line, 0);
-        const endOfLine = new vscode.Position(this.working_on_snippet_range.start.line + 1, 0);
-        const firstLineRange = new vscode.Range(startOfLine, endOfLine);
-        const spaceRegex = /^[ \t]+/;
-        const selectedLine = this.working_on_snippet_editor.document.getText(
-            firstLineRange
-        );
-        const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
-        const needsNewLine = data.code_block.endsWith("\n") === false;
-        const indentedCode = (indent + data.code_block).replace(/\n/gm, "\n" + indent) + (needsNewLine ? "\n" : "");
-
-        const range = new vscode.Range(startOfLine, this.working_on_snippet_range.end);
-
-		return diff_paste_back(
-            this.working_on_snippet_editor.document,
-            range,
-            indentedCode
-        );
-
-	}
-
-    private handleStopClicked() {
-        return this.cancellationTokenSource.cancel();
-    }
-
-    private async handleOpenNewFile(value: string) {
-        vscode.workspace.openTextDocument().then((document) => {
-            vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
-                .then((editor) => {
-                    editor.edit((editBuilder) => {
-                        editBuilder.insert(new vscode.Position(0, 0), value);
-                    });
-                });
-        });
-    }
+    // private async handleOpenNewFile(value: string) {
+    //     vscode.workspace.openTextDocument().then((document) => {
+    //         vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+    //             .then((editor) => {
+    //                 editor.edit((editBuilder) => {
+    //                     editBuilder.insert(new vscode.Position(0, 0), value);
+    //                 });
+    //             });
+    //     });
+    // }
 
     public static async clear_and_repopulate_chat(
         question: string,
@@ -1072,10 +1022,10 @@ export function backquote_backquote_backquote_remove_language_spec(code: string)
         let char = code[i];
         if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
             i++;
-        } 
+        }
         else if (char === '\n') {
             return code.substring(i + 1);
-        } 
+        }
         else {
             break;
         }

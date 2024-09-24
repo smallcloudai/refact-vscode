@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as estate from "./estate";
-import * as storeVersions from "./storeVersions";
-import * as privacy from "./privacy";
 import * as fetchAPI from "./fetchAPI";
 import * as fetchH2 from 'fetch-h2';
 import { FimDebugData, fim } from 'refact-chat-js/dist/events';
@@ -17,7 +15,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         cancelToken: vscode.CancellationToken
     )
     {
-
         if(document.uri.scheme === "comment") {
             return [];
         }
@@ -27,10 +24,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             if (state.get_mode() !== estate.Mode.Normal && state.get_mode() !== estate.Mode.Highlight) {
                 return [];
             }
-        }
-        let access_level = await privacy.get_file_access(document.fileName);
-        if (access_level < 1) {
-            return [];
         }
         let pause_completion = vscode.workspace.getConfiguration().get('refactai.pauseCompletion');
         if (pause_completion && context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic) {
@@ -51,7 +44,7 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             return [];
         }
 
-        let debounce_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
+        // let debounce_if_not_cached = context.triggerKind === vscode.InlineCompletionTriggerKind.Automatic;
         let called_manually = context.triggerKind === vscode.InlineCompletionTriggerKind.Invoke;
 
         let completion = "";
@@ -71,7 +64,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             whole_doc,
             position.line,
             corrected_cursor_character,
-            debounce_if_not_cached,
             multiline,
             called_manually,
         );
@@ -100,49 +92,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         return [completionItem];
     }
 
-    // public cache: Map<string, CacheEntry> = new Map();  // LRUCache?
-    // public slowdown_rapidfire_ts = 0;
-    // public slowdown_rapidfire_count = 0;
-    // public slowdown_sustained_ts = 0;
-    // public slowdown_sustained_count = 0;
-
-    // async slowdown(cancelToken: vscode.CancellationToken): Promise<boolean>
-    // {
-    //     const ALLOWED_RATE_RAPIDFIRE = 2.0;
-    //     const ALLOWED_RATE_SUSTAINED = 1.0;  // requests per second
-    //     while (1) {
-    //         await fetch.wait_until_all_requests_finished();
-    //         if (cancelToken.isCancellationRequested) {
-    //             return true;
-    //         }
-    //         let now = Date.now();
-    //         let rapid_rate = this.slowdown_rapidfire_count / ((now - this.slowdown_rapidfire_ts) / 1000.0);
-    //         let sustained_rate = this.slowdown_sustained_count / ((now - this.slowdown_sustained_ts) / 1000.0);
-    //         if (rapid_rate > ALLOWED_RATE_RAPIDFIRE || sustained_rate > ALLOWED_RATE_SUSTAINED) {
-    //             // console.log("slowdown, rapid=" + rapid_rate + ", sustained=" + sustained_rate);
-    //             let sleep = 100;
-    //             await new Promise(resolve => setTimeout(resolve, sleep));
-    //         } else {
-    //             // console.log("go ahead, rapid=" + rapid_rate + ", sustained=" + sustained_rate);
-    //             break;
-    //         }
-    //     }
-    //     let now = Date.now();
-    //     if (now - this.slowdown_rapidfire_ts > 500) {
-    //         // 2*0.5=1 request in 0.5 seconds -- it's there to prevent a wi-fi lag from forming a pile of requests
-    //         this.slowdown_rapidfire_ts = now;
-    //         this.slowdown_rapidfire_count = 0;
-    //     }
-    //     if (now - this.slowdown_sustained_ts > 20000) {
-    //         // reset every 20 seconds
-    //         this.slowdown_sustained_ts = now;
-    //         this.slowdown_sustained_count = 0;
-    //     }
-    //     this.slowdown_rapidfire_count += 1;
-    //     this.slowdown_sustained_count += 1;
-    //     return false;
-    // }
-
     private called_manually_count: number = 0;
 
     async cached_request(
@@ -151,7 +100,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         whole_doc: string,
         cursor_line: number,
         cursor_character: number,
-        debounce_if_not_cached: boolean,
         multiline: boolean,
         called_manually: boolean
     ): Promise<[string, number]>
@@ -159,10 +107,6 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
         if (!global.have_caps) {
             await global.rust_binary_blob?.read_caps();
         }
-        // if (debounce_if_not_cached) {
-        //     let drop = await this.slowdown(cancelToken);
-        //     if (drop) { return ["", -1]; }
-        // }
         if (cancelToken.isCancellationRequested) {
             return ["", -1];
         }

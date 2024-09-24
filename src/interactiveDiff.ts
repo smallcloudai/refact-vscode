@@ -7,7 +7,6 @@ import * as storeVersions from './storeVersions';
 import * as estate from './estate';
 import * as codeLens from "./codeLens";
 import * as crlf from "./crlf";
-import * as privacy from "./privacy";
 
 
 let global_nav_counter: number = 0;
