@@ -601,8 +601,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 	}
 
     private async handleDiffPreview(response: DiffPreviewResponse) {
-        const editor = vscode.window.activeTextEditor;
-        if(!editor) { return; }
+
+        // TODO:  Won't work if no file is open :/
+        // const editor = vscode.window.activeTextEditor;
+        // if(!editor) { return; }
 
         for (const change of response.results) {
             if (change.file_name_edit !== null && change.file_text !== null) {
@@ -618,6 +620,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     range,
                     change.file_text
                 );
+            } else if(change.file_name_add !== null && change.file_text!== null) {
+                const newFile = vscode.Uri.parse('untitled:' + change.file_name_add);
+                vscode.workspace.openTextDocument(newFile).then(document => {
+                    const edit = new vscode.WorkspaceEdit();
+                    edit.insert(newFile, new vscode.Position(0, 0), change.file_text);
+                    return vscode.workspace.applyEdit(edit).then(success => {
+                        if (success) {
+                            vscode.window.showTextDocument(document);
+                        } else {
+                            vscode.window.showInformationMessage('Error: creating file ' + change.file_name_add);
+                        }
+                    });
+                });
             }
         }
 	}
