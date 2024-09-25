@@ -244,7 +244,7 @@ export function activate(context: vscode.ExtensionContext)
     );
     context.subscriptions.push(quickProvider);
 
-    for (const action of QuickActionProvider.actions) {
+    for (const action of QuickActionProvider.actions_static_list) {
         context.subscriptions.push(
           vscode.commands.registerCommand(
             `refactcmd.${action.id}`,
