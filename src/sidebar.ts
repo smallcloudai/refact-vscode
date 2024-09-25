@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as userLogin from "./userLogin";
 import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
-import * as fimDebug from './fimDebug';
-import { get_caps } from "./fetchAPI";
-import ChatHistoryProvider, {convert_old_chat_to_new_chat} from "./chatHistory";
-import type { OldChat } from "./chatHistory";
 import { v4 as uuidv4 } from "uuid";
 import { getKeyBindingForChat } from "./getKeybindings";
 import {
@@ -14,10 +9,6 @@ import {
     fim,
     isLogOut,
     isOpenExternalUrl,
-    // type FileInfo,
-    // setFileInfo,
-    // type Snippet,
-    // setSelectedSnippet,
     updateConfig,
     isSetupHost,
     type FileInfo,
@@ -73,33 +64,6 @@ export async function open_chat_tab(
     return;
 }
 
-export async function open_statistic_tab(): Promise<statisticTab.StatisticTab|undefined> {
-    if (global.side_panel && global.side_panel._view) {
-        let stat = global.side_panel.new_statistic(global.side_panel._view);
-
-        let context: vscode.ExtensionContext | undefined = global.global_context;
-        if (!context) {
-            return;
-        }
-        global.side_panel.goto_statistic(stat);  // changes html
-    }
-    return;
-}
-
-export async function open_fim_debug(): Promise<void> {
-    if (global.side_panel && global.side_panel._view) {
-        let fim = global.side_panel.new_fim_debug(global.side_panel._view);
-
-        let context: vscode.ExtensionContext | undefined = global.global_context;
-        if (!context) {
-            return;
-        }
-
-        global.side_panel.goto_fim(fim);
-    }
-    return;
-}
-
 export class PanelWebview implements vscode.WebviewViewProvider {
     _view?: vscode.WebviewView;
     _history: string[] = [];
@@ -110,15 +74,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public chat: chatTab.ChatTab | null = null;
     public statistic: statisticTab.StatisticTab | null = null;
-    public fim_debug: fimDebug.FimDebug | null = null;
-    public chatHistoryProvider: ChatHistoryProvider|undefined;
+    // public fim_debug: fimDebug.FimDebug | null = null;
+    // public chatHistoryProvider: ChatHistoryProvider|undefined;
 
     _disposables: vscode.Disposable[] = [];
 
     public static readonly viewType = "refactai-toolbox";
 
     constructor(private readonly context: vscode.ExtensionContext) {
-        this.chatHistoryProvider = undefined;
+        // this.chatHistoryProvider = undefined;
         this.address = "";
         this.js2ts_message = this.js2ts_message.bind(this);
 
@@ -263,37 +227,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view?.webview.postMessage(message);
     }
 
-    // This can go
-    public make_sure_have_chat_history_provider()
-    {
-        if (!this.chatHistoryProvider) {
-            this.chatHistoryProvider = new ChatHistoryProvider(
-                this.context,
-            );
-        }
-        return this.chatHistoryProvider;
-    }
-
-    // This can be deleted
-    public new_chat(view: vscode.WebviewView, chat_id: string)
-    {
-        if (chat_id === "" || chat_id === undefined) {
-            chat_id = uuidv4();
-        }
-        this.chat = new chatTab.ChatTab(view, this.make_sure_have_chat_history_provider(), chat_id);
-        this.address = chat_id;
-        return this.chat;
-    }
-
     public new_statistic(view: vscode.WebviewView)
     {
         this.statistic = new statisticTab.StatisticTab(view);
         return this.statistic;
-    }
-
-    public new_fim_debug(view: vscode.WebviewView) {
-        this.fim_debug = new fimDebug.FimDebug(view);
-        return this.fim_debug;
     }
 
     public resolveWebviewView(
@@ -309,9 +246,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             localResourceRoots: [this.context.extensionUri],
         };
         webviewView.onDidChangeVisibility(() => {
-            if (webviewView.visible) {
-                this.update_webview();
-            }
+            // do nothing
         });
 
         this.goto_main();
@@ -332,13 +267,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return;
         }
         this._view.webview.html = await this.html_main_screen(this._view.webview);
-        this.update_webview();
     }
 
     // can change this to
     public async goto_chat(chat_thread?: ChatThread)
     {
-
         // this.html_main_screen(this._view.webview);
         // this.address = chat.chat_id;
         if (!this._view) {
@@ -361,38 +294,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view?.webview.postMessage(message);
     }
 
-    public goto_statistic(statistic: statisticTab.StatisticTab)
-    {
-        if (!this._view) {
-            return;
-        }
-        this._view.webview.html = statistic.get_html_for_statistic(
-            this._view.webview,
-            this.context.extensionUri,
-        );
-        this.update_webview();
-    }
-
-    public goto_fim(fim: fimDebug.FimDebug) {
-        if (!this._view) { return; }
-        this._view.webview.html = fim.get_html(
-            this._view.webview,
-            this.context.extensionUri
-        );
-        this.update_webview();
-    }
-
-    public update_chat_history()
-    {
-        const history = this.make_sure_have_chat_history_provider().chats_sorted_by_time();
-        if (this._view) {
-            this._view.webview.postMessage({
-                command: "loadHistory",
-                history: history,
-            });
-        }
-    }
-
     public async delete_old_settings()
     {
         await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
@@ -413,169 +314,100 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         // console.log(`RECEIVED JS2TS: ${JSON.stringify(data)}`);
         switch (data.type) {
         // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB:
-        case "open_chat_in_new_tab": {
-            const chat_id = data?.chat_id || this.chat?.chat_id;
-            // const chat_id = data.payload.id;
-            if(!chat_id || typeof chat_id !== "string") {return; }
-            if(!this.chatHistoryProvider) { return; }
+        // case "open_chat_in_new_tab": {
+        //     const chat_id = data?.chat_id || this.chat?.chat_id;
+        //     // const chat_id = data.payload.id;
+        //     if(!chat_id || typeof chat_id !== "string") {return; }
+        //     if(!this.chatHistoryProvider) { return; }
 
-            const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
-            if(openTab) {
-                return openTab.focus();
-            }
-            // is extensionUri defined anywhere?
-            await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this.context.extensionUri.toString(), true);
-            this.chat = null;
-            return this.goto_main();
-        }
-        case "focus_back_to_editor": {
-            vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
-            break;
-        }
+        //     const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
+        //     if(openTab) {
+        //         return openTab.focus();
+        //     }
+        //     // is extensionUri defined anywhere?
+        //     await chatTab.ChatTab.open_chat_in_new_tab(this.chatHistoryProvider, chat_id, this.context.extensionUri.toString(), true);
+        //     this.chat = null;
+        //     return this.goto_main();
+        // }
 
-        case "open_new_chat": {
-            let question = data.question;
-            if (!question) {
-                question = "";
-            }
-            let editor = vscode.window.activeTextEditor;
-            let attach_default = !!vscode.window.activeTextEditor;
-            await open_chat_tab(
-                question,
-                editor,
-                attach_default,
-                data.chat_model,
-                [],      // messages
-                "",      // chat id
-                true,
-            );
-            break;
-        }
-        case "open_statistic": {
-            await open_statistic_tab();
-            break;
-        }
-        case "delete_chat": {
-            const chat_id = data.chat_id;
-            await this.make_sure_have_chat_history_provider().delete_chat(chat_id);
-            break;
-        }
-        case "button_hf_open_tokens": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
-            break;
-        }
-        case "privacy": {
-            vscode.commands.executeCommand("refactaicmd.privacySettings");
-            break;
-        }
-        case "js2ts_report_bug": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://github.com/smallcloudai/refact-vscode/issues`));
-            break;
-        }
-        case "js2ts_discord": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://www.smallcloud.ai/discord`));
-            break;
-        }
-        case "js2ts_logout": {
-            vscode.commands.executeCommand("refactaicmd.logout");
-            break;
-        }
-        case "js2ts_goto_profile": {
-            vscode.env.openExternal(vscode.Uri.parse(`https://refact.smallcloud.ai/account?utm_source=plugin&utm_medium=vscode&utm_campaign=account`));
-            break;
-        }
-        case "js2ts_refresh_login": {
-            userLogin.inference_login_force_retry();
-            await userLogin.inference_login();
-            break;
-        }
+        // case "focus_back_to_editor": {
+        //     vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+        //     break;
+        // }
+
+        // case "delete_chat": {
+        //     const chat_id = data.chat_id;
+        //     await this.make_sure_have_chat_history_provider().delete_chat(chat_id);
+        //     break;
+        // }
+        // case "button_hf_open_tokens": {
+        //     vscode.env.openExternal(vscode.Uri.parse(`https://huggingface.co/settings/tokens`));
+        //     break;
+        // }
+        // case "privacy": {
+        //     vscode.commands.executeCommand("refactaicmd.privacySettings");
+        //     break;
+        // }
         case "openSettings": {
             vscode.commands.executeCommand("refactaicmd.openSettings");
             break;
         }
-        case "openKeys": {
-            vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "Refact.ai");
-            break;
-        }
-        case "restore_chat": {
-            const chat_id = data.chat_id;
-            if (!chat_id) {
-                break;
-            }
-            let editor = vscode.window.activeTextEditor;
+        // case "openKeys": {
+        //     vscode.commands.executeCommand("workbench.action.openGlobalKeybindings", "Refact.ai");
+        //     break;
+        // }
+        // case "restore_chat": {
+        //     const chat_id = data.chat_id;
+        //     if (!chat_id) {
+        //         break;
+        //     }
+        //     let editor = vscode.window.activeTextEditor;
 
-            const caps = await get_caps();
+        //     const caps = await get_caps();
 
-            let chat: OldChat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
-            if (!chat) {
-                console.log(`Chat ${chat_id} not found, cannot restore`);
-                break;
-            }
+        //     let chat: OldChat | undefined = await this.make_sure_have_chat_history_provider().lookup_chat(chat_id);
+        //     if (!chat) {
+        //         console.log(`Chat ${chat_id} not found, cannot restore`);
+        //         break;
+        //     }
 
-            const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
-            if(openTab) {
-                return openTab.focus();
-            } else {
-                const model = caps.running_models.includes(chat.chatModel)
-					? chat.chatModel
-					: caps.code_chat_default_model;
+        //     const openTab = global.open_chat_tabs?.find(tab => tab.chat_id === chat_id);
+        //     if(openTab) {
+        //         return openTab.focus();
+        //     } else {
+        //         const model = caps.running_models.includes(chat.chatModel)
+		// 			? chat.chatModel
+		// 			: caps.code_chat_default_model;
 
-                // await open_chat_tab(
-                //     "",
-                //     editor,
-                //     true,
-                //     model,
-                //     chat.messages,
-                //     chat_id,
-                // );
-            }
-            break;
-        }
-        case "save_telemetry_settings": {
-            // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
-            break;
-        }
+        //         // await open_chat_tab(
+        //         //     "",
+        //         //     editor,
+        //         //     true,
+        //         //     model,
+        //         //     chat.messages,
+        //         //     chat_id,
+        //         // );
+        //     }
+        //     break;
+        // }
+        // case "save_telemetry_settings": {
+        //     // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
+        //     break;
+        // }
         // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
         // case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
         // case FIM_EVENT_NAMES.BACK:
-        case "back-from-chat": {
-            this.goto_main();
-            this.chat = null;
-            break;
-        }
+        // case "back-from-chat": {
+        //     this.goto_main();
+        //     this.chat = null;
+        //     break;
+        // }
 
-        case "fim_debug": {
-            await open_fim_debug();
-            break;
+        // case "fim_debug": {
+        //     await open_fim_debug();
+        //     break;
+        // }
         }
-        }
-    }
-
-    public update_webview()
-    {
-        if (!this._view) {
-            return;
-        }
-        let have_key = !!userLogin.secret_api_key() && !!userLogin.get_address();
-        if (have_key) {
-            this.update_chat_history();
-        }
-        let plan_msg = global.user_active_plan;
-        if (!plan_msg && global.streamlined_login_countdown > -1) {
-            plan_msg = `Waiting for website login... ${global.streamlined_login_countdown}`;
-        } else if (plan_msg) {
-            plan_msg = "Active Plan: <b>" + plan_msg + "</b>";
-        }
-        this._view!.webview.postMessage({
-            command: "ts2js",
-            ts2js_user: global.user_logged_in,
-            ts2js_havekey: have_key,
-            ts2js_apikey: global.api_key,
-            ts2js_plan: plan_msg,
-            ts2js_metering_balance: global.user_metering_balance,
-            ts2js_staging: vscode.workspace.getConfiguration().get('refactai.staging'),
-            ts2js_stat_info: "stat inforamtion"
-        });
     }
 
     private async handleEvents(e: unknown) {
@@ -646,7 +478,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideNewFileAction.match(e)) {
-            const action = e as ReturnType<typeof ideNewFileAction>
+            const action = e as ReturnType<typeof ideNewFileAction>;
             return vscode.workspace.openTextDocument().then((document) => {
                 vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
                     .then((editor) => {
@@ -739,7 +571,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if(!editor) { return; }
 
         for (const change of response.results) {
-            if (change.file_name_edit !== null && change.file_text != null) {
+            if (change.file_name_edit !== null && change.file_text !== null) {
                 const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_edit));
                 await vscode.window.showTextDocument(document);
 
@@ -789,7 +621,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
-        const maybeHistory = this.context.globalState.get<OldChat[]>("refact_chat_history") ?? [];
 
         const config: InitialState["config"] = {
             host: "vscode",
@@ -822,15 +653,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if(snippet && file) {
             state.active_file = file;
             state.selected_snippet = snippet;
-        }
-        if(maybeHistory.length > 0) {
-            state.history =  maybeHistory.map(convert_old_chat_to_new_chat).reduce<InitialState["history"]>((acc, cur) => {
-                return {
-                    ...acc,
-                    [cur.id]: cur
-                };
-            }, {});
-            this.context.globalState.update("refact_chat_history", []);
         }
 
         if(thread) {
@@ -879,6 +701,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         const initialState = await this.createInitialState(chat_thread, tabbed);
+        let stringifiedInitialState = JSON.stringify(initialState);
+        stringifiedInitialState = stringifiedInitialState.replace("</script>", "</scr\"+\"ipt>");
 
         return `<!DOCTYPE html>
             <html lang="en" class="light">
@@ -902,7 +726,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 <div id="refact-chat"></div>
 
                 <script nonce="${nonce}">
-                const initialState = ${JSON.stringify(initialState)};
+                const initialState = ${stringifiedInitialState};
                 window.__INITIAL_STATE__ = initialState;
                 window.onload = function() {
                     const root = document.getElementById("refact-chat");

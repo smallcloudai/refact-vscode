@@ -237,7 +237,6 @@ export class RustBinaryBlob
             console.log(["read_caps:", e]);
         }
         global.status_bar.choose_color();
-        global.side_panel?.update_webview();
         fetchAPI.maybe_show_rag_status();
     }
 

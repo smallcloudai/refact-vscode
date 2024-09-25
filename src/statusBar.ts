@@ -1,8 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as userLogin from "./userLogin";
-import * as privacy from "./privacy";
-import { PrivacySettings } from './privacySettings';
 import * as fetchH2 from 'fetch-h2';
 import { RagStatus } from './fetchAPI';
 
@@ -230,14 +228,7 @@ export class StatusBarMenu {
 
 async function on_change_active_editor(editor: vscode.TextEditor | undefined)
 {
-    if (!editor) {
-        global.status_bar.set_access_level(-1);
-        PrivacySettings.update_webview(PrivacySettings._panel);
-        return;
-    }
-    let document_filename = editor.document.fileName;
-    let access_level = await privacy.get_file_access(document_filename);
-    global.status_bar.set_access_level(access_level);
+    global.status_bar.choose_color();
 }
 
 
@@ -294,25 +285,10 @@ export async function send_network_problems_to_status_bar(
     } else {
         global.last_positive_result = Date.now();
     }
-    // if (invalid_session || conn_refused) {
-    //     userLogin.inference_login_force_retry();
-    //     console.log(["INVALID_SESSION, ECONNREFUSED => inference_login_force_retry"]);
-    // }
-    // if (timedout) {
-    //     userLogin.inference_login_force_retry();
-    //     // console.log(["ETIMEDOUT => disconnectAll"]);
-    // }
     if (error_message.length > 200) {
         error_message = error_message.substring(0, 200) + "…";
     }
-    // if (model_name) {
-    //     global.status_bar.url_and_model_worked(related_url, model_name);
-    // }
     global.status_bar.set_socket_error(!positive, error_message);
-    // if (global.side_panel) {
-    //     global.side_panel.update_webview();
-    // }
-    // global.status_bar.url_and_model_worked("", "");
 }
 
 export default StatusBarMenu;

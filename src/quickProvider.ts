@@ -5,6 +5,8 @@ import * as fetchAPI from "./fetchAPI";
 import {
 	type ChatMessages,
 } from "refact-chat-js/dist/events";
+
+
 export class QuickActionProvider implements vscode.CodeActionProvider {
 
     provideCodeActions(
@@ -17,7 +19,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             return;
         }
         const quickActions = [];
-        for (const action of QuickActionProvider.actions) {
+        for (const action of QuickActionProvider.actions_static_list) {
             const quickAction = new vscode.CodeAction(action.title, action.kind);
             if(action.id === 'fix') {
                 quickAction.command = {
@@ -79,7 +81,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             attach_file: false,
             tools: tools,
         };
-            
+
         // await chat.handleChatQuestion(questionData).then(() => {
         //     console.log("Chat question handled successfully.");
         // }).catch((error) => {
@@ -126,7 +128,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
 
         global.side_panel?.goto_chat(questionData);
     }
-    
+
 
     public static async handleAction(actionId: string, diagnostics: any) {
         if (actionId === 'fix') {
@@ -169,7 +171,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         }
     }
 
-    public static readonly actions = [
+    public static readonly actions_static_list = [
         {
           id: 'fix',
           title: 'Refact.ai: Fix this problem',

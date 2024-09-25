@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
-import * as userLogin from "./userLogin";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
 import {
-	isCommandPreviewResponse,
-	isDetailMessage,
+	// isCommandPreviewResponse,
+	// isDetailMessage,
 	type CapsResponse,
-	type CommandCompletionResponse,
-	type ChatContextFileMessage,
-	type ChatContextFile,
-	isCustomPromptsResponse,
+	// type CommandCompletionResponse,
+	// type ChatContextFileMessage,
+	// type ChatContextFile,
+	// isCustomPromptsResponse,
     type CustomPromptsResponse,
     ChatMessages,
     DiffChunk,
@@ -265,37 +264,6 @@ export function save_url_from_login(url: string)
 }
 
 
-// export function inference_url(addthis: string, third_party: boolean)
-// {
-//     let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
-//     let url: string;
-//     if (!manual_infurl) {
-//         // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
-//         let url_ = vscode.workspace.getConfiguration().get(third_party ? 'refactai.infurl3rd' : 'refactai.infurl');
-//         if (!url_) {
-//             // Backward compatibility: codify is the old name
-//             url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
-//         }
-//         if (typeof url_ !== 'string' || url_ === '' || !url_) {
-//             url = global_inference_url_from_login;
-//         } else {
-//             url = `${url_}`;
-//         }
-//     } else {
-//         // If manual, then only the specified manual
-//         url = `${manual_infurl}`;
-//     }
-//     if (!url) {
-//         return url;
-//     }
-//     while (url.endsWith("/")) {
-//         url = url.slice(0, -1);
-//     }
-//     url += addthis;
-//     return url;
-// }
-
-
 export function rust_url(addthis: string)
 {
     if (!global.rust_binary_blob) {
@@ -328,92 +296,6 @@ export function inference_context(third_party: boolean)
 }
 
 
-// export function fetch_api_promise(
-//     cancelToken: vscode.CancellationToken,
-//     scope: string,
-//     sources: { [key: string]: string },
-//     intent: string,
-//     functionName: string,
-//     cursorFile: string,
-//     cursor0: number,
-//     cursor1: number,
-//     maxTokens: number,
-//     maxEdits: number,
-//     stop_tokens: string[],
-//     stream: boolean,
-//     suggest_longthink_model: string = "",
-//     third_party: boolean = false,
-// ): [Promise<fetchH2.Response>, estate.ApiFields]
-// {
-//     let url = inference_url("/v1/contrast", third_party);
-//     let ctx = inference_context(third_party);
-//     let model_ = vscode.workspace.getConfiguration().get('refactai.model') || "CONTRASTcode";
-//     let model_longthink: string = vscode.workspace.getConfiguration().get('refactai.longthinkModel') || suggest_longthink_model;
-//     if (suggest_longthink_model && suggest_longthink_model !== "CONTRASTcode") {
-//         model_ = model_longthink;
-//     }
-//     vscode.workspace.getConfiguration().update("files.autoSave", "off", true); // otherwise diffs do not work properly
-//     let model: string = `${model_}`;
-//     const apiKey = userLogin.secret_api_key();
-//     if (!apiKey) {
-//         return [Promise.reject("No API key"), new estate.ApiFields()];
-//     }
-//     let temp = 0.2;  // vscode.workspace.getConfiguration().get('codify.temperature');
-//     let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
-//     let api_fields = new estate.ApiFields();
-//     api_fields.scope = scope;
-//     api_fields.url = url;
-//     api_fields.model = model;
-//     api_fields.sources = sources;
-//     api_fields.intent = intent;
-//     api_fields.function = functionName;
-//     api_fields.cursor_file = cursorFile;
-//     api_fields.cursor_pos0 = cursor0;
-//     api_fields.cursor_pos1 = cursor1;
-//     api_fields.ts_req = Date.now();
-//     const body = JSON.stringify({
-//         "model": model,
-//         "sources": sources,
-//         "intent": intent,
-//         "function": functionName,
-//         "cursor_file": cursorFile,
-//         "cursor0": cursor0,
-//         "cursor1": cursor1,
-//         "temperature": temp,
-//         "max_tokens": maxTokens,
-//         "max_edits": maxEdits,
-//         "stop": stop_tokens,
-//         "stream": stream,
-//         "client": `vscode-${client_version}`,
-//     });
-//     const headers = {
-//         "Content-Type": "application/json",
-//         "Authorization": `Bearer ${apiKey}`,
-//     };
-//     let req = new fetchH2.Request(url, {
-//         method: "POST",
-//         headers: headers,
-//         body: body,
-//         redirect: "follow",
-//         cache: "no-cache",
-//         referrer: "no-referrer"
-//     });
-//     let init: any = {
-//         timeout: 20*1000,
-//     };
-//     if (cancelToken) {
-//         let abort = new fetchH2.AbortController();
-//         cancelToken.onCancellationRequested(() => {
-//             console.log(["API fetch cancelled"]);
-//             abort.abort();
-//         });
-//         init.signal = abort.signal;
-//     }
-//     let promise = ctx.fetch(req, init);
-//     return [promise, api_fields];
-// }
-
-
 export function fetch_code_completion(
     cancelToken: vscode.CancellationToken,
     sources: { [key: string]: string },
@@ -435,10 +317,6 @@ export function fetch_code_completion(
     let third_party = false;
     let ctx = inference_context(third_party);
     let model_name = vscode.workspace.getConfiguration().get<string>("refactai.codeCompletionModel") || "";
-    // const apiKey = userLogin.secret_api_key();
-    // if (!apiKey) {
-    //     return Promise.reject("No API key");
-    // }
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     // api_fields.scope = "code-completion";
     // api_fields.url = url;
@@ -517,49 +395,12 @@ export function fetch_chat_promise(
         console.log(["fetch_chat_promise: No rust binary working"]);
         return [Promise.reject("No rust binary working"), scope, ""];
     }
-    const apiKey = userLogin.secret_api_key();
+    const apiKey = "any-key-will-work";
     if (!apiKey) {
         return [Promise.reject("No API key"), "chat", ""];
     }
 
     let ctx = inference_context(third_party);
-    // TODO: this shouldn't need to be cast to ChatMessages, it'll be removed in an updated
-    // let json_messages = formatMessagesForLsp(messages as ChatMessages);
-    // "refactai.defaultSystemPrompt": {
-    //     "type": "string",
-    //     "markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
-    //     "default": "",
-    //     "order": 8
-    // },
-    // let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
-    // if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
-    //     json_messages.push({
-    //         "role": "system",
-    //         "content": default_system_prompt,
-    //     });
-    // }
-    // for (let i=0; i<messages.length; i++) {
-    //     if(messages[i][0] === "tool") {
-    //         const message = messages[i] as ToolMessage;
-    //         json_messages.push({
-    //             role: message[0],
-    //             content: message[1].content,
-    //             tool_call_id: message[1].tool_call_id
-    //         });
-    //     } else {
-
-    //         const toolCalls = messages[i][0] === "assistant" && messages[i][2] ? {tool_calls: messages[i][2]} : {};
-    //         let content = messages[i][1];
-    //         if(typeof content !== "string" && content !== null) {
-    //             content = JSON.stringify(content);
-    //         }
-    //         json_messages.push({
-    //             "role": messages[i][0],
-    //             "content": content,
-    //             ...toolCalls,
-    //         });
-    //     }
-    // }
 
     // an empty tools array causes issues
     const maybeTools = tools && tools.length > 0 ? {tools} : {};

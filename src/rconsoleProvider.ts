@@ -409,7 +409,6 @@ export class RefactConsoleProvider {
         await this.hints_and_magic_tabs(e);
     }
 
-
     activate_cmd(
         cmd: string,
         args: string
@@ -444,7 +443,7 @@ export class RefactConsoleProvider {
 
         // const messagesWithQuestion: ChatMessages = appendQuestion(question, messages) as ChatMessages;
 
-
+        // this really opens chat somehow
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
             question,
             this.editor,
@@ -474,13 +473,6 @@ export class RefactConsoleProvider {
         // }));
 
         await new Promise(r => setTimeout(r, 200));
-        // await chat.handleChatQuestion({
-		// 	id: chat.chat_id,
-		// 	model: this.model_name,
-		// 	title: question,
-		// 	messages: messagesWithQuestion,
-		// 	attach_file: false,
-		// });
     }
 }
 
