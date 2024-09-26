@@ -25,6 +25,7 @@ import {
     ideDiffPreviewAction,
     ChatThread,
     DiffPreviewResponse,
+    setOpenFiles,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -108,6 +109,21 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }));
 
+        this._disposables.push(vscode.window.onDidChangeVisibleTextEditors(() => {
+            this.sendOpenFiles();
+        }));
+
+        // this._disposables.push(vscode.workspace.onDidOpenTextDocument((event) => {
+        //     console.log("onDidOpenTextDocument");
+        //     console.log(event);
+        // }));
+
+        // this._disposables.push(vscode.workspace.onDidCloseTextDocument((event) => {
+        //     console.log("onDidCloseTextDocument");
+        //     console.log(event);
+        // }));
+        // // workspace onDidOpenTextDocument and onDidCloseTextDocument:
+
         // TODO: theme changes.
     }
 
@@ -115,6 +131,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //     if(!this._view) { return; }
     //     return composeHandlers(this.chat?.handleEvents, this.js2ts_message)(data);
     // }
+
+    getOpenFiles(): string[] {
+        const openDocuments = vscode.workspace.textDocuments;
+        const openFiles = openDocuments.map(document => document.uri.fsPath);
+        return openFiles;
+    }
+
+    sendOpenFiles(): void {
+        const files = this.getOpenFiles();
+        const message = setOpenFiles(files);
+        this._view?.webview.postMessage(message);
+    }
 
     sendSnippetToChat() {
         const snippet = this.getSnippetFromEditor();
@@ -232,6 +260,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         this._view?.webview.postMessage(message);
     }
+
 
     public new_statistic(view: vscode.WebviewView)
     {
@@ -605,6 +634,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         // TODO:  Won't work if no file is open :/
         // const editor = vscode.window.activeTextEditor;
         // if(!editor) { return; }
+        console.log("handleDiffPReview")
+        console.log({response});
+        const openFiles = this.getOpenFiles();
 
         for (const change of response.results) {
             if (change.file_name_edit !== null && change.file_text !== null) {
@@ -620,7 +652,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     range,
                     change.file_text
                 );
-            } else if(change.file_name_add !== null && change.file_text!== null) {
+            } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add) === false) {
                 const newFile = vscode.Uri.parse('untitled:' + change.file_name_add);
                 vscode.workspace.openTextDocument(newFile).then(document => {
                     const edit = new vscode.WorkspaceEdit();
@@ -633,7 +665,23 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         }
                     });
                 });
+            } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
+                // almost duplicate of edit
+                const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_add));
+                await vscode.window.showTextDocument(document);
+                const start = new vscode.Position(0, 0);
+                const end = new vscode.Position(document.lineCount, 0);
+                const range = new vscode.Range(start, end);
+
+                diff_paste_back(
+                    document,
+                    range,
+                    change.file_text
+                );
+
             }
+
+            // TODO: delete
         }
 	}
 
