@@ -451,8 +451,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 }
                 let command: string[] = [
                     join(global.rust_binary_blob.asset_path, "refact-lsp"),
-                    "--save-byok-file",
-                    "--address-url", "xxx",
+                    "--only-create-yaml-configs",
                 ];
                 execFile(command[0], command.splice(1), async (err, stdout, stderr) => {
                     if (err) {
