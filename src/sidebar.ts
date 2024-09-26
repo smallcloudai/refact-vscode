@@ -611,8 +611,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         // TODO:  Won't work if no file is open :/
         // const editor = vscode.window.activeTextEditor;
         // if(!editor) { return; }
-        console.log("handleDiffPReview")
-        console.log({response});
+        
         const openFiles = this.getOpenFiles();
 
         for (const change of response.results) {
@@ -624,6 +623,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 const end = new vscode.Position(document.lineCount, 0);
                 const range = new vscode.Range(start, end);
 
+                // TODO: on accept, reset the diff cache
                 diff_paste_back(
                     document,
                     range,
@@ -655,7 +655,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         }
                     });
                 });
-                // TODO: on save invalidate the diff cache in chat
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
                 // almost duplicate of edit
                 const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_add));
@@ -664,6 +663,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 const end = new vscode.Position(document.lineCount, 0);
                 const range = new vscode.Range(start, end);
 
+                // TODO: on accept, reset the diff cache
                 diff_paste_back(
                     document,
                     range,
