@@ -26,6 +26,7 @@ import {
     ChatThread,
     DiffPreviewResponse,
     setOpenFiles,
+    resetDiffApi,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -258,6 +259,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             features: {vecdb, ast}
         });
 
+        this._view?.webview.postMessage(message);
+    }
+
+    sendClearDiffCacheMessage() {
+        const message = resetDiffApi();
         this._view?.webview.postMessage(message);
     }
 
@@ -660,6 +666,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     return vscode.workspace.applyEdit(edit).then(success => {
                         if (success) {
                             vscode.window.showTextDocument(document);
+                            const disposables: vscode.Disposable[] = [];
+                            const dispose = () => disposables.forEach(d => d.dispose());
+                            disposables.push(vscode.workspace.onDidSaveTextDocument((savedDocument) => {
+                                if(savedDocument.uri.fsPath === document.uri.fsPath) {
+                                    this.sendClearDiffCacheMessage();
+                                    dispose();
+                                }
+                            }));
+                            disposables.push(vscode.workspace.onDidCloseTextDocument((closedDocument) => {
+                                if(closedDocument.uri.fsPath === document.uri.fsPath) {
+                                    dispose();
+                                }
+                            }));
                         } else {
                             vscode.window.showInformationMessage('Error: creating file ' + change.file_name_add);
                         }
