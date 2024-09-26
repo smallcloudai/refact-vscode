@@ -636,6 +636,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                         }
                     });
                 });
+                // TODO: on save invalidate the diff cache in chat
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
                 // almost duplicate of edit
                 const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_add));
