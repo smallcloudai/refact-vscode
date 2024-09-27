@@ -606,6 +606,22 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
 	}
 
+    private refetchDiffsOnSave(document: vscode.TextDocument) {
+        const disposables: vscode.Disposable[] = [];
+        const dispose = () => disposables.forEach(d => d.dispose());
+        disposables.push(vscode.workspace.onDidSaveTextDocument((savedDocument) => {
+            if(savedDocument.uri.fsPath === document.uri.fsPath) {
+                this.sendClearDiffCacheMessage();
+                dispose();
+            }
+        }));
+        disposables.push(vscode.workspace.onDidCloseTextDocument((closedDocument) => {
+            if(closedDocument.uri.fsPath === document.uri.fsPath) {
+                dispose();
+            }
+        }));
+    }
+
     private async handleDiffPreview(response: DiffPreviewResponse) {
 
         // TODO:  Won't work if no file is open :/
@@ -623,12 +639,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 const end = new vscode.Position(document.lineCount, 0);
                 const range = new vscode.Range(start, end);
 
-                // TODO: on accept, reset the diff cache
+                
                 diff_paste_back(
                     document,
                     range,
                     change.file_text
                 );
+                this.refetchDiffsOnSave(document);
+
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add) === false) {
                 const newFile = vscode.Uri.parse('untitled:' + change.file_name_add);
                 vscode.workspace.openTextDocument(newFile).then(document => {
@@ -637,19 +655,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                     return vscode.workspace.applyEdit(edit).then(success => {
                         if (success) {
                             vscode.window.showTextDocument(document);
-                            const disposables: vscode.Disposable[] = [];
-                            const dispose = () => disposables.forEach(d => d.dispose());
-                            disposables.push(vscode.workspace.onDidSaveTextDocument((savedDocument) => {
-                                if(savedDocument.uri.fsPath === document.uri.fsPath) {
-                                    this.sendClearDiffCacheMessage();
-                                    dispose();
-                                }
-                            }));
-                            disposables.push(vscode.workspace.onDidCloseTextDocument((closedDocument) => {
-                                if(closedDocument.uri.fsPath === document.uri.fsPath) {
-                                    dispose();
-                                }
-                            }));
+                            this.refetchDiffsOnSave(document);
                         } else {
                             vscode.window.showInformationMessage('Error: creating file ' + change.file_name_add);
                         }
@@ -663,12 +669,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 const end = new vscode.Position(document.lineCount, 0);
                 const range = new vscode.Range(start, end);
 
-                // TODO: on accept, reset the diff cache
                 diff_paste_back(
                     document,
                     range,
                     change.file_text
                 );
+
+                this.refetchDiffsOnSave(document);
 
             }
 
