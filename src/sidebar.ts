@@ -559,7 +559,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         );
         const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
         const needsNewLine = code_block.endsWith("\n") === false;
-        const indentedCode = (indent + code_block).replace(/\n/gm, "\n" + indent) + (needsNewLine ? "\n" : "");
+        const indentedCode = (indent + code_block).replace(/\n(?!$)/gm, "\n" + indent) + (needsNewLine ? "\n" : "");
 
         const range = new vscode.Range(startOfLine, selection.end);
 
