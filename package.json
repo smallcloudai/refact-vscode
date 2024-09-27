@@ -22,7 +22,7 @@
 	"dependencies": {
 		"@types/marked": "^4.0.8",
 		"@types/vscode": "^1.69.0",
-		"diff": "^5.1.0",
+		"diff": "^7.0.0",
 		"difflib": "^0.2.4",
 		"fetch-h2": "^3.0.2",
 		"json5": "^2.2.3",

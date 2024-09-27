@@ -300,7 +300,13 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
         console.log(["apply diff -- no change"]);
         // no change, but go on because we want UI to be the same
     }
-    const diff = Diff.diffLines(whole_doc, modif_doc);
+
+    const diff = Diff.diffLines(whole_doc, modif_doc, {
+        // ignoreNewlineAtEof: true,
+        ignoreWhitespace: true,
+        newlineIsToken: true,
+    });
+
     let green_bg_ranges: vscode.Range[] = [];
     let red_bg_ranges: vscode.Range[] = [];
     let very_green_bg_ranges: vscode.Range[] = [];
