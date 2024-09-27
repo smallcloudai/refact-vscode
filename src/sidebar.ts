@@ -540,27 +540,56 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     // }
 
+    
+    private getTrimmedSelectedRange(editor: vscode.TextEditor): vscode.Range {
+
+        const selection = editor.selection;
+        const document = editor.document;
+        let start = selection.start;
+        let end = selection.end;
+    
+        // Get the text of the selected range
+        let selectedText = document.getText(selection);
+    
+        // Trim leading and trailing whitespace and new lines
+        const trimmedText = selectedText.trim();
+    
+        // If the trimmed text is empty, return the original selection
+        if (trimmedText.length === 0) {
+            return selection;
+        }
+    
+        // Find the start and end positions of the trimmed text within the selected range
+        const leadingWhitespaceLength = selectedText.length - selectedText.trimStart().length;
+        const trailingWhitespaceLength = selectedText.length - selectedText.trimEnd().length;
+    
+        start = document.positionAt(document.offsetAt(start) + leadingWhitespaceLength);
+        end = document.positionAt(document.offsetAt(end) - trailingWhitespaceLength);
+    
+        return new vscode.Range(start, end);
+    }
+    
+    
     private async handleDiffPasteBack(code_block: string) {
         const editor = vscode.window.activeTextEditor;
         if(!editor) { return; }
-        const selection = editor.selection;
-        const startOfLine = new vscode.Position(selection.start.line, 0);
-        const endOfLine = new vscode.Position(selection.start.line + 1, 0);
+        const trimmedRange = this.getTrimmedSelectedRange(editor);
+        const startOfLine = new vscode.Position(trimmedRange.start.line, 0);
+        const endOfLine = new vscode.Position(trimmedRange.start.line + 1, 0);
         const firstLineRange = new vscode.Range(startOfLine, endOfLine);
-        const spaceRegex = /^[ \t]+/;
+        const spaceRegex =  /^[ \t]+/;
         const selectedLine = editor.document.getText(
             firstLineRange
         );
         const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
-        const needsNewLine = code_block.endsWith("\n") === false;
-        const indentedCode = (indent + code_block).replace(/\n(?!$)/gm, "\n" + indent) + (needsNewLine ? "\n" : "");
+        const indentedCode = code_block.replace(/\n/gm, "\n" + indent);
+        const rangeToReplace = new vscode.Range(trimmedRange.start, trimmedRange.end);
 
-        const range = new vscode.Range(startOfLine, selection.end);
 
 		return diff_paste_back(
             editor.document,
-            range,
-            indentedCode
+            rangeToReplace,
+            indentedCode,
         );
 
 	}
