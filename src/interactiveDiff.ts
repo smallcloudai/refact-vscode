@@ -304,7 +304,7 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
     const diff = Diff.diffLines(whole_doc, modif_doc, {
         // ignoreNewlineAtEof: true,
         ignoreWhitespace: true,
-        newlineIsToken: true,
+        // newlineIsToken: true,
     });
 
     let green_bg_ranges: vscode.Range[] = [];
