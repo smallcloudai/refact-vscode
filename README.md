@@ -8,8 +8,11 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/refact_ai)](https://twitter.com/intent/follow?screen_name=refact_ai)
 ![License](https://img.shields.io/github/license/smallcloudai/refact-vscode)
 
+
 ## Refact.ai Open Source, Customizable AI Coding Assistant
 Refact.ai is an open-source AI coding assistant that boosts developer's productivity. It's suitable for both individual and enterprise use, supporting 25+ programming languages including Python, Javascript, Java, Rust, Typescript, PHP, Java, C++, C#, Go and more.
+
+Download the extension for VS Code from [here](https://marketplace.visualstudio.com/items?itemName=smallcloud.codify).
 
 Simplify your coding experience with Refact.ai's functions:
 
@@ -34,7 +37,6 @@ Are you part of an Enterprise and want to **boost developers' efficiency by 45%*
 
 ### Boost coding productivity with fine-tuned auto-completions
 ![Comp_brand](https://github.com/smallcloudai/refact-vscode/assets/15157041/59bd60e2-4680-4bf5-87c5-6f57dc96cef7)
-
 
 ### Get the answer to your question in the embedded Chat
 ![Chat_brand](https://github.com/smallcloudai/refact-vscode/assets/15157041/7e10a353-bb6f-4c79-b65e-c01a7ab6aece)
