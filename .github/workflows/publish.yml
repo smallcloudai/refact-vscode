@@ -138,3 +138,9 @@ jobs:
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+
+      - name: Notify to Discord
+        run: |
+          curl -X POST ${{ secrets.DISCORD_WEBHOOK_URL }} \
+          -H "Content-Type: application/json" \
+          -d '{"msg":"VSCode plugin ${{ steps.setupvars.outputs.plugin_version }} is released in ${{ steps.setupvars.outputs.slack_notification_channel }} channel"}'
