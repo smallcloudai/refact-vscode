@@ -27,10 +27,14 @@ import {
     DiffPreviewResponse,
     setOpenFiles,
     resetDiffApi,
+    ideAnimateFileStart,
+    ideAnimateFileStop,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
 import { execFile } from "child_process";
+import * as estate from './estate';
+import { animation_start } from "./interactiveDiff";
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -549,6 +553,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleDiffPreview(e.payload);
         }
 
+        if(ideAnimateFileStart.match(e)) {
+            console.log("ideAnimateFileStart");
+            console.log({event: e});
+            return this.startFileAnimation(e.payload);
+          // TODO: handle animating the open file,
+        }
+
+        if(ideAnimateFileStop.match(e)) {
+            console.log("ideAnimateFileStop");
+            console.log({event: e});
+            return this.stopFileAnimation(e.payload);
+            // TODO: stop animating the file
+        }
+
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
@@ -581,7 +599,27 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     // }
 
-    
+    async startFileAnimation(fileName: string) {
+
+        const openFiles = this.getOpenFiles();
+        const document = await vscode.workspace.openTextDocument(fileName);
+        const editor = vscode.window.activeTextEditor;
+        if(!openFiles.includes(fileName)|| !editor) {return;}
+
+        const state = estate.state_of_editor(editor, "start_animate for file: " + fileName);
+        if(!state) {return;}
+        await estate.switch_mode(state, estate.Mode.DiffWait);
+        const startPosition = new vscode.Position(0, 0);
+        const endPosition = new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
+        state.showing_diff_for_range = new vscode.Range(startPosition, endPosition);
+        animation_start(editor, state);
+    }
+
+    stopFileAnimation(fileName: string) {
+        // TODO: animation seems to stop on it's own :/
+    }
+
+
     private getTrimmedSelectedRange(editor: vscode.TextEditor): vscode.Range {
 
         const selection = editor.selection;
