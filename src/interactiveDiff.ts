@@ -2,12 +2,11 @@
 import * as vscode from 'vscode';
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
-import Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
+import * as Diff from "diff";  // Documentation: https://github.com/kpdecker/jsdiff/
 import * as storeVersions from './storeVersions';
 import * as estate from './estate';
 import * as codeLens from "./codeLens";
 import * as crlf from "./crlf";
-
 
 let global_nav_counter: number = 0;
 
