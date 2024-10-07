@@ -604,9 +604,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     async startFileAnimation(fileName: string) {
 
         const openFiles = this.getOpenFiles();
-        const document = await vscode.workspace.openTextDocument(fileName);
         const editor = vscode.window.activeTextEditor;
         if(!openFiles.includes(fileName)|| !editor) {return;}
+        const document = await vscode.workspace.openTextDocument(fileName);
 
         const state = estate.state_of_editor(editor, "start_animate for file: " + fileName);
         if(!state) {return;}
@@ -617,8 +617,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         animation_start(editor, state);
     }
 
-    stopFileAnimation(fileName: string) {
-        // TODO: animation seems to stop on it's own :/
+    async stopFileAnimation(fileName: string) {
+
+        const openFiles = this.getOpenFiles();
+        const editor = vscode.window.activeTextEditor;
+        if(!openFiles.includes(fileName)|| !editor) {return;}
+
+        const state = estate.state_of_editor(editor, "stop_animate for file: " + fileName);
+        if(!state) {return;}
+        
+        await estate.switch_mode(state, estate.Mode.Normal);
     }
 
 
