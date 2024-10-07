@@ -556,17 +556,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideAnimateFileStart.match(e)) {
-            console.log("ideAnimateFileStart");
-            console.log({event: e});
             return this.startFileAnimation(e.payload);
-          // TODO: handle animating the open file,
         }
 
         if(ideAnimateFileStop.match(e)) {
-            console.log("ideAnimateFileStop");
-            console.log({event: e});
             return this.stopFileAnimation(e.payload);
-            // TODO: stop animating the file
         }
 
         // if(ideOpenChatInNewTab.match(e)) {
