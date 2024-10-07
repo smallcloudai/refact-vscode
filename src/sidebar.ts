@@ -114,9 +114,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }));
 
-        this._disposables.push(vscode.window.onDidChangeVisibleTextEditors(() => {
-            this.sendOpenFiles();
+        this._disposables.push(vscode.window.onDidChangeVisibleTextEditors((editors) => {
+            this.sendOpenFiles(editors);
         }));
+
+     
 
         // this._disposables.push(vscode.workspace.onDidOpenTextDocument((event) => {
         //     console.log("onDidOpenTextDocument");
@@ -143,8 +145,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return openFiles;
     }
 
-    sendOpenFiles(): void {
-        const files = this.getOpenFiles();
+    sendOpenFiles(editors: readonly vscode.TextEditor[]): void {
+        const files = editors.map(editor => editor.document.uri.fsPath);
         const message = setOpenFiles(files);
         this._view?.webview.postMessage(message);
     }
