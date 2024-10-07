@@ -22,19 +22,19 @@ jobs:
           - os: windows-latest
             target: aarch64-pc-windows-msvc
             code-target: win32-arm64
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             code-target: linux-x64
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             code-target: linux-arm64
           # - os: ubuntu-20.04
           #   target: armv7-unknown-linux-gnueabihf
           #   code-target: linux-armhf
-          - os: macos-12
+          - os: macos-13
             target: x86_64-apple-darwin
             code-target: darwin-x64
-          - os: macos-12
+          - os: macos-14
             target: aarch64-apple-darwin
             code-target: darwin-arm64
 
@@ -46,6 +46,11 @@ jobs:
     container: ${{ matrix.container }}
 
     steps:
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -58,7 +63,7 @@ jobs:
 
       - name: Download artifact
         id: download-artifact
-        uses: dawidd6/action-download-artifact@v2
+        uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
@@ -87,7 +92,7 @@ jobs:
           vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: vscode-plugin-${{ matrix.target }}
           path: ./*.vsix
