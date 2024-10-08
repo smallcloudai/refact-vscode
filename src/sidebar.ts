@@ -25,7 +25,6 @@ import {
     ideDiffPreviewAction,
     type ChatThread,
     type DiffPreviewResponse,
-    setOpenFiles,
     resetDiffApi,
     ideAnimateFileStart,
     ideAnimateFileStop,
@@ -116,11 +115,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }));
 
-        this._disposables.push(vscode.window.onDidChangeVisibleTextEditors((editors) => {
-            this.sendOpenFiles(editors);
-        }));
-
-     
 
         // this._disposables.push(vscode.workspace.onDidOpenTextDocument((event) => {
         //     console.log("onDidOpenTextDocument");
@@ -145,12 +139,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const openDocuments = vscode.workspace.textDocuments;
         const openFiles = openDocuments.map(document => document.uri.fsPath);
         return openFiles;
-    }
-
-    sendOpenFiles(editors: readonly vscode.TextEditor[]): void {
-        const files = editors.map(editor => editor.document.uri.fsPath);
-        const message = setOpenFiles(files);
-        this._view?.webview.postMessage(message);
     }
 
     sendSnippetToChat() {
