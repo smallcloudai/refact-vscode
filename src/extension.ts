@@ -237,25 +237,25 @@ export function activate(context: vscode.ExtensionContext)
     const comp = new completionProvider.MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
-    const quickProvider = new QuickActionProvider();
-    vscode.languages.registerCodeActionsProvider({pattern: "**"},quickProvider,
-        {
-            providedCodeActionKinds: [
-            //   vscode.CodeActionKind.RefactorRewrite,
-              vscode.CodeActionKind.QuickFix,
-            ],
-        }
-    );
-    context.subscriptions.push(quickProvider);
+    // const quickProvider = new QuickActionProvider();
+    // vscode.languages.registerCodeActionsProvider({pattern: "**"},quickProvider,
+    //     {
+    //         providedCodeActionKinds: [
+    //         //   vscode.CodeActionKind.RefactorRewrite,
+    //           vscode.CodeActionKind.QuickFix,
+    //         ],
+    //     }
+    // );
+    // context.subscriptions.push(quickProvider);
 
-    for (const action of QuickActionProvider.actions_static_list) {
-        context.subscriptions.push(
-          vscode.commands.registerCommand(
-            `refactcmd.${action.id}`,
-            (actionId: string, diagnosticMessage: string) => QuickActionProvider.handleAction(actionId, diagnosticMessage)
-          )
-        );
-    }
+    // for (const action of QuickActionProvider.actions_static_list) {
+    //     context.subscriptions.push(
+    //       vscode.commands.registerCommand(
+    //         `refactcmd.${action.id}`,
+    //         (actionId: string, diagnosticMessage: string) => QuickActionProvider.handleAction(actionId, diagnosticMessage)
+    //       )
+    //     );
+    // }
 
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
@@ -387,6 +387,27 @@ export function activate(context: vscode.ExtensionContext)
             }
         }
     });
+
+    const quickProvider = new QuickActionProvider();
+    context.subscriptions.push(
+        vscode.languages.registerCodeActionsProvider(
+            { pattern: "**" },
+            quickProvider,
+            {
+                providedCodeActionKinds: [
+                    vscode.CodeActionKind.QuickFix,
+                    vscode.CodeActionKind.RefactorRewrite
+                ]
+            }
+        )
+    );
+
+    // // Register a generic command handler for all actions
+    // context.subscriptions.push(
+    //     vscode.commands.registerCommand('refactcmd.genericAction', (actionId: string, command: any, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) => 
+    //         QuickActionProvider.handleAction(actionId, command, context)
+    //     )
+    // );
 }
 
 export async function rollback_and_regen(editor: vscode.TextEditor)

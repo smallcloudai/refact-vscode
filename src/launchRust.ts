@@ -7,6 +7,7 @@ import { join } from 'path';
 import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
 import { register_commands } from './rconsoleCommands';
+import { QuickActionProvider } from './quickProvider';
 
 
 const DEBUG_HTTP_PORT = 8001;
@@ -231,6 +232,13 @@ export class RustBinaryBlob
             global.chat_default_model = json["code_chat_default_model"] || "";
             global.have_caps = true;
             global.status_bar.set_socket_error(false, "");
+
+            const promptCustomization = await fetchAPI.get_prompt_customization();
+            if (promptCustomization && promptCustomization.toolbox_commands) {
+                await QuickActionProvider.updateActions(promptCustomization.toolbox_commands as Record<string, ToolboxCommand>);
+            }
+
+
         } catch (e) {
             global.chat_models = [];
             global.have_caps = false;
