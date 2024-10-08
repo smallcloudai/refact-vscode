@@ -23,12 +23,14 @@ import {
     ideOpenSettingsAction,
     ideDiffPasteBackAction,
     ideDiffPreviewAction,
-    ChatThread,
-    DiffPreviewResponse,
+    type ChatThread,
+    type DiffPreviewResponse,
     setOpenFiles,
     resetDiffApi,
     ideAnimateFileStart,
     ideAnimateFileStop,
+    ideWriteResultsToFile,
+    type PatchResult,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -563,6 +565,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.stopFileAnimation(e.payload);
         }
 
+        if(ideWriteResultsToFile.match(e)) {
+            return this.writeResultsToFile(e.payload);
+        }
+
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
@@ -594,6 +600,71 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //     panel.webview.html = html;
 
     // }
+
+    createNewFileWithContent(fileName: string, content: string) {
+        const newFile = vscode.Uri.parse('untitled:' + fileName);
+        vscode.workspace.openTextDocument(newFile).then(document => {
+            const edit = new vscode.WorkspaceEdit();
+            edit.insert(newFile, new vscode.Position(0, 0), content);
+            return vscode.workspace.applyEdit(edit).then(success => {
+                if (success) {
+                    vscode.window.showTextDocument(document);
+                    this.refetchDiffsOnSave(document);
+                } else {
+                    vscode.window.showInformationMessage('Error: creating file ' + fileName);
+                }
+            });
+        });
+    }
+
+    async addDiffToFile(fileName: string, content: string) {
+        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(fileName));
+        await vscode.window.showTextDocument(document);
+
+        const start = new vscode.Position(0, 0);
+        const end = new vscode.Position(document.lineCount, 0);
+        const range = new vscode.Range(start, end);
+
+        
+        diff_paste_back(
+            document,
+            range,
+            content
+        );
+        // TODO: can remove this when diff api is removed.
+        this.refetchDiffsOnSave(document);
+    }
+
+    async editFileWithContent(fileName: string, content: string) {
+        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(fileName));
+        const start = new vscode.Position(0, 0);
+        const end = new vscode.Position(document.lineCount, 0);
+        const range = new vscode.Range(start, end);
+
+        const edit = new vscode.WorkspaceEdit();
+        edit.delete(document.uri, range);
+        edit.insert(document.uri, start, content);
+        vscode.workspace.applyEdit(edit).then(success => {
+            if(success) {
+                vscode.window.showTextDocument(document);
+            } else {
+                vscode.window.showInformationMessage('Error: editing file ' + fileName);
+            }
+        });
+    }
+
+
+    async writeResultsToFile(results: PatchResult[]) {
+        for(const result of results)  {
+            if(result.file_name_add) {
+                this.createNewFileWithContent(result.file_name_add, result.file_text);
+            } else if(result.file_name_edit) {
+                this.editFileWithContent(result.file_name_edit, result.file_text);
+            } else if (result.file_name_delete) {
+                // TODO: delete the file
+            }
+        }
+    }
 
     async startFileAnimation(fileName: string) {
 
@@ -694,60 +765,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     private async handleDiffPreview(response: DiffPreviewResponse) {
-
-        // TODO:  Won't work if no file is open :/
-        // const editor = vscode.window.activeTextEditor;
-        // if(!editor) { return; }
         
         const openFiles = this.getOpenFiles();
 
         for (const change of response.results) {
             if (change.file_name_edit !== null && change.file_text !== null) {
-                const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_edit));
-                await vscode.window.showTextDocument(document);
-
-                const start = new vscode.Position(0, 0);
-                const end = new vscode.Position(document.lineCount, 0);
-                const range = new vscode.Range(start, end);
-
-                
-                diff_paste_back(
-                    document,
-                    range,
-                    change.file_text
-                );
-                this.refetchDiffsOnSave(document);
-
+                this.addDiffToFile(change.file_name_edit, change.file_text);
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add) === false) {
-                const newFile = vscode.Uri.parse('untitled:' + change.file_name_add);
-                vscode.workspace.openTextDocument(newFile).then(document => {
-                    const edit = new vscode.WorkspaceEdit();
-                    edit.insert(newFile, new vscode.Position(0, 0), change.file_text);
-                    return vscode.workspace.applyEdit(edit).then(success => {
-                        if (success) {
-                            vscode.window.showTextDocument(document);
-                            this.refetchDiffsOnSave(document);
-                        } else {
-                            vscode.window.showInformationMessage('Error: creating file ' + change.file_name_add);
-                        }
-                    });
-                });
+                this.createNewFileWithContent(change.file_name_add, change.file_text);
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
-                // almost duplicate of edit
-                const document = await vscode.workspace.openTextDocument(vscode.Uri.file(change.file_name_add));
-                await vscode.window.showTextDocument(document);
-                const start = new vscode.Position(0, 0);
-                const end = new vscode.Position(document.lineCount, 0);
-                const range = new vscode.Range(start, end);
-
-                diff_paste_back(
-                    document,
-                    range,
-                    change.file_text
-                );
-
-                this.refetchDiffsOnSave(document);
-
+                this.addDiffToFile(change.file_name_add, change.file_text);
             }
 
             // TODO: delete
