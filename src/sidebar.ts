@@ -600,6 +600,17 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //     panel.webview.html = html;
 
     // }
+    
+    async deleteFile(fileName: string) {
+        const pathToFile = vscode.Uri.file(fileName);
+        const edit = new vscode.WorkspaceEdit();
+        edit.deleteFile(pathToFile);
+        return vscode.workspace.applyEdit(edit).then(success => {
+            if(!success) {
+                vscode.window.showInformationMessage("Error: could not delete: "  + pathToFile);
+            }
+        })
+    }
 
     createNewFileWithContent(fileName: string, content: string) {
         const newFile = vscode.Uri.parse('untitled:' + fileName);
@@ -661,7 +672,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             } else if(result.file_name_edit) {
                 this.editFileWithContent(result.file_name_edit, result.file_text);
             } else if (result.file_name_delete) {
-                // TODO: delete the file
+                this.deleteFile(result.file_name_delete);
             }
         }
     }
@@ -775,9 +786,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 this.createNewFileWithContent(change.file_name_add, change.file_text);
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
                 this.addDiffToFile(change.file_name_add, change.file_text);
+            } else if(change.file_name_delete) {
+                this.deleteFile(change.file_name_delete);
             }
-
-            // TODO: delete
         }
 	}
 
