@@ -394,20 +394,10 @@ export function activate(context: vscode.ExtensionContext)
             { pattern: "**" },
             quickProvider,
             {
-                providedCodeActionKinds: [
-                    vscode.CodeActionKind.QuickFix,
-                    vscode.CodeActionKind.RefactorRewrite
-                ]
+                providedCodeActionKinds: QuickActionProvider.providedCodeActionKinds
             }
         )
     );
-
-    // // Register a generic command handler for all actions
-    // context.subscriptions.push(
-    //     vscode.commands.registerCommand('refactcmd.genericAction', (actionId: string, command: any, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) => 
-    //         QuickActionProvider.handleAction(actionId, command, context)
-    //     )
-    // );
 }
 
 export async function rollback_and_regen(editor: vscode.TextEditor)

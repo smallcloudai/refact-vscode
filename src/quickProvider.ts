@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as sidebar from "./sidebar";
 import * as fetchAPI from "./fetchAPI";
+import { v4 as uuidv4 } from "uuid";
 import { ToolboxCommand, ChatMessageFromLsp } from "./launchRust";
 import {
     type ChatMessages,
@@ -16,13 +17,20 @@ type ChatMessage = PlainTextMessage;
 
 export class QuickActionProvider implements vscode.CodeActionProvider {
     private static actions: vscode.CodeAction[] = [];
+
+    public static readonly providedCodeActionKinds = [
+        vscode.CodeActionKind.QuickFix,
+        vscode.CodeActionKind.RefactorRewrite
+    ];
+
     provideCodeActions(
         document: vscode.TextDocument,
         range: vscode.Range | vscode.Selection,
         context: vscode.CodeActionContext,
         token: vscode.CancellationToken
     ): vscode.ProviderResult<(vscode.CodeAction | vscode.Command)[]> {    
-        return QuickActionProvider.actions.map(action => {
+        // Create new instances of Refact.ai actions
+        const refactActions = QuickActionProvider.actions.map(action => {
             const newAction = new vscode.CodeAction(action.title, action.kind);
             if (action.command) {
                 const diagnosticRange = context.diagnostics[0]?.range || range;
@@ -41,12 +49,11 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             }
             return newAction;
         });
+    
+        return refactActions;
     }
-    
-    
 
     public static updateActions = async (toolboxCommands: Record<string, ToolboxCommand>) => {
-        console.log('..........................',toolboxCommands);
         this.actions = Object.entries(toolboxCommands).map(([id, command]) => {
             if(id === 'help') { return; }
             let action;
@@ -56,13 +63,13 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 action = new vscode.CodeAction('Refact.ai: ' + command.description, vscode.CodeActionKind.RefactorRewrite);
             }
             action.command = {
-                command: 'refactcmd.genericAction',
+                command: 'refactcmd.' + id,
                 title: 'Refact.ai: ' + command.description,
                 arguments: [id, command]
             };
             return action;
         }).filter((action): action is vscode.CodeAction => action !== undefined);
-    
+
         this.actions.forEach(action => {
             if (action.command) {
                 vscode.commands.registerCommand(action.command.command, (actionId: string, command: ToolboxCommand, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) => {
@@ -76,10 +83,38 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         let tools = await fetchAPI.get_tools();
     
         const editor = vscode.window.activeTextEditor;
-        const working_on_attach_filename = editor?.document.uri.fsPath || '';
-        const selection = editor?.selection;
-        const middle_line_of_selection = selection ? Math.floor((selection.start.line + selection.end.line) / 2) : 0;
-        const code_snippet = selection ? editor.document.getText(selection) : '';
+        if (!editor) {
+            vscode.window.showErrorMessage('No active editor');
+            return;
+        }
+    
+        const working_on_attach_filename = editor.document.uri.fsPath;
+        const selection = editor.selection;
+        let code_snippet = '';
+        let middle_line_of_selection = 0;
+        let diagnostic_message = '';
+    
+        if (actionId === 'bugs') {
+            if (context?.diagnostics && context.diagnostics.length > 0) {
+                const diagnostic = context.diagnostics[0];
+                diagnostic_message = diagnostic.message;
+                middle_line_of_selection = diagnostic.range.start.line;
+                
+                code_snippet = editor.document.getText(diagnostic.range);
+            }
+            
+            if (!code_snippet) {
+                const cursorPosition = selection.isEmpty ? editor.selection.active : selection.start;
+                const startLine = Math.max(0, cursorPosition.line - 2);
+                const endLine = Math.min(editor.document.lineCount - 1, cursorPosition.line + 2);
+                const range = new vscode.Range(startLine, 0, endLine, editor.document.lineAt(endLine).text.length);
+                code_snippet = editor.document.getText(range);
+                middle_line_of_selection = cursorPosition.line;
+            }
+        } else {
+            code_snippet = editor.document.getText(selection);
+            middle_line_of_selection = Math.floor((selection.start.line + selection.end.line) / 2);
+        }
     
         const messages: PlainTextMessage[] = command.messages.map(({ content }) => ({
             role: 'system',
@@ -91,18 +126,21 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 .replace("%CODE_SELECTION%", code_snippet)
         }));
         
-        const question = context?.diagnostics[0]?.message || 'Issue';
+        const question = actionId === 'bugs' ? (diagnostic_message || 'Issue with code') : 'Issue';
         
         const chat: ChatThread = {
-            id: '', // Set the ID to the active file's path
+            id: uuidv4(),
             title: question,
-            messages: question ? [
+            messages: [
                 ...messages,
-                { role: 'system', content: `Active file: ${working_on_attach_filename}` } // Optionally include the active file in messages
-            ] : messages,
+                { role: 'system', content: `Active file: ${working_on_attach_filename}` },
+                ...(actionId === 'bugs' && diagnostic_message 
+                    ? [{ role: 'user', content: `Error in: ${diagnostic_message}` }] 
+                    : [])
+            ] as ChatMessage[],
             model: '',
         };
-        
+        vscode.commands.executeCommand("refactaicmd.callChat");
         global.side_panel?.goto_chat(chat);        
     }
 }
