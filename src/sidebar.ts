@@ -29,6 +29,7 @@ import {
     ideAnimateFileStart,
     ideAnimateFileStop,
     ideWriteResultsToFile,
+    showPatchTicket,
     type PatchResult,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
@@ -36,6 +37,7 @@ import { diff_paste_back } from "./chatTab";
 import { execFile } from "child_process";
 import * as estate from './estate';
 import { animation_start } from "./interactiveDiff";
+import { set_next_ticket } from "./codeLens";
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -542,7 +544,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if (ideDiffPreviewAction.match(e)) {
-            return this.handleDiffPreview(e.payload);
+            const {currentPin, allPins, ...preview} = e.payload
+            return this.handleDiffPreview(preview, currentPin, allPins);
         }
 
         if(ideAnimateFileStart.match(e)) {
@@ -608,7 +611,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return vscode.workspace.applyEdit(edit).then(success => {
                 if (success) {
                     vscode.window.showTextDocument(document);
-                    this.refetchDiffsOnSave(document);
                 } else {
                     vscode.window.showInformationMessage('Error: creating file ' + fileName);
                 }
@@ -616,7 +618,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    async addDiffToFile(fileName: string, content: string) {
+    sendShowTicketMessage(ticketId: string) {
+        const message = showPatchTicket(ticketId);
+        this._view?.webview.postMessage(message);
+    }
+
+    async addDiffToFile(fileName: string, content: string, nextTicket: string | null) {
         const document = await vscode.workspace.openTextDocument(vscode.Uri.file(fileName));
         await vscode.window.showTextDocument(document);
 
@@ -624,14 +631,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const end = new vscode.Position(document.lineCount, 0);
         const range = new vscode.Range(start, end);
 
-        
+        set_next_ticket(nextTicket);
+
         diff_paste_back(
             document,
             range,
-            content
+            content,
         );
-        // TODO: can remove this when diff api is removed.
-        this.refetchDiffsOnSave(document);
     }
 
     async editFileWithContent(fileName: string, content: string) {
@@ -747,33 +753,25 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
 	}
 
-    private refetchDiffsOnSave(document: vscode.TextDocument) {
-        const disposables: vscode.Disposable[] = [];
-        const dispose = () => disposables.forEach(d => d.dispose());
-        disposables.push(vscode.workspace.onDidSaveTextDocument((savedDocument) => {
-            if(savedDocument.uri.fsPath === document.uri.fsPath) {
-                this.sendClearDiffCacheMessage();
-                dispose();
-            }
-        }));
-        disposables.push(vscode.workspace.onDidCloseTextDocument((closedDocument) => {
-            if(closedDocument.uri.fsPath === document.uri.fsPath) {
-                dispose();
-            }
-        }));
+    getNext<A>(arr: A[], item: A): A | null {
+        const index = arr.indexOf(item);
+        if(index === -1) { return null; }
+        if(index === arr.length - 1) { return null; }
+        return arr[index + 1];
     }
 
-    private async handleDiffPreview(response: DiffPreviewResponse) {
+    private async handleDiffPreview(response: DiffPreviewResponse, currentPin: string, allPins: string[]) {
         
         const openFiles = this.getOpenFiles();
+        const nextPin = this.getNext(allPins, currentPin);
 
         for (const change of response.results) {
             if (change.file_name_edit !== null && change.file_text !== null) {
-                this.addDiffToFile(change.file_name_edit, change.file_text);
+                this.addDiffToFile(change.file_name_edit, change.file_text, nextPin);
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add) === false) {
                 this.createNewFileWithContent(change.file_name_add, change.file_text);
             } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
-                this.addDiffToFile(change.file_name_add, change.file_text);
+                this.addDiffToFile(change.file_name_add, change.file_text, nextPin);
             } else if(change.file_name_delete) {
                 this.deleteFile(change.file_name_delete);
             }
