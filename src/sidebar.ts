@@ -597,7 +597,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if(!success) {
                 vscode.window.showInformationMessage("Error: could not delete: "  + pathToFile);
             }
-        })
+        });
     }
 
     createNewFileWithContent(fileName: string, content: string) {
@@ -855,13 +855,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 error: null,
                 prevent_send: true,
                 waiting_for_response: false,
-                tool_use: "agent",
+                tool_use: thread.tool_use ? thread.tool_use : "explore",
                 cache: {},
                 system_prompt: {},
                 send_immediately: thread.messages.length > 0,
                 thread,
             };
-
             state.chat = chat;
             state.pages = [{name: "initial setup"}, {name: "history"}, {name: "chat"}];
         }

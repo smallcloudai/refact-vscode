@@ -628,6 +628,7 @@ type AtParamDict = {
 
 type AtToolFunction = {
     name: string;
+    agentic: boolean;
     description: string;
     parameters: AtParamDict[];
     parameters_required: string[];
