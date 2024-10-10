@@ -6,7 +6,8 @@ import * as fetchAPI from "./fetchAPI";
 import { 
     type ChatMessages,
     type ChatMessage,
-    type ToolUse
+    type ToolUse,
+    setInputValue,
 } from "refact-chat-js/dist/events";
 import { chat_model_get } from './chatTab';
 
@@ -109,18 +110,10 @@ export async function code_lens_execute(code_lens: string, range: any) {
         console.log(`[DEBUG]: tools: `, tools);
         let [chat_model] = await chat_model_get();
         if(!auto_submit) {
-            // const query_text = `\`\`\`\n ${text}\n\`\`\`\n`;
-            // const questionData = {
-            //     id: '',
-            //     model: "",
-            //     title: "",
-            //     messages: [
-            //         {role: "user", content: query_text}
-            //     ] as ChatMessages,
-            //     attach_file: false,
-            //     tools: [],
-            // };
-            // global.side_panel?.goto_chat(questionData);
+            if (global && global.side_panel && global.side_panel._view) {
+                const message = setInputValue(text);
+                global.side_panel._view.webview.postMessage(message);
+            }
             vscode.commands.executeCommand('refactaicmd.callChat', '');
         } else {
             let messages_data: ChatMessages = [];
