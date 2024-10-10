@@ -5,8 +5,10 @@ import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
 import { 
     type ChatMessages,
-    type ChatMessage
+    type ChatMessage,
+    type ToolUse
 } from "refact-chat-js/dist/events";
+import { chat_model_get } from './chatTab';
 
 
 class ExperimentalLens extends vscode.CodeLens {
@@ -92,10 +94,20 @@ export async function code_lens_execute(code_lens: string, range: any) {
     if(custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
         let messages = custom_code_lens[code_lens]["messages"];
+        console.log(`[DEBUG]: custorm_code_lens: `, custom_code_lens[code_lens]);
+        
         const start_of_line = new vscode.Position(range.start.line, 0);
         const end_of_line = new vscode.Position(range.end.line + 1, 0);
         const block_range = new vscode.Range(start_of_line, end_of_line);
+
+        const file_path = vscode.window.activeTextEditor?.document.fileName || "";
+        const cursor_line = vscode.window.activeTextEditor?.selection.active.line ?? null;
         let text = vscode.window.activeTextEditor!.document.getText(block_range);
+
+        let tools = await fetchAPI.get_tools();
+        const tools_to_use = tools.filter(tool => tool.function.agentic !== true);
+        console.log(`[DEBUG]: tools: `, tools);
+        let [chat_model] = await chat_model_get();
         if(!auto_submit) {
             // const query_text = `\`\`\`\n ${text}\n\`\`\`\n`;
             // const questionData = {
@@ -115,7 +127,10 @@ export async function code_lens_execute(code_lens: string, range: any) {
             if (messages) {
                 messages.forEach((message: { role: string; content: string; }) =>  {                        
                     const data: ChatMessage = {
-                        content: message.content.replace("%CODE_SELECTION%", text),
+                        content: message.content
+                            .replace("%CURRENT_FILE%", file_path)
+                            .replace("%CURSOR_LINE%", cursor_line !== null ? (cursor_line + 1).toString() : "")
+                            .replace("%CODE_SELECTION%", text),
                         role: message.role as "user"
                     };
                     messages_data.push(data);
@@ -123,12 +138,14 @@ export async function code_lens_execute(code_lens: string, range: any) {
             }
             const questionData = {
                 id: '',
-                model: "",
+                model: chat_model,
                 title: "",
                 messages: messages_data,
                 attach_file: false,
-                tools: [],
+                tool_use: "explore" as ToolUse,
+                tools: tools_to_use
             };
+            console.log(`[DEBUG]: questionData: `, questionData);
             global.side_panel?.goto_chat(questionData);
         }
     }
@@ -147,6 +164,7 @@ export function save_provider(provider: LensProvider)
 export function quick_refresh()
 {
     if (global_provider) {
+        console.log(`[DEBUG]: refreshing code lens!`);
         global_provider.notifyCodeLensesChanged.fire();
     }
 }

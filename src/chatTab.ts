@@ -976,6 +976,8 @@ export async function chat_model_get(): Promise<[string, string]>
         return ["", ""];
     }
 
+    console.log(`[DEBUG]: context.globalState: `, context.globalState);
+
     try {
         await global.rust_binary_blob?.read_caps();
     } catch {
@@ -1011,6 +1013,7 @@ export async function chat_model_set(chat_model: string, model_function: string)
     if (!chat_model) {
         return;
     }
+    console.log(`[DEBUG]: globalState: `, context.globalState);
     await context.globalState.update("chat_model", chat_model);
     await context.globalState.update("chat_model_function", model_function);
 }
