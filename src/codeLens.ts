@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
+import * as path from 'path';
 import * as estate from "./estate";
 import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
@@ -94,7 +95,7 @@ export class LensProvider implements vscode.CodeLensProvider
 export async function code_lens_execute(code_lens: string, range: any) {
     if(custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
-        let messages = custom_code_lens[code_lens]["messages"];
+        let messages: {content: string; role: string;}[] = custom_code_lens[code_lens]["messages"];
         console.log(`[DEBUG]: custorm_code_lens: `, custom_code_lens[code_lens]);
         
         const start_of_line = new vscode.Position(range.start.line, 0);
@@ -102,6 +103,14 @@ export async function code_lens_execute(code_lens: string, range: any) {
         const block_range = new vscode.Range(start_of_line, end_of_line);
 
         const file_path = vscode.window.activeTextEditor?.document.fileName || "";
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        let relative_path: string = "";
+
+        if (workspaceFolders) {
+            const workspacePath = workspaceFolders[0].uri.fsPath;
+            relative_path = path.relative(workspacePath, file_path);
+        }
+
         const cursor_line = vscode.window.activeTextEditor?.selection.active.line ?? null;
         let text = vscode.window.activeTextEditor!.document.getText(block_range);
 
@@ -109,12 +118,34 @@ export async function code_lens_execute(code_lens: string, range: any) {
         const tools_to_use = tools.filter(tool => tool.function.agentic !== true);
         console.log(`[DEBUG]: tools: `, tools);
         let [chat_model] = await chat_model_get();
-        if(!auto_submit) {
-            if (global && global.side_panel && global.side_panel._view) {
-                const message = setInputValue(text);
+
+        if (!auto_submit) {
+            const sendCodeLensToChat = (global: typeof globalThis) => {
+                if (!global || !global.side_panel || !global.side_panel._view) {
+                    return;
+                }
+
+                const messageBlock = messages.find((message: {content: string; role: string;}) => message.role === "user")?.content
+                    .replace("%CURRENT_FILE%", relative_path)
+                    .replace("%CURSOR_LINE%", "")
+                    .replace("%CODE_SELECTION%", text);
+                
+                const message = setInputValue(messageBlock ? messageBlock : text);
                 global.side_panel._view.webview.postMessage(message);
+            };
+            
+            
+            if (messages.length === 0) {
+                vscode.commands.executeCommand('refactaicmd.callChat', '');
+                return;
             }
-            vscode.commands.executeCommand('refactaicmd.callChat', '');
+
+            if (global && global.side_panel && global.side_panel._view) {
+                sendCodeLensToChat(global);
+            } else {
+                vscode.commands.executeCommand('refactaicmd.callChat', '');
+                sendCodeLensToChat(global);
+            }
         } else {
             let messages_data: ChatMessages = [];
             if (messages) {
