@@ -10,7 +10,7 @@ class ExperimentalLens extends vscode.CodeLens {
         range: vscode.Range,
         msg: string,
         arg0: string,
-        arg1: string,
+        arg1: string | null,
     ) {
         super(range, {
             title: msg,
@@ -25,7 +25,7 @@ export class LensProvider implements vscode.CodeLensProvider
 {
     public notifyCodeLensesChanged: vscode.EventEmitter<void>;
     public onDidChangeCodeLenses?: vscode.Event<void>;
-
+    public nextPinMessage: string | null = null;
     constructor()
     {
         this.notifyCodeLensesChanged = new vscode.EventEmitter<void>();
@@ -76,6 +76,9 @@ export class LensProvider implements vscode.CodeLensProvider
             let range = new vscode.Range(state.diff_lens_pos, 0, state.diff_lens_pos, 0);
             lenses.push(new ExperimentalLens(range, "👍 Approve (Tab)", "APPROVE", ""));
             lenses.push(new ExperimentalLens(range, "👎 Reject (Esc)", "REJECT", ""));
+            if(this.nextPinMessage) {
+                lenses.push(new ExperimentalLens(range, "👍 Approve and Continue", "APPROVE_AND_CONTINUE", this.nextPinMessage));
+            }
             // lenses.push(new ExperimentalLens(range, "↻ Rerun \"" + estate.global_intent + "\" (F1)", "RERUN"));  // 🔃
         }
 
@@ -93,6 +96,11 @@ export function save_provider(provider: LensProvider)
     global_provider = provider;
 }
 
+export function set_next_ticket(msg: string | null) {
+    if(global_provider) {
+        global_provider.nextPinMessage = msg;
+    }
+}
 
 export function quick_refresh()
 {

@@ -141,7 +141,7 @@ async function pressed_tab()
 }
 
 
-async function code_lens_clicked(arg0: any)
+async function code_lens_clicked(arg0: any, arg1: string)
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
@@ -157,6 +157,9 @@ async function code_lens_clicked(arg0: any)
             await pressed_escape();  // might return to highlight
         } else if (arg0 === "RERUN") {
             await rollback_and_regen(editor);
+        } else if (arg0 === "APPROVE_AND_CONTINUE") {
+            await interactiveDiff.like_and_accept(editor);
+            global.side_panel?.sendShowTicketMessage(arg1);
         // } else if (arg0 === "COMP_APPROVE") {
         //     state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
         //     codeLens.quick_refresh();
