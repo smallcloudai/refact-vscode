@@ -140,8 +140,8 @@ export async function code_lens_execute(code_lens: string, range: any) {
                 return;
             }
 
-            if (global && global.side_panel && global.side_panel._view) {
-                const current_page = global.side_panel.context.globalState.get("chat_page"); // test!
+            if (global && global.side_panel && global.side_panel._view && global.side_panel._view.visible) {
+                const current_page = global.side_panel.context.globalState.get("chat_page");
                 if (typeof current_page === "string" && current_page !== '"chat"') {
                     vscode.commands.executeCommand('refactaicmd.callChat', '');
                 }
