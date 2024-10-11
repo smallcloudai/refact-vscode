@@ -19,6 +19,7 @@ import { Mode } from "./estate";
 import { fileURLToPath } from 'url';
 import { ChatTab } from './chatTab';
 import { FimDebugData } from 'refact-chat-js/dist/events/index.js';
+import { code_lens_execute } from './codeLens';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -141,7 +142,7 @@ async function pressed_tab()
 }
 
 
-async function code_lens_clicked(arg0: any)
+async function code_lens_clicked(arg0: any, arg1: any, range: vscode.Range)
 {
     let editor = vscode.window.activeTextEditor;
     if (editor) {
@@ -170,7 +171,10 @@ async function code_lens_clicked(arg0: any)
         //     await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
         //     await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
         } else {
-            console.log(["code_lens_clicked: can't do", arg0]);
+            if (arg0.startsWith('CUSTOMLENS:')) {
+                let custom_lens_name = arg0.substring("CUSTOMLENS:".length);
+                code_lens_execute(custom_lens_name, range);
+            }
         }
     }
 }
@@ -233,25 +237,25 @@ export function activate(context: vscode.ExtensionContext)
     const comp = new completionProvider.MyInlineCompletionProvider();
     vscode.languages.registerInlineCompletionItemProvider({pattern: "**"}, comp);
 
-    const quickProvider = new QuickActionProvider();
-    vscode.languages.registerCodeActionsProvider({pattern: "**"},quickProvider,
-        {
-            providedCodeActionKinds: [
-            //   vscode.CodeActionKind.RefactorRewrite,
-              vscode.CodeActionKind.QuickFix,
-            ],
-        }
-    );
-    context.subscriptions.push(quickProvider);
+    // const quickProvider = new QuickActionProvider();
+    // vscode.languages.registerCodeActionsProvider({pattern: "**"},quickProvider,
+    //     {
+    //         providedCodeActionKinds: [
+    //         //   vscode.CodeActionKind.RefactorRewrite,
+    //           vscode.CodeActionKind.QuickFix,
+    //         ],
+    //     }
+    // );
+    // context.subscriptions.push(quickProvider);
 
-    for (const action of QuickActionProvider.actions_static_list) {
-        context.subscriptions.push(
-          vscode.commands.registerCommand(
-            `refactcmd.${action.id}`,
-            (actionId: string, diagnosticMessage: string) => QuickActionProvider.handleAction(actionId, diagnosticMessage)
-          )
-        );
-    }
+    // for (const action of QuickActionProvider.actions_static_list) {
+    //     context.subscriptions.push(
+    //       vscode.commands.registerCommand(
+    //         `refactcmd.${action.id}`,
+    //         (actionId: string, diagnosticMessage: string) => QuickActionProvider.handleAction(actionId, diagnosticMessage)
+    //       )
+    //     );
+    // }
 
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
@@ -383,6 +387,17 @@ export function activate(context: vscode.ExtensionContext)
             }
         }
     });
+
+    const quickProvider = new QuickActionProvider();
+    context.subscriptions.push(
+        vscode.languages.registerCodeActionsProvider(
+            { pattern: "**" },
+            quickProvider,
+            {
+                providedCodeActionKinds: QuickActionProvider.providedCodeActionKinds
+            }
+        )
+    );
 }
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
