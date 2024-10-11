@@ -30,6 +30,7 @@ import {
     ideAnimateFileStop,
     ideWriteResultsToFile,
     type PatchResult,
+    ideChatPageChange
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -88,7 +89,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public static readonly viewType = "refactai-toolbox";
 
-    constructor(private readonly context: vscode.ExtensionContext) {
+    constructor(public readonly context: vscode.ExtensionContext) {
         // this.chatHistoryProvider = undefined;
         this.address = "";
         this.js2ts_message = this.js2ts_message.bind(this);
@@ -557,6 +558,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.writeResultsToFile(e.payload);
         }
 
+        if(ideChatPageChange.match(e)) {
+            console.log(`[DEBUG]: current page: ${e.payload}`);
+            return this.handleCurrentChatPage(e.payload);
+        }
+
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
@@ -663,6 +669,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 this.deleteFile(result.file_name_delete);
             }
         }
+    }
+
+    async handleCurrentChatPage(page: string) {
+        this.context.globalState.update("chat_page", JSON.stringify(page));
     }
 
     async startFileAnimation(fileName: string) {
