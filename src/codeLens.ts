@@ -67,6 +67,7 @@ export class LensProvider implements vscode.CodeLensProvider
         } else if ("code_lens" in customization) {
             custom_code_lens = customization["code_lens"] as { [key: string]: any };
             const this_file_lens = await response.json();
+            console.log(`[DEBUG]: this_file_lens: `, this_file_lens);
             if ("detail" in this_file_lens) {
                 console.log(["/v1/code-lens error", this_file_lens["detail"]]);
             }
@@ -92,11 +93,29 @@ export class LensProvider implements vscode.CodeLensProvider
     }
 }
 
+const sendCodeLensToChat = (messages: {content: string; role: string;}[], relative_path: string, text: string, auto_submit: boolean = false) => {
+    if (!global || !global.side_panel || !global.side_panel._view) {
+        return;
+    }
+
+    const messageBlock = messages.find((message: {content: string; role: string;}) => message.role === "user")?.content
+        .replace("%CURRENT_FILE%", relative_path)
+        .replace("%CURSOR_LINE%", "")
+        .replace("%CODE_SELECTION%", text);
+    
+    // TODO: send auto_submit somehow?
+    const message = setInputValue({
+        value: messageBlock ? messageBlock : text,
+        send_immediately: auto_submit
+    });
+    global.side_panel._view.webview.postMessage(message);
+};
+
 export async function code_lens_execute(code_lens: string, range: any) {
-    if(custom_code_lens) {
+    if (custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
+        const new_tab = custom_code_lens[code_lens]["new_tab"];
         let messages: {content: string; role: string;}[] = custom_code_lens[code_lens]["messages"];
-        console.log(`[DEBUG]: custorm_code_lens: `, custom_code_lens[code_lens]);
         
         const start_of_line = new vscode.Position(range.start.line, 0);
         const end_of_line = new vscode.Position(range.end.line + 1, 0);
@@ -111,70 +130,22 @@ export async function code_lens_execute(code_lens: string, range: any) {
             relative_path = path.relative(workspacePath, file_path);
         }
 
-        const cursor_line = vscode.window.activeTextEditor?.selection.active.line ?? null;
-        let text = vscode.window.activeTextEditor!.document.getText(block_range);
+        let text = vscode.window.activeTextEditor!.document.getText(block_range);         
+        
+        if (messages.length === 0) {
+            vscode.commands.executeCommand('refactaicmd.callChat', '');
+            return;
+        }
 
-        let tools = await fetchAPI.get_tools();
-        const tools_to_use = tools.filter(tool => tool.function.agentic !== true);
-        console.log(`[DEBUG]: tools: `, tools);
-        let [chat_model] = await chat_model_get();
-
-        if (!auto_submit) {
-            const sendCodeLensToChat = (global: typeof globalThis) => {
-                if (!global || !global.side_panel || !global.side_panel._view) {
-                    return;
-                }
-
-                const messageBlock = messages.find((message: {content: string; role: string;}) => message.role === "user")?.content
-                    .replace("%CURRENT_FILE%", relative_path)
-                    .replace("%CURSOR_LINE%", "")
-                    .replace("%CODE_SELECTION%", text);
-                
-                const message = setInputValue(messageBlock ? messageBlock : text);
-                global.side_panel._view.webview.postMessage(message);
-            };
-            
-            
-            if (messages.length === 0) {
+        if (global && global.side_panel && global.side_panel._view && global.side_panel._view.visible) {
+            const current_page = global.side_panel.context.globalState.get("chat_page");
+            if (typeof current_page === "string" && current_page !== '"chat"' || new_tab) {
                 vscode.commands.executeCommand('refactaicmd.callChat', '');
-                return;
             }
-
-            if (global && global.side_panel && global.side_panel._view && global.side_panel._view.visible) {
-                const current_page = global.side_panel.context.globalState.get("chat_page");
-                if (typeof current_page === "string" && current_page !== '"chat"') {
-                    vscode.commands.executeCommand('refactaicmd.callChat', '');
-                }
-                sendCodeLensToChat(global);
-            } else {
-                vscode.commands.executeCommand('refactaicmd.callChat', '');
-                sendCodeLensToChat(global);
-            }
+            sendCodeLensToChat(messages, relative_path, text, auto_submit);
         } else {
-            let messages_data: ChatMessages = [];
-            if (messages) {
-                messages.forEach((message: { role: string; content: string; }) =>  {                        
-                    const data: ChatMessage = {
-                        content: message.content
-                            .replace("%CURRENT_FILE%", file_path)
-                            .replace("%CURSOR_LINE%", cursor_line !== null ? (cursor_line + 1).toString() : "")
-                            .replace("%CODE_SELECTION%", text),
-                        role: message.role as "user"
-                    };
-                    messages_data.push(data);
-                });
-            }
-            const questionData = {
-                id: '',
-                model: chat_model,
-                title: "",
-                messages: messages_data,
-                attach_file: false,
-                tool_use: "explore" as ToolUse,
-                tools: tools_to_use
-            };
-            console.log(`[DEBUG]: questionData: `, questionData);
-            global.side_panel?.goto_chat(questionData);
+            vscode.commands.executeCommand('refactaicmd.callChat', '');
+            sendCodeLensToChat(messages, relative_path, text, auto_submit);
         }
     }
 }
