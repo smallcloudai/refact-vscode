@@ -896,7 +896,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         const initialState = await this.createInitialState(chat_thread, tabbed);
         let stringifiedInitialState = JSON.stringify(initialState);
-        stringifiedInitialState = stringifiedInitialState.replace("</script>", "</scr\"+\"ipt>");
+        stringifiedInitialState = stringifiedInitialState.replace(/\<\/script>/gi, "</scr\"+\"ipt>");
+
+
 
         return `<!DOCTYPE html>
             <html lang="en" class="light">
