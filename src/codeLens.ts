@@ -98,9 +98,11 @@ const sendCodeLensToChat = (messages: {content: string; role: string;}[], relati
         return;
     }
 
+    const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
+
     const messageBlock = messages.find((message: {content: string; role: string;}) => message.role === "user")?.content
         .replace("%CURRENT_FILE%", relative_path)
-        .replace("%CURSOR_LINE%", "")
+        .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
         .replace("%CODE_SELECTION%", text);
     
     // TODO: send auto_submit somehow?
@@ -112,6 +114,9 @@ const sendCodeLensToChat = (messages: {content: string; role: string;}[], relati
 };
 
 export async function code_lens_execute(code_lens: string, range: any) {
+    if (!global) { return; }
+    if (global.is_chat_streaming) { return; }
+    global.is_chat_streaming = true;
     if (custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
         const new_tab = custom_code_lens[code_lens]["new_tab"];
