@@ -111,7 +111,14 @@ const sendCodeLensToChat = (messages: {content: string; role: string;}[], relati
     global.side_panel._view.webview.postMessage(message);
 };
 
+// isRecursiveCall is required to avoid double-opening of chat if code_lens are called recursivelly (for first chat initialization)
+let isRecursiveCall = false;
 export async function code_lens_execute(code_lens: string, range: any) {
+    if (!global) {return; }
+    if (global.isCodeLensExecuting) {
+        return;
+    }
+    global.isCodeLensExecuting = true;
     if (custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
         const new_tab = custom_code_lens[code_lens]["new_tab"];
@@ -137,14 +144,27 @@ export async function code_lens_execute(code_lens: string, range: any) {
             return;
         }
 
-        if (global && global.side_panel && global.side_panel._view && global.side_panel._view.visible) {
+        if (global.side_panel && global.side_panel._view && global.side_panel._view.visible) {
             const current_page = global.side_panel.context.globalState.get("chat_page");
-            if (typeof current_page === "string" && current_page !== '"chat"' || new_tab) {
+            if (typeof current_page === "string" && current_page !== '"chat"' || new_tab) {   
                 vscode.commands.executeCommand('refactaicmd.callChat', '');
             }
             sendCodeLensToChat(messages, relative_path, text, auto_submit);
         } else {
-            vscode.commands.executeCommand('refactaicmd.callChat', '');
+            // checking for first chat initialization, if yes, doing closure call
+            if (!global.isChatFirstlyInitialized) {
+                await vscode.commands.executeCommand('refactaicmd.callChat', '');
+                setTimeout(() => {
+                    isRecursiveCall = true;
+                    global.isCodeLensExecuting = false;
+                    code_lens_execute(code_lens, range);
+                }, 6000);
+                return;
+            }
+            // if runned as usual without recursion, opening a new chat
+            if (!isRecursiveCall) {
+                vscode.commands.executeCommand('refactaicmd.callChat', '');
+            }
             sendCodeLensToChat(messages, relative_path, text, auto_submit);
         }
     }
@@ -163,7 +183,6 @@ export function save_provider(provider: LensProvider)
 export function quick_refresh()
 {
     if (global_provider) {
-        console.log(`[DEBUG]: refreshing code lens!`);
         global_provider.notifyCodeLensesChanged.fire();
     }
 }

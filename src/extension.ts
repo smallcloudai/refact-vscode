@@ -41,7 +41,8 @@ declare global {
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
-
+    var isChatFirstlyInitialized: boolean | undefined;
+    var isCodeLensExecuting: boolean | undefined;
     var open_chat_panels: Record<string, vscode.WebviewPanel>;
 
     var toolbox_config: launchRust.ToolboxConfig | undefined;
@@ -50,22 +51,38 @@ declare global {
     var fim_data_cache: FimDebugData | undefined;
 }
 
-async function pressed_call_chat(n = 0) {
+async function pressed_call_chat(n: number = 0) {
     let editor = vscode.window.activeTextEditor;
+    
+    // if (!global.side_panel && !global.side_panel._view) {
+    //     activate(global_context, "open-chat")
+    //         .then(() => pressed_call_chat());
+    //     return;
+    // }
+
     if(global.side_panel && !global.side_panel._view) {
 
         await vscode.commands.executeCommand(sidebar.default.viewType + ".focus");
 
         const delay = (n + 1) * 10;
-        if(delay > 200) { return; }
+        if(delay > 400) { return; }
 
-        setTimeout(() => pressed_call_chat(n + 1), delay);
+        setTimeout(() => pressed_call_chat(Number(n + 1)), delay);
         return;
     } else if (global.side_panel && global.side_panel._view && !global.side_panel?._view?.visible) {
         global.side_panel._view.show();
+        return;
     }
-
-    global.side_panel?.newChat();
+    
+    if (global.isChatFirstlyInitialized) {
+        global.side_panel?.newChat();
+    } else {
+        global.isChatFirstlyInitialized = true;
+        setTimeout(() => {
+            global.side_panel?.newChat();
+        }, 5000);
+    }
+    
 }
 
 
@@ -212,7 +229,7 @@ export async function inline_accepted(this_completion_serial_number: number)
 }
 
 
-export function activate(context: vscode.ExtensionContext)
+export async function activate(context: vscode.ExtensionContext, mode?: "open-chat")
 {
     global.global_context = context;
     global.enable_longthink_completion = false;
@@ -398,6 +415,10 @@ export function activate(context: vscode.ExtensionContext)
             }
         )
     );
+
+    if (mode === "open-chat") {
+        pressed_call_chat();
+    }
 }
 
 export async function rollback_and_regen(editor: vscode.TextEditor)
