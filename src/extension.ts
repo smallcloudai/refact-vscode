@@ -41,7 +41,7 @@ declare global {
     var open_chat_tabs: ChatTab[];
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
-
+    var is_chat_streaming: boolean | undefined;
     var open_chat_panels: Record<string, vscode.WebviewPanel>;
 
     var toolbox_config: launchRust.ToolboxConfig | undefined;
