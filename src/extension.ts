@@ -42,7 +42,6 @@ declare global {
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
     var isChatFirstlyInitialized: boolean | undefined;
-    var isCodeLensExecuting: boolean | undefined;
     var open_chat_panels: Record<string, vscode.WebviewPanel>;
 
     var toolbox_config: launchRust.ToolboxConfig | undefined;

@@ -563,11 +563,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             console.log(`[DEBUG]: current page: ${e.payload}`);
             return this.handleCurrentChatPage(e.payload);
         }
-        
-        if(ideDoneStreaming.match(e)) {
-            console.log(`[DEBUG]: isStreaming: ${e.payload}`);
-            return this.handleStreamingChange(e.payload);
-        }
 
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
@@ -679,10 +674,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     async handleCurrentChatPage(page: string) {
         this.context.globalState.update("chat_page", JSON.stringify(page));
-    }
-
-    async handleStreamingChange(state: boolean) {
-        global.isCodeLensExecuting = state;
     }
 
     async startFileAnimation(fileName: string) {

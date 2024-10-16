@@ -115,10 +115,6 @@ const sendCodeLensToChat = (messages: {content: string; role: string;}[], relati
 let isRecursiveCall = false;
 export async function code_lens_execute(code_lens: string, range: any) {
     if (!global) {return; }
-    if (global.isCodeLensExecuting) {
-        return;
-    }
-    global.isCodeLensExecuting = true;
     if (custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
         const new_tab = custom_code_lens[code_lens]["new_tab"];
@@ -156,7 +152,8 @@ export async function code_lens_execute(code_lens: string, range: any) {
                 await vscode.commands.executeCommand('refactaicmd.callChat', '');
                 setTimeout(() => {
                     isRecursiveCall = true;
-                    global.isCodeLensExecuting = false;
+                    // TODO: merge dev later on and change isCodeLensExecuting => is_chat_streaming
+                    // global.isCodeLensExecuting = false;
                     code_lens_execute(code_lens, range);
                 }, 6000);
                 return;
