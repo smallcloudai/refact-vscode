@@ -45,9 +45,12 @@ export class LensProvider implements vscode.CodeLensProvider
     ): Promise<vscode.CodeLens[]>
     {
         let state = estate.state_of_document(document);
-        if (!state) {
+        const codeLensIsEnabled = vscode.workspace.getConfiguration("refactai").get<boolean>("codeLens") ?? true;
+
+        if (!state || !codeLensIsEnabled) {
             return [];
         }
+
 
         let customization = await fetchAPI.get_prompt_customization();
 
