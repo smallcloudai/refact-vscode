@@ -38,6 +38,7 @@ import { diff_paste_back } from "./chatTab";
 import { execFile } from "child_process";
 import * as estate from './estate';
 import { animation_start } from "./interactiveDiff";
+import path from "node:path"
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -683,14 +684,23 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         global.is_chat_streaming = state;
     }
 
+    private filePathToUri(fileName: string) {
+        // TODO: check if posix paths are sent by the lsp on a windows system
+        const parsedPath = path.parse(fileName);
+        return vscode.Uri.file(path.posix.format(parsedPath));
+    }
+
     async startFileAnimation(fileName: string) {
 
         const openFiles = this.getOpenFiles();
         const editor = vscode.window.activeTextEditor;
+        console.log({fileName, openFiles});
         if(!openFiles.includes(fileName)|| !editor) {return;}
-        const document = await vscode.workspace.openTextDocument(fileName);
+        const file = this.filePathToUri(fileName);
+        console.log({file});
+        const document = await vscode.workspace.openTextDocument(file);
 
-        const state = estate.state_of_editor(editor, "start_animate for file: " + fileName);
+        const state = estate.state_of_editor(editor, "start_animate for file: " + file.toString());
         if(!state) {return;}
         await estate.switch_mode(state, estate.Mode.DiffWait);
         const startPosition = new vscode.Position(0, 0);
@@ -704,8 +714,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const openFiles = this.getOpenFiles();
         const editor = vscode.window.activeTextEditor;
         if(!openFiles.includes(fileName)|| !editor) {return;}
+        const file = this.filePathToUri(fileName);
 
-        const state = estate.state_of_editor(editor, "stop_animate for file: " + fileName);
+        const state = estate.state_of_editor(editor, "stop_animate for file: " + file.toString());
         if(!state) {return;}
         
         await estate.switch_mode(state, estate.Mode.Normal);
