@@ -171,6 +171,12 @@
 					"default": "",
 					"order": 4
 				},
+				"refactai.codeLens": {
+					"type": "boolean",
+					"description": "Enable inline annotations that provide chat actions directly within the code editor.",
+					"default": true,
+					"order": 5
+				},
 				"refactai.telemetryCodeSnippets": {
 					"type": "boolean",
 					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
