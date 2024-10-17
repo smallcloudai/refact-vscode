@@ -560,12 +560,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideChatPageChange.match(e)) {
-            console.log(`[DEBUG]: current page: ${e.payload}`);
             return this.handleCurrentChatPage(e.payload);
         }
 
         if(ideDoneStreaming.match(e)) {
-            console.log(`[DEBUG]: isStreaming: ${e.payload}`);
             return this.handleStreamingChange(e.payload);
         }
 
