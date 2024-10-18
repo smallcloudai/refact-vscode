@@ -60,7 +60,7 @@ export class LensProvider implements vscode.CodeLensProvider
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ uri: document.uri.toString() }),
+            body: JSON.stringify({ uri: document.uri.fsPath }),
         });
 
         const response = await fetchH2.fetch(request);
