@@ -710,7 +710,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const uri = vscode.Uri.file(normalized_path);
 
         console.log(`[DEBUG]: (animation) opening file: `, {value: relative_path});
-
+        
+        console.log(`[COND]: openFiles.some(file => file.includes(relative_path): ${openFiles.some(file => file.includes(relative_path))}`);
         if(!openFiles.some(file => file.includes(relative_path))|| !editor) {return;}
         const document = await vscode.workspace.openTextDocument(uri);
 
@@ -741,7 +742,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const relative_path = path.relative(workspace_path, fileName.replace(/\?/g, ''));
 
         console.log(`[DEBUG]: opening file: `, normalized_path);
-
+        console.log(`[COND]: openFiles.some(file => file.includes(relative_path): ${openFiles.some(file => file.includes(relative_path))}`);
         if(!openFiles.some(file => file.includes(relative_path))|| !editor) {return;}
 
         const state = estate.state_of_editor(editor, "stop_animate for file: " + uri);
