@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
+import * as path from 'path';
 import { v4 as uuidv4 } from "uuid";
 import { getKeyBindingForChat } from "./getKeybindings";
 import {
@@ -600,18 +601,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     // }
     
     async deleteFile(fileName: string) {
-        const pathToFile = vscode.Uri.file(fileName);
+        const uri = this.filePathToUri(fileName);
         const edit = new vscode.WorkspaceEdit();
-        edit.deleteFile(pathToFile);
+        edit.deleteFile(uri);
         return vscode.workspace.applyEdit(edit).then(success => {
             if(!success) {
-                vscode.window.showInformationMessage("Error: could not delete: "  + pathToFile);
+                vscode.window.showInformationMessage("Error: could not delete: "  + uri);
             }
         });
     }
 
     createNewFileWithContent(fileName: string, content: string) {
-        const newFile = vscode.Uri.parse('untitled:' + fileName);
+        const uri = this.filePathToUri(fileName);
+        const newFile = vscode.Uri.parse('untitled:' + uri);
         vscode.workspace.openTextDocument(newFile).then(document => {
             const edit = new vscode.WorkspaceEdit();
             edit.insert(newFile, new vscode.Position(0, 0), content);
@@ -627,7 +629,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     async addDiffToFile(fileName: string, content: string) {
-        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(fileName));
+        const uri = this.filePathToUri(fileName);
+        const document = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(document);
 
         const start = new vscode.Position(0, 0);
@@ -645,7 +648,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     async editFileWithContent(fileName: string, content: string) {
-        const document = await vscode.workspace.openTextDocument(vscode.Uri.file(fileName));
+        const uri = this.filePathToUri(fileName);
+        const document = await vscode.workspace.openTextDocument(uri);
+
         const start = new vscode.Position(0, 0);
         const end = new vscode.Position(document.lineCount, 0);
         const range = new vscode.Range(start, end);
@@ -683,17 +688,57 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         global.is_chat_streaming = state;
     }
 
+    removeQuestionMarks(filePath: string): string {
+        // Remove the sequence '\\?\\'
+        let cleanedPath = filePath.replace(/\\\?\\/g, '');
+        // Remove leading backslashes if present
+        cleanedPath = cleanedPath.replace(/^\\+/, '');
+        // Replace question marks and backslashes
+        // return cleanedPath.replace(/\?/g, '').replace(/\\/g, '/');
+        return cleanedPath;
+    }
+
+    private filePathToUri(fileName: string) {
+        // TODO: check if posix paths are sent by the lsp on a windows system
+        console.log(`[DEBUG]: original file_name: `, fileName);
+        if (fileName.startsWith('\\?\\')) {
+            fileName = fileName.slice(3); // Remove the '\\?\' prefix
+        }
+        const parsedPath = path.parse(fileName);
+        return vscode.Uri.file(path.posix.format(parsedPath));
+    }
+
     async startFileAnimation(fileName: string) {
 
         const openFiles = this.getOpenFiles();
+        console.log(`[COND]: openFiles: `, openFiles);
         const editor = vscode.window.activeTextEditor;
-        if(!openFiles.includes(fileName)|| !editor) {return;}
-        const document = await vscode.workspace.openTextDocument(fileName);
 
-        const state = estate.state_of_editor(editor, "start_animate for file: " + fileName);
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            return;
+        }
+        
+        const workspace_path = workspaceFolders[0].uri.fsPath;        
+        const relative_path = path.relative(workspace_path, fileName.replace(/\?/g, ''));
+
+        const uri = this.filePathToUri(fileName);
+        console.log(`[COND]: obtained uri: `, {uri: uri});
+        
+        console.log(`[COND]: openFiles.some(file => file.includes(relative_path): ${openFiles.some(file => file.includes(relative_path))}`);
+        let document: vscode.TextDocument | null = null;
+        if(!openFiles.some(file => file.includes(relative_path))) {
+            console.log(`[COND]: файла нет, но вы держитесь`);
+            // document = await vscode.workspace.openTextDocument(uri);
+        }
+        if (!editor) { return; }
+        document = await vscode.workspace.openTextDocument(uri);
+
+        const state = estate.state_of_editor(editor, "start_animate for file: " + uri);
         if(!state) {return;}
         await estate.switch_mode(state, estate.Mode.DiffWait);
         const startPosition = new vscode.Position(0, 0);
+        if (!document) {return;}
         const endPosition = new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
         state.showing_diff_for_range = new vscode.Range(startPosition, endPosition);
         animation_start(editor, state);
@@ -703,9 +748,22 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         const openFiles = this.getOpenFiles();
         const editor = vscode.window.activeTextEditor;
-        if(!openFiles.includes(fileName)|| !editor) {return;}
 
-        const state = estate.state_of_editor(editor, "stop_animate for file: " + fileName);
+        const uri = this.filePathToUri(fileName);
+        console.log(`[DEBUG]: obtained uri: `, {uri: uri});
+
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            return;
+        }
+        
+        const workspace_path = workspaceFolders[0].uri.fsPath;
+        const relative_path = path.relative(workspace_path, fileName.replace(/\?/g, ''));
+
+        console.log(`[COND]: openFiles.some(file => file.includes(relative_path): ${openFiles.some(file => file.includes(relative_path))}`);
+        if(!openFiles.some(file => file.includes(relative_path))|| !editor) {return;}
+
+        const state = estate.state_of_editor(editor, "stop_animate for file: " + uri);
         if(!state) {return;}
         
         await estate.switch_mode(state, estate.Mode.Normal);
@@ -800,8 +858,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
 
     async handleOpenFile(file: {file_name:string, line?: number}) {
-        const uri = vscode.Uri.file(file.file_name);
+        // const normalized_path = this.removeQuestionMarks(file.file_name);
+
+        // const uri = vscode.Uri.file(normalized_path);
+        const uri = this.filePathToUri(file.file_name);
+        console.log(`[DEBUG]: obtained uri: `, {uri: uri});
         const document = await vscode.workspace.openTextDocument(uri);
+
         if(file.line !== undefined) {
             const position = new vscode.Position(file.line ?? 0, 0);
             const editor = await vscode.window.showTextDocument(document);
