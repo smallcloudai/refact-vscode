@@ -138,6 +138,7 @@ export async function code_lens_execute(code_lens: string, range: any) {
         let text = vscode.window.activeTextEditor!.document.getText(block_range);         
         
         if (messages.length === 0) {
+            global.is_chat_streaming = false;
             vscode.commands.executeCommand('refactaicmd.callChat', '');
             return;
         }
