@@ -685,15 +685,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     removeQuestionMarks(filePath: string): string {
+        // Remove the sequence '\\?\\'
         let cleanedPath = filePath.replace(/\\\?\\/g, '');
+        // Remove leading backslashes if present
         cleanedPath = cleanedPath.replace(/^\\+/, '');
+        // Replace question marks and backslashes
+        // return cleanedPath.replace(/\?/g, '').replace(/\\/g, '/');
         return cleanedPath;
     }
 
     async startFileAnimation(fileName: string) {
 
         const openFiles = this.getOpenFiles();
-        console.log(`[DEBUG]: opened files: `, openFiles);
         const editor = vscode.window.activeTextEditor;
 
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -701,15 +704,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return;
         }
         
-        const workspace_path = workspaceFolders[0].uri.fsPath;
-        console.log(`[DEBUG]: workspacePath: `, workspace_path);
-        
+        const workspace_path = workspaceFolders[0].uri.fsPath;        
         const relative_path = path.relative(workspace_path, fileName.replace(/\?/g, ''));
 
         const normalized_path = this.removeQuestionMarks(fileName);
         const uri = vscode.Uri.file(normalized_path);
-
-        console.log(`[DEBUG]: (animation) opening file: `, {value: relative_path});
         
         console.log(`[COND]: openFiles.some(file => file.includes(relative_path): ${openFiles.some(file => file.includes(relative_path))}`);
         if(!openFiles.some(file => file.includes(relative_path))|| !editor) {return;}
@@ -738,10 +737,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
         
         const workspace_path = workspaceFolders[0].uri.fsPath;
-        console.log(`[DEBUG]: workspacePath: `, workspace_path);
         const relative_path = path.relative(workspace_path, fileName.replace(/\?/g, ''));
 
-        console.log(`[DEBUG]: opening file: `, normalized_path);
         console.log(`[COND]: openFiles.some(file => file.includes(relative_path): ${openFiles.some(file => file.includes(relative_path))}`);
         if(!openFiles.some(file => file.includes(relative_path))|| !editor) {return;}
 
@@ -840,32 +837,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
 
     async handleOpenFile(file: {file_name:string, line?: number}) {
-        //
-
-        // const workspaceFolders = vscode.workspace.workspaceFolders;
-        // let relative_path: string = "";
-        // let workspace_path: string = "";
-        // if (workspaceFolders) {
-        //     workspace_path = workspaceFolders[0].uri.fsPath;
-        //     console.log(`[DEBUG]: workspacePath: `, workspace_path);
-        //     relative_path = path.relative(workspace_path, file.file_name.replace(/\?/g, ''));
-        // }
-
-        function removeQuestionMarks(filePath: string): string {
-            // Remove the sequence '\\?\\'
-            let cleanedPath = filePath.replace(/\\\?\\/g, '');
-            // Remove leading backslashes if present
-            cleanedPath = cleanedPath.replace(/^\\+/, '');
-            // Replace question marks and backslashes
-            return cleanedPath.replace(/\?/g, '').replace(/\\/g, '/');
-        }
-
-        const normalized_path = removeQuestionMarks(file.file_name);
-
-        console.log(`[DEBUG]: opening file: `, normalized_path);
+        const normalized_path = this.removeQuestionMarks(file.file_name);
 
         const uri = vscode.Uri.file(normalized_path);
         const document = await vscode.workspace.openTextDocument(uri);
+
         if(file.line !== undefined) {
             const position = new vscode.Position(file.line ?? 0, 0);
             const editor = await vscode.window.showTextDocument(document);
