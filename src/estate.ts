@@ -133,8 +133,9 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
                     return other_state;
                 }
                 if (editor === current_editor) {
-                    console.log([reqfrom, "state delete/add AKA new is current", other_state.fn]);
+                    console.log([reqfrom, "state delete/add AKA new is current", removeQuestionMarks(other_state.fn)]);
                     editor2state.delete(other_editor);
+                    other_state.fn = removeQuestionMarks(other_state.fn);
                     editor2state.set(editor, other_state);
                     state = other_state;
                     state.editor = editor;
@@ -156,6 +157,11 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
     return state;
 }
 
+function removeQuestionMarks(filePath: string): string {
+    let cleanedPath = filePath.replace(/\\\?\\/g, '');
+    cleanedPath = cleanedPath.replace(/^\\+/, '');
+    return cleanedPath;
+}
 
 export function state_of_document(doc: vscode.TextDocument): StateOfEditor | undefined
 {
