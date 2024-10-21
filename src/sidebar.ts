@@ -31,6 +31,7 @@ import {
     ideWriteResultsToFile,
     type PatchResult,
     ideChatPageChange,
+    ideEscapeKeyPressed,
     ideDoneStreaming,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
@@ -566,6 +567,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if(ideDoneStreaming.match(e)) {
             return this.handleStreamingChange(e.payload);
         }
+        
+        if(ideEscapeKeyPressed.match(e)) {
+            return this.handleEscapePressed(e.payload);
+        }
 
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
@@ -681,6 +686,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     async handleStreamingChange(state: boolean) {
         global.is_chat_streaming = state;
+    }
+
+    async handleEscapePressed(mode: string) {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) { return; }
+        // more logic could be developed for different scenarios when esc was pressed
+        if (mode === "combobox") {
+            await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+        }
     }
 
     async startFileAnimation(fileName: string) {
