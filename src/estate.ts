@@ -156,7 +156,6 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
     return state;
 }
 
-
 export function state_of_document(doc: vscode.TextDocument): StateOfEditor | undefined
 {
     let candidates_list = [];
