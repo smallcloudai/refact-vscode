@@ -613,7 +613,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     createNewFileWithContent(fileName: string, content: string) {
         const uri = this.filePathToUri(fileName);
-        const newFile = vscode.Uri.parse('untitled:' + uri);
+        const newFile = vscode.Uri.parse('untitled:' + uri.fsPath);
         vscode.workspace.openTextDocument(newFile).then(document => {
             const edit = new vscode.WorkspaceEdit();
             edit.insert(newFile, new vscode.Position(0, 0), content);
