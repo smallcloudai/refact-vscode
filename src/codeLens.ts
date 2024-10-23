@@ -108,7 +108,6 @@ const sendCodeLensToChat = (messages: {content: string; role: string;}[], relati
         .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
         .replace("%CODE_SELECTION%", text);
     
-    // TODO: send auto_submit somehow?
     const message = setInputValue({
         value: messageBlock ? messageBlock : text,
         send_immediately: auto_submit
@@ -142,6 +141,10 @@ export async function code_lens_execute(code_lens: string, range: any) {
         
         if (messages.length === 0) {
             global.is_chat_streaming = false;
+            const editor = vscode.window.activeTextEditor;
+            if (!editor) {return;}
+            editor.selection = new vscode.Selection(start_of_line, end_of_line);
+            editor.revealRange(block_range);
             vscode.commands.executeCommand('refactaicmd.callChat', '');
             return;
         }
