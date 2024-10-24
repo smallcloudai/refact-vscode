@@ -303,25 +303,35 @@ export class RustBinaryBlob
             this.lsp_client_options
         );
         this.lsp_disposable = this.lsp_client.start();
-        console.log(`RUST START`);
-        const timeoutPromise = new Promise((resolve, reject) => {
-            setTimeout(() => {
-                reject("timeout");
-            }, 5000);
+
+        console.log(`${logts()} RUST START`);
+        const somethings_wrong_timeout = 10000;
+        const startTime = Date.now();
+        let started_okay = false;
+
+        const onReadyPromise = this.lsp_client.onReady().then(() => {
+            started_okay = true;
         });
-        // HACK: sometimes on timeout it cannot lsp_dispose() properly (when it timeouts fast?),
-        // that leads to two processes running :/
-        // So we wait a bit, hope this will happen less often.
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+
         try {
-            await Promise.race([this.lsp_client.onReady(), timeoutPromise]);
-            console.log(`RUST /START`);
+            while (true) {
+                const elapsedTime = Date.now() - startTime;
+                if (started_okay) {
+                    console.log(`${logts()} RUST /START after ${elapsedTime}ms`);
+                    break;
+                }
+                if (elapsedTime >= somethings_wrong_timeout) {
+                    throw new Error("timeout");
+                }
+                console.log(`${logts()} RUST waiting...`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
         } catch (e) {
-            console.log(`RUST START PROBLEM e=${e}`);
-            // e=timeout might lead to the problem above
+            console.log(`${logts()} RUST START PROBLEM e=${e}`);
             this.lsp_dispose();
             return;
         }
+
         let success = await this.ping();
         if (!success) {
             console.log("RUST ping failed");
@@ -460,3 +470,12 @@ export type ToolboxConfig = {
   system_prompts: Record<string, SystemPrompt>;
   toolbox_commands: Record<string, ToolboxCommand>;
 };
+
+function logts() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+    return `${hours}${minutes}${seconds}.${milliseconds}`;
+}
