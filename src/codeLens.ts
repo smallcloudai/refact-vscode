@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as estate from "./estate";
 import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
-import { 
+import {
     type ChatMessages,
     type ChatMessage,
     type ToolUse,
@@ -70,7 +70,6 @@ export class LensProvider implements vscode.CodeLensProvider
         } else if ("code_lens" in customization) {
             custom_code_lens = customization["code_lens"] as { [key: string]: any };
             const this_file_lens = await response.json();
-            console.log(`[DEBUG]: this_file_lens: `, this_file_lens);
             if ("detail" in this_file_lens) {
                 console.log(["/v1/code-lens error", this_file_lens["detail"]]);
             }
@@ -107,7 +106,8 @@ const sendCodeLensToChat = (messages: {content: string; role: string;}[], relati
         .replace("%CURRENT_FILE%", relative_path)
         .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
         .replace("%CODE_SELECTION%", text);
-    
+
+    // TODO: send auto_submit somehow?
     const message = setInputValue({
         value: messageBlock ? messageBlock : text,
         send_immediately: auto_submit
@@ -123,7 +123,7 @@ export async function code_lens_execute(code_lens: string, range: any) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
         const new_tab = custom_code_lens[code_lens]["new_tab"];
         let messages: {content: string; role: string;}[] = custom_code_lens[code_lens]["messages"];
-        
+
         const start_of_line = new vscode.Position(range.start.line, 0);
         const end_of_line = new vscode.Position(range.end.line + 1, 0);
         const block_range = new vscode.Range(start_of_line, end_of_line);
@@ -137,12 +137,14 @@ export async function code_lens_execute(code_lens: string, range: any) {
             relative_path = path.relative(workspacePath, file_path);
         }
 
-        let text = vscode.window.activeTextEditor!.document.getText(block_range);         
-        
+        let text = vscode.window.activeTextEditor!.document.getText(block_range);
+
         if (messages.length === 0) {
             global.is_chat_streaming = false;
             const editor = vscode.window.activeTextEditor;
-            if (!editor) {return;}
+            if (!editor) {
+                return;
+            }
             editor.selection = new vscode.Selection(start_of_line, end_of_line);
             editor.revealRange(block_range);
             vscode.commands.executeCommand('refactaicmd.callChat', '');
