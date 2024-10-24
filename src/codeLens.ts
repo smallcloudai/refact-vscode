@@ -157,9 +157,15 @@ export async function code_lens_execute(code_lens: string, range: any) {
                 vscode.commands.executeCommand('refactaicmd.callChat', '');
             }
             sendCodeLensToChat(messages, relative_path, text, auto_submit);
+            if (!auto_submit) {
+                global.is_chat_streaming = false;
+            }
         } else {
             vscode.commands.executeCommand('refactaicmd.callChat', '');
             sendCodeLensToChat(messages, relative_path, text, auto_submit);
+            if (!auto_submit) {
+                global.is_chat_streaming = false;
+            }
         }
     }
 }
