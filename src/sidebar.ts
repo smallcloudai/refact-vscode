@@ -33,7 +33,7 @@ import {
     type PatchResult,
     ideChatPageChange,
     ideEscapeKeyPressed,
-    ideDoneStreaming,
+    ideIsChatStreaming,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -565,7 +565,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleCurrentChatPage(e.payload);
         }
 
-        if(ideDoneStreaming.match(e)) {
+        if(ideIsChatStreaming.match(e)) {
             return this.handleStreamingChange(e.payload);
         }
         
