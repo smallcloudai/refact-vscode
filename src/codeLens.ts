@@ -44,13 +44,15 @@ export class LensProvider implements vscode.CodeLensProvider
         document: vscode.TextDocument,
     ): Promise<vscode.CodeLens[]>
     {
-        let state = estate.state_of_document(document);
         const codeLensIsEnabled = vscode.workspace.getConfiguration("refactai").get<boolean>("codeLens") ?? true;
-
-        if (!state || !codeLensIsEnabled) {
+        if (!codeLensIsEnabled) {
             return [];
         }
-
+        const debug = vscode.workspace.getConfiguration("refactai").get<boolean>("codeLensDebug") ?? false;
+        let state = estate.state_of_document(document);
+        if (!state) {
+            return [];
+        }
 
         let customization = await fetchAPI.get_prompt_customization();
 
@@ -60,13 +62,17 @@ export class LensProvider implements vscode.CodeLensProvider
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ uri: document.uri.toString() }),
+            body: JSON.stringify({
+                uri: document.uri.toString(),
+                debug: debug,
+            }),
         });
 
         const response = await fetchH2.fetch(request);
         let lenses: vscode.CodeLens[] = [];
         if (response.status !== 200) {
             console.log([`${url} http status`, response.status]);
+
         } else if ("code_lens" in customization) {
             custom_code_lens = customization["code_lens"] as { [key: string]: any };
             const this_file_lens = await response.json();
@@ -74,10 +80,17 @@ export class LensProvider implements vscode.CodeLensProvider
                 console.log(["/v1/code-lens error", this_file_lens["detail"]]);
             }
             if ("code_lens" in this_file_lens) {
-                for (let item of this_file_lens["code_lens"]) {
+                for (let i = this_file_lens["code_lens"].length - 1; i >= 0; i--) {
+                    let item = this_file_lens["code_lens"][i];
                     let range = new vscode.Range(item["line1"] - 1, 0, item["line2"] - 1, 0);
-                    for (const [key, lensdict] of Object.entries(custom_code_lens)) {
-                        lenses.push(new ExperimentalLens(range, lensdict["label"], `CUSTOMLENS:${key}`, item["spath"]));
+                    if (item["spath"] !== "") {
+                        for (const [key, lensdict] of Object.entries(custom_code_lens)) {
+                            lenses.push(new ExperimentalLens(range, lensdict["label"], `CUSTOMLENS:${key}`, item["spath"]));
+                        }
+                    } else if (item["debug_string"] !== "") {
+                        lenses.push(new ExperimentalLens(range, item["debug_string"], "debug", ""));
+                    } else {
+                        console.log(["/v1/code-lens error", "no spath or debug_string"]);
                     }
                 }
             }

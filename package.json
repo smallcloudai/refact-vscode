@@ -177,9 +177,10 @@
 					"default": true,
 					"order": 5
 				},
-				"refactai.telemetryCodeSnippets": {
+				"refactai.codeLensDebug": {
 					"type": "boolean",
-					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
+					"description": "See what the parser sees, useful for debugging the parser.",
+					"deprecationMessage": "debug only",
 					"default": false,
 					"order": 6
 				},

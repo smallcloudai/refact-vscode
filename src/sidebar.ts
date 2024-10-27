@@ -431,10 +431,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         //     }
         //     break;
         // }
-        // case "save_telemetry_settings": {
-        //     // await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', data.code, vscode.ConfigurationTarget.Global);
-        //     break;
-        // }
         // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT:
         // case EVENT_NAMES_FROM_STATISTIC.BACK_FROM_STATISTIC:
         // case FIM_EVENT_NAMES.BACK:
@@ -474,7 +470,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             const { host } = e.payload;
             if (host.type === "cloud") {
                 await this.delete_old_settings();
-                await vscode.workspace.getConfiguration().update('refactai.telemetryCodeSnippets', host.sendCorrectedCodeSnippets, vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
             } else if (host.type === "self") {
@@ -568,7 +563,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if(ideDoneStreaming.match(e)) {
             return this.handleStreamingChange(e.payload);
         }
-        
+
         if(ideEscapeKeyPressed.match(e)) {
             return this.handleEscapePressed(e.payload);
         }
@@ -604,7 +599,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     //     panel.webview.html = html;
 
     // }
-    
+
     async deleteFile(fileName: string) {
         const uri = this.filePathToUri(fileName);
         const edit = new vscode.WorkspaceEdit();
@@ -642,7 +637,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const end = new vscode.Position(document.lineCount, 0);
         const range = new vscode.Range(start, end);
 
-        
+
         diff_paste_back(
             document,
             range,
@@ -715,18 +710,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const editor = vscode.window.activeTextEditor;
         const uri = this.filePathToUri(fileName);
         if (!editor) { return; }
-        
+
         const document = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(document);
 
         const state = estate.state_of_editor(editor, "start_animate for file: " + uri);
         if(!state) {return;}
-        
+
         await estate.switch_mode(state, estate.Mode.DiffWait);
         const startPosition = new vscode.Position(0, 0);
         if (!document) {return;}
         const endPosition = new vscode.Position(document.lineCount - 1, document.lineAt(document.lineCount - 1).text.length);
-        
+
         state.showing_diff_for_range = new vscode.Range(startPosition, endPosition);
         animation_start(editor, state);
     }
@@ -748,29 +743,29 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const document = editor.document;
         let start = selection.start;
         let end = selection.end;
-    
+
         // Get the text of the selected range
         let selectedText = document.getText(selection);
-    
+
         // Trim leading and trailing whitespace and new lines
         const trimmedText = selectedText.trim();
-    
+
         // If the trimmed text is empty, return the original selection
         if (trimmedText.length === 0) {
             return selection;
         }
-    
+
         // Find the start and end positions of the trimmed text within the selected range
         const leadingWhitespaceLength = selectedText.length - selectedText.trimStart().length;
         const trailingWhitespaceLength = selectedText.length - selectedText.trimEnd().length;
-    
+
         start = document.positionAt(document.offsetAt(start) + leadingWhitespaceLength);
         end = document.positionAt(document.offsetAt(end) - trailingWhitespaceLength);
-    
+
         return new vscode.Range(start, end);
     }
-    
-    
+
+
     private async handleDiffPasteBack(code_block: string) {
         const editor = vscode.window.activeTextEditor;
         if(!editor) { return; }
@@ -812,7 +807,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     private async handleDiffPreview(response: DiffPreviewResponse) {
-        
+
         const openFiles = this.getOpenFiles();
 
         for (const change of response.results) {
@@ -936,9 +931,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         );
 
         const nonce = this.getNonce();
-        // if(vscode.workspace.getConfiguration().get('refactai.telemetryCodeSnippets')) {
-        //     telemetry_code = 'checked';
-        // }
         let existing_address = vscode.workspace.getConfiguration().get("refactai.addressURL");
         if (typeof existing_address !== "string" || (typeof existing_address === "string" && !existing_address.match(/^https?:\/\//))) {
             existing_address = "";
