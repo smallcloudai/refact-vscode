@@ -232,13 +232,6 @@ export class RustBinaryBlob
             global.chat_default_model = json["code_chat_default_model"] || "";
             global.have_caps = true;
             global.status_bar.set_socket_error(false, "");
-
-            const promptCustomization = await fetchAPI.get_prompt_customization();
-            if (promptCustomization && promptCustomization.toolbox_commands) {
-                await QuickActionProvider.updateActions(promptCustomization.toolbox_commands as Record<string, ToolboxCommand>);
-            }
-
-
         } catch (e) {
             global.chat_models = [];
             global.have_caps = false;
@@ -246,6 +239,11 @@ export class RustBinaryBlob
         }
         global.status_bar.choose_color();
         fetchAPI.maybe_show_rag_status();
+
+        const promptCustomization = await fetchAPI.get_prompt_customization();
+        if (promptCustomization && promptCustomization.toolbox_commands) {
+            await QuickActionProvider.updateActions(promptCustomization.toolbox_commands as Record<string, ToolboxCommand>);
+        }
     }
 
     public async ping()

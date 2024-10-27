@@ -603,12 +603,12 @@ export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = globa
             }
 
             if ((res.ast && ["starting", "parsing", "indexing"].includes(res.ast.state)) ||
-                (res.vecdb && ["starting", "parsing"].includes(res.vecdb.state)))
+                (res.vecdb && ["starting", "parsing", "cooldown"].includes(res.vecdb.state)))
             {
-                console.log("ast or vecdb is still indexing");
+                // console.log("ast or vecdb is still indexing");
                 ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 700);
             } else {
-                console.log("ast and vecdb status complete, slowdown poll");
+                // console.log("ast and vecdb status complete, slowdown poll");
                 statusbar.statusbar_spinner(false);
                 ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
             }

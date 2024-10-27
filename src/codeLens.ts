@@ -10,7 +10,6 @@ import {
     type ToolUse,
     setInputValue,
 } from "refact-chat-js/dist/events";
-import { chat_model_get } from './chatTab';
 
 
 class ExperimentalLens extends vscode.CodeLens {

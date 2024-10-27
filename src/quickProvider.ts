@@ -28,13 +28,13 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         range: vscode.Range | vscode.Selection,
         context: vscode.CodeActionContext,
         token: vscode.CancellationToken
-    ): vscode.ProviderResult<(vscode.CodeAction | vscode.Command)[]> {    
+    ): vscode.ProviderResult<(vscode.CodeAction | vscode.Command)[]> {
         // Create new instances of Refact.ai actions
         const refactActions = QuickActionProvider.actions.map(action => {
             const newAction = new vscode.CodeAction(action.title, action.kind);
             if (action.command) {
                 const diagnosticRange = context.diagnostics[0]?.range || range;
-    
+
                 newAction.command = {
                     ...action.command,
                     arguments: [
@@ -49,7 +49,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             }
             return newAction;
         });
-    
+
         return refactActions;
     }
 
@@ -72,37 +72,45 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
 
         this.actions.forEach(action => {
             if (action.command) {
-                vscode.commands.registerCommand(action.command.command, (actionId: string, command: ToolboxCommand, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) => {
-                    QuickActionProvider.handleAction(actionId, command, context);
-                });
+                try {
+                    // XXX: this returns disposable, we need to dispose of old before setting new
+                    let disposable = vscode.commands.registerCommand(
+                        action.command.command,
+                        (actionId: string, command: ToolboxCommand, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) => {
+                            QuickActionProvider.handleAction(actionId, command, context);
+                        },
+                    );
+                } catch (e) {
+                    console.error('Error registering command', e);
+                }
             }
         });
     }
 
     public static async handleAction(actionId: string, command: ToolboxCommand, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) {
         let tools = await fetchAPI.get_tools();
-    
+
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage('No active editor');
             return;
         }
-    
+
         const working_on_attach_filename = editor.document.uri.fsPath;
         const selection = editor.selection;
         let code_snippet = '';
         let middle_line_of_selection = 0;
         let diagnostic_message = '';
-    
+
         if (actionId === 'bugs') {
             if (context?.diagnostics && context.diagnostics.length > 0) {
                 const diagnostic = context.diagnostics[0];
                 diagnostic_message = diagnostic.message;
                 middle_line_of_selection = diagnostic.range.start.line;
-                
+
                 code_snippet = editor.document.getText(diagnostic.range);
             }
-            
+
             if (!code_snippet) {
                 const cursorPosition = selection.isEmpty ? editor.selection.active : selection.start;
                 const startLine = Math.max(0, cursorPosition.line - 2);
@@ -115,7 +123,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             code_snippet = editor.document.getText(selection);
             middle_line_of_selection = Math.floor((selection.start.line + selection.end.line) / 2);
         }
-    
+
         const messages: PlainTextMessage[] = command.messages.map(({ content }) => ({
             role: 'system',
             content: content
@@ -125,23 +133,23 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                 .replace("%CURSOR_LINE%", (middle_line_of_selection + 1).toString())
                 .replace("%CODE_SELECTION%", code_snippet)
         }));
-        
+
         const question = actionId === 'bugs' ? (diagnostic_message || 'Issue with code') : 'Issue';
-        
+
         const chat: ChatThread = {
             id: uuidv4(),
             title: question,
             messages: [
                 ...messages,
                 { role: 'system', content: `Active file: ${working_on_attach_filename}` },
-                ...(actionId === 'bugs' && diagnostic_message 
-                    ? [{ role: 'user', content: `Error in: ${diagnostic_message}` }] 
+                ...(actionId === 'bugs' && diagnostic_message
+                    ? [{ role: 'user', content: `Error in: ${diagnostic_message}` }]
                     : [])
             ] as ChatMessage[],
             model: '',
         };
         vscode.commands.executeCommand("refactaicmd.callChat");
-        global.side_panel?.goto_chat(chat);        
+        global.side_panel?.goto_chat(chat);
     }
 }
 
