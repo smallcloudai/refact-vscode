@@ -17,6 +17,7 @@ type ChatMessage = PlainTextMessage;
 
 export class QuickActionProvider implements vscode.CodeActionProvider {
     private static actions: vscode.CodeAction[] = [];
+    private static quickActionDisposables: vscode.Disposable[] = [];
 
     public static readonly providedCodeActionKinds = [
         vscode.CodeActionKind.QuickFix,
@@ -69,6 +70,12 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
             };
             return action;
         }).filter((action): action is vscode.CodeAction => action !== undefined);
+        
+        const dispose = (disposables: vscode.Disposable[]) => {
+            disposables.forEach(d => d.dispose());
+        }; 
+
+        dispose(this.quickActionDisposables);
 
         this.actions.forEach(action => {
             if (action.command) {
@@ -80,12 +87,13 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
                             QuickActionProvider.handleAction(actionId, command, context);
                         },
                     );
+                    this.quickActionDisposables.push(disposable);
                 } catch (e) {
                     console.error('Error registering command', e);
                 }
             }
         });
-    }
+    };
 
     public static async handleAction(actionId: string, command: ToolboxCommand, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) {
         let tools = await fetchAPI.get_tools();
