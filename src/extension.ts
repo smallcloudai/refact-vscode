@@ -355,7 +355,8 @@ export function activate(context: vscode.ExtensionContext)
             e.affectsConfiguration("refactai.ast") ||
             e.affectsConfiguration("refactai.astFileLimit") ||
             e.affectsConfiguration("refactai.vecdb") ||
-            e.affectsConfiguration("refactai.vecdbFileLimit")
+            e.affectsConfiguration("refactai.vecdbFileLimit") ||
+            e.affectsConfiguration("refactai.xperimental")
         ) {
             if (config_debounce) {
                 clearTimeout(config_debounce);
