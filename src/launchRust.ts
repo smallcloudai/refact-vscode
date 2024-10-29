@@ -142,11 +142,15 @@ export class RustBinaryBlob
                 new_cmdline.push(`--ast-max-files`);
                 new_cmdline.push(`${ast_limit}`);
             }
-
             let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");
             if (insecureSSL) {
                 new_cmdline.push("--insecure");
             }
+            let experimental = vscode.workspace.getConfiguration().get("refactai.xperimental");
+            if (experimental) {
+                new_cmdline.push("--experimental");
+            }
+
             let cmdline_existing: string = this.cmdline.join(" ");
             let cmdline_new: string = new_cmdline.join(" ");
             if (cmdline_existing !== cmdline_new) {
