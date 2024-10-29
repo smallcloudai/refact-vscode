@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "5.1.2",
+	"version": "5.2.0",
 	"dependencies": {
 		"@types/marked": "^4.0.8",
 		"@types/vscode": "^1.69.0",
@@ -218,6 +218,12 @@
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
 					"order": 13
+				},
+				"refactai.xperimental": {
+					"type": "boolean",
+					"description": "Enable experimental features.",
+					"default": false,
+					"order": 14
 				}
 			}
 		},
