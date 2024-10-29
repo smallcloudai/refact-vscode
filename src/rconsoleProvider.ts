@@ -4,6 +4,7 @@ import * as rconsoleCommands from "./rconsoleCommands";
 import * as sidebar from "./sidebar";
 import * as chatTab from "./chatTab";
 import { v4 as uuidv4 } from 'uuid';
+import { ChatMessages } from 'refact-chat-js/dist/events';
 
 export class MyCommentAuthorInformation implements vscode.CommentAuthorInformation {
     name: string;
@@ -264,7 +265,7 @@ export class RefactConsoleProvider {
 
     scroll_to_thread() {
         return;
-        const thread = this.thread.range.end.line
+        const thread = this.thread.range.end.line;
         const range = new vscode.Range(thread, 0, thread + 10, 0);
         this.editor.revealRange(range, vscode.TextEditorRevealType.AtTop);
     }
@@ -408,7 +409,6 @@ export class RefactConsoleProvider {
         await this.hints_and_magic_tabs(e);
     }
 
-
     activate_cmd(
         cmd: string,
         args: string
@@ -426,7 +426,7 @@ export class RefactConsoleProvider {
     }
 
     async activate_chat(
-        messages: [string, string][],
+        messages: rconsoleCommands.Messages,
         question: string,
     ) {
         console.log(`activate_chat question.length=${question.length}`);
@@ -441,15 +441,16 @@ export class RefactConsoleProvider {
 
         const id = uuidv4();
 
-        const messagesWithQuestion = appendQuestion(question, messages);
+        // const messagesWithQuestion: ChatMessages = appendQuestion(question, messages) as ChatMessages;
 
-
+        // this really opens chat somehow
         let chat: chatTab.ChatTab | undefined = await sidebar.open_chat_tab(
             question,
             this.editor,
             false,
             this.model_name,
-            messagesWithQuestion,
+            [],
+            // messagesWithQuestion,
             id,
         );
         if (!chat) {
@@ -472,17 +473,10 @@ export class RefactConsoleProvider {
         // }));
 
         await new Promise(r => setTimeout(r, 200));
-        await chat.handleChatQuestion({
-			id: chat.chat_id,
-			model: this.model_name,
-			title: question,
-			messages: messagesWithQuestion,
-			attach_file: false,
-		});
     }
 }
 
-function appendQuestion(question: string, messages: [string, string][]): [string, string][] {
+function appendQuestion(question: string, messages: rconsoleCommands.Messages): rconsoleCommands.Messages {
     if(messages.length === 0) {
         return [["user", question]];
     }

@@ -1,19 +1,13 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
-import * as userLogin from "./userLogin";
 import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
 import {
-	isCommandPreviewResponse,
-	isDetailMessage,
 	type CapsResponse,
-	type CommandCompletionResponse,
-	type ChatContextFileMessage,
-	type ChatContextFile,
-	isCustomPromptsResponse,
     type CustomPromptsResponse,
+    ChatMessages,
 } from "refact-chat-js/dist/events";
 
 
@@ -261,37 +255,6 @@ export function save_url_from_login(url: string)
 }
 
 
-// export function inference_url(addthis: string, third_party: boolean)
-// {
-//     let manual_infurl = vscode.workspace.getConfiguration().get("refactai.infurl");
-//     let url: string;
-//     if (!manual_infurl) {
-//         // infurl3rd changes only for debugging, user can't change it in UI, we don't advertise this variable
-//         let url_ = vscode.workspace.getConfiguration().get(third_party ? 'refactai.infurl3rd' : 'refactai.infurl');
-//         if (!url_) {
-//             // Backward compatibility: codify is the old name
-//             url_ = vscode.workspace.getConfiguration().get(third_party ? 'codify.infurl3rd' : 'codify.infurl');
-//         }
-//         if (typeof url_ !== 'string' || url_ === '' || !url_) {
-//             url = global_inference_url_from_login;
-//         } else {
-//             url = `${url_}`;
-//         }
-//     } else {
-//         // If manual, then only the specified manual
-//         url = `${manual_infurl}`;
-//     }
-//     if (!url) {
-//         return url;
-//     }
-//     while (url.endsWith("/")) {
-//         url = url.slice(0, -1);
-//     }
-//     url += addthis;
-//     return url;
-// }
-
-
 export function rust_url(addthis: string)
 {
     if (!global.rust_binary_blob) {
@@ -324,92 +287,6 @@ export function inference_context(third_party: boolean)
 }
 
 
-// export function fetch_api_promise(
-//     cancelToken: vscode.CancellationToken,
-//     scope: string,
-//     sources: { [key: string]: string },
-//     intent: string,
-//     functionName: string,
-//     cursorFile: string,
-//     cursor0: number,
-//     cursor1: number,
-//     maxTokens: number,
-//     maxEdits: number,
-//     stop_tokens: string[],
-//     stream: boolean,
-//     suggest_longthink_model: string = "",
-//     third_party: boolean = false,
-// ): [Promise<fetchH2.Response>, estate.ApiFields]
-// {
-//     let url = inference_url("/v1/contrast", third_party);
-//     let ctx = inference_context(third_party);
-//     let model_ = vscode.workspace.getConfiguration().get('refactai.model') || "CONTRASTcode";
-//     let model_longthink: string = vscode.workspace.getConfiguration().get('refactai.longthinkModel') || suggest_longthink_model;
-//     if (suggest_longthink_model && suggest_longthink_model !== "CONTRASTcode") {
-//         model_ = model_longthink;
-//     }
-//     vscode.workspace.getConfiguration().update("files.autoSave", "off", true); // otherwise diffs do not work properly
-//     let model: string = `${model_}`;
-//     const apiKey = userLogin.secret_api_key();
-//     if (!apiKey) {
-//         return [Promise.reject("No API key"), new estate.ApiFields()];
-//     }
-//     let temp = 0.2;  // vscode.workspace.getConfiguration().get('codify.temperature');
-//     let client_version = vscode.extensions.getExtension("smallcloud.refact")!.packageJSON.version;
-//     let api_fields = new estate.ApiFields();
-//     api_fields.scope = scope;
-//     api_fields.url = url;
-//     api_fields.model = model;
-//     api_fields.sources = sources;
-//     api_fields.intent = intent;
-//     api_fields.function = functionName;
-//     api_fields.cursor_file = cursorFile;
-//     api_fields.cursor_pos0 = cursor0;
-//     api_fields.cursor_pos1 = cursor1;
-//     api_fields.ts_req = Date.now();
-//     const body = JSON.stringify({
-//         "model": model,
-//         "sources": sources,
-//         "intent": intent,
-//         "function": functionName,
-//         "cursor_file": cursorFile,
-//         "cursor0": cursor0,
-//         "cursor1": cursor1,
-//         "temperature": temp,
-//         "max_tokens": maxTokens,
-//         "max_edits": maxEdits,
-//         "stop": stop_tokens,
-//         "stream": stream,
-//         "client": `vscode-${client_version}`,
-//     });
-//     const headers = {
-//         "Content-Type": "application/json",
-//         "Authorization": `Bearer ${apiKey}`,
-//     };
-//     let req = new fetchH2.Request(url, {
-//         method: "POST",
-//         headers: headers,
-//         body: body,
-//         redirect: "follow",
-//         cache: "no-cache",
-//         referrer: "no-referrer"
-//     });
-//     let init: any = {
-//         timeout: 20*1000,
-//     };
-//     if (cancelToken) {
-//         let abort = new fetchH2.AbortController();
-//         cancelToken.onCancellationRequested(() => {
-//             console.log(["API fetch cancelled"]);
-//             abort.abort();
-//         });
-//         init.signal = abort.signal;
-//     }
-//     let promise = ctx.fetch(req, init);
-//     return [promise, api_fields];
-// }
-
-
 export function fetch_code_completion(
     cancelToken: vscode.CancellationToken,
     sources: { [key: string]: string },
@@ -431,10 +308,6 @@ export function fetch_code_completion(
     let third_party = false;
     let ctx = inference_context(third_party);
     let model_name = vscode.workspace.getConfiguration().get<string>("refactai.codeCompletionModel") || "";
-    // const apiKey = userLogin.secret_api_key();
-    // if (!apiKey) {
-    //     return Promise.reject("No API key");
-    // }
     let client_version = vscode.extensions.getExtension("smallcloud.codify")!.packageJSON.version;
     // api_fields.scope = "code-completion";
     // api_fields.url = url;
@@ -502,9 +375,10 @@ export function fetch_code_completion(
 export function fetch_chat_promise(
     cancelToken: vscode.CancellationToken,
     scope: string,
-    messages: [string, string][],
+    messages: ChatMessages | [string, string][],
     model: string,
     third_party: boolean = false,
+    tools: AtToolCommand[] | null = null,
 ): [Promise<fetchH2.Response>, string, string]
 {
     let url = rust_url("/v1/chat");
@@ -512,37 +386,30 @@ export function fetch_chat_promise(
         console.log(["fetch_chat_promise: No rust binary working"]);
         return [Promise.reject("No rust binary working"), scope, ""];
     }
-    const apiKey = userLogin.secret_api_key();
+    const apiKey = "any-key-will-work";
     if (!apiKey) {
         return [Promise.reject("No API key"), "chat", ""];
     }
+
     let ctx = inference_context(third_party);
-    let json_messages = [];
-    let default_system_prompt = vscode.workspace.getConfiguration().get("refactai.defaultSystemPrompt");
-    if (default_system_prompt && (messages.length === 0 || messages[0][0] !== "system")) {
-        json_messages.push({
-            "role": "system",
-            "content": default_system_prompt,
-        });
-    }
-    for (let i=0; i<messages.length; i++) {
-        json_messages.push({
-            "role": messages[i][0],
-            "content": messages[i][1],
-        });
-    }
+
+    // an empty tools array causes issues
+    const maybeTools = tools && tools.length > 0 ? {tools} : {};
     const body = JSON.stringify({
-        "messages": json_messages,
+        "messages": [], //json_messages,
         "model": model,
         "parameters": {
             "max_new_tokens": 1000,
         },
         "stream": true,
+        ...maybeTools
     });
+
     const headers = {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
     };
+
     let req = new fetchH2.Request(url, {
         method: "POST",
         headers: headers,
@@ -614,92 +481,6 @@ export async function get_caps(): Promise<CapsResponse> {
   return json as CapsResponse;
 }
 
-export async function getAtCommands(query: string, cursor: number, amount: number): Promise<CommandCompletionResponse> {
-    const url = rust_url("/v1/at-command-completion");
-
-    const request = new fetchH2.Request(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query, cursor, top_n: amount }),
-    });
-
-    const response = await fetchH2.fetch(request);
-    if (response.status!== 200) {
-      console.log([`${url} http status`, response.status]);
-      return Promise.reject("get At Commands bad status");
-    }
-
-    const json = await response.json();
-
-    if("detail" in json) {
-        throw new Error("Command completion error: " + json.detail);
-    }
-
-    return json as CommandCompletionResponse;
-}
-
-export async function getAtCommandPreview(query: string): Promise<ChatContextFileMessage[]> {
-    const url = rust_url("/v1/at-command-preview");
-
-    const request = new fetchH2.Request(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({query})
-    });
-
-    const response = await fetchH2.fetch(request);
-
-    if (response.status!== 200) {
-      console.log([`${url} http status`, response.status]);
-      return Promise.reject("get at command preview bad status");
-    }
-
-    const json = await response.json();
-
-      if (!isCommandPreviewResponse(json) && !isDetailMessage(json)) {
-        throw new Error("Invalid response from command preview");
-      }
-      if (isDetailMessage(json)) {
-        return [];
-      }
-
-      const jsonMessages = json.messages.map<ChatContextFileMessage>(
-        ({ role, content }) => {
-          const fileData = JSON.parse(content) as ChatContextFile[];
-          return [role, fileData];
-        }
-      );
-
-      return jsonMessages;
-}
-
-export async function get_statistic_data(): Promise<{ data: string }> {
-    let url = rust_url("/v1/get-dashboard-plots");
-
-    if (!url) {
-      return Promise.reject("get-dashboard-plots doesn't work");
-    }
-    let req = new fetchH2.Request(url, {
-      method: "GET",
-      redirect: "follow",
-      cache: "no-cache",
-      referrer: "no-referrer",
-    });
-
-    let resp = await fetchH2.fetch(req);
-    if (resp.status !== 200) {
-        console.log(["get_dashboard_plots http status", resp.status]);
-        return Promise.reject("get_dashboard_plots");
-      }
-    let json = await resp.json();
-    console.log(["successful get_dashboard_plots", json]);
-    return json;
-  }
-
 export async function get_prompt_customization(): Promise<CustomPromptsResponse> {
     const url = rust_url("/v1/customization");
 
@@ -723,11 +504,200 @@ export async function get_prompt_customization(): Promise<CustomPromptsResponse>
 
     const json = await response.json();
 
-    if(!isCustomPromptsResponse(json)) {
-        console.log(["get_prompt_customization invalid json", json]);
-        return Promise.reject("unable to get prompt customization: data invalid");
+    return json;
+}
+
+export type AstStatus = {
+	files_unparsed: number;
+	files_total: number;
+	ast_index_files_total: number;
+	ast_index_symbols_total: number;
+	state: "starting" | "parsing" | "indexing" | "done";
+};
+
+export interface RagStatus {
+    ast: {
+        files_unparsed: number;
+        files_total: number;
+        ast_index_files_total: number;
+        ast_index_symbols_total: number;
+        state: string;
+        ast_max_files_hit: boolean;
+    } | null;
+    ast_alive: string | null;
+    vecdb: {
+        files_unprocessed: number;
+        files_total: number;
+        requests_made_since_start: number;
+        vectors_made_since_start: number;
+        db_size: number;
+        db_cache_size: number;
+        state: string;
+        vecdb_max_files_hit: boolean;
+    } | null;
+    vecdb_alive: string | null;
+    vec_db_error: string;
+}
+
+async function fetch_rag_status()
+{
+    const url = rust_url("/v1/rag-status");
+    if(!url) {
+        return Promise.reject("rag-status no rust binary working, very strange");
     }
 
-    return json;
+    const request = new fetchH2.Request(url, {
+        method: "GET",
+        redirect: "follow",
+        cache: "no-cache",
+        referrer: "no-referrer",
+    });
 
+    try {
+        const response = await fetchH2.fetch(request);
+        if (response.status !== 200) {
+            console.log(["rag-status http status", response.status]);
+        }
+        const json = await response.json();
+        return json;
+    } catch (e) {
+        statusBar.send_network_problems_to_status_bar(
+            false,
+            "rag-status",
+            url,
+            e,
+            undefined
+        );
+    }
+    return Promise.reject("rag-status bad status");
+}
+
+let ragstat_timeout: NodeJS.Timeout | undefined;
+
+export function maybe_show_rag_status(statusbar: statusBar.StatusBarMenu = global.status_bar)
+{
+    if (ragstat_timeout) {
+        clearTimeout(ragstat_timeout);
+        ragstat_timeout = undefined;
+    }
+
+    fetch_rag_status()
+        .then((res: RagStatus) => {
+            if (res.ast && res.ast.ast_max_files_hit) {
+                statusbar.ast_status_limit_reached();
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+                return;
+            }
+
+            if (res.vecdb && res.vecdb.vecdb_max_files_hit) {
+                statusbar.vecdb_status_limit_reached();
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+                return;
+            }
+
+            statusbar.ast_limit_hit = false;
+            statusbar.vecdb_limit_hit = false;
+
+            if (res.vec_db_error !== '') {
+                statusbar.vecdb_error(res.vec_db_error);
+            }
+
+            if ((res.ast && ["starting", "parsing", "indexing"].includes(res.ast.state)) ||
+                (res.vecdb && ["starting", "parsing", "cooldown"].includes(res.vecdb.state)))
+            {
+                // console.log("ast or vecdb is still indexing");
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 700);
+            } else {
+                // console.log("ast and vecdb status complete, slowdown poll");
+                statusbar.statusbar_spinner(false);
+                ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+            }
+            statusbar.update_rag_status(res);
+        })
+        .catch((err) => {
+            console.log("fetch_rag_status", err);
+            ragstat_timeout = setTimeout(() => maybe_show_rag_status(statusbar), 5000);
+        });
+}
+
+type AtParamDict = {
+    name: string;
+    type: string;
+    description: string;
+};
+
+type AtToolFunction = {
+    name: string;
+    agentic: boolean;
+    description: string;
+    parameters: AtParamDict[];
+    parameters_required: string[];
+};
+
+type AtToolCommand = {
+    function: AtToolFunction;
+    type: "function";
+};
+
+type AtToolResponse = AtToolCommand[];
+
+export async function get_tools(notes: boolean = false): Promise<AtToolResponse> {
+    const url = rust_url("/v1/tools");
+
+    if (!url) {
+        return Promise.reject("unable to get tools url");
+    }
+	const request = new fetchH2.Request(url, {
+        method: "GET",
+        redirect: "follow",
+		cache: "no-cache",
+		referrer: "no-referrer",
+    });
+
+
+    const response = await fetchH2.fetch(request);
+
+    if (!response.ok) {
+        console.log(["tools response http status", response.status]);
+
+        // return Promise.reject("unable to get available tools");
+        return [];
+    }
+
+    const json: AtToolResponse = await response.json();
+
+    const tools = notes ?
+        json.filter((tool) => tool.function.name === "note_to_self") :
+        json.filter((tool) => tool.function.name !== "note_to_self");
+
+    return tools;
+}
+
+
+export async function lsp_set_active_document(editor: vscode.TextEditor)
+{
+    let url = rust_url("/v1/lsp-set-active-document");
+    if (url) {
+        const post = JSON.stringify({
+            "uri": editor.document.uri.toString(),
+        });
+        const headers = {
+            "Content-Type": "application/json",
+        };
+        let req = new fetchH2.Request(url, {
+            method: "POST",
+            headers: headers,
+            body: post,
+            redirect: "follow",
+            cache: "no-cache",
+            referrer: "no-referrer"
+        });
+        fetchH2.fetch(req).then((response) => {
+            if (!response.ok) {
+                console.log(["lsp-set-active-document failed", response.status, response.statusText]);
+            } else {
+                console.log(["lsp-set-active-document success", response.status]);
+            }
+        });
+    }
 }

@@ -2,10 +2,12 @@
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
 import * as userLogin from './userLogin';
+import * as fetchAPI from "./fetchAPI";
 import { join } from 'path';
 import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
 import { register_commands } from './rconsoleCommands';
+import { QuickActionProvider } from './quickProvider';
 
 
 const DEBUG_HTTP_PORT = 8001;
@@ -42,6 +44,15 @@ export class RustBinaryBlob
             return 0;
         }
         return 1;
+    }
+
+    public get_port(): number {
+        let xdebug = this.x_debug();
+        if (xdebug) {
+            return 8001;
+        } else {
+            return this.port;
+        }
     }
 
     public rust_url(): string
@@ -119,11 +130,17 @@ export class RustBinaryBlob
                 "--basic-telemetry",
             ];
 
-            if(vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
+            if (vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
                 new_cmdline.push("--vecdb");
+                const vecdb_limit = vscode.workspace.getConfiguration().get<number>("refactai.vecdbFileLimit") ?? 15000;
+                new_cmdline.push(`--vecdb-max-files`);
+                new_cmdline.push(`${vecdb_limit}`);
             }
-            if( vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
+            if (vscode.workspace.getConfiguration().get<boolean>("refactai.ast")) {
                 new_cmdline.push("--ast");
+                const ast_limit = vscode.workspace.getConfiguration().get<number>("refactai.astFileLimit") ?? 15000;
+                new_cmdline.push(`--ast-max-files`);
+                new_cmdline.push(`${ast_limit}`);
             }
 
             let insecureSSL = vscode.workspace.getConfiguration().get("refactai.insecureSSL");
@@ -142,7 +159,7 @@ export class RustBinaryBlob
                 break;
             }
         }
-        global.side_panel?.update_webview();
+        global.side_panel?.handleSettingsChange();
     }
 
     public async launch()
@@ -187,7 +204,7 @@ export class RustBinaryBlob
         await this.stop_lsp();
         await fetchH2.disconnectAll();
         global.have_caps = false;
-        status_bar.choose_color();
+        global.status_bar.choose_color();
     }
 
     public async read_caps()
@@ -214,13 +231,19 @@ export class RustBinaryBlob
             global.chat_models = Object.keys(json["code_chat_models"]);
             global.chat_default_model = json["code_chat_default_model"] || "";
             global.have_caps = true;
+            global.status_bar.set_socket_error(false, "");
         } catch (e) {
             global.chat_models = [];
             global.have_caps = false;
             console.log(["read_caps:", e]);
         }
-        status_bar.choose_color();
-        global.side_panel?.update_webview();
+        global.status_bar.choose_color();
+        fetchAPI.maybe_show_rag_status();
+
+        const promptCustomization = await fetchAPI.get_prompt_customization();
+        if (promptCustomization && promptCustomization.toolbox_commands) {
+            await QuickActionProvider.updateActions(promptCustomization.toolbox_commands as Record<string, ToolboxCommand>);
+        }
     }
 
     public async ping()
@@ -278,20 +301,35 @@ export class RustBinaryBlob
             this.lsp_client_options
         );
         this.lsp_disposable = this.lsp_client.start();
-        console.log(`RUST START`);
-        const timeoutPromise = new Promise((resolve, reject) => {
-            setTimeout(() => {
-                reject("timeout");
-            }, 5000);
+
+        console.log(`${logts()} RUST START`);
+        const somethings_wrong_timeout = 10000;
+        const startTime = Date.now();
+        let started_okay = false;
+
+        const onReadyPromise = this.lsp_client.onReady().then(() => {
+            started_okay = true;
         });
+
         try {
-            await Promise.race([this.lsp_client.onReady(), timeoutPromise]);
-            console.log(`RUST /START`);
+            while (true) {
+                const elapsedTime = Date.now() - startTime;
+                if (started_okay) {
+                    console.log(`${logts()} RUST /START after ${elapsedTime}ms`);
+                    break;
+                }
+                if (elapsedTime >= somethings_wrong_timeout) {
+                    throw new Error("timeout");
+                }
+                console.log(`${logts()} RUST waiting...`);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
         } catch (e) {
-            console.log(`RUST START PROBLEM e=${e}`);
+            console.log(`${logts()} RUST START PROBLEM e=${e}`);
             this.lsp_dispose();
             return;
         }
+
         let success = await this.ping();
         if (!success) {
             console.log("RUST ping failed");
@@ -347,6 +385,32 @@ export class RustBinaryBlob
         this.lsp_socket.connect(DEBUG_LSP_PORT);
     }
 
+    async rag_status()
+    {
+        try {
+            let url = this.rust_url();
+            if (!url) {
+                return Promise.reject("rag status no rust binary working, very strange");
+            }
+            url += "v1/rag-status";
+            let req = new fetchH2.Request(url, {
+                method: "GET",
+                redirect: "follow",
+                cache: "no-cache",
+                referrer: "no-referrer",
+            });
+            let resp = await fetchH2.fetch(req, { timeout: 5000 });
+            if (resp.status !== 200) {
+                console.log(["rag status http status", resp.status]);
+                return Promise.reject("rag status bad status");
+            }
+            let rag_status = await resp.json();
+            return rag_status;
+        } catch (e) {
+            console.log(["rag status error:", e]);
+        }
+        return false;
+    }
 
     async fetch_toolbox_config(): Promise<ToolboxConfig> {
       const rust_url = this.rust_url();
@@ -404,3 +468,12 @@ export type ToolboxConfig = {
   system_prompts: Record<string, SystemPrompt>;
   toolbox_commands: Record<string, ToolboxCommand>;
 };
+
+function logts() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+    return `${hours}${minutes}${seconds}.${milliseconds}`;
+}

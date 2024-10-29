@@ -2,13 +2,11 @@
 import * as vscode from 'vscode';
 import * as fetchAPI from "./fetchAPI";
 import * as userLogin from "./userLogin";
-const Diff = require('diff');  // Documentation: https://github.com/kpdecker/jsdiff/
+import * as Diff from "diff";  // Documentation: https://github.com/kpdecker/jsdiff/
 import * as storeVersions from './storeVersions';
 import * as estate from './estate';
 import * as codeLens from "./codeLens";
 import * as crlf from "./crlf";
-import * as privacy from "./privacy";
-
 
 let global_nav_counter: number = 0;
 
@@ -301,7 +299,14 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
         console.log(["apply diff -- no change"]);
         // no change, but go on because we want UI to be the same
     }
-    const diff = Diff.diffLines(whole_doc, modif_doc);
+
+
+    const diff = Diff.diffLines(whole_doc, modif_doc, {
+        // ignoreNewlineAtEof: true,
+        // ignoreWhitespace: true, // can remove trailing new lines
+        // newlineIsToken: true,
+    });
+
     let green_bg_ranges: vscode.Range[] = [];
     let red_bg_ranges: vscode.Range[] = [];
     let very_green_bg_ranges: vscode.Range[] = [];
@@ -319,7 +324,8 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
         let chunk_remember_removed_line = -1;
         let chunk_remember_added = '';
         let chunk_remember_added_line = -1;
-        diff.forEach((part: any) => {
+
+        diff.forEach((part) => {
             if (!state) {
                 return;
             }
@@ -361,7 +367,8 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
                     let char_ins_line = chunk_remember_added_line;
                     let char_del_pos = 0;
                     let char_ins_pos = 0;
-                    diff_char.forEach((part_char: any) => {
+
+                    diff_char.forEach((part_char) => {
                         let txt = part_char.value;
                         if (part_char.removed) {
                             very_red_bg_ranges.push(new vscode.Range(
@@ -374,7 +381,8 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
                                 new vscode.Position(char_ins_line, char_ins_pos + txt.length),
                             ));
                         }
-                        if (part_char.removed || part_char.added === undefined) {
+                        
+                        if (part_char.removed || (part_char.added === undefined)) {
                             for (let c=0; c<txt.length; c++) {
                                 if (txt[c] === '\n') {
                                     char_del_line++;
@@ -383,13 +391,23 @@ export async function present_diff_to_user(editor: vscode.TextEditor, modif_doc:
                                     char_del_pos++;
                                 }
                             }
-                        }
-                        if (part_char.added || part_char.removed === undefined) {
+                        } else if (part_char.added || (part_char.removed === undefined)) {
                             for (let c=0; c<txt.length; c++) {
                                 if (txt[c] === '\n') {
                                     char_ins_line++;
                                     char_ins_pos = 0;
                                 } else {
+                                    char_ins_pos++;
+                                }
+                            }
+                        } else if(!part_char.added && !part_char.removed) {
+                            for (let c=0; c<txt.length; c++) {
+                                if (txt[c] === '\n') {
+                                    char_del_line++;
+                                    char_ins_line++;
+                                    char_del_pos = 0;
+                                } else {
+                                    char_del_pos++;
                                     char_ins_pos++;
                                 }
                             }

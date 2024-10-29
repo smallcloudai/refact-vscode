@@ -18,7 +18,35 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "3.1.123",
+	"version": "5.1.2",
+	"dependencies": {
+		"@types/marked": "^4.0.8",
+		"@types/vscode": "^1.69.0",
+		"diff": "^7.0.0",
+		"difflib": "^0.2.4",
+		"fetch-h2": "^3.0.2",
+		"json5": "^2.2.3",
+		"marked": "^4.0.8",
+		"refact-chat-js": "~v2.0.1-alpha.14",
+		"uuid": "^9.0.1",
+		"vscode-languageclient": "^7.0.0"
+	},
+	"devDependencies": {
+		"@types/diff": "^5.2.2",
+		"@types/glob": "^7.2.0",
+		"@types/mocha": "^9.1.1",
+		"@types/node": "^20.4.2",
+		"@types/uuid": "^9.0.4",
+		"@types/vscode": "^1.69.0",
+		"@typescript-eslint/eslint-plugin": "^5.30.0",
+		"@typescript-eslint/parser": "^5.30.0",
+		"@vscode/test-electron": "^2.1.5",
+		"esbuild": "^0.16.3",
+		"eslint": "^8.18.0",
+		"glob": "^8.0.3",
+		"mocha": "^10.0.0",
+		"typescript": "^4.7.4"
+	},
 	"engines": {
 		"vscode": "^1.69.0"
 	},
@@ -125,6 +153,12 @@
 					"default": false,
 					"order": 2
 				},
+				"refactai.submitChatWithShiftEnter": {
+					"type": "boolean",
+					"description": "Send chat messages with Shift+Enter instead of Enter.",
+					"default": false,
+					"order": 3
+				},
 				"refactai.completionMaxTokens": {
 					"type": "number",
 					"markdownDescription": "Maximum number of tokens to generate for code completion. Leave 0 if not sure.",
@@ -137,9 +171,16 @@
 					"default": "",
 					"order": 4
 				},
-				"refactai.telemetryCodeSnippets": {
+				"refactai.codeLens": {
 					"type": "boolean",
-					"description": "Send code snippets as corrected by you, in a form suitable to improve model quality.",
+					"description": "Enable inline annotations that provide chat actions directly within the code editor.",
+					"default": true,
+					"order": 5
+				},
+				"refactai.codeLensDebug": {
+					"type": "boolean",
+					"description": "See what the parser sees, useful for debugging the parser.",
+					"deprecationMessage": "debug only",
 					"default": false,
 					"order": 6
 				},
@@ -149,28 +190,34 @@
 					"default": false,
 					"order": 7
 				},
-				"refactai.defaultSystemPrompt": {
-					"type": "string",
-					"markdownDescription": "Default system prompt for chat models.\nor [Customize toolbox commands](command:refactaicmd.openPromptCustomizationPage) to your liking.",
-					"default": "",
+				"refactai.ast": {
+					"type": "boolean",
+					"markdownDescription": "Enable context-aware code completion and chat, adds defintion() and references() functions for a chat model, and @definition, @references commands for you to add context manually.\n\nRAG works better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"default": true,
 					"order": 8
+				},
+				"refactai.astFileLimit": {
+					"type": "number",
+					"description": "Limit the number of files for AST to process, to avoid memory issues. Increase if you have a large project and sufficient memory.",
+					"default": 35000,
+					"order": 9
 				},
 				"refactai.vecdb": {
 					"type": "boolean",
-					"description": "Enable embedded vecdb for search (experimental)",
-					"default": false,
-					"order": 9
+					"markdownDescription": "Enable vector database. This adds the ability for a chat model to perform a semantic search in your codebase, and the @workspace command for you to add context manually.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"default": true,
+					"order": 11
 				},
-				"refactai.ast": {
-					"type": "boolean",
-					"description": "Enable syntax parsing (experimental, works only for popular languages).",
-					"default": false,
-					"order": 10
+				"refactai.vecdbFileLimit": {
+					"type": "number",
+					"description": "Limit the number of files for VecDB to process. Increase if you have a lot of files.",
+					"default": 15000,
+					"order": 12
 				},
 				"refactai.xDebug": {
 					"type": "number|undefined",
 					"description": "Set this to debug the Rust binary in console. If set, the plugin will not attempt to start its own, it will connect HTTP on the port 8001, LSP on the port 8002 instead.",
-					"order": 11
+					"order": 13
 				}
 			}
 		},
@@ -186,8 +233,13 @@
 				"title": "Close"
 			},
 			{
+				"command": "refactaicmd.activateToolboxDeprecated",
+				"title": "Activate Toolbox (deprecated)",
+				"category": "Refact.ai"
+			},
+			{
 				"command": "refactaicmd.activateToolbox",
-				"title": "Activate",
+				"title": "Activate (opens chat)",
 				"category": "Refact.ai"
 			},
 			{
@@ -203,37 +255,12 @@
 			{
 				"command": "refactaicmd.callChat",
 				"title": "Chat",
-				"key": "alt+c",
-				"category": "Refact.ai"
-			},
-			{
-				"command": "refactaicmd.logout",
-				"title": "Logout",
+				"key": "F1",
 				"category": "Refact.ai"
 			},
 			{
 				"command": "refactaicmd.openSettings",
 				"title": "Settings Page",
-				"category": "Refact.ai"
-			},
-			{
-				"command": "refactaicmd.privacySettings",
-				"title": "Privacy Rules",
-				"category": "Refact.ai"
-			},
-			{
-				"command": "refactaicmd.addPrivacyOverride0",
-				"title": "Add Privacy Rule: Turn off",
-				"category": "Refact.ai"
-			},
-			{
-				"command": "refactaicmd.addPrivacyOverride1",
-				"title": "Add Privacy Rule: Level 1",
-				"category": "Refact.ai"
-			},
-			{
-				"command": "refactaicmd.addPrivacyOverride2",
-				"title": "Add Privacy Rule: Level 2",
 				"category": "Refact.ai"
 			},
 			{
@@ -245,49 +272,15 @@
 		"menus": {
 			"editor/context": [
 				{
-					"submenu": "refact-access-menu",
-					"group": "z_commands"
-				},
-				{
 					"group": "z_commands",
 					"command": "refactaicmd.callChat"
 				}
-			],
-			"refact-access-menu": [
-				{
-					"command": "refactaicmd.addPrivacyOverride0",
-					"group": "refact-privacy-item.currentfile@1"
-				},
-				{
-					"command": "refactaicmd.addPrivacyOverride1",
-					"group": "refact-privacy-item.currentfile@2"
-				},
-				{
-					"command": "refactaicmd.addPrivacyOverride2",
-					"group": "refact-privacy-item.currentfile@3"
-				},
-				{
-					"command": "refactaicmd.privacySettings",
-					"group": "refact-privacy-item.justopen"
-				}
-			],
-			"explorer/context": [
-				{
-					"submenu": "refact-access-menu",
-					"group": "z_commands"
-				}
 			]
 		},
-		"submenus": [
-			{
-				"label": "Refact.ai Privacy",
-				"id": "refact-access-menu"
-			}
-		],
 		"keybindings": [
 			{
-				"command": "refactaicmd.activateToolbox",
-				"key": "F1"
+				"command": "refactaicmd.activateToolboxDeprecated",
+				"key": "alt+t"
 			},
 			{
 				"command": "refactaicmd.completionManual",
@@ -305,7 +298,7 @@
 			},
 			{
 				"command": "refactaicmd.callChat",
-				"key": "alt+c"
+				"key": "F1"
 			}
 		],
 		"viewsContainers": {
@@ -430,32 +423,5 @@
 		"esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
 		"esbuild": "npm run esbuild-base -- --sourcemap",
 		"esbuild-watch": "npm run esbuild-base -- --sourcemap --watch"
-	},
-	"dependencies": {
-		"@types/marked": "^4.0.8",
-		"@types/vscode": "^1.69.0",
-		"diff": "^5.1.0",
-		"difflib": "^0.2.4",
-		"fetch-h2": "^3.0.2",
-		"json5": "^2.2.3",
-		"marked": "^4.0.8",
-		"refact-chat-js": "^0.2.1-alpha.4",
-		"uuid": "^9.0.1",
-		"vscode-languageclient": "^7.0.0"
-	},
-	"devDependencies": {
-		"@types/glob": "^7.2.0",
-		"@types/mocha": "^9.1.1",
-		"@types/node": "^20.4.2",
-		"@types/uuid": "^9.0.4",
-		"@types/vscode": "^1.69.0",
-		"@typescript-eslint/eslint-plugin": "^5.30.0",
-		"@typescript-eslint/parser": "^5.30.0",
-		"@vscode/test-electron": "^2.1.5",
-		"esbuild": "^0.16.3",
-		"eslint": "^8.18.0",
-		"glob": "^8.0.3",
-		"mocha": "^10.0.0",
-		"typescript": "^4.7.4"
 	}
 }

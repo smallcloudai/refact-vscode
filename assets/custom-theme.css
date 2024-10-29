@@ -21,6 +21,11 @@
    background-color: var(--color-background);
 }
 
+.radix-themes code {
+  color: unset;
+  background-color: unset;
+}
+
 :where([data-state-tabbed]) .radix-themes {
   --color-background: var(--vscode-editor-background);
   --color-panel: var(--vscode-input-background);

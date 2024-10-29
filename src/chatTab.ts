@@ -1,10 +1,8 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
-import * as fetchAPI from "./fetchAPI";
 import * as crlf from "./crlf";
 import * as estate from "./estate";
-import ChatHistoryProvider, { Chat } from "./chatHistory";
 import { basename } from "path";
 
 const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdiff/
@@ -13,24 +11,31 @@ const Diff = require("diff"); // Documentation: https://github.com/kpdecker/jsdi
 import { open_chat_tab } from "./sidebar";
 
 import {
-	EVENT_NAMES_FROM_CHAT,
-	EVENT_NAMES_TO_CHAT,
-	EVENT_NAMES_TO_CONFIG,
-	type ChatSetSelectedSnippet,
-	type ReceiveAtCommandCompletion,
-	type ReceiveAtCommandPreview,
+	// EVENT_NAMES_FROM_CHAT,
+	// EVENT_NAMES_TO_CHAT,
+	// EVENT_NAMES_TO_CONFIG,
+	// type ChatSetSelectedSnippet,
+	// type ReceiveAtCommandCompletion,
+	// type ReceiveAtCommandPreview,
 	type Snippet,
-	type ChatContextFile,
-	type ToggleActiveFile,
-	type RestoreChat,
-	type ActiveFileInfo,
+	// type ChatContextFile,
+	// type ToggleActiveFile,
+	// type RestoreChat,
+	// type ActiveFileInfo,
 	type ChatMessages,
-	type ReceiveTokenCount,
+	// type ReceiveTokenCount,
 	type FileInfo,
-	type UpdateConfigMessage,
-	type RequestPrompts,
-	type ReceivePromptsError,
-	type ReceivePrompts,
+	// type UpdateConfigMessage,
+	// type RequestPrompts,
+	// type ReceivePromptsError,
+	// type ReceivePrompts,
+	// type RequestPreviewFiles,
+    // type ChatMessage,
+    // type SetChatModel,
+    // RequestTools,
+    ToolCommand,
+    // RecieveTools,
+    // QuestionFromChat
 } from "refact-chat-js/dist/events";
 
 
@@ -84,7 +89,7 @@ export function attach_code_from_editor(editor: vscode.TextEditor, insert_here_t
 export class ChatTab {
   // public static current_tab: ChatTab | undefined;
     private _disposables: vscode.Disposable[] = [];
-    public messages: [string, string][] = [];
+    public messages: ChatMessages = [];
     public cancellationTokenSource: vscode.CancellationTokenSource;
     public working_on_attach_filename: string = "";
     public working_on_attach_code: string = "";
@@ -96,13 +101,12 @@ export class ChatTab {
     public model_to_thirdparty: { [key: string]: boolean } = {};
     private default_chat_model: undefined|string;
 
-    public get_messages(): [string, string][] {
+    public get_messages(): ChatMessages {
         return this.messages;
     }
 
     public constructor(
         public web_panel: vscode.WebviewPanel | vscode.WebviewView,
-        public chatHistoryProvider: ChatHistoryProvider,
         public chat_id = ""
     ) {
         this.cancellationTokenSource = new vscode.CancellationTokenSource();
@@ -127,7 +131,6 @@ export class ChatTab {
         }));
 
         this._disposables.push(this.web_panel.onDidDispose(this.dispose));
-
     }
 
     async focus() {
@@ -144,123 +147,133 @@ export class ChatTab {
         global.open_chat_tabs = otherTabs;
     }
 
-    async getHistory(): Promise<Chat | undefined> {
-        return this.chatHistoryProvider.lookup_chat(this.chat_id);
-    }
-
     async saveToSideBar() {
-        const history = await this.getHistory();
-        if(this.messages.length > 0) {
-          this.chatHistoryProvider.save_messages_list(
-            this.chat_id,
-            this.messages,
-            history?.chatModel || "",
-            history?.chat_title
-          );
-        }
+        // const history = await this.getHistory();
+        // if(this.messages.length > 0) {
+        //   this.chatHistoryProvider.save_messages_list(
+        //     this.chat_id,
+        //     this.messages,
+        //     history?.chatModel || "",
+        //     history?.chat_title
+        //   );
+        // }
 
         if (!global.side_panel?.chat) {
           global.side_panel?.goto_main();
         }
     }
 
-    static async open_chat_in_new_tab(chatHistoryProvider: ChatHistoryProvider, chat_id: string, extensionUri: string, append_snippet_to_input: boolean) {
+    // static async open_chat_in_new_tab(chat_id: string, extensionUri: string, append_snippet_to_input: boolean)
+    // {
+    //     const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
 
-        const savedHistory = await chatHistoryProvider.lookup_chat(chat_id);
+    //     const history = {
+    //         chat_id: "",
+    //         chatModel: "",
+    //         messages: [],
+    //         chat_title: "",
+    //         ...(savedHistory || {})
+    //     };
 
-        const history = {
-            chat_id: "",
-            chatModel: "",
-            messages: [],
-            chat_title: "",
-            ...(savedHistory || {})
-        };
-
-        const {
-            chatModel,
-            messages,
-            chat_title
-        } = history;
+    //     const {
+    //         chatModel,
+    //         messages,
+    //         chat_title
+    //     } = history;
 
 
-        const panel = vscode.window.createWebviewPanel(
-            "refact-chat-tab",
-            truncate(`Refact.ai ${chat_title}`, 24),
-            vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-            }
-        );
+    //     const panel = vscode.window.createWebviewPanel(
+    //         "refact-chat-tab",
+    //         truncate(`Refact.ai ${chat_title}`, 24),
+    //         vscode.ViewColumn.One,
+    //         {
+    //             enableScripts: true,
+    //             retainContextWhenHidden: true,
+    //         }
+    //     );
 
-        const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
+    //     const tab = new ChatTab(panel, chatHistoryProvider, chat_id);
 
-        if (global.open_chat_tabs === undefined) {
-            // TODO: find out how this gets unset :/
-            global.open_chat_tabs = [tab];
-        } else {
-            global.open_chat_tabs.push(tab);
-        }
+    //     if (global.open_chat_tabs === undefined) {
+    //         // TODO: find out how this gets unset :/
+    //         global.open_chat_tabs = [tab];
+    //     } else {
+    //         global.open_chat_tabs.push(tab);
+    //     }
 
-        panel.onDidDispose(async () => {
-            await tab.saveToSideBar();
-            tab.dispose();
-        });
+    //     panel.onDidDispose(async () => {
+    //         await tab.saveToSideBar();
+    //         tab.dispose();
+    //     });
 
-        panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
+    //     panel.webview.html = tab.get_html_for_chat(panel.webview, extensionUri, true);
 
-        panel.webview.onDidReceiveMessage(tab.handleEvents);
+    //     panel.webview.onDidReceiveMessage(tab.handleEvents);
 
-        await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
-    }
+    //     // await tab._clear_and_repopulate_chat(chat_title, undefined, false, chatModel, messages, append_snippet_to_input);
+    // }
 
     async restoreChat(chat: {
         id: string;
-        messages: [string, string][];
+        messages: ChatMessages,
         title?: string;
         model: string;
     }, appendSnippet = false) {
-        const [model] = chat.model ? [chat.model] : await chat_model_get();
-        const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
-        // TODO: fix cast this
-        const messages = chat.messages as ChatMessages;
-        this.chat_id = chat.id;
-        return new Promise<void>((resolve) => {
-            const disposables: vscode.Disposable[] = [];
-            const restore = (event: { type: string }) => {
-                if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
+        // const [model] = chat.model ? [chat.model] : await chat_model_get();
+        // const snippet = appendSnippet ? this.getSnippetFromEditor(): undefined;
+        // // TODO: fix cast this
+        // const messages = chat.messages as ChatMessages;
+        // this.chat_id = chat.id;
+        // return new Promise<void>((resolve) => {
+        //     const disposables: vscode.Disposable[] = [];
+        //     const restore = (event: { type: string }) => {
+        //         if (event.type === EVENT_NAMES_FROM_CHAT.READY) {
 
-                    const action: RestoreChat = {
-                        type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
-                        payload: {
-                          id: this.chat_id,
-                          chat: {
-                            ...chat,
-                            messages,
-                            attach_file: !!snippet,
-                            model
-                          },
-                          snippet
-                        }
-                    };
+        //             const action: RestoreChat = {
+        //                 type: EVENT_NAMES_TO_CHAT.RESTORE_CHAT,
+        //                 payload: {
+        //                   id: this.chat_id,
+        //                   chat: {
+        //                     ...chat,
+        //                     messages,
+        //                     attach_file: !!snippet,
+        //                     model
+        //                   },
+        //                   snippet
+        //                 }
+        //             };
 
-                    this.web_panel.webview.postMessage(action);
+        //             this.web_panel.webview.postMessage(action);
 
-                    this.postActiveFileInfo();
-                    this.toggleAttachFile(!!this.working_on_snippet_code);
-                    this.sendTokenCountToChat();
-                    disposables.forEach((d) => d.dispose());
-                    resolve();
-                }
-            };
+        //             this.postActiveFileInfo();
+        //             this.toggleAttachFile(!!this.working_on_snippet_code);
+        //             this.sendTokenCountToChat();
+        //             disposables.forEach((d) => d.dispose());
+        //             resolve();
+        //         }
+        //     };
 
-            this.web_panel.webview.onDidReceiveMessage(
-                restore,
-                undefined,
-                disposables
-            );
+        //     this.web_panel.webview.onDidReceiveMessage(
+        //         restore,
+        //         undefined,
+        //         disposables
+        //     );
+        // });
+
+    }
+
+    trimIndent(code: string) {
+        if(/^\s/.test(code) === false) { return code; }
+        const lastLine = code.split("\n").slice(-1)[0];
+        if(/^\s/.test(lastLine) === false) { return code; }
+        const tabSettings = vscode.workspace.getConfiguration("editor").get<number>("tabSize") ?? 4;
+        const spaces = " ".repeat(tabSettings);
+        const spacedCode = code.replace(/^\t+/gm, (match) => {
+            return match.replace(/\t/g, spaces);
         });
-
+        const regexp = new RegExp(`^${spaces}`, "gm");
+        const indented = spacedCode.replace(regexp, "");
+        return indented;
     }
 
     getSnippetFromEditor(): Snippet {
@@ -272,42 +285,50 @@ export class ChatTab {
         const filePath = vscode.window.activeTextEditor?.document.fileName?? "";
         const fileName = basename(filePath);
 
+
+        const indentedCode = this.trimIndent(code);
+
+        this.working_on_snippet_editor = vscode.window.activeTextEditor;
+        this.working_on_snippet_range = selection;
+        this.working_on_snippet_code = indentedCode;
+        this.working_on_snippet_column = this.working_on_snippet_editor?.viewColumn;
+
         return {
-            code,
+            code: indentedCode,
             language,
             path: filePath,
             basename: fileName
         };
     }
 
-    sendSnippetToChat() {
-        const snippet = this.getSnippetFromEditor();
-        const action: ChatSetSelectedSnippet = {
-            type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
-            payload: { id: this.chat_id, snippet }
-        };
-        this.web_panel.webview.postMessage(action);
+    sendSnippetToChat(id?: string) {
+        // const snippet = this.getSnippetFromEditor();
+        // const action: ChatSetSelectedSnippet = {
+        //     type: EVENT_NAMES_TO_CHAT.SET_SELECTED_SNIPPET,
+        //     payload: { id: id || this.chat_id, snippet }
+        // };
+        // this.web_panel.webview.postMessage(action);
     }
 
     toggleAttachFile(attach_file: boolean) {
-        const action: ToggleActiveFile = {
-            type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
-            payload: { id: this.chat_id, attach_file, }
-        };
+        // const action: ToggleActiveFile = {
+        //     type: EVENT_NAMES_TO_CHAT.TOGGLE_ACTIVE_FILE,
+        //     payload: { id: this.chat_id, attach_file, }
+        // };
 
-        this.web_panel.webview.postMessage(action);
+        // this.web_panel.webview.postMessage(action);
     }
 
     sendTokenCountToChat() {
-        const action: ReceiveTokenCount = {
-            type: EVENT_NAMES_TO_CHAT.RECEIVE_TOKEN_COUNT,
-            payload: {
-                id: this.chat_id,
-                tokens: global.user_logged_in ? global.user_metering_balance : null
-            }
-        };
+        // const action: ReceiveTokenCount = {
+        //     type: EVENT_NAMES_TO_CHAT.RECEIVE_TOKEN_COUNT,
+        //     payload: {
+        //         id: this.chat_id,
+        //         tokens: global.user_logged_in ? global.user_metering_balance : null
+        //     }
+        // };
 
-        this.web_panel.webview.postMessage(action);
+        // this.web_panel.webview.postMessage(action);
     }
 
     // createNewChat() {
@@ -318,25 +339,25 @@ export class ChatTab {
     // }
 
     postActiveFileInfo(id = this.chat_id) {
-        const file = this.getActiveFileInfo();
-        if(file === null) {
-            const action: ActiveFileInfo = {
-                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
-                payload: { id, file: { can_paste: false } },
-            };
-            this.web_panel.webview.postMessage(action);
-        } else {
-            const action: ActiveFileInfo = {
-                type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
-                payload: { id, file },
-            };
+        // const file = this.getActiveFileInfo();
+        // if(file === null) {
+        //     const action: ActiveFileInfo = {
+        //         type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+        //         payload: { id, file: { can_paste: false } },
+        //     };
+        //     this.web_panel.webview.postMessage(action);
+        // } else {
+        //     const action: ActiveFileInfo = {
+        //         type: EVENT_NAMES_TO_CHAT.ACTIVE_FILE_INFO,
+        //         payload: { id, file },
+        //     };
 
-            this.web_panel.webview.postMessage(action);
-        }
+        //     this.web_panel.webview.postMessage(action);
+        // }
     }
 
     getActiveFileInfo(): Partial<FileInfo> | null {
-        if(vscode.window.activeTextEditor?.document.uri.scheme === "comment") {
+        if(vscode.window.activeTextEditor?.document.uri.scheme !== "file") {
             return null;
         }
         const file_path =
@@ -372,306 +393,409 @@ export class ChatTab {
         title,
         messages,
         attach_file,
+        tools = null,
     }: {
         id: string;
         model: string;
-        title: string;
-        messages: [string, string][];
-        // messages: ChatMessages;
+        title?: string;
+        // messages: [string, string][];
+        messages: ChatMessages;
         attach_file?: boolean;
+        tools?: ToolCommand[] | null;
     }): Promise<void> {
-        this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
-        // const file = attach_file && this.getActiveFileInfo();
+        // // this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
+        // // const file = attach_file && this.getActiveFileInfo();
 
-        // TODO: confirm if context files are no longer sent
-        // if (file) {
-        //     const message: [string, string] = ["context_file", JSON.stringify([file])];
-        //     const tail = messages.splice(-1, 1, message);
-        //     tail.map((m) => messages.push(m));
+        // // TODO: confirm if context files are no longer sent
+        // // if (file) {
+        // //     const message: [string, string] = ["context_file", JSON.stringify([file])];
+        // //     const tail = messages.splice(-1, 1, message);
+        // //     tail.map((m) => messages.push(m));
+        // // }
+        // this.chat_id = id;
+        // this.messages = messages;
+        // this.cancellationTokenSource =
+        //     new vscode.CancellationTokenSource();
+        // if (model) {
+        //     await chat_model_set(model, ""); // successfully used model, save it
+        // } else if(this.default_chat_model) {
+        //     await chat_model_set(this.default_chat_model, "");
         // }
-        this.chat_id = id;
-        this.messages = messages;
-        this.cancellationTokenSource =
-            new vscode.CancellationTokenSource();
-        if (model) {
-            await chat_model_set(model, ""); // successfully used model, save it
-        } else if(this.default_chat_model) {
-            await chat_model_set(this.default_chat_model, "");
-        }
 
-        await this.chatHistoryProvider.save_messages_list(
-            this.chat_id,
-            this.messages,
-            model,
-            title
-        );
+        // await this.chatHistoryProvider.save_messages_list(
+        //     this.chat_id,
+        //     this.messages,
+        //     model,
+        //     title
+        // );
 
-        await fetchAPI.wait_until_all_requests_finished();
-        const handle_response = (json: any) => {
-            if (typeof json !== "object") {
-            return;
-            }
+        // await fetchAPI.wait_until_all_requests_finished();
+        // const handle_response = (json: any) => {
+        //     if (typeof json !== "object") {
+        //       return;
+        //     }
 
-            const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
-            this.web_panel.webview.postMessage({
-            type,
-              payload: {
-                  id,
-                  ...json,
-              },
-            });
-        };
+        //     const type = EVENT_NAMES_TO_CHAT.CHAT_RESPONSE;
+        //     this.web_panel.webview.postMessage({
+        //     type,
+        //       payload: {
+        //           ...json,
+        //           id,
+        //       },
+        //     });
+        // };
 
-        const request = new fetchAPI.PendingRequest(
-            undefined,
-            this.cancellationTokenSource.token
-        );
-        request.set_streaming_callback(
-            handle_response,
-            (error?: string) => this.handleStreamEnd(id, error),
-        );
-        //TODO: find out what this is for?
-        const third_party = this.model_to_thirdparty[model];
+        // const request = new fetchAPI.PendingRequest(
+        //     undefined,
+        //     this.cancellationTokenSource.token
+        // );
+        // request.set_streaming_callback(
+        //     handle_response,
+        //     (error?: string) => this.handleStreamEnd(id, error),
+        // );
+        // //TODO: find out what this is for?
+        // const third_party = this.model_to_thirdparty[model];
 
-        const formattedMessages = this.messages.map<[string, string]>(
-            ([role, content]) => {
-            if (
-                role === "context_file" &&
-                typeof content !== "string"
-            ) {
-                return [role, JSON.stringify(content)];
-            }
-            return [role, content];
-            }
-        );
+        // const formattedMessages = this.messages.map((message:ChatMessage) => {
+        //     if (message[0] === "context_file" && typeof message[1] !== "string") {
+        //         return [message[0], JSON.stringify(message[1])];
+        //     }
+
+        //     return message;
+        // }) as ChatMessages;
 
 
+        // const chat_promise = fetchAPI.fetch_chat_promise(
+        //     this.cancellationTokenSource.token,
+        //     "chat-tab",
+        //     formattedMessages,
+        //     model,
+        //     third_party,
+        //     tools
+        // );
 
-        const chat_promise = fetchAPI.fetch_chat_promise(
-            this.cancellationTokenSource.token,
-            "chat-tab",
-            formattedMessages,
-            model,
-            third_party
-        );
-
-        return request.supply_stream(...chat_promise);
+        // return request.supply_stream(...chat_promise);
     }
 
     handleStreamEnd(id: string = this.chat_id, error?: string) {
-        if (error) {
-            this.web_panel.webview.postMessage({
-                type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
-                payload: {
-                    id,
-                    message: error,
-                },
-            });
-        } else {
-            this.web_panel.webview.postMessage({
-                type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
-                payload: { id },
-            });
-            this.sendTokenCountToChat();
-        }
+        // if (error) {
+        //     this.web_panel.webview.postMessage({
+        //         type: EVENT_NAMES_TO_CHAT.ERROR_STREAMING,
+        //         payload: {
+        //             id,
+        //             message: error,
+        //         },
+        //     });
+        // } else {
+        //     this.web_panel.webview.postMessage({
+        //         type: EVENT_NAMES_TO_CHAT.DONE_STREAMING,
+        //         payload: { id },
+        //     });
+        //     this.sendTokenCountToChat();
+        // }
     }
 
     async handleAtCommandCompletion(payload: { id: string; query: string; cursor: number; trigger: string | null; number: number }) {
-        fetchAPI.getAtCommands(
-            payload.trigger ?? payload.query,
-            payload.trigger ? payload.trigger.length : payload.cursor,
-            payload.number
-        ).then((res) => {
-            const message: ReceiveAtCommandCompletion = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
-                payload: { id: payload.id, ...res },
-            };
+        // fetchAPI.getAtCommands(
+        //     payload.trigger ?? payload.query,
+        //     payload.trigger ? payload.trigger.length : payload.cursor,
+        //     payload.number
+        // ).then((res) => {
+        //     const message: ReceiveAtCommandCompletion = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_COMPLETION,
+        //         payload: { id: payload.id, ...res },
+        //     };
 
-            this.web_panel.webview.postMessage(message);
-        }).catch(() => ({}));
+        //     this.web_panel.webview.postMessage(message);
+        // }).catch(() => ({}));
+    }
 
-        fetchAPI.getAtCommandPreview(payload.query).then(res => {
-            const message: ReceiveAtCommandPreview = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
-                payload: {id: payload.id, preview: res}
-            };
+    async handlePreviewFileRequest(payload: {id: string, query: string}) {
+        // fetchAPI
+        //     .getAtCommandPreview(payload.query)
+        //     .then((res) => {
+        //         const message: ReceiveAtCommandPreview = {
+        //             type: EVENT_NAMES_TO_CHAT.RECEIVE_AT_COMMAND_PREVIEW,
+        //             payload: { id: payload.id, preview: res },
+        //         };
 
-            this.web_panel.webview.postMessage(message);
-        }).catch(() => ({}));
+        //         this.web_panel.webview.postMessage(message);
+        //     })
+        //     .catch(() => ({}));
     }
 
     async handleEvents({ type, ...data }: any) {
-        switch (type) {
+        // switch (type) {
 
-            case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
-                // Note: context_file will be a different format
-                const { id, messages, title, model, attach_file } = data.payload;
-                return this.handleChatQuestion({ id, model, title, messages, attach_file });
-            }
+        //     case EVENT_NAMES_FROM_CHAT.ASK_QUESTION: {
+        //         // Note: context_file will be a different format
+        //         const payload: QuestionFromChat["payload"] = data.payload;
+        //         const { id, messages, title, model, attach_file, tools } = payload;
+        //         return this.handleChatQuestion({ id, model, title, messages, attach_file, tools  });
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
-                return fetchAPI
-                    .get_caps()
-                    .then((caps) => {
-                        this.default_chat_model = caps.code_chat_default_model;
-                        return this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
-                            payload: {
-                                id: data.payload.id,
-                                caps,
-                            },
-                        });
-                    })
-                    .catch((err) => {
-                        return this.web_panel.webview.postMessage({
-                            type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
-                            payload: {
-                                id: data.payload.id,
-                                message: err.message,
-                            },
-                        });
-                    });
-            }
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_CAPS: {
+        //         return fetchAPI
+        //             .get_caps()
+        //             .then((caps) => {
+        //                 this.default_chat_model = caps.code_chat_default_model;
+        //                 return this.web_panel.webview.postMessage({
+        //                     type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS,
+        //                     payload: {
+        //                         id: data.payload.id,
+        //                         caps,
+        //                     },
+        //                 });
+        //             })
+        //             .catch((err) => {
+        //                 return this.web_panel.webview.postMessage({
+        //                     type: EVENT_NAMES_TO_CHAT.RECEIVE_CAPS_ERROR,
+        //                     payload: {
+        //                         id: data.payload.id,
+        //                         message: err.message,
+        //                     },
+        //                 });
+        //             });
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
-                const { id, model, messages, title } = data.payload;
-                return this.chatHistoryProvider.save_messages_list(
-                    id,
-                    messages,
-                    model,
-                    title
-                );
-            }
-            case EVENT_NAMES_FROM_CHAT.STOP_STREAMING: {
-                return this.handleStopClicked();
-            }
+        //     case EVENT_NAMES_FROM_CHAT.SAVE_CHAT: {
+        //         const { id, model, messages, title } = data.payload;
 
-            case EVENT_NAMES_FROM_CHAT.READY: {
-                const { id } = data.payload;
-                this.chat_id = id;
-                return this.postActiveFileInfo(id);
-            }
+        //         return this.chatHistoryProvider.save_messages_list(
+        //             id,
+        //             messages,
+        //             model,
+        //             title
+        //         );
+        //     }
+        //     case EVENT_NAMES_FROM_CHAT.STOP_STREAMING: {
+        //         return this.handleStopClicked();
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.SEND_TO_SIDE_BAR: {
-                return this.handleSendToSideBar();
-            }
+        //     case EVENT_NAMES_FROM_CHAT.READY: {
+        //         const { id } = data.payload;
+        //         this.chat_id = id;
+        //         this.setChatModel(id);
+        //         this.sendSnippetToChat(id);
+        //         return this.postActiveFileInfo(id);
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.NEW_FILE: {
-                const value = data.payload.content;
-                return this.handleOpenNewFile(value);
-            }
+        //     case EVENT_NAMES_FROM_CHAT.SEND_TO_SIDE_BAR: {
+        //         return this.handleSendToSideBar();
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
-                const value = data.payload.content;
-                return this.handleDiffPasteBack({ code_block: value });
-            }
+        //     case EVENT_NAMES_FROM_CHAT.NEW_FILE: {
+        //         const value = data.payload.content;
+        //         return this.handleOpenNewFile(value);
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
-                return this.handleAtCommandCompletion(data.payload);
-            }
+        //     case EVENT_NAMES_FROM_CHAT.PASTE_DIFF: {
+        //         const value = data.payload.content;
+        //         return this.handleDiffPasteBack({ code_block: value });
+        //     }
 
-            case EVENT_NAMES_FROM_CHAT.REQUEST_PROMPTS: {
-              const action: RequestPrompts = data;
-              return this.handleCustomPromptsRequest(action.payload.id);
-            }
-            // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
-            // // handled in sidebar.ts
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_AT_COMMAND_COMPLETION: {
+        //         return this.handleAtCommandCompletion(data.payload);
+        //     }
+
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_PROMPTS: {
+        //       const action: RequestPrompts = data;
+        //       return this.handleCustomPromptsRequest(action.payload.id);
+        //     }
+
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_PREVIEW_FILES: {
+		// 		const acton: RequestPreviewFiles = data;
+		// 		return this.handlePreviewFileRequest(acton.payload);
+		// 	}
+
+        //     case EVENT_NAMES_FROM_CHAT.REQUEST_TOOLS: {
+        //         const action: RequestTools = data;
+        //         return this.handleToolRequest(action.payload.id);
+        //     }
+
+            // case EVENT_NAMES_FROM_CHAT.OPEN_SETTINGS: {
+            //     return this.handleOpenSettings();
             // }
 
-            // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB: {
-            //  // handled in sidebar.ts
+            // case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_APPLIED_CHUNKS: {
+            //     const action: RequestDiffAppliedChunks = data;
+            //     return this.handleAppliedChunksRequest(action.payload.id, action.payload.diff_id, action.payload.chunks);
+
             // }
 
-        }
+            // case EVENT_NAMES_FROM_CHAT.REQUEST_DIFF_OPPERATION: {
+            //     const action: RequestDiffOpperation = data;
+            //     return this.handleDiffOperation(action.payload.id, action.payload.diff_id, action.payload.chunks, action.payload.toApply);
+            // }
+
+            // case EVENT_NAMES_FROM_CHAT.OPEN_FILE: {
+            //     const action: OpenFile = data;
+            //     return this.handleOpenFile(action.payload.file);
+            // }
+
+        //     // case EVENT_NAMES_FROM_CHAT.BACK_FROM_CHAT: {
+        //     // // handled in sidebar.ts
+        //     // }
+
+        //     // case EVENT_NAMES_FROM_CHAT.OPEN_IN_CHAT_IN_TAB: {
+        //     //  // handled in sidebar.ts
+        //     // }
+
+        // }
     }
 
-    	async handleCustomPromptsRequest(id: string) {
-        return fetchAPI.get_prompt_customization().then((data) => {
-          const message: ReceivePrompts = {
-				    type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS,
-				    payload: { id, prompts: data.system_prompts },
-			    };
+    // async handleOpenFile(file: {file_name:string, line?: number}) {
+    //     const uri = vscode.Uri.file(file.file_name);
+    //     const document = await vscode.workspace.openTextDocument(uri);
+    //     if(file.line !== undefined) {
+    //         const position = new vscode.Position(file.line ?? 0, 0);
+    //         const editor = await vscode.window.showTextDocument(document);
+    //         const range = new vscode.Range(position, position);
+    //         editor.revealRange(range);
+    //     }
+    // }
 
-          return this.web_panel.webview.postMessage(message);
+    // async handleDiffOperation(id: string, diff_id: string, chunks: DiffChunk[], to_apply: boolean[]) {
+    //     fetchAPI.send_chunks_to_diff_apply(chunks, to_apply).then((res) => {
+    //         const action: RecieveDiffOpperationResult = {
+    //             type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_OPPERATION_RESULT,
+    //             payload: {
+    //                 id: id,
+    //                 diff_id,
+    //                 fuzzy_results: res.fuzzy_results,
+    //                 state: res.state,
+    //             }
+    //         };
 
-        }).catch((err: string) => {
-            const message: ReceivePromptsError = {
-                type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS_ERROR,
-                payload: { id, error: `Prompts: ${err}` },
-            };
-            return this.web_panel.webview.postMessage(message);
-        });
+    //         this.web_panel.webview.postMessage(action);
+    //     }).catch((err: string) => {
+    //         const action: RecieveDiffOpperationError = {
+    //             type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_OPPERATION_ERROR,
+    //             payload: {
+    //               id,
+    //               diff_id,
+    //               reason: err
+    //             },
+    //           };
+    //         this.web_panel.webview.postMessage(action);
+    //     });
+    // }
+
+    // async handleAppliedChunksRequest(id: string, diff_id: string, chunks: DiffChunk[]) {
+    //     fetchAPI.get_diff_state(chunks).then((diff_state) => {
+    //         const action: RecieveDiffAppliedChunks = {
+    //             type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_APPLIED_CHUNKS,
+    //             payload: {
+    //                 id: id,
+    //                 diff_id,
+    //                 applied_chunks: diff_state.state,
+    //                 can_apply: diff_state.can_apply,
+    //             }
+    //         };
+
+    //         this.web_panel.webview.postMessage(action);
+    //     }).catch((err: string) => {
+    //         const action: RecieveDiffAppliedChunksError = {
+    //           type: EVENT_NAMES_TO_CHAT.RECIEVE_DIFF_APPLIED_CHUNKS_ERROR,
+    //           payload: { id, diff_id, reason: err },
+    //         };
+
+    //         this.web_panel.webview.postMessage(action);
+    //     });
+    // }
+
+    async handleOpenSettings() {
+        return vscode.commands.executeCommand("workbench.action.openSettings", "refactai");
     }
 
-    async handleSendToSideBar() {
-        await vscode.commands.executeCommand("refactai-toolbox.focus");
+    async setChatModel(id: string) {
+        // const [model] = await chat_model_get();
+        // const message: SetChatModel = {
+        //     type: EVENT_NAMES_TO_CHAT.SET_CHAT_MODEL,
+        //     payload: {id, model}
+        // };
 
-        let editor = vscode.window.activeTextEditor;
-        const history = await this.getHistory();
-
-        if(!history) {
-            await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
-        }
-
-        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-
-        await open_chat_tab(
-            history?.chat_title || "",
-            editor,
-            false,
-            history?.chatModel || "",
-            this.messages,
-            this.chat_id,
-        );
-    }
-    private async handleDiffPasteBack(data: {code_block: string}) {
-        if (!this.working_on_snippet_editor) {
-            return;
-        }
-        await vscode.window.showTextDocument(
-            this.working_on_snippet_editor.document,
-            this.working_on_snippet_column
-        );
-        let state = estate.state_of_document(
-            this.working_on_snippet_editor.document
-        );
-        if (!state) {
-            return;
-        }
-        if (!this.working_on_snippet_range) {
-            const range = this.working_on_snippet_editor.selection;
-            const snippet = new vscode.SnippetString(data.code_block);
-            vscode.window.activeTextEditor?.insertSnippet(snippet, range);
-            return;
-        }
-        return diff_paste_back(
-            state.editor,
-            this.working_on_snippet_range,
-            data.code_block,
-        );
+        // this.web_panel.webview.postMessage(message);
     }
 
-    private handleStopClicked() {
-        return this.cancellationTokenSource.cancel();
+    async handleToolRequest(id: string) {
+
+        // fetchAPI.get_tools().then((res) => {
+        //     const action: RecieveTools = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
+        //         payload: { id, tools: res },
+        //     };
+        //     this.web_panel.webview.postMessage(action);
+        // }).catch((err) => {
+        //     const action: RecieveTools = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_TOOLS,
+        //         payload: { id, tools: [] },
+        //     };
+        //     this.web_panel.webview.postMessage(action);
+        // });
     }
 
-    private async handleOpenNewFile(value: string) {
-        vscode.workspace.openTextDocument().then((document) => {
-            vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
-                .then((editor) => {
-                    editor.edit((editBuilder) => {
-                        editBuilder.insert(new vscode.Position(0, 0), value);
-                    });
-                });
-        });
+    async handleCustomPromptsRequest(id: string) {
+        // return fetchAPI.get_prompt_customization().then((data) => {
+        //   const message: ReceivePrompts = {
+		// 		    type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS,
+		// 		    payload: { id, prompts: data.system_prompts },
+		// 	    };
+
+        //   return this.web_panel.webview.postMessage(message);
+
+        // }).catch((err: string) => {
+        //     const message: ReceivePromptsError = {
+        //         type: EVENT_NAMES_TO_CHAT.RECEIVE_PROMPTS_ERROR,
+        //         payload: { id, error: `Prompts: ${err}` },
+        //     };
+        //     return this.web_panel.webview.postMessage(message);
+        // });
     }
+
+    // async handleSendToSideBar() {
+    //     await vscode.commands.executeCommand("refactai-toolbox.focus");
+
+    //     let editor = vscode.window.activeTextEditor;
+    //     const history = await this.getHistory();
+
+    //     // if(!history) {
+    //     //     await this.chatHistoryProvider.save_messages_list(this.chat_id, this.messages, "");
+    //     // }
+
+    //     await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
+
+    //     await open_chat_tab(
+    //         history?.chat_title || "",
+    //         editor,
+    //         false,
+    //         history?.chatModel || "",
+    //         this.messages,
+    //         this.chat_id,
+    //     );
+    // }
+
+    // private handleStopClicked() {
+    //     return this.cancellationTokenSource.cancel();
+    // }
+
+    // private async handleOpenNewFile(value: string) {
+    //     vscode.workspace.openTextDocument().then((document) => {
+    //         vscode.window.showTextDocument(document, vscode.ViewColumn.Active)
+    //             .then((editor) => {
+    //                 editor.edit((editBuilder) => {
+    //                     editBuilder.insert(new vscode.Position(0, 0), value);
+    //                 });
+    //             });
+    //     });
+    // }
 
     public static async clear_and_repopulate_chat(
         question: string,
         editor: vscode.TextEditor | undefined,
         attach_default: boolean,
         use_model: string,
-        messages: [string, string][],
+        messages: ChatMessages,
         append_snippet_to_input: boolean = false,
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
@@ -684,7 +808,6 @@ export class ChatTab {
             console.log("no chat found!");
             return;
         }
-
         await free_floating_tab._clear_and_repopulate_chat(question, editor, attach_default, use_model, messages, append_snippet_to_input);
     }
 
@@ -693,14 +816,13 @@ export class ChatTab {
         editor: vscode.TextEditor | undefined,
         attach_default: boolean,
         use_model: string,
-        messages: [string, string][],
+        messages: ChatMessages,
         append_snippet_to_input: boolean = false
     ) {
         let context: vscode.ExtensionContext | undefined = global.global_context;
         if (!context) {
             return;
         }
-
         // TODO: find out if this is this needed any more?
         let code_snippet = "";
         this.working_on_snippet_range = undefined;
@@ -727,7 +849,7 @@ export class ChatTab {
             title: question,
         };
 
-        return this.restoreChat(chat, append_snippet_to_input);
+        // return this.restoreChat(chat, append_snippet_to_input);
 
     }
 
@@ -744,22 +866,22 @@ export class ChatTab {
     // }
 
     handleSettingsChange() {
-        const vecdb =
-            vscode.workspace
-                .getConfiguration()
-                ?.get<boolean>("refactai.vecdb") ?? false;
+        // const vecdb =
+        //     vscode.workspace
+        //         .getConfiguration()
+        //         ?.get<boolean>("refactai.vecdb") ?? false;
 
-        const ast =
-            vscode.workspace
-                .getConfiguration()
-                ?.get<boolean>("refactai.ast") ?? false;
-        const message: UpdateConfigMessage = {
-            type: EVENT_NAMES_TO_CONFIG.UPDATE,
-            payload: {
-                features: { vecdb, ast}
-            }
-        };
-        this.web_panel.webview.postMessage(message);
+        // const ast =
+        //     vscode.workspace
+        //         .getConfiguration()
+        //         ?.get<boolean>("refactai.ast") ?? false;
+        // const message: UpdateConfigMessage = {
+        //     type: EVENT_NAMES_TO_CONFIG.UPDATE,
+        //     payload: {
+        //         features: { vecdb, ast }
+        //     }
+        // };
+        // this.web_panel.webview.postMessage(message);
     }
 
 
@@ -854,6 +976,8 @@ export async function chat_model_get(): Promise<[string, string]>
         return ["", ""];
     }
 
+    console.log(`[DEBUG]: context.globalState: `, context.globalState);
+
     try {
         await global.rust_binary_blob?.read_caps();
     } catch {
@@ -889,22 +1013,23 @@ export async function chat_model_set(chat_model: string, model_function: string)
     if (!chat_model) {
         return;
     }
+    console.log(`[DEBUG]: globalState: `, context.globalState);
     await context.globalState.update("chat_model", chat_model);
     await context.globalState.update("chat_model_function", model_function);
 }
 
-export function backquote_backquote_backquote_remove_language_spec(code: string): string
-{
-    // this removes ```python or ```json or similar, assuming ``` itself is already not there
-    while (1) {
-        let first_char = code[0];
-        if (first_char === "\n") {
-            return code.substring(1);
+export function backquote_backquote_backquote_remove_language_spec(code: string): string {
+    // this removes the language spec, assuming ``` itself is already not there
+    let i = 0;
+    while (i < code.length) {
+        let char = code[i];
+        if ((char >= 'a' && char <= 'z') || (char >= '0' && char <= '9')) {
+            i++;
         }
-        if (first_char >= 'a' && first_char <= 'z' || first_char >= '0' && first_char <= '9') {
-            code = code.substring(1);
-            continue;
-        } else {
+        else if (char === '\n') {
+            return code.substring(i + 1);
+        }
+        else {
             break;
         }
     }
@@ -937,11 +1062,11 @@ export function indent_so_diff_is_minimized(orig_code: string, code_block: strin
 }
 
 export function diff_paste_back(
-    editor: vscode.TextEditor,
+    document: vscode.TextDocument,
     dest_range: vscode.Range,
     new_code_block: string,
 ): number {
-    let state = estate.state_of_document(editor.document);
+    let state = estate.state_of_document(document);
     if (!state) {
         console.log("diff_paste_back: no state");
         return -1;
@@ -955,18 +1080,18 @@ export function diff_paste_back(
     //     console.log("diff_paste_back: dest_range is empty");
     //     return -1;
     // }
-    let snippet_ofs0 = editor.document.offsetAt(dest_range.start);
-    let snippet_ofs1 = editor.document.offsetAt(dest_range.end);
+    let snippet_ofs0 = document.offsetAt(dest_range.start);
+    let snippet_ofs1 = document.offsetAt(dest_range.end);
     let code_block_clean = backquote_backquote_backquote_remove_language_spec(new_code_block);
-    let text = editor.document.getText();
+    let text = document.getText();
     let orig_text0 = text.substring(0, snippet_ofs0);
     let orig_text1 = text.substring(snippet_ofs1);
     let orig_code = text.substring(snippet_ofs0, snippet_ofs1);
-    if (orig_text1.startsWith("\n")) {
-        orig_text1 = orig_text1.substring(1);
-    } else if (orig_text1.startsWith("\r\n")) {
-        orig_text1 = orig_text1.substring(2);
-    }
+    // if (orig_text1.startsWith("\n")) {
+    //     orig_text1 = orig_text1.substring(1);
+    // } else if (orig_text1.startsWith("\r\n")) {
+    //     orig_text1 = orig_text1.substring(2);
+    // }
     [orig_code] = crlf.cleanup_cr_lf(orig_code, []);
     [code_block_clean] = crlf.cleanup_cr_lf(code_block_clean, []);
     code_block_clean = indent_so_diff_is_minimized(orig_code, code_block_clean);
@@ -985,7 +1110,7 @@ export function diff_paste_back(
     return last_affected_line;
 }
 
-function truncate(str: string, length: number): string {
+export function truncate(str: string, length: number): string {
   if (str.length <= length) {
     return str;
   }

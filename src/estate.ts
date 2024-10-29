@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import * as interactiveDiff from "./interactiveDiff";
 import * as codeLens from "./codeLens";
 import * as completionProvider from "./completionProvider";
+import * as fetchAPI from "./fetchAPI";
 
 export let global_intent: string = "Fix";
 
@@ -154,7 +155,6 @@ export function state_of_editor(editor: vscode.TextEditor|undefined, reqfrom: st
     state.last_used_ts = Date.now();
     return state;
 }
-
 
 export function state_of_document(doc: vscode.TextDocument): StateOfEditor | undefined
 {
@@ -329,7 +329,6 @@ export function on_text_edited(editor: vscode.TextEditor)
     }
 }
 
-
 function on_change_active_editor(editor: vscode.TextEditor | undefined)
 {
     if (editor) {
@@ -341,10 +340,10 @@ function on_change_active_editor(editor: vscode.TextEditor | undefined)
                 switch_mode(state, Mode.Normal);
             }
         }
+        fetchAPI.lsp_set_active_document(editor);
     }
     info2sidebar(editor);
 }
-
 
 export function estate_init()
 {
