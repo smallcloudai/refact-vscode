@@ -96,7 +96,6 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         if (!global || !global.side_panel || !global.side_panel._view) {
             return;
         }
-        // TODO: send auto_submit somehow?
         const message = setInputValue({
             value: messageBlock,
             // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -126,6 +125,7 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         let middleLineOfSelection = 0;
         let diagnosticMessage = '';
 
+        // if no diagnostic were present, taking user's selection instead
         if (actionId === 'bugs' && context?.diagnostics && context.diagnostics.length > 0) {
             const diagnostic = context.diagnostics[0];
             diagnosticMessage = diagnostic.message;
