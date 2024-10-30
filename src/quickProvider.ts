@@ -1,11 +1,8 @@
 import * as vscode from 'vscode';
-import * as sidebar from "./sidebar";
-import * as fetchAPI from "./fetchAPI";
-import { v4 as uuidv4 } from "uuid";
-import { ToolboxCommand, ChatMessageFromLsp } from "./launchRust";
+import * as path from 'path';
+import { ToolboxCommand } from "./launchRust";
 import {
-    type ChatMessages,
-    ChatThread,
+    setInputValue,
 } from "refact-chat-js/dist/events";
 
 type PlainTextMessage = {
@@ -95,69 +92,72 @@ export class QuickActionProvider implements vscode.CodeActionProvider {
         });
     };
 
-    public static async handleAction(actionId: string, command: ToolboxCommand, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) {
-        let tools = await fetchAPI.get_tools();
+    public static sendQuickActionToChat(messageBlock: string) {
+        if (!global || !global.side_panel || !global.side_panel._view) {
+            return;
+        }
+        // TODO: send auto_submit somehow?
+        const message = setInputValue({
+            value: messageBlock,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            send_immediately: true
+        });
+        global.side_panel._view.webview.postMessage(message);
+    }
 
+    public static async handleAction(actionId: string, command: ToolboxCommand, context?: { range: vscode.Range, diagnostics: vscode.Diagnostic[] }) {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             vscode.window.showErrorMessage('No active editor');
             return;
         }
 
-        const working_on_attach_filename = editor.document.uri.fsPath;
-        const selection = editor.selection;
-        let code_snippet = '';
-        let middle_line_of_selection = 0;
-        let diagnostic_message = '';
+        const filePath = vscode.window.activeTextEditor?.document.fileName || "";
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        let relativePath: string = "";
 
-        if (actionId === 'bugs') {
-            if (context?.diagnostics && context.diagnostics.length > 0) {
-                const diagnostic = context.diagnostics[0];
-                diagnostic_message = diagnostic.message;
-                middle_line_of_selection = diagnostic.range.start.line;
-
-                code_snippet = editor.document.getText(diagnostic.range);
-            }
-
-            if (!code_snippet) {
-                const cursorPosition = selection.isEmpty ? editor.selection.active : selection.start;
-                const startLine = Math.max(0, cursorPosition.line - 2);
-                const endLine = Math.min(editor.document.lineCount - 1, cursorPosition.line + 2);
-                const range = new vscode.Range(startLine, 0, endLine, editor.document.lineAt(endLine).text.length);
-                code_snippet = editor.document.getText(range);
-                middle_line_of_selection = cursorPosition.line;
-            }
-        } else {
-            code_snippet = editor.document.getText(selection);
-            middle_line_of_selection = Math.floor((selection.start.line + selection.end.line) / 2);
+        if (workspaceFolders) {
+            const workspacePath = workspaceFolders[0].uri.fsPath;
+            relativePath = path.relative(workspacePath, filePath);
         }
 
-        const messages: PlainTextMessage[] = command.messages.map(({ content }) => ({
-            role: 'system',
-            content: content
-                .replace("%ARGS%", '')
+        const selection = editor.selection;
+        let codeSnippet = '';
+        let middleLineOfSelection = 0;
+        let diagnosticMessage = '';
+
+        if (actionId === 'bugs' && context?.diagnostics && context.diagnostics.length > 0) {
+            const diagnostic = context.diagnostics[0];
+            diagnosticMessage = diagnostic.message;
+            middleLineOfSelection = diagnostic.range.start.line;
+
+            codeSnippet = editor.document.getText(diagnostic.range);
+        } else {
+            codeSnippet = editor.document.getText(selection);
+            middleLineOfSelection = Math.floor((selection.start.line + selection.end.line) / 2);
+        }
+
+        if (!codeSnippet) {
+            const cursorPosition = selection.isEmpty ? editor.selection.active : selection.start;
+            const startLine = Math.max(0, cursorPosition.line - 2);
+            const endLine = Math.min(editor.document.lineCount - 1, cursorPosition.line + 2);
+            const range = new vscode.Range(startLine, 0, endLine, editor.document.lineAt(endLine).text.length);
+            codeSnippet = editor.document.getText(range);
+            middleLineOfSelection = cursorPosition.line;
+        }
+
+        const messageBlock = command.messages.map(({content}) => (
+            content
+                // we should fetch default prompt somehow
+                .replace("%PROMPT_DEFAULT%", '')
                 .replace("%CURRENT_FILE_PATH_COLON_CURSOR%", '')
-                .replace("%CURRENT_FILE%", working_on_attach_filename)
-                .replace("%CURSOR_LINE%", (middle_line_of_selection + 1).toString())
-                .replace("%CODE_SELECTION%", code_snippet)
-        }));
+                .replace("%CURRENT_FILE%", filePath)
+                .replace("%CURSOR_LINE%", (middleLineOfSelection + 1).toString())
+                .replace("%CODE_SELECTION%", codeSnippet + "\n")
+        )).join("\n");
 
-        const question = actionId === 'bugs' ? (diagnostic_message || 'Issue with code') : 'Issue';
-
-        const chat: ChatThread = {
-            id: uuidv4(),
-            title: question,
-            messages: [
-                ...messages,
-                { role: 'system', content: `Active file: ${working_on_attach_filename}` },
-                ...(actionId === 'bugs' && diagnostic_message
-                    ? [{ role: 'user', content: `Error in: ${diagnostic_message}` }]
-                    : [])
-            ] as ChatMessage[],
-            model: '',
-        };
         vscode.commands.executeCommand("refactaicmd.callChat");
-        global.side_panel?.goto_chat(chat);
+        this.sendQuickActionToChat(messageBlock);
     }
 }
 
