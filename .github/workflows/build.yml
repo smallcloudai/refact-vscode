@@ -7,6 +7,10 @@ on:
   # Trigger the workflow on any pull request
   pull_request:
   workflow_dispatch:
+    inputs:
+      lsp_branch:
+        description: "Branch name of lsp"
+        default: "main"
 
 jobs:
   dist:
@@ -60,7 +64,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: build.yml
           repo: smallcloudai/refact-lsp
-          branch: main 
+          branch: ${{ inputs.lsp_branch }}
           path: ./assets
           name: dist-${{ matrix.target }}
 
