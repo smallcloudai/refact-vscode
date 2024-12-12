@@ -243,6 +243,10 @@ export class RustBinaryBlob
         }
         global.status_bar.choose_color();
         fetchAPI.maybe_show_rag_status();
+        let current_editor = vscode.window.activeTextEditor;
+        if (current_editor) {
+            fetchAPI.lsp_set_active_document(current_editor);
+        }
 
         const promptCustomization = await fetchAPI.get_prompt_customization();
         if (promptCustomization && promptCustomization.toolbox_commands) {
