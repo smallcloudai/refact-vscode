@@ -20,6 +20,7 @@ import { fileURLToPath } from 'url';
 import { ChatTab } from './chatTab';
 import { FimDebugData } from 'refact-chat-js/dist/events/index.js';
 import { code_lens_execute } from './codeLens';
+import { send_chat_telemetry } from './telemetryUtils';
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -50,7 +51,7 @@ declare global {
     var fim_data_cache: FimDebugData | undefined;
 }
 
-async function pressed_call_chat(n = 0) {
+async function pressed_call_chat(n = 0, fromCodeLens = false) {
     let editor = vscode.window.activeTextEditor;
     if(global.side_panel && !global.side_panel._view) {
 
@@ -59,13 +60,18 @@ async function pressed_call_chat(n = 0) {
         const delay = (n + 1) * 10;
         if(delay > 200) { return; }
 
-        setTimeout(() => pressed_call_chat(n + 1), delay);
+        setTimeout(() => pressed_call_chat(n + 1, fromCodeLens), delay);
         return;
     } else if (global.side_panel && global.side_panel._view && !global.side_panel?._view?.visible) {
         global.side_panel._view.show();
     }
 
     global.side_panel?.newChat();
+    let scope = "openChatByShortcut"
+    if (fromCodeLens) {
+        scope = "openChatByCodelens"
+    }
+    send_chat_telemetry(scope, true, "")
 }
 
 

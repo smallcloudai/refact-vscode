@@ -10,6 +10,7 @@ import {
     type ToolUse,
     setInputValue,
 } from "refact-chat-js/dist/events";
+import { send_chat_telemetry } from './telemetryUtils';
 
 
 class ExperimentalLens extends vscode.CodeLens {
@@ -159,21 +160,21 @@ export async function code_lens_execute(code_lens: string, range: any) {
             }
             editor.selection = new vscode.Selection(start_of_line, end_of_line);
             editor.revealRange(block_range);
-            vscode.commands.executeCommand('refactaicmd.callChat', '');
+            vscode.commands.executeCommand('refactaicmd.callChat', '', true);
             return;
         }
 
         if (global && global.side_panel && global.side_panel._view && global.side_panel._view.visible) {
             const current_page = global.side_panel.context.globalState.get("chat_page");
             if (typeof current_page === "string" && current_page !== '"chat"' || new_tab) {
-                vscode.commands.executeCommand('refactaicmd.callChat', '');
+                vscode.commands.executeCommand('refactaicmd.callChat', '', true);
             }
             sendCodeLensToChat(messages, relative_path, text, auto_submit);
             if (!auto_submit) {
                 global.is_chat_streaming = false;
             }
         } else {
-            vscode.commands.executeCommand('refactaicmd.callChat', '');
+            vscode.commands.executeCommand('refactaicmd.callChat', '', true);
             sendCodeLensToChat(messages, relative_path, text, auto_submit);
             if (!auto_submit) {
                 global.is_chat_streaming = false;
