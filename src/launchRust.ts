@@ -177,20 +177,24 @@ export class RustBinaryBlob
         }
     }
 
-    public async stop_lsp()
+    public stop_lsp()
     {
-        if (this.lsp_client) {
+        let my_lsp_client_copy = this.lsp_client;
+        if (my_lsp_client_copy) {
             console.log("RUST STOP");
-            try {
-                let ts = Date.now();
-                await this.lsp_client.stop();
-                console.log(`RUST /STOP ${Date.now() - ts}ms`);
-            } catch (e) {
-                console.log(`RUST STOP ERROR e=${e}`);
-            }
+            let ts = Date.now();
+            my_lsp_client_copy.stop()   // will complete in the background, otherwise it might die inside stop() such that execution never reaches even finally() and we don't know how to restart the process :/
+                .then(() => {
+                    console.log(`RUST /STOP completed in ${Date.now() - ts}ms`);
+                })
+                .catch((e) => {
+                    console.log(`RUST STOP ERROR e=${e}`);
+                })
+                .finally(() => {
+                    console.log("RUST STOP FINALLY");
+                });
         }
         this.lsp_dispose();
-        this.lsp_client = undefined;
     }
 
     public lsp_dispose()
@@ -205,7 +209,7 @@ export class RustBinaryBlob
 
     public async terminate()
     {
-        await this.stop_lsp();
+        this.stop_lsp();
         await fetchH2.disconnectAll();
         global.have_caps = false;
         global.status_bar.choose_color();
