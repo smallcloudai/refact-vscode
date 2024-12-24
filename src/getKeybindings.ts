@@ -26,6 +26,7 @@ function getSystem(): keyof typeof configPaths {
 }
 
 function getPathToConfigFile(): string {
+    // XXX: use any other way to read keybindings.json, so it doesn't get to the LSP
     const system = getSystem();
     const directoryForSystem = configPaths[system];
     const configDir = process.env.VSCODE_PORTABLE ? path.join(process.env.VSCODE_PORTABLE, "user-data","User") : directoryForSystem;
