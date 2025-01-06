@@ -154,24 +154,30 @@ const sendCodeLensToChat = (
     const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
 
     if (!isOnlyOneUserMessage) {
-        postMessageToWebview(messages, '', auto_submit);
+        const formattedMessages = formatMultipleMessagesForCodeLens(messages, relative_path, cursor, text);
+        postMessageToWebview({
+            messages: formattedMessages, send_immediately: auto_submit
+        });
         return;
     }
 
     const messageBlock = createMessageBlock(firstMessage, relative_path, cursor, text);
-    postMessageToWebview(messages, messageBlock, auto_submit);
+    postMessageToWebview({
+        value: messageBlock, send_immediately: auto_submit
+    });
 };
 
-const postMessageToWebview = (messages: ChatMessage[], value: string, send_immediately: boolean) => {
+const postMessageToWebview = ({messages, value, send_immediately}: {messages?: ChatMessage[], value?: string, send_immediately: boolean}) => {
     if (!global.side_panel?._view) {
         return;
     };
-    const message = setInputValue({
+
+    const eventMessage = setInputValue({
         messages,
         value,
         send_immediately
     });
-    global.side_panel._view.webview.postMessage(message);
+    global.side_panel._view.webview.postMessage(eventMessage);
 };
 
 const createMessageBlock = (
@@ -195,6 +201,28 @@ const createMessageBlock = (
             }
         }).join("\n");
     }
+};
+
+const formatMultipleMessagesForCodeLens = (
+    messages: ChatMessage[],
+    relative_path: string,
+    cursor: number | null,
+    text: string
+) => {
+    return messages.map(message => {
+        if (isUserMessage(message)) {
+            if (typeof message.content === 'string') {
+                return {
+                    ...message,
+                    content: message.content
+                        .replace("%CURRENT_FILE%", relative_path)
+                        .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
+                        .replace("%CODE_SELECTION%", text)
+                };
+            }
+        }
+        return message;
+    });
 };
 
 export async function code_lens_execute(code_lens: string, range: any) {
