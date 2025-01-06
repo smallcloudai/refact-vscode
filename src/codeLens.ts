@@ -9,6 +9,8 @@ import {
     type ChatMessage,
     type ToolUse,
     setInputValue,
+    isUserMessage,
+    UserMessage,
 } from "refact-chat-js/dist/events";
 
 
@@ -107,24 +109,92 @@ export class LensProvider implements vscode.CodeLensProvider
     }
 }
 
-const sendCodeLensToChat = (messages: {content: string; role: string;}[], relative_path: string, text: string, auto_submit: boolean = false) => {
-    if (!global || !global.side_panel || !global.side_panel._view) {
+// const sendCodeLensToChat = (messages: ChatMessage[], relative_path: string, text: string, auto_submit: boolean = false) => {
+//     if (!global || !global.side_panel || !global.side_panel._view || !messages) {
+//         return;
+//     }
+//     const firstMessage = messages[0];
+//     const isOnlyOneUserMessage = messages.length === 1 && isUserMessage(firstMessage);
+
+//     const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
+//     if (!isOnlyOneUserMessage) {
+//         const message = setInputValue({
+//             messages: messages,
+//             value: '',
+//             send_immediately: auto_submit
+//         });
+//         global.side_panel._view.webview.postMessage(message);
+//         return;    
+//     }
+//     const messageBlock = messages.find((message: ChatMessage) => message.role === "user")?.content
+//         .replace("%CURRENT_FILE%", relative_path)
+//         .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
+//         .replace("%CODE_SELECTION%", text);
+
+//     const message = setInputValue({
+//         messages: messages,
+//         value: isOnlyOneUserMessage ? messageBlock : text,
+//         send_immediately: auto_submit
+//     });
+//     global.side_panel._view.webview.postMessage(message);
+// };
+
+const sendCodeLensToChat = (
+    messages: ChatMessage[],
+    relative_path: string,
+    text: string,
+    auto_submit: boolean = false
+) => {
+    if (!global?.side_panel?._view || !messages) {
         return;
     }
 
+    const firstMessage = messages[0];
+    const isOnlyOneUserMessage = messages.length === 1 && isUserMessage(firstMessage);
     const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
 
-    const messageBlock = messages.find((message: {content: string; role: string;}) => message.role === "user")?.content
-        .replace("%CURRENT_FILE%", relative_path)
-        .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
-        .replace("%CODE_SELECTION%", text);
+    if (!isOnlyOneUserMessage) {
+        postMessageToWebview(messages, '', auto_submit);
+        return;
+    }
 
-    // TODO: send auto_submit somehow?
+    const messageBlock = createMessageBlock(firstMessage, relative_path, cursor, text);
+    postMessageToWebview(messages, messageBlock, auto_submit);
+};
+
+const postMessageToWebview = (messages: ChatMessage[], value: string, send_immediately: boolean) => {
+    if (!global.side_panel?._view) {
+        return;
+    };
     const message = setInputValue({
-        value: messageBlock ? messageBlock : text,
-        send_immediately: auto_submit
+        messages,
+        value,
+        send_immediately
     });
     global.side_panel._view.webview.postMessage(message);
+};
+
+const createMessageBlock = (
+    message: UserMessage,
+    relative_path: string,
+    cursor: number | null,
+    text: string
+) => {
+    if (typeof message.content === 'string') {
+        return message.content
+            .replace("%CURRENT_FILE%", relative_path)
+            .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
+            .replace("%CODE_SELECTION%", text);
+    } else {
+        return message.content.map(content => {
+            if (('type' in content) && content.type === 'text') {
+                return content.text
+                    .replace("%CURRENT_FILE%", relative_path)
+                    .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
+                    .replace("%CODE_SELECTION%", text);
+            }
+        }).join("\n");
+    }
 };
 
 export async function code_lens_execute(code_lens: string, range: any) {
@@ -134,7 +204,7 @@ export async function code_lens_execute(code_lens: string, range: any) {
     if (custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
         const new_tab = custom_code_lens[code_lens]["new_tab"];
-        let messages: {content: string; role: string;}[] = custom_code_lens[code_lens]["messages"];
+        let messages: ChatMessage[] = custom_code_lens[code_lens]["messages"];
 
         const start_of_line = new vscode.Position(range.start.line, 0);
         const end_of_line = new vscode.Position(range.end.line + 1, 0);
