@@ -109,36 +109,6 @@ export class LensProvider implements vscode.CodeLensProvider
     }
 }
 
-// const sendCodeLensToChat = (messages: ChatMessage[], relative_path: string, text: string, auto_submit: boolean = false) => {
-//     if (!global || !global.side_panel || !global.side_panel._view || !messages) {
-//         return;
-//     }
-//     const firstMessage = messages[0];
-//     const isOnlyOneUserMessage = messages.length === 1 && isUserMessage(firstMessage);
-
-//     const cursor = vscode.window.activeTextEditor?.selection.active.line ?? null;
-//     if (!isOnlyOneUserMessage) {
-//         const message = setInputValue({
-//             messages: messages,
-//             value: '',
-//             send_immediately: auto_submit
-//         });
-//         global.side_panel._view.webview.postMessage(message);
-//         return;    
-//     }
-//     const messageBlock = messages.find((message: ChatMessage) => message.role === "user")?.content
-//         .replace("%CURRENT_FILE%", relative_path)
-//         .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
-//         .replace("%CODE_SELECTION%", text);
-
-//     const message = setInputValue({
-//         messages: messages,
-//         value: isOnlyOneUserMessage ? messageBlock : text,
-//         send_immediately: auto_submit
-//     });
-//     global.side_panel._view.webview.postMessage(message);
-// };
-
 const sendCodeLensToChat = (
     messages: ChatMessage[],
     relative_path: string,
@@ -180,6 +150,19 @@ const postMessageToWebview = ({messages, value, send_immediately}: {messages?: C
     global.side_panel._view.webview.postMessage(eventMessage);
 };
 
+const replaceVariablesInText = (
+    text: string,
+    relative_path: string,
+    cursor: number | null, 
+    code_selection: string
+) => {
+    return text
+        .replace("%CURRENT_FILE%", relative_path)
+        .replace('%CURSOR_LINE%', cursor ? (cursor + 1).toString() : '')
+        .replace("%CODE_SELECTION%", code_selection)
+        .replace("%PROMPT_EXPLORATION_TOOLS%", '');
+};
+
 const createMessageBlock = (
     message: UserMessage,
     relative_path: string,
@@ -187,17 +170,11 @@ const createMessageBlock = (
     text: string
 ) => {
     if (typeof message.content === 'string') {
-        return message.content
-            .replace("%CURRENT_FILE%", relative_path)
-            .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
-            .replace("%CODE_SELECTION%", text);
+        return replaceVariablesInText(message.content, relative_path, cursor, text);
     } else {
         return message.content.map(content => {
             if (('type' in content) && content.type === 'text') {
-                return content.text
-                    .replace("%CURRENT_FILE%", relative_path)
-                    .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
-                    .replace("%CODE_SELECTION%", text);
+                return replaceVariablesInText(content.text, relative_path, cursor, text);
             }
         }).join("\n");
     }
@@ -214,10 +191,7 @@ const formatMultipleMessagesForCodeLens = (
             if (typeof message.content === 'string') {
                 return {
                     ...message,
-                    content: message.content
-                        .replace("%CURRENT_FILE%", relative_path)
-                        .replace("%CURSOR_LINE%", cursor ? (cursor + 1).toString() : "")
-                        .replace("%CODE_SELECTION%", text)
+                    content: replaceVariablesInText(message.content, relative_path, cursor, text)
                 };
             }
         }
