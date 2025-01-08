@@ -62,7 +62,7 @@ export class RustBinaryBlob
         if (!port) {
             return "";
         }
-        return "http2://127.0.0.1:" + port.toString() + "/";
+        return "http://127.0.0.1:" + port.toString() + "/";
     }
 
     public attemping_to_reach(): string
