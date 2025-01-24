@@ -34,6 +34,7 @@ import {
     ideChatPageChange,
     ideEscapeKeyPressed,
     ideIsChatStreaming,
+    setCurrentProjectInfo
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -117,6 +118,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             ) {
                 this.handleSettingsChange();
             }
+        }));
+
+        this._disposables.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+            this.sendCurrentProjectInfo();
         }));
 
 
@@ -848,6 +853,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
     }
 
+    sendCurrentProjectInfo() {
+        const action = setCurrentProjectInfo({name: vscode.workspace.name ?? ""});
+        this._view?.webview.postMessage(action);
+    }
+
 
     async createInitialState(thread?: ChatThread, tabbed = false): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
@@ -887,6 +897,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         };
 
         const state: Partial<InitialState> = {
+            current_project: {name: vscode.workspace.name ?? ""},
             config,
         };
 
