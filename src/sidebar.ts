@@ -908,7 +908,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 thread,
             };
             state.chat = chat;
-            state.pages = [{name: "initial setup"}, {name: "history"}, {name: "chat"}];
+            state.pages = [{name: "login page"}, {name: "history"}, {name: "chat"}];
         }
 
         return state;
