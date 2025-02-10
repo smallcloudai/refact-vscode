@@ -953,7 +953,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 -->
                 <meta http-equiv="Content-Security-Policy" content="style-src ${
                   webview.cspSource
-                } 'unsafe-inline'; img-src 'self' data: https:; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
+                } 'unsafe-inline'; img-src 'self' data: https: http://127.0.0.1:*; script-src 'nonce-${nonce}'; style-src-attr 'sha256-tQhKwS01F0Bsw/EwspVgMAqfidY8gpn/+DKLIxQ65hg=' 'unsafe-hashes';">
                 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
 
                 <title>Refact.ai Chat</title>
