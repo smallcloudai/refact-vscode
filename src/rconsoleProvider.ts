@@ -265,12 +265,6 @@ export class RefactConsoleProvider {
 
     scroll_to_thread() {
         return;
-        if (!this.thread || !this.thread.range) {
-            return;
-        }
-        const thread = this.thread.range.end.line;
-        const range = new vscode.Range(thread, 0, thread + 10, 0);
-        this.editor.revealRange(range, vscode.TextEditorRevealType.AtTop);
     }
 
     send_thread_to_line(line: number) {
