@@ -265,6 +265,9 @@ export class RefactConsoleProvider {
 
     scroll_to_thread() {
         return;
+        if (!this.thread || !this.thread.range) {
+            return;
+        }
         const thread = this.thread.range.end.line;
         const range = new vscode.Range(thread, 0, thread + 10, 0);
         this.editor.revealRange(range, vscode.TextEditorRevealType.AtTop);
@@ -279,6 +282,8 @@ export class RefactConsoleProvider {
     handle_message_stream_end(response_messages: rconsoleCommands.Messages, maybe_last_affected_line? : number) {
         this.messages = response_messages;
         if(
+            this.thread &&
+            this.thread.range &&
             maybe_last_affected_line !== undefined
             && maybe_last_affected_line >= 0
             && this.thread.range.start.line !== maybe_last_affected_line
