@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       lsp_branch:
-        description: "Branch name to publish"
+        description: "Branch name of lsp"
         default: "main"
       stable_release:
         description: "Publish stable release version"
@@ -81,6 +81,23 @@ jobs:
           fi
           echo "PRERELEASE=${PRERELEASE}"
           vsce package --target ${{ matrix.code-target }} ${PRERELEASE}
+
+      - name: Getting version
+        id: get_version  # Add this ID to reference the output
+        shell: bash
+        run: |
+          VERSION=$(cat package.json | grep \"version\": | head -n1 | cut -d'"' -f4)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT  # Store version in GitHub output
+
+      - name: Release in GH
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ github.token }}
+          file: ./*.vsix
+          prerelease: ${{ !inputs.stable_release }}
+          tag: v${{ steps.get_version.outputs.version }}  # Use the version from previous step with 'v' prefix
+          overwrite: true
+          file_glob: true
 
       - name: Publish VSCE extension
         shell: bash
