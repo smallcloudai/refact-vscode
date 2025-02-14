@@ -30,7 +30,9 @@ import {
     ideEscapeKeyPressed,
     ideIsChatStreaming,
     setCurrentProjectInfo,
-    ideCreateNewFile
+    ideCreateNewFile,
+    ideToolEdit,
+    ToolEditResult,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -558,7 +560,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if(ideEscapeKeyPressed.match(e)) {
             return this.handleEscapePressed(e.payload);
         }
+
+        if(ideToolEdit.match(e)) {
+            return this.handleToolEdit(e.payload.path, e.payload.edit);
+        }
         
+        // TODO: can remove
         if(ideCreateNewFile.match(e)) {
             return this.createNewFileWithContent(e.payload.path, e.payload.content);
         }
@@ -595,6 +602,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     // }
 
+    async handleToolEdit(path: string,  toolEdit: ToolEditResult) {
+        if(!toolEdit.file_before && toolEdit.file_after) {
+            return this.createNewFileWithContent(path, toolEdit.file_after);
+        }
+
+        return this.addDiffToFile(path, toolEdit.file_after);
+    }
+
 
     // This isn't called
     async deleteFile(fileName: string) {
@@ -624,7 +639,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    // this isn't called
     async addDiffToFile(fileName: string, content: string) {
         const uri = this.filePathToUri(fileName);
         const document = await vscode.workspace.openTextDocument(uri);
