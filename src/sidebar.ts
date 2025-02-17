@@ -30,7 +30,6 @@ import {
     ideEscapeKeyPressed,
     ideIsChatStreaming,
     setCurrentProjectInfo,
-    ideCreateNewFile,
     ideToolEdit,
     ToolEditResult,
 } from "refact-chat-js/dist/events";
@@ -564,12 +563,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if(ideToolEdit.match(e)) {
             return this.handleToolEdit(e.payload.path, e.payload.edit);
         }
-        
-        // TODO: can remove
-        if(ideCreateNewFile.match(e)) {
-            return this.createNewFileWithContent(e.payload.path, e.payload.content);
-        }
-
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
