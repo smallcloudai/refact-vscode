@@ -57,7 +57,9 @@
 		"Machine Learning",
 		"Education",
 		"Testing",
-		"Data Science"
+		"Data Science",
+		"AI",
+		"Chat"
 	],
 	"keywords": [
 		"refact",
@@ -95,14 +97,12 @@
 		"react",
 		"swift",
 		"objective-c",
-		"objectivec",
 		"ai",
 		"method completion",
 		"intellicode",
 		"intellisense",
 		"snippets",
 		"kite",
-		"nodejs",
 		"node",
 		"node.js",
 		"jupyter",
@@ -114,7 +114,9 @@
 		"llm",
 		"test",
 		"security",
-		"coding"
+		"coding",
+		"copilot",
+		"cursor"
 	],
 	"activationEvents": [
 		"onStartupFinished"
