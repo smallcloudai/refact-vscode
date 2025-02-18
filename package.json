@@ -1,7 +1,7 @@
 {
 	"name": "codify",
-	"displayName": "Refact",
-	"description": "Refact AI Assistant for Code Writing and Refactoring",
+	"displayName": "Refact – Open-Source AI Agent, Code Generator & Chat for JavaScript, Python, TypeScript, Java, PHP, Go, and more.",
+	"description": "Refact.ai is a free, open-source AI Agent that adapts to your workflow. It tracks your cursor to provide instant assistance, connects with tools, databases and browsers, works with debuggers, and runs shell commands. As your AI copilot, it handles code generation, testing, review, and refactoring.",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
 	"galleryBanner": {
