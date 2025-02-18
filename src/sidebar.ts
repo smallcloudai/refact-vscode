@@ -23,18 +23,15 @@ import {
     ideNewFileAction,
     ideOpenSettingsAction,
     ideDiffPasteBackAction,
-    ideDiffPreviewAction,
     type ChatThread,
-    type DiffPreviewResponse,
-    resetDiffApi,
     ideAnimateFileStart,
     ideAnimateFileStop,
-    ideWriteResultsToFile,
-    type PatchResult,
     ideChatPageChange,
     ideEscapeKeyPressed,
     ideIsChatStreaming,
-    setCurrentProjectInfo
+    setCurrentProjectInfo,
+    ideToolEdit,
+    ToolEditResult,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -70,7 +67,7 @@ export async function open_chat_tab(
             ] : [],
             model: model,
             new_chat_suggested: {
-                wasSuggested: false
+                wasSuggested: false,
             }
         };
         global.side_panel.goto_chat(chat);  // changes html
@@ -270,10 +267,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view?.webview.postMessage(message);
     }
 
-    sendClearDiffCacheMessage() {
-        const message = resetDiffApi();
-        this._view?.webview.postMessage(message);
-    }
+
 
 
     public new_statistic(view: vscode.WebviewView)
@@ -548,9 +542,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleDiffPasteBack(e.payload);
         }
 
-        if (ideDiffPreviewAction.match(e)) {
-            return this.handleDiffPreview(e.payload);
-        }
 
         if(ideAnimateFileStart.match(e)) {
             return this.startFileAnimation(e.payload);
@@ -558,10 +549,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         if(ideAnimateFileStop.match(e)) {
             return this.stopFileAnimation(e.payload);
-        }
-
-        if(ideWriteResultsToFile.match(e)) {
-            return this.writeResultsToFile(e.payload);
         }
 
         if(ideChatPageChange.match(e)) {
@@ -576,6 +563,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleEscapePressed(e.payload);
         }
 
+        if(ideToolEdit.match(e)) {
+            return this.handleToolEdit(e.payload.path, e.payload.edit);
+        }
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
@@ -608,6 +598,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     // }
 
+    async handleToolEdit(path: string,  toolEdit: ToolEditResult) {
+        if(!toolEdit.file_before && toolEdit.file_after) {
+            return this.createNewFileWithContent(path, toolEdit.file_after);
+        }
+
+        return this.addDiffToFile(path, toolEdit.file_after);
+    }
+
+
+    // This isn't called
     async deleteFile(fileName: string) {
         const uri = this.filePathToUri(fileName);
         const edit = new vscode.WorkspaceEdit();
@@ -628,7 +628,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return vscode.workspace.applyEdit(edit).then(success => {
                 if (success) {
                     vscode.window.showTextDocument(document);
-                    this.refetchDiffsOnSave(document);
                 } else {
                     vscode.window.showInformationMessage('Error: creating file ' + fileName);
                 }
@@ -651,10 +650,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             range,
             content
         );
-        // TODO: can remove this when diff api is removed.
-        this.refetchDiffsOnSave(document);
     }
 
+    // this isn't called
     async editFileWithContent(fileName: string, content: string) {
         const uri = this.filePathToUri(fileName);
         const document = await vscode.workspace.openTextDocument(uri);
@@ -676,17 +674,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
 
-    async writeResultsToFile(results: PatchResult[]) {
-        for(const result of results)  {
-            if(result.file_name_add) {
-                this.createNewFileWithContent(result.file_name_add, result.file_text);
-            } else if(result.file_name_edit) {
-                this.editFileWithContent(result.file_name_edit, result.file_text);
-            } else if (result.file_name_delete) {
-                this.deleteFile(result.file_name_delete);
-            }
-        }
-    }
 
     async handleCurrentChatPage(page: string) {
         this.context.globalState.update("chat_page", JSON.stringify(page));
@@ -796,39 +783,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             indentedCode,
         );
 
-	}
-
-    private refetchDiffsOnSave(document: vscode.TextDocument) {
-        const disposables: vscode.Disposable[] = [];
-        const dispose = () => disposables.forEach(d => d.dispose());
-        disposables.push(vscode.workspace.onDidSaveTextDocument((savedDocument) => {
-            if(savedDocument.uri.fsPath === document.uri.fsPath) {
-                this.sendClearDiffCacheMessage();
-                dispose();
-            }
-        }));
-        disposables.push(vscode.workspace.onDidCloseTextDocument((closedDocument) => {
-            if(closedDocument.uri.fsPath === document.uri.fsPath) {
-                dispose();
-            }
-        }));
-    }
-
-    private async handleDiffPreview(response: DiffPreviewResponse) {
-
-        const openFiles = this.getOpenFiles();
-
-        for (const change of response.results) {
-            if (change.file_name_edit !== null && change.file_text !== null) {
-                this.addDiffToFile(change.file_name_edit, change.file_text);
-            } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add) === false) {
-                this.createNewFileWithContent(change.file_name_add, change.file_text);
-            } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
-                this.addDiffToFile(change.file_name_add, change.file_text);
-            } else if(change.file_name_delete) {
-                this.deleteFile(change.file_name_delete);
-            }
-        }
 	}
 
 
