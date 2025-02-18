@@ -59,32 +59,35 @@ Deploying Refact.ai Agent is like adding a 24/7 engineer to your team—one that
 ## Which tasks can Refact.ai help me with?
 
 - **Generate code from natural language prompts (even if you make typos)** - Instantly turn ideas into functional code, accelerating development and eliminating the blank-screen problem.
-
-
-  ![gen](https://github.com/user-attachments/assets/ef4acec7-4967-400a-900e-9d3382d05b1b)
-
-
+\
+&nbsp;
+  ![gen](https://github.com/user-attachments/assets/ef4acec7-4967-400a-900e-9d3382d05b1b) 
+\
+&nbsp;
 - **Refactor code** - Improve code quality, readability, and efficiency with automated refactoring that aligns with best practices.
-
-  ![refactor](https://github.com/user-attachments/assets/2cae4467-f363-4033-8ecf-2854dcc74aaa)
-
-
+\
+&nbsp;
+  ![refactor](https://github.com/user-attachments/assets/2cae4467-f363-4033-8ecf-2854dcc74aaa) 
+\
+&nbsp;
 - **Explain code** - Quickly understand complex or unfamiliar code with AI-generated explanations, making collaboration and onboarding faster.
-
-
-  ![explain](https://github.com/user-attachments/assets/bd43d9aa-15c9-49dc-9fa9-b5ab5c4ecdfe)
-
-
-- **Debug code** - Detect and fix errors faster with intelligent debugging, reducing time spent troubleshooting issues.
-
-
-  ![ddbg](https://github.com/user-attachments/assets/45e917b5-f47b-4b84-b1f4-f4918c8a00c7)
-  
+\
+&nbsp;
+![explain](https://github.com/user-attachments/assets/bd43d9aa-15c9-49dc-9fa9-b5ab5c4ecdfe)
+\
+&nbsp;
+- **Debug code** - Detect and fix errors faster with intelligent debugging, reducing time spent troubleshooting issues. 
+\
+&nbsp;
+![ddbg](https://github.com/user-attachments/assets/45e917b5-f47b-4b84-b1f4-f4918c8a00c7) 
+\
+&nbsp;
 - **Generate unit tests** -  Ensure code reliability by automatically creating comprehensive unit tests.
-
-
+\
+&nbsp;
   ![unit](https://github.com/user-attachments/assets/5168ee57-e35b-4484-bf19-70cc0f3a6299)
-
+\
+&nbsp;
 
 - **Code Review** - Get AI-assisted code reviews for cleaner, more secure, and more efficient code, addressing developers' top concern: accuracy.
 - **Create Documentation** - Automate documentation generation to keep knowledge accessible and up to date.
