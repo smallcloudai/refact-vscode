@@ -69,6 +69,9 @@ export async function open_chat_tab(
                 {role: "user", content: question},
             ] : [],
             model: model,
+            new_chat_suggested: {
+                wasSuggested: false
+            }
         };
         global.side_panel.goto_chat(chat);  // changes html
 
