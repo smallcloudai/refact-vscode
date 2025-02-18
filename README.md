@@ -35,12 +35,12 @@ We can't say it better than our users: *'Refact.ai understands me better than my
 - **Bring your own key (BYOK)** - Use your own API keys for external LLMs, ensuring flexibility and control over your AI infrastructure.
 - **Upload images**: Click the image button to add visual context to your chat.
 - **Use @-commands** to control what context to use to answer your question:
- - **@web** - define a webpage.
- - **@file** - upload and attach a single file.
- - **@definition** - find and attach a definition.
- - **@references** - locate all references and attach them.
- - **@tree** - display the workspace directory and files tree.
- - Create your own **custom system prompt** for a more personalized workflow.
+    - **@web** - define a webpage.
+    - **@file** - upload and attach a single file.
+    - **@definition** - find and attach a definition.
+    - **@references** - locate all references and attach them.
+    - **@tree** - display the workspace directory and files tree.
+    - Create your own **custom system prompt** for a more personalized workflow.
 
 ## Refact.ai Agent For Enterprise
 Deploying Refact.ai Agent is like adding a 24/7 engineer to your team—one that instantly understands your codebase, adapts to your workflows, accelerates development from day one, and becomes a shared knowledge base for your entire team.
