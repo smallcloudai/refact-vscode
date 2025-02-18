@@ -54,10 +54,10 @@ Deploying Refact.ai Agent is like adding a 24/7 engineer to your team—one that
 - **Priority Support:** Our engineers are always available to assist you at every stage, from setup to fine-tuning and beyond.
 
 **To get a 2-week free trial** for your team, just fill out the form on [our website](https://refact.ai/contact/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
-
-
-
-
+\
+&nbsp;
+\
+&nbsp;
 ## Which tasks can Refact.ai help me with?
 
 - **Generate code from natural language prompts (even if you make typos)** - Instantly turn ideas into functional code, accelerating development and eliminating the blank-screen problem.
