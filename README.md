@@ -8,8 +8,6 @@
 [![Twitter Follow](https://img.shields.io/twitter/follow/refact_ai)](https://twitter.com/intent/follow?screen_name=refact_ai)
 ![License](https://img.shields.io/github/license/smallcloudai/refact-vscode)
 
-Refact.ai is a free, open-source AI Agent that adapts to your workflow. It tracks your cursor to provide instant assistance, connects with tools, databases and browsers, works with debuggers, and runs shell commands. As your AI copilot, it handles code generation, testing, review, and refactoring.
-
 ## Refact.ai - Your Customizable Open-Source AI Software Engineering Agent
 
 Refact.ai is a free, **open-source** AI Agent that handles engineering tasks end-to-end. It deeply understands your codebases and integrates with your tools, databases, and browsers to automate complex, multi-step tasks.
