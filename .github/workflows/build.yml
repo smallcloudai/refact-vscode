@@ -62,8 +62,8 @@ jobs:
         uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
-          workflow: build.yml
-          repo: smallcloudai/refact-lsp
+          workflow: agent_engine_build.yml
+          repo: smallcloudai/refact
           branch: ${{ inputs.lsp_branch }}
           path: ./assets
           name: dist-${{ matrix.target }}

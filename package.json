@@ -1,7 +1,7 @@
 {
 	"name": "codify",
-	"displayName": "Refact",
-	"description": "Refact AI Assistant for Code Writing and Refactoring",
+	"displayName": "Refact – Open-Source AI Agent, Code Generator & Chat for JavaScript, Python, TypeScript, Java, PHP, Go, and more.",
+	"description": "Refact.ai is a free, open-source AI Agent that adapts to your workflow. It tracks your cursor to provide instant assistance, connects with tools, databases and browsers, works with debuggers, and runs shell commands. As your AI copilot, it handles code generation, testing, review, and refactoring.",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
 	"galleryBanner": {
@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "6.1.0",
+	"version": "6.1.3",
 	"dependencies": {
 		"@types/marked": "^4.0.8",
 		"@types/vscode": "^1.69.0",
@@ -57,7 +57,9 @@
 		"Machine Learning",
 		"Education",
 		"Testing",
-		"Data Science"
+		"Data Science",
+		"AI",
+		"Chat"
 	],
 	"keywords": [
 		"refact",
@@ -95,14 +97,12 @@
 		"react",
 		"swift",
 		"objective-c",
-		"objectivec",
 		"ai",
 		"method completion",
 		"intellicode",
 		"intellisense",
 		"snippets",
 		"kite",
-		"nodejs",
 		"node",
 		"node.js",
 		"jupyter",
@@ -114,7 +114,9 @@
 		"llm",
 		"test",
 		"security",
-		"coding"
+		"coding",
+		"copilot",
+		"cursor"
 	],
 	"activationEvents": [
 		"onStartupFinished"
