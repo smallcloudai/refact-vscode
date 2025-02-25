@@ -589,6 +589,8 @@ export async function like_and_accept(editor: vscode.TextEditor)
         // dataCollection.data_feedback_candidate_reset(state);
     });
     await thenable;
+    global.side_panel?.toolEditChange(editor.document.uri.fsPath, true);
+    await editor.document.save();
 }
 
 

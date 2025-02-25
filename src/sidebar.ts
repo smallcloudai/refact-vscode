@@ -30,8 +30,10 @@ import {
     ideEscapeKeyPressed,
     ideIsChatStreaming,
     setCurrentProjectInfo,
-    ideToolEdit,
+    ideToolCall,
     ToolEditResult,
+    ideToolCallResponse,
+    TextDocToolCall,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -86,6 +88,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public chat: chatTab.ChatTab | null = null;
     public statistic: statisticTab.StatisticTab | null = null;
+    public tool_edit_in_progress: null | {chatId: string, toolCallId?: string} = null;
     // public fim_debug: fimDebug.FimDebug | null = null;
     // public chatHistoryProvider: ChatHistoryProvider|undefined;
 
@@ -539,7 +542,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideDiffPasteBackAction.match(e)) {
-            return this.handleDiffPasteBack(e.payload);
+            this.tool_edit_in_progress = e.payload.chatId ? {chatId: e.payload.chatId, toolCallId: e.payload.toolCallId} : null;
+            return this.handleDiffPasteBack(e.payload.content);
         }
 
 
@@ -563,8 +567,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleEscapePressed(e.payload);
         }
 
-        if(ideToolEdit.match(e)) {
-            return this.handleToolEdit(e.payload.path, e.payload.edit);
+        if(ideToolCall.match(e)) {
+            this.tool_edit_in_progress = {chatId: e.payload.chatId, toolCallId: e.payload.toolCall.id};
+            return this.handleToolEdit(e.payload.toolCall, e.payload.edit);
         }
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
@@ -598,12 +603,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     // }
 
-    async handleToolEdit(path: string,  toolEdit: ToolEditResult) {
+    async handleToolEdit(toolCall: TextDocToolCall,  toolEdit: ToolEditResult) {
         if(!toolEdit.file_before && toolEdit.file_after) {
-            return this.createNewFileWithContent(path, toolEdit.file_after);
+            return this.createNewFileWithContent(toolCall.function.arguments.path, toolEdit.file_after);
         }
 
-        return this.addDiffToFile(path, toolEdit.file_after);
+        return this.addDiffToFile(toolCall.function.arguments.path, toolEdit.file_after);
     }
 
 
@@ -627,12 +632,49 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             edit.insert(newFile, new vscode.Position(0, 0), content);
             return vscode.workspace.applyEdit(edit).then(success => {
                 if (success) {
+                    this.watchFileForSaveOrClose(document);
                     vscode.window.showTextDocument(document);
+                    // TOOD: send message to ide when file is saved, or closed
                 } else {
                     vscode.window.showInformationMessage('Error: creating file ' + fileName);
                 }
             });
         });
+    }
+
+    watchFileForSaveOrClose(document: vscode.TextDocument) {
+        const disposables: vscode.Disposable[] = [];
+        const saveDisposable = vscode.workspace.onDidSaveTextDocument((savedDoc) => {
+            if (savedDoc.uri.toString() === document.uri.toString()) {
+                // Send message to webview that file was saved
+                this.toolEditChange(document.uri.fsPath, true);
+                disposables.forEach(d => d.dispose());
+            }
+        });
+        disposables.push(saveDisposable);
+
+        const closeDisposable = vscode.workspace.onDidCloseTextDocument((closedDoc) => {
+            if (closedDoc.uri.toString() === document.uri.toString()) {
+                // Send message to webview that file was closed
+                this.toolEditChange(document.uri.fsPath, false);
+                disposables.forEach(d => d.dispose());
+            }
+        });
+        disposables.push(closeDisposable);
+
+        this._disposables.push(...disposables);
+    }
+
+    toolEditChange(path: string, accepted: boolean | "indeterminate") {
+        if(this.tool_edit_in_progress) {
+            const action = ideToolCallResponse({
+                chatId: this.tool_edit_in_progress.chatId,
+                toolCallId: this.tool_edit_in_progress.toolCallId ?? "",
+                accepted
+            });
+            this._view?.webview.postMessage(action);
+            this.tool_edit_in_progress = null;
+        }
     }
 
     async addDiffToFile(fileName: string, content: string) {

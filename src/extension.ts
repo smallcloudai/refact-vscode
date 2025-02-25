@@ -89,6 +89,7 @@ async function pressed_escape()
     }
     if (editor) {
         let state = estate.state_of_editor(editor, "pressed_escape");
+        global.side_panel?.toolEditChange(editor.document.uri.fsPath, false);
         if (state) {
             state.diff_lens_pos = Number.MAX_SAFE_INTEGER;
             state.completion_lens_pos = Number.MAX_SAFE_INTEGER;
