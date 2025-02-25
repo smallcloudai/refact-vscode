@@ -88,7 +88,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public chat: chatTab.ChatTab | null = null;
     public statistic: statisticTab.StatisticTab | null = null;
-    public tool_edit_in_progress: null | {chatId: string, toolCallId?: string} = null;
+    public tool_edit_in_progress: string = "";
     // public fim_debug: fimDebug.FimDebug | null = null;
     // public chatHistoryProvider: ChatHistoryProvider|undefined;
 
@@ -542,7 +542,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideDiffPasteBackAction.match(e)) {
-            this.tool_edit_in_progress = e.payload.chatId ? {chatId: e.payload.chatId, toolCallId: e.payload.toolCallId} : null;
+            this.tool_edit_in_progress = e.payload.toolCallId ?? "";
             return this.handleDiffPasteBack(e.payload.content);
         }
 
@@ -568,7 +568,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideToolCall.match(e)) {
-            this.tool_edit_in_progress = {chatId: e.payload.chatId, toolCallId: e.payload.toolCall.id};
+            this.tool_edit_in_progress = e.payload.toolCall.id ?? "";
             return this.handleToolEdit(e.payload.toolCall, e.payload.edit);
         }
         // if(ideOpenChatInNewTab.match(e)) {
@@ -668,12 +668,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     toolEditChange(path: string, accepted: boolean | "indeterminate") {
         if(this.tool_edit_in_progress) {
             const action = ideToolCallResponse({
-                chatId: this.tool_edit_in_progress.chatId,
-                toolCallId: this.tool_edit_in_progress.toolCallId ?? "",
+                toolCallId: this.tool_edit_in_progress,
                 accepted
             });
             this._view?.webview.postMessage(action);
-            this.tool_edit_in_progress = null;
+            this.tool_edit_in_progress = "";
         }
     }
 
