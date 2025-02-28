@@ -11,6 +11,9 @@ on:
       lsp_branch:
         description: "Branch name of lsp"
         default: "main"
+      chat_js_branch:
+        description: "Branch name of chat-js"
+        default: "main"
 
 jobs:
   dist:
@@ -57,8 +60,8 @@ jobs:
         with:
           fetch-depth: ${{ env.FETCH_DEPTH }}
           
-      - name: Download artifact
-        id: download-artifact
+      - name: Download lsp artifacts
+        id: download-artifact-lsp
         uses: dawidd6/action-download-artifact@v3
         with:
           github_token: ${{secrets.GITHUB_TOKEN}}
@@ -67,13 +70,34 @@ jobs:
           branch: ${{ inputs.lsp_branch }}
           path: ./assets
           name: dist-${{ matrix.target }}
+      
+      - name: Download chat artifacts
+        id: download-artifact-chat
+        uses: dawidd6/action-download-artifact@v9
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          workflow: agent_gui_build.yml
+          repo: smallcloudai/refact
+          branch: ${{ inputs.chat_js_branch }}
+          path: ./chat_package
+          name: lts-refact-chat-js-.*\.tgz
+          name_is_regexp: true
+          
+      - name: Prepare chat package
+        shell: bash
+        run: |
+          mkdir -p ./chat_package_fixed
+          find ./chat_package -name "*.tgz" -type f -exec cp {} ./chat_package_fixed/ \;
+          ls -la ./chat_package_fixed
 
       - name: Install VSCE
+        shell: bash
         run: |
-          npm install
+          npm install ./chat_package_fixed/*.tgz
           npm install -g @vscode/vsce
+          rm -rf ./chat_package ./chat_package_fixed
 
-      - name: Pakckage VSCE extension
+      - name: Package VSCE extension
         run: |
           chmod +x ./assets/refact-lsp*
           vsce package --target ${{ matrix.code-target }}
