@@ -846,7 +846,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 ast,
                 images: true,
                 statistics: true,
-                knowledge: false,
             },
             keyBindings: {
                 completeManual,
