@@ -155,7 +155,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     sendSnippetToChat() {
         const snippet = this.getSnippetFromEditor();
-        console.log({snippet})
         if(!snippet) { return; }
         const message = setSelectedSnippet(snippet);
         this._view?.webview.postMessage(message);
