@@ -791,18 +791,23 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     async handleOpenFile(file: {file_name:string, line?: number}) {
         const uri = this.filePathToUri(file.file_name);
-        const document = await vscode.workspace.openTextDocument(uri);
-
-        if(file.line !== undefined) {
-            const position = new vscode.Position(file.line ?? 0, 0);
-            const editor = await vscode.window.showTextDocument(document);
-            const range = new vscode.Range(position, position);
-            editor.revealRange(range);
-        } else {
-            await vscode.window.showTextDocument(document);
+        try {
+            const document = await vscode.workspace.openTextDocument(uri);
+            
+            if(file.line !== undefined) {
+                const position = new vscode.Position(file.line ?? 0, 0);
+                const editor = await vscode.window.showTextDocument(document);
+                const range = new vscode.Range(position, position);
+                editor.revealRange(range);
+            } else {
+                await vscode.window.showTextDocument(document);
+            }
+            
+            console.log(`opening document ${document.uri}`);
+            return document;
+        } catch (e) {
+            console.error(e);
         }
-
-        return document;
     }
 
     getColorTheme(): "light" | "dark" {
