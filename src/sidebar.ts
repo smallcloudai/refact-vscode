@@ -117,7 +117,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if(
                 event.affectsConfiguration("refactai.vecdb") ||
                 event.affectsConfiguration("refactai.ast") ||
-                event.affectsConfiguration("refactai.submitChatWithShiftEnter")
+                event.affectsConfiguration("refactai.submitChatWithShiftEnter") ||
+                event.affectsConfiguration("refactai.xperimental")
             ) {
                 this.handleSettingsChange();
             }
@@ -251,6 +252,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 .getConfiguration()
                 ?.get<boolean>("refactai.ast") ?? false;
 
+        const knowledge = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
+
 
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
@@ -262,7 +265,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             addressURL,
             lspPort: port,
             shiftEnterToSubmit: submitChatWithShiftEnter,
-            features: {vecdb, ast}
+            features: {vecdb, ast, knowledge}
         });
 
         this._view?.webview.postMessage(message);
@@ -825,6 +828,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const activeColorTheme = this.getColorTheme();
         const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
+        const knowledge = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
         const port = global.rust_binary_blob?.get_port() ?? 8001;
@@ -846,6 +850,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 ast,
                 images: true,
                 statistics: true,
+                knowledge,
             },
             keyBindings: {
                 completeManual,
