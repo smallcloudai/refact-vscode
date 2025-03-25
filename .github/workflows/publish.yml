@@ -131,7 +131,7 @@ jobs:
             export PRERELEASE=--pre-release
           fi
           echo "PRERELEASE=${PRERELEASE}"
-          vsce publish --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
+          vsce publish --skip-duplicate --pat ${{secrets.VSCE_PAT}} ${PRERELEASE} --packagePath *.vsix
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
