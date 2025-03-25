@@ -23,17 +23,17 @@ import {
     ideNewFileAction,
     ideOpenSettingsAction,
     ideDiffPasteBackAction,
-    ideDiffPreviewAction,
     type ChatThread,
-    type DiffPreviewResponse,
-    resetDiffApi,
     ideAnimateFileStart,
     ideAnimateFileStop,
-    ideWriteResultsToFile,
-    type PatchResult,
     ideChatPageChange,
     ideEscapeKeyPressed,
     ideIsChatStreaming,
+    setCurrentProjectInfo,
+    ideToolCall,
+    ToolEditResult,
+    ideToolCallResponse,
+    TextDocToolCall,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -68,6 +68,9 @@ export async function open_chat_tab(
                 {role: "user", content: question},
             ] : [],
             model: model,
+            new_chat_suggested: {
+                wasSuggested: false,
+            }
         };
         global.side_panel.goto_chat(chat);  // changes html
 
@@ -85,6 +88,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     public chat: chatTab.ChatTab | null = null;
     public statistic: statisticTab.StatisticTab | null = null;
+    public tool_edit_in_progress: null | {chatId: string, toolCallId?: string} = null;
     // public fim_debug: fimDebug.FimDebug | null = null;
     // public chatHistoryProvider: ChatHistoryProvider|undefined;
 
@@ -113,10 +117,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             if(
                 event.affectsConfiguration("refactai.vecdb") ||
                 event.affectsConfiguration("refactai.ast") ||
-                event.affectsConfiguration("refactai.submitChatWithShiftEnter")
+                event.affectsConfiguration("refactai.submitChatWithShiftEnter") ||
+                event.affectsConfiguration("refactai.xperimental")
             ) {
                 this.handleSettingsChange();
             }
+        }));
+
+        this._disposables.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+            this.sendCurrentProjectInfo();
         }));
 
 
@@ -176,10 +185,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const fileName = basename(filePath);
 
 
-        const indentedCode = this.trimIndent(code);
-
         return {
-            code: indentedCode,
+            code: code,
             language,
             path: filePath,
             basename: fileName
@@ -245,6 +252,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 .getConfiguration()
                 ?.get<boolean>("refactai.ast") ?? false;
 
+        const knowledge = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
+
 
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
@@ -256,16 +265,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             addressURL,
             lspPort: port,
             shiftEnterToSubmit: submitChatWithShiftEnter,
-            features: {vecdb, ast}
+            features: {vecdb, ast, knowledge}
         });
 
         this._view?.webview.postMessage(message);
     }
 
-    sendClearDiffCacheMessage() {
-        const message = resetDiffApi();
-        this._view?.webview.postMessage(message);
-    }
+
 
 
     public new_statistic(view: vscode.WebviewView)
@@ -537,12 +543,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(ideDiffPasteBackAction.match(e)) {
-            return this.handleDiffPasteBack(e.payload);
+            this.tool_edit_in_progress = e.payload.chatId ? {chatId: e.payload.chatId, toolCallId: e.payload.toolCallId} : null;
+            return this.handleDiffPasteBack(e.payload.content);
         }
 
-        if (ideDiffPreviewAction.match(e)) {
-            return this.handleDiffPreview(e.payload);
-        }
 
         if(ideAnimateFileStart.match(e)) {
             return this.startFileAnimation(e.payload);
@@ -550,10 +554,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         if(ideAnimateFileStop.match(e)) {
             return this.stopFileAnimation(e.payload);
-        }
-
-        if(ideWriteResultsToFile.match(e)) {
-            return this.writeResultsToFile(e.payload);
         }
 
         if(ideChatPageChange.match(e)) {
@@ -568,6 +568,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleEscapePressed(e.payload);
         }
 
+        if(ideToolCall.match(e)) {
+            this.tool_edit_in_progress = {chatId: e.payload.chatId, toolCallId: e.payload.toolCall.id};
+            return this.handleToolEdit(e.payload.toolCall, e.payload.edit);
+        }
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
@@ -600,6 +604,16 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     // }
 
+    async handleToolEdit(toolCall: TextDocToolCall,  toolEdit: ToolEditResult) {
+        if(!toolEdit.file_before && toolEdit.file_after) {
+            return this.createNewFileWithContent(toolCall.function.arguments.path, toolEdit.file_after);
+        }
+
+        return this.addDiffToFile(toolCall.function.arguments.path, toolEdit.file_after);
+    }
+
+
+    // This isn't called
     async deleteFile(fileName: string) {
         const uri = this.filePathToUri(fileName);
         const edit = new vscode.WorkspaceEdit();
@@ -619,13 +633,49 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             edit.insert(newFile, new vscode.Position(0, 0), content);
             return vscode.workspace.applyEdit(edit).then(success => {
                 if (success) {
+                    this.watchFileForSaveOrClose(document);
                     vscode.window.showTextDocument(document);
-                    this.refetchDiffsOnSave(document);
+                    // TOOD: send message to ide when file is saved, or closed
                 } else {
                     vscode.window.showInformationMessage('Error: creating file ' + fileName);
                 }
             });
         });
+    }
+
+    watchFileForSaveOrClose(document: vscode.TextDocument) {
+        const disposables: vscode.Disposable[] = [];
+        const saveDisposable = vscode.workspace.onDidSaveTextDocument((savedDoc) => {
+            if (savedDoc.uri.toString() === document.uri.toString()) {
+                // Send message to webview that file was saved
+                this.toolEditChange(document.uri.fsPath, true);
+                disposables.forEach(d => d.dispose());
+            }
+        });
+        disposables.push(saveDisposable);
+
+        const closeDisposable = vscode.workspace.onDidCloseTextDocument((closedDoc) => {
+            if (closedDoc.uri.toString() === document.uri.toString()) {
+                // Send message to webview that file was closed
+                this.toolEditChange(document.uri.fsPath, false);
+                disposables.forEach(d => d.dispose());
+            }
+        });
+        disposables.push(closeDisposable);
+
+        this._disposables.push(...disposables);
+    }
+
+    toolEditChange(path: string, accepted: boolean | "indeterminate") {
+        if(this.tool_edit_in_progress) {
+            const action = ideToolCallResponse({
+                chatId: this.tool_edit_in_progress.chatId,
+                toolCallId: this.tool_edit_in_progress.toolCallId ?? "",
+                accepted
+            });
+            this._view?.webview.postMessage(action);
+            this.tool_edit_in_progress = null;
+        }
     }
 
     async addDiffToFile(fileName: string, content: string) {
@@ -638,15 +688,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const range = new vscode.Range(start, end);
 
 
-        diff_paste_back(
+        return diff_paste_back(
             document,
             range,
             content
         );
-        // TODO: can remove this when diff api is removed.
-        this.refetchDiffsOnSave(document);
     }
 
+    // this isn't called
     async editFileWithContent(fileName: string, content: string) {
         const uri = this.filePathToUri(fileName);
         const document = await vscode.workspace.openTextDocument(uri);
@@ -668,17 +717,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
 
-    async writeResultsToFile(results: PatchResult[]) {
-        for(const result of results)  {
-            if(result.file_name_add) {
-                this.createNewFileWithContent(result.file_name_add, result.file_text);
-            } else if(result.file_name_edit) {
-                this.editFileWithContent(result.file_name_edit, result.file_text);
-            } else if (result.file_name_delete) {
-                this.deleteFile(result.file_name_delete);
-            }
-        }
-    }
 
     async handleCurrentChatPage(page: string) {
         this.context.globalState.update("chat_page", JSON.stringify(page));
@@ -737,90 +775,20 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
 
-    private getTrimmedSelectedRange(editor: vscode.TextEditor): vscode.Range {
-
-        const selection = editor.selection;
-        const document = editor.document;
-        let start = selection.start;
-        let end = selection.end;
-
-        // Get the text of the selected range
-        let selectedText = document.getText(selection);
-
-        // Trim leading and trailing whitespace and new lines
-        const trimmedText = selectedText.trim();
-
-        // If the trimmed text is empty, return the original selection
-        if (trimmedText.length === 0) {
-            return selection;
-        }
-
-        // Find the start and end positions of the trimmed text within the selected range
-        const leadingWhitespaceLength = selectedText.length - selectedText.trimStart().length;
-        const trailingWhitespaceLength = selectedText.length - selectedText.trimEnd().length;
-
-        start = document.positionAt(document.offsetAt(start) + leadingWhitespaceLength);
-        end = document.positionAt(document.offsetAt(end) - trailingWhitespaceLength);
-
-        return new vscode.Range(start, end);
-    }
-
-
     private async handleDiffPasteBack(code_block: string) {
         const editor = vscode.window.activeTextEditor;
         if(!editor) { return; }
-        const trimmedRange = this.getTrimmedSelectedRange(editor);
-        const startOfLine = new vscode.Position(trimmedRange.start.line, 0);
-        const endOfLine = new vscode.Position(trimmedRange.start.line + 1, 0);
+        const range = editor.selection
+        const startOfLine = new vscode.Position(range.start.line, 0);
+        const endOfLine = new vscode.Position(range.start.line + 1, 0);
         const firstLineRange = new vscode.Range(startOfLine, endOfLine);
-        const spaceRegex =  /^[ \t]+/;
-        const selectedLine = editor.document.getText(
-            firstLineRange
-        );
-        const indent = selectedLine.match(spaceRegex)?.[0] ?? "";
-        const indentedCode = code_block.replace(/\n/gm, "\n" + indent);
-        const rangeToReplace = new vscode.Range(trimmedRange.start, trimmedRange.end);
-
 
 		return diff_paste_back(
             editor.document,
-            rangeToReplace,
-            indentedCode,
+            firstLineRange,
+             code_block
         );
 
-	}
-
-    private refetchDiffsOnSave(document: vscode.TextDocument) {
-        const disposables: vscode.Disposable[] = [];
-        const dispose = () => disposables.forEach(d => d.dispose());
-        disposables.push(vscode.workspace.onDidSaveTextDocument((savedDocument) => {
-            if(savedDocument.uri.fsPath === document.uri.fsPath) {
-                this.sendClearDiffCacheMessage();
-                dispose();
-            }
-        }));
-        disposables.push(vscode.workspace.onDidCloseTextDocument((closedDocument) => {
-            if(closedDocument.uri.fsPath === document.uri.fsPath) {
-                dispose();
-            }
-        }));
-    }
-
-    private async handleDiffPreview(response: DiffPreviewResponse) {
-
-        const openFiles = this.getOpenFiles();
-
-        for (const change of response.results) {
-            if (change.file_name_edit !== null && change.file_text !== null) {
-                this.addDiffToFile(change.file_name_edit, change.file_text);
-            } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add) === false) {
-                this.createNewFileWithContent(change.file_name_add, change.file_text);
-            } else if(change.file_name_add !== null && change.file_text!== null && openFiles.includes(change.file_name_add)) {
-                this.addDiffToFile(change.file_name_add, change.file_text);
-            } else if(change.file_name_delete) {
-                this.deleteFile(change.file_name_delete);
-            }
-        }
 	}
 
 
@@ -848,6 +816,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
     }
 
+    sendCurrentProjectInfo() {
+        const action = setCurrentProjectInfo({name: vscode.workspace.name ?? ""});
+        this._view?.webview.postMessage(action);
+    }
+
 
     async createInitialState(thread?: ChatThread, tabbed = false): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
@@ -855,6 +828,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const activeColorTheme = this.getColorTheme();
         const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
+        const knowledge = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
         const port = global.rust_binary_blob?.get_port() ?? 8001;
@@ -874,6 +848,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             features: {
                 vecdb,
                 ast,
+                images: true,
+                statistics: true,
+                knowledge,
             },
             keyBindings: {
                 completeManual,
@@ -884,6 +861,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         };
 
         const state: Partial<InitialState> = {
+            current_project: {name: vscode.workspace.name ?? ""},
             config,
         };
 
