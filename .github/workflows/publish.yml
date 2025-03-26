@@ -77,7 +77,8 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           workflow: agent_gui_build.yml
           repo: smallcloudai/refact
-          branch: ${{ inputs.chat_js_branch }}
+          commit: 0b99b8a73918e4dfaf41387419f19a6dd97969d7
+          # branch: ${{ inputs.chat_js_branch }}
           path: ./chat_package
           name: lts-refact-chat-js-.*\.tgz
           name_is_regexp: true
