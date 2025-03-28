@@ -275,6 +275,11 @@
 				"command": "refactaicmd.openPromptCustomizationPage",
 				"title": "Open Prompt Customization Page",
 				"category": "Refact.ai"
+			},
+			{
+				"command": "refactaicmd.attachFile",
+				"title": "Attach to chat",
+				"category": "Refact.ai"
 			}
 		],
 		"menus": {
@@ -282,6 +287,17 @@
 				{
 					"group": "z_commands",
 					"command": "refactaicmd.callChat"
+				},
+				{
+					"group": "9_cutcopypaste",
+					"command": "refactaicmd.attachFile",
+					"when": "refactai.chat_page == 'chat'"
+				}
+			],
+			"explorer/context": [
+				{
+					"group": "5_cutcopypaste",
+					"command": "refactaicmd.attachFile"
 				}
 			]
 		},
