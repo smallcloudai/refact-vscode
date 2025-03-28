@@ -282,6 +282,11 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable6);
     context.subscriptions.push(toolbar_command_disposable);
 
+    context.subscriptions.push(vscode.commands.registerCommand("refactaicmd.attachFile", (file) => {
+        if(file.scheme !== "file") { return; }
+        global.side_panel?.attachFile(file.fsPath);
+    }));
+
     global.rust_binary_blob = new launchRust.RustBinaryBlob(
         fileURLToPath(vscode.Uri.joinPath(context.extensionUri, "assets").toString())
     );
