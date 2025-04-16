@@ -33,6 +33,7 @@ import {
     ideToolCall,
     ToolEditResult,
     ideToolCallResponse,
+    ideAttachFileToChat,
     TextDocToolCall,
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
@@ -271,6 +272,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view?.webview.postMessage(message);
     }
 
+    public attachFile(path: string) {
+        const action = ideAttachFileToChat(path);
+        this._view?.webview.postMessage(action);
+    }
 
 
 
@@ -720,6 +725,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     async handleCurrentChatPage(page: string) {
         this.context.globalState.update("chat_page", JSON.stringify(page));
+        vscode.commands.executeCommand("setContext", "refactai.chat_page", page);
     }
 
     async handleStreamingChange(state: boolean) {
@@ -963,6 +969,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
         return text;
+    }
+
+    dispose() {
+        vscode.commands.executeCommand("setContext", "refactai.chat_page", "");
+        this._disposables.forEach(d => d.dispose());
     }
 }
 
