@@ -14,19 +14,17 @@ const DEBUG_HTTP_PORT = 8001;
 const DEBUG_LSP_PORT = 8002;
 
 
-export class RustBinaryBlob
-{
+export class RustBinaryBlob {
     public asset_path: string;
     public cmdline: string[] = [];
     public port: number = 0;
-    public lsp_disposable: vscode.Disposable|undefined = undefined;
-    public lsp_client: lspClient.LanguageClient|undefined = undefined;
-    public lsp_socket: net.Socket|undefined = undefined;
+    public lsp_disposable: vscode.Disposable | undefined = undefined;
+    public lsp_client: lspClient.LanguageClient | undefined = undefined;
+    public lsp_socket: net.Socket | undefined = undefined;
     public lsp_client_options: lspClient.LanguageClientOptions;
     public ping_response: string = "";
 
-    constructor(asset_path: string)
-    {
+    constructor(asset_path: string) {
         this.asset_path = asset_path;
         this.lsp_client_options = {
             documentSelector: [{ scheme: 'file', language: '*' }],
@@ -37,8 +35,7 @@ export class RustBinaryBlob
         };
     }
 
-    public x_debug(): number
-    {
+    public x_debug(): number {
         let xdebug = vscode.workspace.getConfiguration().get("refactai.xDebug");
         if (xdebug === undefined || xdebug === null || xdebug === 0 || xdebug === "0" || xdebug === false || xdebug === "false") {
             return 0;
@@ -55,8 +52,7 @@ export class RustBinaryBlob
         }
     }
 
-    public rust_url(): string
-    {
+    public rust_url(): string {
         let xdebug = this.x_debug();
         let port = xdebug ? 8001 : this.port;
         if (!port) {
@@ -65,8 +61,7 @@ export class RustBinaryBlob
         return "http2://127.0.0.1:" + port.toString() + "/";
     }
 
-    public attemping_to_reach(): string
-    {
+    public attemping_to_reach(): string {
         let xdebug = this.x_debug();
         if (xdebug) {
             return `debug rust binary on ports ${DEBUG_HTTP_PORT} and ${DEBUG_LSP_PORT}`;
@@ -79,10 +74,9 @@ export class RustBinaryBlob
         }
     }
 
-    public async settings_changed()
-    {
-        for (let i = 0; i<5; i++) {
-            console.log(`RUST settings changed, attempt to restart ${i+1}`);
+    public async settings_changed() {
+        for (let i = 0; i < 5; i++) {
+            console.log(`RUST settings changed, attempt to restart ${i + 1}`);
             let xdebug = this.x_debug();
             let api_key: string = userLogin.secret_api_key();
             let port: number;
@@ -166,8 +160,7 @@ export class RustBinaryBlob
         global.side_panel?.handleSettingsChange();
     }
 
-    public async launch()
-    {
+    public async launch() {
         await this.terminate();
         let xdebug = this.x_debug();
         if (xdebug) {
@@ -177,8 +170,7 @@ export class RustBinaryBlob
         }
     }
 
-    public stop_lsp()
-    {
+    public stop_lsp() {
         let my_lsp_client_copy = this.lsp_client;
         if (my_lsp_client_copy) {
             console.log("RUST STOP");
@@ -197,8 +189,7 @@ export class RustBinaryBlob
         this.lsp_dispose();
     }
 
-    public lsp_dispose()
-    {
+    public lsp_dispose() {
         if (this.lsp_disposable) {
             this.lsp_disposable.dispose();
             this.lsp_disposable = undefined;
@@ -207,16 +198,14 @@ export class RustBinaryBlob
         this.lsp_socket = undefined;
     }
 
-    public async terminate()
-    {
+    public async terminate() {
         this.stop_lsp();
         await fetchH2.disconnectAll();
         global.have_caps = false;
         global.status_bar.choose_color();
     }
 
-    public async read_caps()
-    {
+    public async read_caps() {
         try {
             let url = this.rust_url();
             if (!url) {
@@ -258,8 +247,7 @@ export class RustBinaryBlob
         }
     }
 
-    public async ping()
-    {
+    public async ping() {
         try {
             let url = this.rust_url();
             if (!url) {
@@ -288,8 +276,7 @@ export class RustBinaryBlob
         return false;
     }
 
-    public async start_lsp_stdin_stdout()
-    {
+    public async start_lsp_stdin_stdout() {
         console.log("RUST start_lsp_stdint_stdout");
         let path = this.cmdline[0];
         let serverOptions: lspClient.ServerOptions;
@@ -355,8 +342,7 @@ export class RustBinaryBlob
         await this.fetch_toolbox_config();
     }
 
-    public async start_lsp_socket()
-    {
+    public async start_lsp_socket() {
         console.log("RUST start_lsp_socket");
         this.lsp_socket = new net.Socket();
         this.lsp_socket.on('error', (error) => {
@@ -397,8 +383,7 @@ export class RustBinaryBlob
         this.lsp_socket.connect(DEBUG_LSP_PORT);
     }
 
-    async rag_status()
-    {
+    async rag_status() {
         try {
             let url = this.rust_url();
             if (!url) {
@@ -425,60 +410,60 @@ export class RustBinaryBlob
     }
 
     async fetch_toolbox_config(): Promise<ToolboxConfig> {
-      const rust_url = this.rust_url();
+        const rust_url = this.rust_url();
 
-      if (!rust_url) {
-        console.log(["fetch_toolbox_config: No rust binary working"]);
-        return Promise.reject("No rust binary working");
-      }
-      const url = rust_url + "v1/customization";
+        if (!rust_url) {
+            console.log(["fetch_toolbox_config: No rust binary working"]);
+            return Promise.reject("No rust binary working");
+        }
+        const url = rust_url + "v1/customization";
 
-      const request = new fetchH2.Request(url, { method: "GET" });
+        const request = new fetchH2.Request(url, { method: "GET" });
 
-      const response = await fetchH2.fetch(request, { timeout: 5000 });
+        const response = await fetchH2.fetch(request, { timeout: 5000 });
 
-      if (!response.ok) {
-        console.log([
-          "fetch_toolbox_config: Error fetching toolbox config",
-          response.status,
-          url,
-        ]);
-        return Promise.reject(
-          `Error fetching toolbox config: [status: ${response.status}] [statusText: ${response.statusText}]`
-        );
-      }
+        if (!response.ok) {
+            console.log([
+                "fetch_toolbox_config: Error fetching toolbox config",
+                response.status,
+                url,
+            ]);
+            return Promise.reject(
+                `Error fetching toolbox config: [status: ${response.status}] [statusText: ${response.statusText}]`
+            );
+        }
 
-      // TBD: type-guards or some sort of runtime validation
-      const json = await response.json() as ToolboxConfig;
-      console.log(["success fetch_toolbox_config", json]);
+        // TBD: type-guards or some sort of runtime validation
+        const json = await response.json() as ToolboxConfig;
+        console.log(["success fetch_toolbox_config", json]);
 
-      global.toolbox_config = json;
-      await register_commands();
-      return json;
+        global.toolbox_config = json;
+        await register_commands();
+        return json;
     }
 }
 
 export type ChatMessageFromLsp = {
-  role: string;
-  content: string;
+    role: string;
+    content: string;
 };
 
 export type ToolboxCommand = {
-  description: string;
-  messages: ChatMessageFromLsp[];
-  selection_needed: number[];
-  selection_unwanted: boolean;
-  insert_at_cursor: boolean;
+    description: string;
+    messages: ChatMessageFromLsp[];
+    selection_needed: number[];
+    selection_unwanted: boolean;
+    insert_at_cursor: boolean;
 };
 
 export type SystemPrompt = {
-  description: string;
-  text: string;
+    description: string;
+    text: string;
 };
 
 export type ToolboxConfig = {
-  system_prompts: Record<string, SystemPrompt>;
-  toolbox_commands: Record<string, ToolboxCommand>;
+    system_prompts: Record<string, SystemPrompt>;
+    toolbox_commands: Record<string, ToolboxCommand>;
 };
 
 function logts() {
