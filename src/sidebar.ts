@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
+import * as usabilityHints from "./usabilityHints";
 import * as path from 'path';
 import { v4 as uuidv4 } from "uuid";
 import { getKeyBindingForChat } from "./getKeybindings";
@@ -35,7 +36,8 @@ import {
     ideToolCallResponse,
     ideAttachFileToChat,
     TextDocToolCall,
-    ideSetCodeCompletionModel
+    ideSetCodeCompletionModel,
+    ideSetLoginMessage
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -325,7 +327,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
      */
     private async checkForBringYourOwnKeyConfig() {
         const hostType = this.context.globalState.get<string>('refactai.hostType');
-        const notificationMessage = "The 'bring-your-own-key' login option is no longer available. Your settings have been cleared. Please choose other login option."
+        const notificationMessage = "The 'bring-your-own-key' login option is no longer available. Your settings have been cleared. Please choose other login option.";
         
         if (hostType === 'bring-your-own-key') {
             vscode.window.showInformationMessage(
@@ -346,7 +348,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         
-        const lowerCasedAddressURL = addressURL.toLowerCase()
+        const lowerCasedAddressURL = addressURL.toLowerCase();
         if (
             typeof addressURL === 'string' && 
             !lowerCasedAddressURL.startsWith("http://") && 
@@ -611,6 +613,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleSetCodeCompletionModel(e.payload);
         }
 
+        if (ideSetLoginMessage.match(e)) {
+            return this.handleSetLoginMessage(e.payload);
+        }
+
         if(ideEscapeKeyPressed.match(e)) {
             return this.handleEscapePressed(e.payload);
         }
@@ -778,6 +784,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         await vscode.workspace.getConfiguration().update("refactai.codeCompletionModel", model, vscode.ConfigurationTarget.Global);
     }
 
+    handleSetLoginMessage(message: string) {
+        usabilityHints.show_message_from_server('InferenceServer', message);
+    }
+
     async handleEscapePressed(mode: string) {
         const editor = vscode.window.activeTextEditor;
         if (!editor) { return; }
@@ -830,7 +840,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     private async handleDiffPasteBack(code_block: string) {
         const editor = vscode.window.activeTextEditor;
         if(!editor) { return; }
-        const range = editor.selection
+        const range = editor.selection;
         const startOfLine = new vscode.Position(range.start.line, 0);
         const endOfLine = new vscode.Position(range.start.line + 1, 0);
         const firstLineRange = new vscode.Range(startOfLine, endOfLine);
