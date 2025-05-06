@@ -2,6 +2,7 @@
 import * as vscode from "vscode";
 import * as chatTab from './chatTab';
 import * as statisticTab from './statisticTab';
+import * as usabilityHints from "./usabilityHints";
 import * as path from 'path';
 import { v4 as uuidv4 } from "uuid";
 import { getKeyBindingForChat } from "./getKeybindings";
@@ -33,7 +34,10 @@ import {
     ideToolCall,
     ToolEditResult,
     ideToolCallResponse,
+    ideAttachFileToChat,
     TextDocToolCall,
+    ideSetCodeCompletionModel,
+    ideSetLoginMessage
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -102,6 +106,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this.js2ts_message = this.js2ts_message.bind(this);
 
         this.handleEvents = this.handleEvents.bind(this);
+        
+        // Check for bring-your-own-key configuration during initialization
+        this.checkForBringYourOwnKeyConfig();
 
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
             this.postActiveFileInfo();
@@ -121,6 +128,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 event.affectsConfiguration("refactai.xperimental")
             ) {
                 this.handleSettingsChange();
+            }
+            if (event.affectsConfiguration("refactai.addressURL")) {
+                this.checkForBringYourOwnKeyConfig();
             }
         }));
 
@@ -271,6 +281,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._view?.webview.postMessage(message);
     }
 
+    public attachFile(path: string) {
+        const action = ideAttachFileToChat(path);
+        this._view?.webview.postMessage(action);
+    }
 
 
 
@@ -307,8 +321,57 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
+    /**
+     * Checks if user has a 'bring-your-own-key' host type configuration and logs them out
+     * as this option is no longer supported
+     */
+    private async checkForBringYourOwnKeyConfig() {
+        const hostType = this.context.globalState.get<string>('refactai.hostType');
+        const notificationMessage = "The 'bring-your-own-key' login option is no longer available. Your settings have been cleared. Please choose other login option.";
+        
+        if (hostType === 'bring-your-own-key') {
+            vscode.window.showInformationMessage(
+                notificationMessage,
+                "Open Settings"
+            ).then(selection => {
+                if (selection === "Open Settings") {
+                    vscode.commands.executeCommand("refactaicmd.openSettings");
+                }
+            });
+            await this.delete_old_settings();
+            
+            await this.context.globalState.update('refactai.hostType', undefined);
+            return;
+        }
+        
+        // Fallback for older versions without stored host type
+        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
+        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
+        
+        const lowerCasedAddressURL = addressURL.toLowerCase();
+        if (
+            typeof addressURL === 'string' && 
+            !lowerCasedAddressURL.startsWith("http://") && 
+            !lowerCasedAddressURL.startsWith("https://") && 
+            lowerCasedAddressURL.endsWith('.yaml')
+        ) {
+            vscode.window.showInformationMessage(
+                notificationMessage,
+                "Open Settings"
+            ).then(selection => {
+                if (selection === "Open Settings") {
+                    vscode.commands.executeCommand("refactaicmd.openSettings");
+                }
+            });
+            
+            await this.delete_old_settings();
+        }
+    }
+
     public async goto_main()
     {
+        await this.checkForBringYourOwnKeyConfig();
+        
         this.address = "";
         if (!this._view) {
             return;
@@ -351,6 +414,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
             await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
         }
+        
+        await this.context.globalState.update('refactai.hostType', undefined);
     }
 
     public async js2ts_message(data: any)
@@ -474,6 +539,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         if (isSetupHost(e)) {
             const { host } = e.payload;
+            await this.context.globalState.update('refactai.hostType', host.type);
+            
             if (host.type === "cloud") {
                 await this.delete_old_settings();
                 await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
@@ -486,27 +553,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 await this.delete_old_settings();
                 await vscode.workspace.getConfiguration().update('refactai.addressURL', host.endpointAddress, vscode.ConfigurationTarget.Global);
                 await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
-            } else if (host.type === "bring-your-own-key") {
-                if (global.rust_binary_blob === undefined) {
-                    console.error("no rust binary blob");
-                    return;
-                }
-                let command: string[] = [
-                    join(global.rust_binary_blob.asset_path, "refact-lsp"),
-                    "--only-create-yaml-configs",
-                ];
-                execFile(command[0], command.splice(1), async (err, stdout, stderr) => {
-                    if (err) {
-                        console.error(err);
-                        return;
-                    }
-                    const path = stdout.trim();
-                    vscode.workspace.openTextDocument(path).then(doc => {
-                        vscode.window.showTextDocument(doc);
-                    });
-                    await vscode.workspace.getConfiguration().update('refactai.addressURL', path, vscode.ConfigurationTarget.Global);
-                    await vscode.workspace.getConfiguration().update('refactai.apiKey', 'any-will-work-for-local-server', vscode.ConfigurationTarget.Global);
-                });
             }
         }
 
@@ -562,6 +608,13 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         if(ideIsChatStreaming.match(e)) {
             return this.handleStreamingChange(e.payload);
+        }
+        if (ideSetCodeCompletionModel.match(e)) {
+            return this.handleSetCodeCompletionModel(e.payload);
+        }
+
+        if (ideSetLoginMessage.match(e)) {
+            return this.handleSetLoginMessage(e.payload);
         }
 
         if(ideEscapeKeyPressed.match(e)) {
@@ -720,10 +773,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     async handleCurrentChatPage(page: string) {
         this.context.globalState.update("chat_page", JSON.stringify(page));
+        vscode.commands.executeCommand("setContext", "refactai.chat_page", page);
     }
 
     async handleStreamingChange(state: boolean) {
         global.is_chat_streaming = state;
+    }
+
+    async handleSetCodeCompletionModel(model: string) {
+        await vscode.workspace.getConfiguration().update("refactai.codeCompletionModel", model, vscode.ConfigurationTarget.Global);
+    }
+
+    handleSetLoginMessage(message: string) {
+        usabilityHints.show_message_from_server('InferenceServer', message);
     }
 
     async handleEscapePressed(mode: string) {
@@ -778,7 +840,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     private async handleDiffPasteBack(code_block: string) {
         const editor = vscode.window.activeTextEditor;
         if(!editor) { return; }
-        const range = editor.selection
+        const range = editor.selection;
         const startOfLine = new vscode.Position(range.start.line, 0);
         const endOfLine = new vscode.Position(range.start.line + 1, 0);
         const firstLineRange = new vscode.Range(startOfLine, endOfLine);
@@ -963,6 +1025,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             text += possible.charAt(Math.floor(Math.random() * possible.length));
         }
         return text;
+    }
+
+    dispose() {
+        vscode.commands.executeCommand("setContext", "refactai.chat_page", "");
+        this._disposables.forEach(d => d.dispose());
     }
 }
 
