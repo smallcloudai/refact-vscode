@@ -77,7 +77,8 @@ export class RustBinaryBlob {
     }
 
     public async settings_changed() {
-        for (let i = 0; i < 5; i++) {
+        const attempts_num = 5;
+        for (let i = 0; i < attempts_num; i++) {
             console.log(`RUST settings changed, attempt to restart ${i + 1}`);
             let xdebug = this.x_debug();
             let api_key: string = userLogin.secret_api_key();
@@ -161,7 +162,10 @@ export class RustBinaryBlob {
                 this.cmdline = new_cmdline;
                 this.port = port;
                 this.ping_response = ping_response;
-                await this.launch();
+                const timeout = (i < (attempts_num - 1))
+                    ? 10000 * (2 ** i)
+                    : 10000 * 99999;
+                await this.launch(timeout);
             }
             if (this.lsp_disposable !== undefined) {
                 break;
@@ -170,13 +174,13 @@ export class RustBinaryBlob {
         global.side_panel?.handleSettingsChange();
     }
 
-    public async launch() {
+    public async launch(timeout: number) {
         await this.terminate();
         let xdebug = this.x_debug();
         if (xdebug) {
             await this.start_lsp_socket();
         } else {
-            await this.start_lsp_stdin_stdout();
+            await this.start_lsp_stdin_stdout(timeout);
         }
     }
 
@@ -302,7 +306,7 @@ export class RustBinaryBlob {
         return false;
     }
 
-    public async start_lsp_stdin_stdout() {
+    public async start_lsp_stdin_stdout(timeout: number) {
         console.log("RUST start_lsp_stdint_stdout");
         let path = this.cmdline[0];
         let serverOptions: lspClient.ServerOptions;
@@ -328,7 +332,7 @@ export class RustBinaryBlob {
         this.lsp_disposable = this.lsp_client.start();
 
         console.log(`${logts()} RUST START`);
-        const somethings_wrong_timeout = 10000;
+
         const startTime = Date.now();
         let started_okay = false;
 
@@ -343,11 +347,11 @@ export class RustBinaryBlob {
                     console.log(`${logts()} RUST /START after ${elapsedTime}ms`);
                     break;
                 }
-                if (elapsedTime >= somethings_wrong_timeout) {
+                if (elapsedTime >= timeout) {
                     throw new Error("timeout");
                 }
                 console.log(`${logts()} RUST waiting...`);
-                await new Promise(resolve => setTimeout(resolve, 100));
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
         } catch (e) {
             console.log(`${logts()} RUST START PROBLEM e=${e}`);
