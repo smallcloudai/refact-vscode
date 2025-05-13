@@ -46,6 +46,7 @@ import { diff_paste_back } from "./chatTab";
 import { execFile } from "child_process";
 import * as estate from './estate';
 import { animation_start } from "./interactiveDiff";
+import {existsSync} from "fs";
 
 
 type Handler = ((data: any) => void) | undefined;
@@ -806,13 +807,64 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
     }
 
-    private filePathToUri(fileName: string) {
-        const extendedLengthPattern = /^\\\\?\\?/i;
-        if (extendedLengthPattern.test(fileName)) {
-            fileName = fileName.slice(3); // Remove the '\\?\' or '\\\\?\\' prefix
+    private getWorkspaceFolderForFile(filePath?: string): vscode.WorkspaceFolder | undefined {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            return undefined;
         }
-        const parsedPath = path.parse(fileName);
-        return vscode.Uri.file(path.posix.format(parsedPath));
+
+        if (filePath) {
+            const folder = workspaceFolders.find(folder => {
+                const folderPath = folder.uri.fsPath;
+                return filePath.startsWith(folderPath);
+            });
+
+            if (folder) {
+                return folder;
+            }
+        }
+
+        return workspaceFolders[0];
+    }
+
+    private filePathToUri(fileName: string): vscode.Uri {
+        let formattedFileName = fileName;
+    
+        // Handle Windows extended-length paths robustly
+        // Examples:
+        //   \\?\C:\Users\TestUser\Desktop\test6.py  =>  C:\Users\TestUser\Desktop\test6.py
+        //   \\?\UNC\server\share\file.txt           =>  \\server\share\file.txt
+        if (typeof formattedFileName === 'string') {
+            if (formattedFileName.startsWith('\\\\?\\UNC\\')) {
+                // UNC path: replace \\?\UNC\ with \\
+                formattedFileName = '\\\\' + formattedFileName.slice(8);
+            } else if (formattedFileName.startsWith('\\\\?\\')) {
+                // Local drive path: remove \\?\
+                formattedFileName = formattedFileName.slice(4);
+            }
+        }
+
+        
+        if (path.isAbsolute(formattedFileName)) {
+            return vscode.Uri.file(formattedFileName);
+        }
+        
+        const activeEditor = vscode.window.activeTextEditor;
+        const currentActiveEditorPath = activeEditor?.document.uri.fsPath;
+
+        // Try to resolve relative to the workspace root
+        const workspaceFolder = this.getWorkspaceFolderForFile(currentActiveEditorPath);
+        if (workspaceFolder) {
+            const workspaceRoot = workspaceFolder.uri.fsPath;
+            const candidate = path.resolve(workspaceRoot, formattedFileName);
+            if (existsSync(candidate)) {
+                return vscode.Uri.file(candidate);
+            }
+            return vscode.Uri.file(candidate);
+        }
+    
+        // Fallback: just return as is (may not exist)
+        return vscode.Uri.file(formattedFileName);
     }
 
     async startFileAnimation(fileName: string) {
