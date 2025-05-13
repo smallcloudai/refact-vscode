@@ -95,6 +95,7 @@ jobs:
         run: |
           npm i -g patch-package
           npm install ./chat_package_fixed/*.tgz
+          npm install -g patch-package
           npm install -g @vscode/vsce
           rm -rf ./chat_package ./chat_package_fixed
 
