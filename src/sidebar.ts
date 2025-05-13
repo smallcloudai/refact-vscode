@@ -852,7 +852,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const activeEditor = vscode.window.activeTextEditor;
         const currentActiveEditorPath = activeEditor?.document.uri.fsPath;
 
-        // Try to resolve relative to the workspace root
+        // Getting current workspace folder based on active editor's path
         const workspaceFolder = this.getWorkspaceFolderForFile(currentActiveEditorPath);
         if (workspaceFolder) {
             const workspaceRoot = workspaceFolder.uri.fsPath;
