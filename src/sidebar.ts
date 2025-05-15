@@ -40,6 +40,7 @@ import {
     ideSetLoginMessage,
     ideSetActiveWorkspace,
     Workspace
+    OpenFilePayload
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -915,8 +916,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 	}
 
 
-    async handleOpenFile(file: {file_name:string, line?: number}) {
-        const uri = this.filePathToUri(file.file_name);
+    async handleOpenFile(file: OpenFilePayload) {
+        const uri = this.filePathToUri(file.file_path);
         const document = await vscode.workspace.openTextDocument(uri);
 
         if(file.line !== undefined) {
