@@ -858,9 +858,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (workspaceFolder) {
             const workspaceRoot = workspaceFolder.uri.fsPath;
             const candidate = path.resolve(workspaceRoot, formattedFileName);
-            if (existsSync(candidate)) {
-                return vscode.Uri.file(candidate);
-            }
             return vscode.Uri.file(candidate);
         }
     
