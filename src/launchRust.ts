@@ -79,6 +79,7 @@ export class RustBinaryBlob {
             console.log(`RUST settings changed, attempt to restart ${i + 1}`);
             let xdebug = this.x_debug();
             let api_key: string = userLogin.secret_api_key();
+            let active_workspace_id = (global.activeWorkspace?.workspace_id ?? "").toString();
             let port: number;
             let ping_response: string;
             if (xdebug === 0) {
@@ -118,6 +119,7 @@ export class RustBinaryBlob {
                 "--address-url", url,
                 "--api-key", api_key,
                 "--ping-message", ping_response,
+                "--active-workspace-id", active_workspace_id,
                 "--http-port", port.toString(),
                 "--lsp-stdin-stdout", "1",
                 "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,

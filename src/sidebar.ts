@@ -37,7 +37,8 @@ import {
     ideAttachFileToChat,
     TextDocToolCall,
     ideSetCodeCompletionModel,
-    ideSetLoginMessage
+    ideSetLoginMessage,
+    ideSetActiveWorkspace
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -275,7 +276,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             addressURL,
             lspPort: port,
             shiftEnterToSubmit: submitChatWithShiftEnter,
-            features: {vecdb, ast, knowledge}
+            features: {vecdb, ast, knowledge},
         });
 
         this._view?.webview.postMessage(message);
@@ -617,6 +618,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleSetLoginMessage(e.payload);
         }
 
+        if (ideSetActiveWorkspace.match(e)) {
+            return this.handleSetActiveWorkspace(e.payload)
+        }
+
         if(ideEscapeKeyPressed.match(e)) {
             return this.handleEscapePressed(e.payload);
         }
@@ -786,6 +791,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     handleSetLoginMessage(message: string) {
         usabilityHints.show_message_from_server('InferenceServer', message);
+    }
+
+    handleSetActiveWorkspace(workspace: {workspace_id: number; workspace_name: string}) {
+        global.activeWorkspace = workspace;
+        this.handleSettingsChange();
     }
 
     async handleEscapePressed(mode: string) {
