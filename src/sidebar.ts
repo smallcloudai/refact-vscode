@@ -264,8 +264,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 .getConfiguration()
                 ?.get<boolean>("refactai.ast") ?? false;
 
-        const knowledge = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
-
 
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
@@ -277,7 +275,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             addressURL,
             lspPort: port,
             shiftEnterToSubmit: submitChatWithShiftEnter,
-            features: {vecdb, ast, knowledge},
+            features: {vecdb, ast},
         });
 
         this._view?.webview.postMessage(message);
