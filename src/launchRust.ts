@@ -8,6 +8,7 @@ import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
 import { register_commands } from './rconsoleCommands';
 import { QuickActionProvider } from './quickProvider';
+import { Workspace } from 'refact-chat-js/dist/events';
 
 
 const DEBUG_HTTP_PORT = 8001;
@@ -79,9 +80,11 @@ export class RustBinaryBlob {
             console.log(`RUST settings changed, attempt to restart ${i + 1}`);
             let xdebug = this.x_debug();
             let api_key: string = userLogin.secret_api_key();
-            let active_workspace_id = (global.activeWorkspace?.workspace_id ?? "").toString();
             let port: number;
             let ping_response: string;
+            
+            const maybe_active_workspace = global.global_context.globalState.get('active_workspace') as Workspace | undefined;
+            const active_workspace_id = maybe_active_workspace ? maybe_active_workspace.workspace_id : null;
             if (xdebug === 0) {
                 if (this.lsp_client) { // running
                     port = this.port;  // keep the same port
@@ -119,12 +122,16 @@ export class RustBinaryBlob {
                 "--address-url", url,
                 "--api-key", api_key,
                 "--ping-message", ping_response,
-                "--active-workspace-id", active_workspace_id,
                 "--http-port", port.toString(),
                 "--lsp-stdin-stdout", "1",
                 "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
                 "--basic-telemetry",
             ];
+
+            if (active_workspace_id !== null && active_workspace_id !== undefined) {
+                new_cmdline.push("--active-workspace-id");
+                new_cmdline.push(active_workspace_id.toString());
+            }
 
             if (vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
                 new_cmdline.push("--vecdb");

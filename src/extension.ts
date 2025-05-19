@@ -18,8 +18,9 @@ import * as path from 'path';
 import { Mode } from "./estate";
 import { fileURLToPath } from 'url';
 import { ChatTab } from './chatTab';
-import { FimDebugData, Workspace } from 'refact-chat-js/dist/events/index.js';
+import { FimDebugData } from 'refact-chat-js/dist/events/index.js';
 import { code_lens_execute } from './codeLens';
+
 
 declare global {
     var rust_binary_blob: launchRust.RustBinaryBlob|undefined;
@@ -42,7 +43,6 @@ declare global {
     var comment_disposables: vscode.Disposable[];
     var comment_file_uri: vscode.Uri|undefined;
     var is_chat_streaming: boolean | undefined;
-    var activeWorkspace: Workspace | undefined;
     var open_chat_panels: Record<string, vscode.WebviewPanel>;
 
     var toolbox_config: launchRust.ToolboxConfig | undefined;
