@@ -38,7 +38,8 @@ import {
     TextDocToolCall,
     ideSetCodeCompletionModel,
     ideSetLoginMessage,
-    ideSetActiveWorkspace
+    ideSetActiveWorkspace,
+    Workspace
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -619,7 +620,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if (ideSetActiveWorkspace.match(e)) {
-            return this.handleSetActiveWorkspace(e.payload)
+            return this.handleSetActiveWorkspace(e.payload);
         }
 
         if(ideEscapeKeyPressed.match(e)) {
@@ -793,8 +794,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         usabilityHints.show_message_from_server('InferenceServer', message);
     }
 
-    handleSetActiveWorkspace(workspace: {workspace_id: number; workspace_name: string}) {
-        global.activeWorkspace = workspace;
+    handleSetActiveWorkspace(workspace: Workspace) {
+        global.global_context.globalState.update('active_workspace', workspace);
         this.handleSettingsChange();
     }
 
