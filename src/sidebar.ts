@@ -899,7 +899,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const activeColorTheme = this.getColorTheme();
         const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
-        const knowledge = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
         const port = global.rust_binary_blob?.get_port() ?? 8001;
@@ -921,7 +920,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 ast,
                 images: true,
                 statistics: true,
-                knowledge,
             },
             keyBindings: {
                 completeManual,
