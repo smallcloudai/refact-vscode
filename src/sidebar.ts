@@ -39,7 +39,7 @@ import {
     ideSetCodeCompletionModel,
     ideSetLoginMessage,
     ideSetActiveWorkspace,
-    Workspace
+    Workspace,
     OpenFilePayload
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
