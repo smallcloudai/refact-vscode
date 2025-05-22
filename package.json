@@ -227,6 +227,15 @@
 					"description": "Enable experimental features.",
 					"default": false,
 					"order": 14
+				},
+				"refactai.activeGroup": {
+					"type": "object",
+					"default": {
+						"id": "",
+						"name": ""
+					},
+					"description": "A hidden setting only editable via settings.json",
+					"included": false
 				}
 			}
 		},
