@@ -626,6 +626,11 @@ type AtParamDict = {
     description: string;
 };
 
+// TODO: align with new /v1/tools response format if necessary
+
+/**
+ * @deprecated
+ */
 type AtToolFunction = {
     name: string;
     agentic: boolean;
@@ -634,11 +639,17 @@ type AtToolFunction = {
     parameters_required: string[];
 };
 
+/**
+ * @deprecated
+ */
 type AtToolCommand = {
     function: AtToolFunction;
     type: "function";
 };
 
+/**
+ * @deprecated
+ */
 type AtToolResponse = AtToolCommand[];
 
 export async function get_tools(notes: boolean = false): Promise<AtToolResponse> {

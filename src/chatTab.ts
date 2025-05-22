@@ -33,7 +33,7 @@ import {
     // type ChatMessage,
     // type SetChatModel,
     // RequestTools,
-    ToolCommand,
+    // ToolCommand,
     // RecieveTools,
     // QuestionFromChat
 } from "refact-chat-js/dist/events";
@@ -393,7 +393,7 @@ export class ChatTab {
         title,
         messages,
         attach_file,
-        tools = null,
+        // tools = null,
     }: {
         id: string;
         model: string;
@@ -401,7 +401,7 @@ export class ChatTab {
         // messages: [string, string][];
         messages: ChatMessages;
         attach_file?: boolean;
-        tools?: ToolCommand[] | null;
+        // tools?: ToolCommand[] | null;
     }): Promise<void> {
         // // this.web_panel.webview.postMessage({type: EVENT_NAMES_TO_CHAT.SET_DISABLE_CHAT, payload: { id, disable: true }});
         // // const file = attach_file && this.getActiveFileInfo();
