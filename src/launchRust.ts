@@ -8,7 +8,7 @@ import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
 import { register_commands } from './rconsoleCommands';
 import { QuickActionProvider } from './quickProvider';
-// import { Workspace } from 'refact-chat-js/dist/events';
+import { TeamsGroup } from 'refact-chat-js/dist/events';
 
 
 const DEBUG_HTTP_PORT = 8001;

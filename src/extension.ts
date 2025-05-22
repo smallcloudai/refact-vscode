@@ -308,6 +308,8 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(settingsCommand);
 
+    const activeGroup = vscode.workspace.getConfiguration().get('refactai.activeGroup');
+
     let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
         context.globalState.update('codifyFirstRun', false);
         await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);

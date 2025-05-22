@@ -38,9 +38,9 @@ import {
     TextDocToolCall,
     ideSetCodeCompletionModel,
     ideSetLoginMessage,
-    // ideSetActiveWorkspace,
-    // Workspace,
-    OpenFilePayload
+    ideSetActiveTeamsGroup,
+    OpenFilePayload,
+    TeamsGroup
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -619,9 +619,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleSetLoginMessage(e.payload);
         }
 
-        // if (ideSetActiveWorkspace.match(e)) {
-        //     return this.handleSetActiveWorkspace(e.payload);
-        // }
+        if (ideSetActiveTeamsGroup.match(e)) {
+            return this.handleSetActiveGroup(e.payload);
+        }
 
         if(ideEscapeKeyPressed.match(e)) {
             return this.handleEscapePressed(e.payload);
@@ -794,10 +794,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         usabilityHints.show_message_from_server('InferenceServer', message);
     }
 
-    // handleSetActiveWorkspace(workspace: Workspace) {
-    //     global.global_context.globalState.update('active_workspace', workspace);
-    //     this.handleSettingsChange();
-    // }
+    async handleSetActiveGroup(group:TeamsGroup) {
+        await vscode.workspace.getConfiguration().update(
+            'refactai.activeGroup',
+            group,
+            vscode.ConfigurationTarget.Workspace
+        );
+        console.log(`[DEBUG]: updated locally active group in ./.vscode/settings.json: `, group);
+        this.handleSettingsChange();
+    }
 
     async handleEscapePressed(mode: string) {
         const editor = vscode.window.activeTextEditor;
