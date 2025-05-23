@@ -812,7 +812,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     async handleClearActiveGroup () {
         await vscode.workspace.getConfiguration().update(
             'refactai.activeGroup',
-            null,
+            undefined,
             vscode.ConfigurationTarget.Workspace
         );
         this.handleSettingsChange();
