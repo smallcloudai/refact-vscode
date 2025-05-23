@@ -39,6 +39,7 @@ import {
     ideSetCodeCompletionModel,
     ideSetLoginMessage,
     ideSetActiveTeamsGroup,
+    ideClearActiveTeamsGroup,
     OpenFilePayload,
     TeamsGroup
 } from "refact-chat-js/dist/events";
@@ -623,6 +624,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleSetActiveGroup(e.payload);
         }
 
+        if (ideClearActiveTeamsGroup.match(e)) {
+            return this.handleClearActiveGroup();
+        }
+
         if(ideEscapeKeyPressed.match(e)) {
             return this.handleEscapePressed(e.payload);
         }
@@ -794,13 +799,22 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         usabilityHints.show_message_from_server('InferenceServer', message);
     }
 
-    async handleSetActiveGroup(group:TeamsGroup) {
+    async handleSetActiveGroup (group:TeamsGroup) {
         await vscode.workspace.getConfiguration().update(
             'refactai.activeGroup',
             group,
             vscode.ConfigurationTarget.Workspace
         );
         console.log(`[DEBUG]: updated locally active group in ./.vscode/settings.json: `, group);
+        this.handleSettingsChange();
+    }
+
+    async handleClearActiveGroup () {
+        await vscode.workspace.getConfiguration().update(
+            'refactai.activeGroup',
+            null,
+            vscode.ConfigurationTarget.Workspace
+        );
         this.handleSettingsChange();
     }
 
@@ -956,6 +970,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
+        const activeTeamsGroup = vscode.workspace.getConfiguration()?.get<TeamsGroup>("refactai.activeGroup") ?? null;
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
         const shiftEnterToSubmit = vscode.workspace.getConfiguration()?.get<boolean>("refactai.shiftEnterToSubmit")?? false;
@@ -985,6 +1000,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         };
 
         const state: Partial<InitialState> = {
+            teams: {
+                group: activeTeamsGroup,
+            },
             current_project: {name: vscode.workspace.name ?? ""},
             config,
         };

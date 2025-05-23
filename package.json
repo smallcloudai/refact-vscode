@@ -235,7 +235,7 @@
 						"name": ""
 					},
 					"description": "A hidden setting only editable via settings.json",
-					"included": false
+					"scope": "machine-overridable"
 				}
 			}
 		},
