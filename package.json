@@ -230,10 +230,7 @@
 				},
 				"refactai.activeGroup": {
 					"type": "object",
-					"default": {
-						"id": "",
-						"name": ""
-					},
+					"default": null,
 					"description": "A hidden setting only editable via settings.json",
 					"scope": "machine-overridable"
 				}
