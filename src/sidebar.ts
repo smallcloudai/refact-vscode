@@ -256,6 +256,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         return file;
     }
 
+    getActiveWorkspace(): string | undefined {
+        const activeEditor = vscode.window.activeTextEditor;
+        if (activeEditor) {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(activeEditor.document.uri);
+            return workspaceFolder?.name;
+        } else {
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            if (workspaceFolders?.length === 1) {
+                return workspaceFolders[0].name;
+            }
+        }
+    }
+
     handleSettingsChange() {
         const vecdb =
             vscode.workspace
@@ -273,12 +286,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const submitChatWithShiftEnter = vscode.workspace.getConfiguration()?.get<boolean>("refactai.submitChatWithShiftEnter")?? false;
 
+        const currentActiveWorkspaceName = this.getActiveWorkspace();
+
         const message = updateConfig({
             apiKey,
             addressURL,
             lspPort: port,
             shiftEnterToSubmit: submitChatWithShiftEnter,
             features: {vecdb, ast},
+            currentWorkspaceName: currentActiveWorkspaceName
         });
 
         this._view?.webview.postMessage(message);
@@ -975,6 +991,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
         const shiftEnterToSubmit = vscode.workspace.getConfiguration()?.get<boolean>("refactai.shiftEnterToSubmit")?? false;
 
+        const currentActiveWorkspaceName = this.getActiveWorkspace();
+
         const config: InitialState["config"] = {
             host: "vscode",
             tabbed,
@@ -997,6 +1015,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             apiKey,
             addressURL,
             lspPort: port,
+            currentWorkspaceName: currentActiveWorkspaceName,
         };
 
         const state: Partial<InitialState> = {
