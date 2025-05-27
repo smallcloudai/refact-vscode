@@ -1,24 +1,27 @@
 :where(.vscode-light) {
-    color-scheme: light;
+  color-scheme: light;
+}
 
-  }
 :where(.vscode-dark) {
-    color-scheme: dark;
-  }
+  color-scheme: dark;
+}
 
 .vscode-dark {
-    color-scheme: dark;
+  color-scheme: dark;
 }
 
 .radix-themes {
-  /** TODO: there are more theme-able variables we can use */
-   --default-font-family: var(--vscode-font-family);
-   --code-font-family: var(--vscode-editor-font-family);
-   --color-background: var(--vscode-sideBar-background);
-   --color-panel: var(--vscode-panel-background);
-   --color-surface: var(--vscode-panel-background);
-   color: var(--vscode-sideBar-foreground);
-   background-color: var(--color-background);
+/** TODO: there are more theme-able variables we can use */
+  --default-font-family: var(--vscode-font-family);
+  --code-font-family: var(--vscode-editor-font-family);
+  --color-background: var(--vscode-sideBar-background);
+  --color-panel: var(--vscode-panel-background);
+  --color-surface: var(--vscode-panel-background);
+}
+  
+.radix-themes > *:not(.rt-TooltipContent):not(.rt-TooltipText) {
+  color: var(--vscode-sideBar-foreground);
+  background-color: var(--color-background);
 }
 
 .radix-themes code {
@@ -33,10 +36,9 @@
 }
 
 body {
-    padding: 0;
-    background-color: transparent;
+  padding: 0;
+  background-color: transparent;
 }
-
 
 .hljs {
   background: var(--vscode-textPreformat-background);
