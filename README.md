@@ -14,7 +14,7 @@ Refact.ai is a free, **open-source** AI Agent that handles engineering tasks end
 
 - Integrate AI Agent with the tools you already use, allowing it to complete tasks for you end-to-end.
 - Deploy Refact.ai on-premise and maintain **100% control over your codebase**.
-- Access State-of-the-Art Models (Claude 3.7 Sonnet, GPT-4o, o3-mini, etc.)
+- Access State-of-the-Art Models (Claude 4, GPT-4o, o3-mini, etc.)
 - Bring your own key (BYOK) - Use your own API keys for external LLMs.
 - Stop switching between your IDE and chat—Refact.ai has an integrated chat right in your IDE.
 - Get free, unlimited, context-aware auto-completion.
@@ -28,7 +28,7 @@ We can't say it better than our users: *'Refact.ai understands me better than my
 - **Unlimited accurate auto-completion with context awareness for free** - Powered by Qwen2.5-Coder-1.5B, Refact.ai uses Retrieval-Augmented Generation (RAG) to provide precise, context-aware code suggestions. By retrieving relevant snippets and project-specific insights, it ensures completions that align with your coding style and architecture.![auto-completion](https://github.com/user-attachments/assets/0ffab638-c807-4863-8d62-a663b1459805)
 - **Integrated in-IDE Chat** - By deeply understanding your codebases, Refact.ai provides relevant, intelligent answers to your questions—right inside your development environment.![refactor](https://github.com/user-attachments/assets/e7b2e779-85c5-46a0-99ad-ea909a69ddc7)
 - **Integrated with the tools** - Refact.ai goes beyond codebases, connecting with GitHub, GitLab, databases (PostgreSQL, MySQL), Pdb, Docker, and any shell command, so AI Agent can autonomously complete tasks—from code generation to deployment.![integrations](https://github.com/user-attachments/assets/daf8d0ee-0a54-4aa8-82e5-f968fded0c7a)
-- **State-of-the-Art Models** - Refact.ai supports **Claude 3.7 Sonnet, GPT-4o, and o3-mini**, allowing you to choose the best model for each task based on its complexity.
+- **State-of-the-Art Models** - Refact.ai supports **Claude 4, GPT-4o, and o3-mini**, allowing you to choose the best model for each task based on its complexity.
 - **Bring your own key (BYOK)** - Use your own API keys for external LLMs, ensuring flexibility and control over your AI infrastructure.![BYOK](https://github.com/user-attachments/assets/44e416f7-fb4d-4846-a1e0-1b7da32c2c75)
 - **Upload images**: Click the image button to add visual context to your chat.
 - **Use @-commands** to control what context to use to answer your question:
