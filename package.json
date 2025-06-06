@@ -1,7 +1,7 @@
 {
 	"name": "codify",
 	"displayName": "Refact – Open-Source AI Agent, Code Generator & Chat for JavaScript, Python, TypeScript, Java, PHP, Go, and more.",
-	"description": "Refact.ai is a free, open-source AI Agent that adapts to your workflow. It tracks your cursor to provide instant assistance, connects with tools, databases and browsers, works with debuggers, and runs shell commands. As your AI copilot, it handles code generation, testing, review, and refactoring.",
+	"description": "Refact.ai is the #1 free open-source AI Agent on the SWE-bench verified leaderboard. It autonomously handles software engineering tasks end to end. It understands large and complex codebases, adapts to your workflow, and connects with the tools developers actually use (including MCP). It tracks your cursor to provide instant help and transparently shows every step the Agent takes. As your AI copilot, it handles code generation, testing, review, refactoring, and more.",
 	"publisher": "smallcloud",
 	"icon": "logo-small.png",
 	"galleryBanner": {
