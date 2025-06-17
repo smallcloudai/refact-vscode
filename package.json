@@ -18,7 +18,7 @@
 		"url": "https://github.com/smallcloudai/refact-vscode/issues",
 		"email": "support@smallcloud.tech"
 	},
-	"version": "6.5.1",
+	"version": "6.5.2",
 	"dependencies": {
 		"@types/marked": "^4.0.8",
 		"@types/vscode": "^1.69.0",
@@ -229,7 +229,10 @@
 					"order": 14
 				},
 				"refactai.activeGroup": {
-					"type": ["object", "null"],
+					"type": [
+						"object",
+						"null"
+					],
 					"default": null,
 					"description": "Active selected group in your Team Workspace. Modify via settings.json in your workspace",
 					"scope": "machine-overridable",
