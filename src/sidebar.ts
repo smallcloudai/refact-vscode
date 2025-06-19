@@ -1018,7 +1018,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         const state: Partial<InitialState> = {
             teams: {
+                workspace: null,
                 group: activeTeamsGroup,
+                skipped: false,
             },
             current_project: {name: vscode.workspace.name ?? ""},
             config,
