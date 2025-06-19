@@ -479,12 +479,12 @@ export async function ask_and_save_intent(): Promise<boolean>
 // }
 
 
-export async function deactivate(context: vscode.ExtensionContext)
+export async function deactivate()
 {
-    // global.global_context = undefined;
-    if (global.rust_binary_blob) {
-        await global.rust_binary_blob.terminate();
+    if (global.rust_binary_blob !== undefined) {
+        let rust_binary_blob = global.rust_binary_blob;
         global.rust_binary_blob = undefined;
+        return rust_binary_blob.terminate();
     }
 }
 
