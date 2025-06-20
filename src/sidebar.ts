@@ -40,8 +40,11 @@ import {
     ideSetLoginMessage,
     ideSetActiveTeamsGroup,
     ideClearActiveTeamsGroup,
+    ideSetActiveTeamsWorkspace,
+    ideClearActiveTeamsWorkspace,
     OpenFilePayload,
-    TeamsGroup
+    type TeamsGroup,
+    type TeamsWorkspace
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -644,6 +647,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleClearActiveGroup();
         }
 
+        if (ideSetActiveTeamsWorkspace.match(e)) {
+            return this.handleSetActiveWorkspace(e.payload);
+        }
+
+        if (ideClearActiveTeamsWorkspace.match(e)) {
+            return this.handleClearActiveWorkspace();
+        }
+
         if(ideEscapeKeyPressed.match(e)) {
             return this.handleEscapePressed(e.payload);
         }
@@ -815,18 +826,33 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         usabilityHints.show_message_from_server('InferenceServer', message);
     }
 
-    async handleSetActiveGroup (group:TeamsGroup) {
+    async handleSetActiveGroup(group: TeamsGroup) {
         await this.context.workspaceState.update(
             'refactai.activeGroup',
             group,
         );
-        console.log(`[DEBUG]: updated locally active group in ./.vscode/settings.json: `, group);
         this.handleSettingsChange();
     }
 
-    async handleClearActiveGroup () {
+    async handleClearActiveGroup() {
         await this.context.workspaceState.update(
             'refactai.activeGroup',
+            undefined,
+        );
+        this.handleSettingsChange();
+    }
+
+    async handleSetActiveWorkspace(workspace: TeamsWorkspace) {
+        await global.global_context.globalState.update(
+            'activeTeamsWorkspace',
+            workspace,
+        );
+        this.handleSettingsChange();
+    }
+
+    async handleClearActiveWorkspace() {
+        await global.global_context.globalState.update(
+            'activeTeamsWorkspace',
             undefined,
         );
         this.handleSettingsChange();
@@ -984,11 +1010,12 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
-        const activeTeamsGroup = this.context.workspaceState.get<TeamsGroup>('refactai.activeGroup') ?? null;
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
         const shiftEnterToSubmit = vscode.workspace.getConfiguration()?.get<boolean>("refactai.shiftEnterToSubmit")?? false;
-
+        
+        const activeTeamsWorkspace = global.global_context.globalState.get<TeamsWorkspace>('activeTeamsWorkspace') ?? null;
+        const activeTeamsGroup = this.context.workspaceState.get<TeamsGroup>('refactai.activeGroup') ?? null;
         const currentActiveWorkspaceName = this.getActiveWorkspace();
 
         const config: InitialState["config"] = {
@@ -1018,7 +1045,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         const state: Partial<InitialState> = {
             teams: {
-                workspace: null,
+                workspace: activeTeamsWorkspace,
                 group: activeTeamsGroup,
                 skipped: false,
             },
