@@ -5,9 +5,7 @@ import * as estate from "./estate";
 import * as fetchH2 from 'fetch-h2';
 import * as fetchAPI from "./fetchAPI";
 import {
-    type ChatMessages,
     type ChatMessage,
-    type ToolUse,
     setInputValue,
     isUserMessage,
     UserMessage,
@@ -169,10 +167,10 @@ const createMessageBlock = (
     cursor: number | null,
     text: string
 ) => {
-    if (typeof message.content === 'string') {
-        return replaceVariablesInText(message.content, relative_path, cursor, text);
+    if (typeof message.ftm_content === 'string') {
+        return replaceVariablesInText(message.ftm_content, relative_path, cursor, text);
     } else {
-        return message.content.map(content => {
+        return message.ftm_content.map(content => {
             if (('type' in content) && content.type === 'text') {
                 return replaceVariablesInText(content.text, relative_path, cursor, text);
             }
@@ -188,10 +186,10 @@ const formatMultipleMessagesForCodeLens = (
 ) => {
     return messages.map(message => {
         if (isUserMessage(message)) {
-            if (typeof message.content === 'string') {
+            if (typeof message.ftm_content === 'string') {
                 return {
                     ...message,
-                    content: replaceVariablesInText(message.content, relative_path, cursor, text)
+                    content: replaceVariablesInText(message.ftm_content, relative_path, cursor, text)
                 };
             }
         }

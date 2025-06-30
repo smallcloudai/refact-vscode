@@ -10,7 +10,8 @@
 			"type": "extensionHost",
 			"request": "launch",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"--allow-insecure-localhost"
 			],
 			"outFiles": [
 				"${workspaceFolder}/out/**/*.js"
