@@ -5,8 +5,6 @@ import * as usabilityHints from "./usabilityHints";
 import * as estate from "./estate";
 import * as statusBar from "./statusBar";
 import {
-	type CapsResponse,
-    type CustomPromptsResponse,
     ChatMessages,
 } from "refact-chat-js/dist/events";
 
@@ -458,28 +456,40 @@ export function look_for_common_errors(json: any, scope: string, url: string): b
     return false;
 }
 
-export async function get_caps(): Promise<CapsResponse> {
-  let url = rust_url("/v1/caps");
-  if (!url) {
-    return Promise.reject("read_caps no rust binary working, very strange");
-  }
+// TODO: this has moved (also not used)
+// export async function get_caps(): Promise<CapsResponse> {
+//   let url = rust_url("/v1/caps");
+//   if (!url) {
+//     return Promise.reject("read_caps no rust binary working, very strange");
+//   }
 
-  let req = new fetchH2.Request(url, {
-    method: "GET",
-    redirect: "follow",
-    cache: "no-cache",
-    referrer: "no-referrer",
-  });
+//   let req = new fetchH2.Request(url, {
+//     method: "GET",
+//     redirect: "follow",
+//     cache: "no-cache",
+//     referrer: "no-referrer",
+//   });
 
-  let resp = await fetchH2.fetch(req);
-  if (resp.status !== 200) {
-    console.log(["read_caps http status", resp.status]);
-    return Promise.reject("read_caps bad status");
-  }
-  let json = await resp.json();
-  console.log(["successful read_caps", json]);
-  return json as CapsResponse;
-}
+//   let resp = await fetchH2.fetch(req);
+//   if (resp.status !== 200) {
+//     console.log(["read_caps http status", resp.status]);
+//     return Promise.reject("read_caps bad status");
+//   }
+//   let json = await resp.json();
+//   console.log(["successful read_caps", json]);
+//   return json as CapsResponse;
+// }
+
+type SystemPrompt = {
+  text: string;
+  description: string;
+};
+
+type SystemPrompts = Record<string, SystemPrompt>;
+type CustomPromptsResponse = {
+  system_prompts: SystemPrompts;
+  toolbox_commands: Record<string, unknown>;
+};
 
 export async function get_prompt_customization(): Promise<CustomPromptsResponse> {
     const url = rust_url("/v1/customization");

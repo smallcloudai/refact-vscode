@@ -73,11 +73,12 @@ export async function open_chat_tab(
     }
 
     if (global.side_panel && global.side_panel._view) {
+        // TODO: ChatThread is no longer used
         const chat: ChatThread =  {
             id: uuidv4(),
             messages: question ? [
                 ...messages,
-                {role: "user", content: question},
+                {ftm_role: "user", ftm_content: question},
             ] : [],
             model: model,
             new_chat_suggested: {
@@ -1002,6 +1003,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
 
+    // TODO: chat thread has changed
     async createInitialState(thread?: ChatThread, tabbed = false): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
         const scaling = fontSize < 14 ? "90%" : "100%";
@@ -1062,6 +1064,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
 
         if(thread) {
+            // TODO: update this the messageThread
             const chat: InitialState["chat"] = {
                 streaming: false,
                 error: null,
@@ -1069,7 +1072,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 waiting_for_response: false,
                 tool_use: thread.tool_use ? thread.tool_use : "explore",
                 cache: {},
-                system_prompt: {},
+                // system_prompt: {},
                 send_immediately: thread.messages.length > 0,
                 thread,
             };
