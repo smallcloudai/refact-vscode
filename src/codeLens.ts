@@ -145,6 +145,7 @@ const postMessageToWebview = ({messages, value, send_immediately}: {messages?: C
         value,
         send_immediately
     });
+    console.log({eventMessage})
     global.side_panel._view.webview.postMessage(eventMessage);
 };
 
@@ -183,13 +184,13 @@ const formatMultipleMessagesForCodeLens = (
     relative_path: string,
     cursor: number | null,
     text: string
-) => {
+): ChatMessage[] => {
     return messages.map(message => {
         if (isUserMessage(message)) {
             if (typeof message.ftm_content === 'string') {
                 return {
                     ...message,
-                    content: replaceVariablesInText(message.ftm_content, relative_path, cursor, text)
+                    ftm_content: replaceVariablesInText(message.ftm_content, relative_path, cursor, text)
                 };
             }
         }
@@ -204,7 +205,12 @@ export async function code_lens_execute(code_lens: string, range: any) {
     if (custom_code_lens) {
         const auto_submit = custom_code_lens[code_lens]["auto_submit"];
         const new_tab = custom_code_lens[code_lens]["new_tab"];
-        let messages: ChatMessage[] = custom_code_lens[code_lens]["messages"];
+        let messages: ChatMessage[] = custom_code_lens[code_lens]["messages"].map((message: {role: string, content: unknown}) => {
+            return {
+                ftm_role: message.role,
+                ftm_content: message.content,
+            };
+        });
 
         const start_of_line = new vscode.Position(range.start.line, 0);
         const end_of_line = new vscode.Position(range.end.line + 1, 0);
