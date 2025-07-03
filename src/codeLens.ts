@@ -145,7 +145,6 @@ const postMessageToWebview = ({messages, value, send_immediately}: {messages?: C
         value,
         send_immediately
     });
-    console.log({eventMessage})
     global.side_panel._view.webview.postMessage(eventMessage);
 };
 
