@@ -284,6 +284,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 .getConfiguration()
                 ?.get<boolean>("refactai.ast") ?? false;
 
+        const connections = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
+
 
         const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
         const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
@@ -297,7 +299,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             addressURL,
             lspPort: port,
             shiftEnterToSubmit: submitChatWithShiftEnter,
-            features: {vecdb, ast},
+            features: {vecdb, ast, connections},
             currentWorkspaceName: currentActiveWorkspaceName
         });
 
@@ -1020,6 +1022,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const activeTeamsGroup = this.context.workspaceState.get<TeamsGroup>('refactai.activeGroup') ?? null;
         const currentActiveWorkspaceName = this.getActiveWorkspace();
 
+        const connections = vscode.workspace.getConfiguration()?.get<boolean>("refactai.xperimental") ?? false;
+
         const config: InitialState["config"] = {
             host: "vscode",
             tabbed,
@@ -1035,6 +1039,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 ast,
                 images: true,
                 statistics: true,
+                connections,
             },
             keyBindings: {
                 completeManual,
