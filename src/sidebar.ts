@@ -24,7 +24,7 @@ import {
     ideNewFileAction,
     ideOpenSettingsAction,
     ideDiffPasteBackAction,
-    type ChatThread,
+    // type ChatThread,
     ideAnimateFileStart,
     ideAnimateFileStop,
     ideChatPageChange,
@@ -59,6 +59,7 @@ function composeHandlers(...eventHandlers: Handler[]) {
     return (data: any) => eventHandlers.forEach(fn => fn && fn(data));
 }
 
+// here
 export async function open_chat_tab(
     question: string,
     editor: vscode.TextEditor | undefined,
@@ -74,18 +75,19 @@ export async function open_chat_tab(
 
     if (global.side_panel && global.side_panel._view) {
         // TODO: ChatThread is no longer used
-        const chat: ChatThread =  {
-            id: uuidv4(),
-            messages: question ? [
-                ...messages,
-                {ftm_role: "user", ftm_content: question},
-            ] : [],
-            model: model,
-            new_chat_suggested: {
-                wasSuggested: false,
-            }
-        };
-        global.side_panel.goto_chat(chat);  // changes html
+        // const chat: ChatThread =  {
+        //     id: uuidv4(),
+        //     messages: question ? [
+        //         ...messages,
+        //         {ftm_role: "user", ftm_content: question},
+        //     ] : [],
+        //     model: model,
+        //     new_chat_suggested: {
+        //         wasSuggested: false,
+        //     }
+        // };
+        // global.side_panel.goto_chat(chat); 
+        global.side_panel.goto_chat(); // changes html
 
     }
     return;
@@ -405,7 +407,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     // can change this to
-    public async goto_chat(chat_thread?: ChatThread)
+    public async goto_chat()
     {
         // this.html_main_screen(this._view.webview);
         // this.address = chat.chat_id;
@@ -418,7 +420,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         // );
 
         // Could throw?
-        const html = await this.html_main_screen(this._view.webview, chat_thread);
+        const html = await this.html_main_screen(this._view.webview);
         this._view.webview.html = html;
         // this.update_webview();
     }
@@ -1006,7 +1008,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
 
     // TODO: chat thread has changed
-    async createInitialState(thread?: ChatThread, tabbed = false): Promise<Partial<InitialState>> {
+    async createInitialState(tabbed = false): Promise<Partial<InitialState>> {
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
         const scaling = fontSize < 14 ? "90%" : "100%";
         const activeColorTheme = this.getColorTheme();
@@ -1068,27 +1070,27 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             state.selected_snippet = snippet;
         }
 
-        if(thread) {
-            // TODO: update this the messageThread
-            const chat: InitialState["chat"] = {
-                streaming: false,
-                error: null,
-                prevent_send: true,
-                waiting_for_response: false,
-                tool_use: thread.tool_use ? thread.tool_use : "explore",
-                cache: {},
-                // system_prompt: {},
-                send_immediately: thread.messages.length > 0,
-                thread,
-            };
-            state.chat = chat;
-            state.pages = [{name: "login page"}, {name: "history"}, {name: "chat"}];
-        }
+        // if(thread) {
+        //     // TODO: update this the messageThread
+        //     const chat: InitialState["chat"] = {
+        //         streaming: false,
+        //         error: null,
+        //         prevent_send: true,
+        //         waiting_for_response: false,
+        //         tool_use: thread.tool_use ? thread.tool_use : "explore",
+        //         cache: {},
+        //         // system_prompt: {},
+        //         send_immediately: thread.messages.length > 0,
+        //         thread,
+        //     };
+        //     state.chat = chat;
+        //     state.pages = [{name: "login page"}, {name: "history"}, {name: "chat"}];
+        // }
 
         return state;
     }
 
-    private async html_main_screen(webview: vscode.Webview, chat_thread?: ChatThread, tabbed?: boolean)
+    private async html_main_screen(webview: vscode.Webview, tabbed?: boolean)
     {
         // TODO: add send immediately flag for context menu and toolbar
         const extensionUri = this.context.extensionUri;
@@ -1110,7 +1112,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             existing_address = "";
         }
 
-        const initialState = await this.createInitialState(chat_thread, tabbed);
+        const initialState = await this.createInitialState(tabbed);
         let stringifiedInitialState = JSON.stringify(initialState);
         stringifiedInitialState = stringifiedInitialState.replace(/\<\/script>/gi, "</scr\"+\"ipt>");
 
