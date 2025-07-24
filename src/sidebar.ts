@@ -306,9 +306,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
 
         this._view?.webview.postMessage(message);
-
-
-        global.rust_binary_blob?.settings_changed();
         
     }
 
