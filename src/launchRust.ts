@@ -129,7 +129,7 @@ export class RustBinaryBlob {
             ];
 
             if (active_workspace_id !== null && active_workspace_id !== undefined) {
-                new_cmdline.push("--active-workspace-id");
+                new_cmdline.push("--active-group-id");
                 new_cmdline.push(active_workspace_id.toString());
             }
 
