@@ -166,7 +166,11 @@ export class RustBinaryBlob {
                 break;
             }
         }
-        // posable loop
+
+    }
+
+    public async settings_changed_and_update_ui() {
+        await this.settings_changed();
         global.side_panel?.handleSettingsChange();
     }
 

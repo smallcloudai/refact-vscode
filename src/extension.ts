@@ -370,7 +370,7 @@ export function activate(context: vscode.ExtensionContext)
             }
             config_debounce = setTimeout(() => {
                 if (global.rust_binary_blob) {
-                    global.rust_binary_blob.settings_changed();
+                    global.rust_binary_blob.settings_changed_and_update_ui();
                 }
             }, 1000);
         }
