@@ -275,7 +275,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         }
     }
 
-    handleSettingsChange() {
+    handleSettingsChange(restart_lsp = false) {
         const vecdb =
             vscode.workspace
                 .getConfiguration()
@@ -294,6 +294,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const port = global.rust_binary_blob?.get_port() ?? 8001;
         const submitChatWithShiftEnter = vscode.workspace.getConfiguration()?.get<boolean>("refactai.submitChatWithShiftEnter")?? false;
 
+        // binary should be restarted?
+
         const currentActiveWorkspaceName = this.getActiveWorkspace();
 
         const message = updateConfig({
@@ -306,6 +308,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
 
         this._view?.webview.postMessage(message);
+
+        if(restart_lsp) {
+            global.rust_binary_blob?.settings_changed();
+        }
     }
 
     public attachFile(path: string) {
@@ -644,6 +650,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             return this.handleSetLoginMessage(e.payload);
         }
 
+        // here
         if (ideSetActiveTeamsGroup.match(e)) {
             return this.handleSetActiveGroup(e.payload);
         }
@@ -852,7 +859,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             'activeTeamsWorkspace',
             workspace,
         );
-        this.handleSettingsChange();
+        this.handleSettingsChange(true);
     }
 
     async handleClearActiveWorkspace() {
@@ -860,7 +867,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             'activeTeamsWorkspace',
             undefined,
         );
-        this.handleSettingsChange();
+        this.handleSettingsChange(true);
     }
 
     async handleEscapePressed(mode: string) {
