@@ -764,7 +764,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this._disposables.push(...disposables);
     }
 
-    toolEditChange(path: string, accepted: boolean | "indeterminate") {
+    toolEditChange(path: string, accepted: boolean) {
         if(this.tool_edit_in_progress) {
             const action = ideToolCallResponse({
                 chatId: this.tool_edit_in_progress.chatId,
