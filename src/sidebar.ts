@@ -1043,6 +1043,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 system_prompt: {},
                 send_immediately: thread.messages.length > 0,
                 thread,
+                queued_messages: [],
             };
             state.chat = chat;
             state.pages = [{name: "login page"}, {name: "history"}, {name: "chat"}];
