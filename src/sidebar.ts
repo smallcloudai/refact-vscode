@@ -685,11 +685,18 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     // }
 
     async handleToolEdit(toolCall: TextDocToolCall,  toolEdit: ToolEditResult) {
-        if(!toolEdit.file_before && toolEdit.file_after) {
-            return this.createNewFileWithContent(toolCall.function.arguments.path, toolEdit.file_after);
+        const args = toolCall.function.arguments;
+        const filePath = 'path' in args ? args.path : undefined;
+        if (!filePath) {
+            console.error('Tool call arguments missing path property');
+            return;
         }
 
-        return this.addDiffToFile(toolCall.function.arguments.path, toolEdit.file_after);
+        if(!toolEdit.file_before && toolEdit.file_after) {
+            return this.createNewFileWithContent(filePath, toolEdit.file_after);
+        }
+
+        return this.addDiffToFile(filePath, toolEdit.file_after);
     }
 
 
@@ -1034,16 +1041,30 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         if(thread) {
             const chat: InitialState["chat"] = {
-                streaming: false,
-                error: null,
-                prevent_send: true,
-                waiting_for_response: false,
-                tool_use: thread.tool_use ? thread.tool_use : "explore",
-                cache: {},
+                current_thread_id: thread.id,
+                open_thread_ids: [thread.id],
+                threads: {
+                    [thread.id]: {
+                        thread,
+                        streaming: false,
+                        waiting_for_response: false,
+                        prevent_send: true,
+                        error: null,
+                        queued_items: [],
+                        send_immediately: thread.messages.length > 0,
+                        attached_images: [],
+                        confirmation: {
+                            pause: false,
+                            pause_reasons: [],
+                            status: { wasInteracted: false, confirmationStatus: false },
+                        },
+                        snapshot_received: false,
+                    },
+                },
                 system_prompt: {},
-                send_immediately: thread.messages.length > 0,
-                thread,
-                queued_messages: [],
+                tool_use: thread.tool_use ? thread.tool_use : "explore",
+                sse_refresh_requested: null,
+                stream_version: 0,
             };
             state.chat = chat;
             state.pages = [{name: "login page"}, {name: "history"}, {name: "chat"}];
