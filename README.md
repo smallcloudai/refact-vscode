@@ -10,11 +10,11 @@
 
 ## Refact.ai - Your Customizable Open-Source AI Software Engineering Agent
 
-Refact.ai is a free, **open-source** AI Agent that handles engineering tasks end-to-end. It deeply understands your codebases and integrates with your tools, databases, and browsers to automate complex, multi-step tasks.
+Refact.ai is the #1 free **open-source** AI Agent on the SWE-bench verified leaderboard. It autonomously handles software engineering tasks end to end. It deeply understands large and complex codebases and integrates with developers’ tools (including MCP), databases, and browsers to automate complex, multi-step tasks.
 
-- Integrate AI Agent with the tools you already use, allowing it to complete tasks for you end-to-end.
-- Deploy Refact.ai on-premise and maintain **100% control over your codebase**.
-- Access State-of-the-Art Models (Claude 3.7 Sonnet, GPT-4o, o3-mini, etc.)
+- Integrate the AI Agent with the tools you already use, allowing it to complete tasks end to end while transparently showing every step it takes.
+- Deploy Refact.ai on-premise to maintain **100% control over your codebase**.
+- Access state-of-the-art models like Claude 4 Sonnet, GPT-4.1, 4o, Gemini 2.5 Pro, and more.
 - Bring your own key (BYOK) - Use your own API keys for external LLMs.
 - Stop switching between your IDE and chat—Refact.ai has an integrated chat right in your IDE.
 - Get free, unlimited, context-aware auto-completion.
