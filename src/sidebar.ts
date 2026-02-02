@@ -41,7 +41,10 @@ import {
     ideSetActiveTeamsGroup,
     ideClearActiveTeamsGroup,
     OpenFilePayload,
-    TeamsGroup
+    TeamsGroup,
+    ideTaskDone,
+    ideAskQuestions,
+    ideSwitchToThread
 } from "refact-chat-js/dist/events";
 import { basename, join } from "path";
 import { diff_paste_back } from "./chatTab";
@@ -98,6 +101,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     public chat: chatTab.ChatTab | null = null;
     public statistic: statisticTab.StatisticTab | null = null;
     public tool_edit_in_progress: null | {chatId: string, toolCallId?: string} = null;
+    private pendingNotifications: number = 0;
     // public fim_debug: fimDebug.FimDebug | null = null;
     // public chatHistoryProvider: ChatHistoryProvider|undefined;
 
@@ -652,6 +656,14 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             this.tool_edit_in_progress = {chatId: e.payload.chatId, toolCallId: e.payload.toolCall.id};
             return this.handleToolEdit(e.payload.toolCall, e.payload.edit);
         }
+
+        if(ideTaskDone.match(e)) {
+            return this.handleTaskDone(e.payload);
+        }
+
+        if(ideAskQuestions.match(e)) {
+            return this.handleAskQuestions(e.payload);
+        }
         // if(ideOpenChatInNewTab.match(e)) {
         //     return this.handleOpenInTab(e.payload);
         // }
@@ -846,6 +858,60 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         if (mode === "combobox") {
             await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
         }
+    }
+
+    private updateBadge(count: number) {
+        this.pendingNotifications = count;
+        if (this._view) {
+            this._view.badge = count > 0 ? { value: count, tooltip: `${count} pending` } : undefined;
+        }
+    }
+
+    private switchToChat(chatId: string) {
+        vscode.commands.executeCommand('workbench.view.extension.refact-toolbox-pane');
+        const action = ideSwitchToThread({ chatId });
+        this._view?.webview.postMessage(action);
+    }
+
+    async handleTaskDone(payload: {
+        chatId: string;
+        toolCallId: string;
+        summary: string;
+        knowledgePath?: string;
+    }) {
+        const message = payload.summary || "Task completed";
+        vscode.window.showInformationMessage(message, "Open Chat").then(selection => {
+            if (selection === "Open Chat") {
+                this.switchToChat(payload.chatId);
+            }
+        });
+    }
+
+    async handleAskQuestions(payload: {
+        chatId: string;
+        toolCallId: string;
+        questions: Array<{
+            id: string;
+            type: string;
+            text: string;
+            options?: string[];
+        }>;
+    }) {
+        const questions = Array.isArray(payload.questions) ? payload.questions : [];
+        const count = questions.length;
+        const text = count === 0 ? "your input" : count === 1 ? "1 question" : `${count} questions`;
+        
+        this.updateBadge(this.pendingNotifications + 1);
+        
+        vscode.window.showInformationMessage(
+            `AI needs ${text} to continue`,
+            "Open Chat"
+        ).then(selection => {
+            if (selection === "Open Chat") {
+                this.updateBadge(Math.max(0, this.pendingNotifications - 1));
+                this.switchToChat(payload.chatId);
+            }
+        });
     }
 
     private getWorkspaceFolderForFile(filePath?: string): vscode.WorkspaceFolder | undefined {
