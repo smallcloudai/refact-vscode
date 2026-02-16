@@ -1125,6 +1125,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                             status: { wasInteracted: false, confirmationStatus: false },
                         },
                         snapshot_received: false,
+                        attached_text_files: [],
+                        task_widget_expanded: false,
                     },
                 },
                 system_prompt: {},

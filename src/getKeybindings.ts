@@ -84,7 +84,7 @@ export async function getKeyBindingForChat(name: string): Promise<string> {
 			.replace("alt", "⌥")
 			.replace("ctrl", "⌃")
 			.replace("cmd", "⌘")
-			.toLocaleUpperCase()
+			.toLocaleUpperCase();
         return key;
     }
     return key.replace(/\w+/g, w => (w.substring(0,1).toUpperCase()) + w.substring(1));
