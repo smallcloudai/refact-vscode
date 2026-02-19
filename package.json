@@ -29,7 +29,7 @@
 		"marked": "^4.0.8",
 		"refact-chat-js": "^7.0.0",
 		"uuid": "^9.0.1",
-		"vscode-languageclient": "^7.0.0"
+		"vscode-languageclient": "^7.0.1"
 	},
 	"devDependencies": {
 		"@types/diff": "^5.2.2",
