@@ -8,6 +8,7 @@
 			"ES2021.WeakRef",
 			"DOM",
 		],
+		"skipLibCheck": true,
 		"sourceMap": true,
 		"rootDir": "src",
 		"strict": true,
