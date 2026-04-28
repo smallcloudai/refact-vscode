@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
 import * as fetchH2 from 'fetch-h2';
-import * as userLogin from './userLogin';
 import * as fetchAPI from "./fetchAPI";
 import { join } from 'path';
 import * as lspClient from 'vscode-languageclient/node';
 import * as net from 'net';
 import { register_commands } from './rconsoleCommands';
 import { QuickActionProvider } from './quickProvider';
-import { TeamsGroup } from 'refact-chat-js/dist/events';
 
 
 const DEBUG_HTTP_PORT = 8001;
@@ -66,25 +64,17 @@ export class RustBinaryBlob {
         let xdebug = this.x_debug();
         if (xdebug) {
             return `debug rust binary on ports ${DEBUG_HTTP_PORT} and ${DEBUG_LSP_PORT}`;
-        } else {
-            let addr = userLogin.get_address();
-            if (addr === "") {
-                return "<no-address-configured>";
-            }
-            return `${addr}`;
         }
+        return "local Refact engine";
     }
 
     public async settings_changed() {
         for (let i = 0; i < 5; i++) {
             console.log(`RUST settings changed, attempt to restart ${i + 1}`);
             let xdebug = this.x_debug();
-            let api_key: string = userLogin.secret_api_key();
             let port: number;
             let ping_response: string;
-            
-            // const maybe_active_workspace = global.global_context.globalState.get('active_workspace') as Workspace | undefined;
-            // const active_workspace_id = maybe_active_workspace ? maybe_active_workspace.workspace_id : null;
+
             if (xdebug === 0) {
                 if (this.lsp_client) { // running
                     port = this.port;  // keep the same port
@@ -106,12 +96,6 @@ export class RustBinaryBlob {
                 await this.start_lsp_socket();
                 return;
             }
-            let url: string = userLogin.get_address();
-            if (url === "") {
-                this.cmdline = [];
-                await this.terminate();
-                return;
-            }
             let plugin_version = vscode.extensions.getExtension("smallcloud.codify")?.packageJSON.version;   // codify is the old name of the product, smallcloud is the company
             if (!plugin_version) {
                 plugin_version = "unknown";
@@ -119,19 +103,11 @@ export class RustBinaryBlob {
 
             let new_cmdline: string[] = [
                 join(this.asset_path, "refact-lsp"),
-                "--address-url", url,
-                "--api-key", api_key,
                 "--ping-message", ping_response,
                 "--http-port", port.toString(),
                 "--lsp-stdin-stdout", "1",
                 "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
-                "--basic-telemetry",
             ];
-
-            // if (active_workspace_id !== null && active_workspace_id !== undefined) {
-            //     new_cmdline.push("--active-workspace-id");
-            //     new_cmdline.push(active_workspace_id.toString());
-            // }
 
             if (vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
                 new_cmdline.push("--vecdb");

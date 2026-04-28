@@ -271,12 +271,6 @@ export function rust_url(addthis: string)
 
 export function inference_context(third_party: boolean)
 {
-    // let modified_url = vscode.workspace.getConfiguration().get('refactai.infurl');
-    // if (!modified_url) {
-    //     // Backward compatibility: codify is the old name
-    //     modified_url = vscode.workspace.getConfiguration().get('codify.infurl');
-    // }
-    // in previous versions, it was possible to skip certificate verification
     return {
         disconnect: fetchH2.disconnect,
         disconnectAll: fetchH2.disconnectAll,
@@ -342,7 +336,6 @@ export function fetch_code_completion(
     });
     const headers = {
         "Content-Type": "application/json",
-        // "Authorization": `Bearer ${apiKey}`,
     };
     let req = new fetchH2.Request(url, {
         method: "POST",
@@ -386,11 +379,6 @@ export function fetch_chat_promise(
         console.log(["fetch_chat_promise: No rust binary working"]);
         return [Promise.reject("No rust binary working"), scope, ""];
     }
-    const apiKey = "any-key-will-work";
-    if (!apiKey) {
-        return [Promise.reject("No API key"), "chat", ""];
-    }
-
     let ctx = inference_context(third_party);
 
     // an empty tools array causes issues
@@ -407,7 +395,6 @@ export function fetch_chat_promise(
 
     const headers = {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
     };
 
     let req = new fetchH2.Request(url, {

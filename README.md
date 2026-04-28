@@ -4,7 +4,6 @@
 
 ---
 
-[![Discord](https://img.shields.io/discord/1037660742440194089?logo=discord&label=Discord&link=https%3A%2F%2Fsmallcloud.ai%2Fdiscord)](https://smallcloud.ai/discord)
 [![Twitter Follow](https://img.shields.io/twitter/follow/refact_ai)](https://twitter.com/intent/follow?screen_name=refact_ai)
 ![License](https://img.shields.io/github/license/smallcloudai/refact-vscode)
 
@@ -13,9 +12,8 @@
 Refact.ai is the #1 free **open-source** AI Agent on the SWE-bench verified leaderboard. It autonomously handles software engineering tasks end to end. It deeply understands large and complex codebases and integrates with developers’ tools (including MCP), databases, and browsers to automate complex, multi-step tasks.
 
 - Integrate the AI Agent with the tools you already use, allowing it to complete tasks end to end while transparently showing every step it takes.
-- Deploy Refact.ai on-premise to maintain **100% control over your codebase**.
 - Access state-of-the-art models like Claude 4 Sonnet, GPT-4.1, 4o, Gemini 2.5 Pro, and more.
-- Bring your own key (BYOK) - Use your own API keys for external LLMs.
+- Bring your own key (BYOK) or connect local providers.
 - Stop switching between your IDE and chat—Refact.ai has an integrated chat right in your IDE.
 - Get free, unlimited, context-aware auto-completion.
 
@@ -39,23 +37,11 @@ We can't say it better than our users: *'Refact.ai understands me better than my
     - **@tree** - display the workspace directory and files tree.
     - Create your own **custom system prompt** for a more personalized workflow.![@-commands](https://github.com/user-attachments/assets/28e1db76-3490-4195-a3e0-de30496239a9)
 
-## Refact.ai Agent For Enterprise
-Deploying Refact.ai Agent is like adding a 24/7 engineer to your team—one that instantly understands your codebase, adapts to your workflows, accelerates development from day one, and becomes a shared knowledge base for your entire team.
+## BYOK/local-only setup
 
-1. **Refact.ai already understands your company's context:** AI Agent captures the unique structure, tools, and workflows of your organization, using your company's databases, documentation, and code architecture to deliver customized solutions.
-2. **Gets smarter over time:** With each interaction and feedback, Refact.ai Agent adapts to your organization's needs, becoming more accurate and powerful.
-3. **Organizes experience into the knowledge base:** Refact.ai Agent captures and shares knowledge from interactions with each team member. It not only streamlines workflows but also supports faster onboarding and smoother cross-functional collaboration across projects.
+Refact runs with BYOK or local model providers configured on your machine.
+Open the Refact sidebar, configure at least one provider in Provider Setup, then choose default models.
 
-### Take full control of your AI Agent, tailored to your company:
-- **Deploy Refact.ai on-premise:** on your own servers or private cloud. Your data never leaves your control. Telemetry from the plugins goes to your server and nowhere else. You can verify what the code does, it's open source.
-- **Fine-tune a model on your codebase:** A fine-tuned code completion model will provide you with more relevant suggestions: it can memorize your coding style, the right way to use your internal APIs, and the tech stack you use.
-- **Priority Support:** Our engineers are always available to assist you at every stage, from setup to fine-tuning and beyond.
-
-**To get a 2-week free trial** for your team, just fill out the form on [our website](https://refact.ai/contact/?utm_source=vscode&utm_medium=marketplace&utm_campaign=enterprise). We'll reach out with more details!
-\
-&nbsp;
-\
-&nbsp;
 ## Which tasks can Refact.ai help me with?
 
 - **Generate code from natural language prompts (even if you make typos)** - Instantly turn ideas into functional code, accelerating development and eliminating the blank-screen problem.
@@ -93,6 +79,6 @@ Deploying Refact.ai Agent is like adding a 24/7 engineer to your team—one that
 - **Create Documentation** - Automate documentation generation to keep knowledge accessible and up to date.
 - **Generate Docstrings** - Enhance maintainability with clear, structured documentation generated for functions and classes in seconds.
 
-## Join Our Discord Community
+## Support & Feedback
 
-Connect with other developers in our [Discord community](https://www.smallcloud.ai/discord). Ask questions, share your opinion, propose new features.
+Use GitHub issues or discussions to ask questions, report bugs, or propose features.

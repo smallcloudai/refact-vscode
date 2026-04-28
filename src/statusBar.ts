@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from 'vscode';
-import * as userLogin from "./userLogin";
 import * as fetchH2 from 'fetch-h2';
 import { RagStatus } from './fetchAPI';
 
@@ -109,10 +108,6 @@ export class StatusBarMenu {
                 msg += _website_message || _inference_message;
             }
             this.menu.tooltip = msg;
-        } else if (!userLogin.secret_api_key()) {
-            this.menu.text = `$(account) Refact.ai`;
-            this.menu.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-            this.menu.tooltip = _website_message || `Click to login`;
         } else {
             this.menu.text = this.rag_status || `$(codify-logo) Refact.ai`;
             this.menu.backgroundColor = undefined;
