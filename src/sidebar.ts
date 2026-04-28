@@ -9,10 +9,8 @@ import { getKeyBindingForChat } from "./getKeybindings";
 import {
     type ChatMessages,
     fim,
-    isLogOut,
     isOpenExternalUrl,
     updateConfig,
-    isSetupHost,
     type FileInfo,
     setFileInfo,
     type Snippet,
@@ -38,10 +36,7 @@ import {
     TextDocToolCall,
     ideSetCodeCompletionModel,
     ideSetLoginMessage,
-    ideSetActiveTeamsGroup,
-    ideClearActiveTeamsGroup,
     OpenFilePayload,
-    TeamsGroup,
     ideTaskDone,
     ideAskQuestions,
     ideSwitchToThread
@@ -115,9 +110,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         this.js2ts_message = this.js2ts_message.bind(this);
 
         this.handleEvents = this.handleEvents.bind(this);
-        
-        // Check for bring-your-own-key configuration during initialization
-        this.checkForBringYourOwnKeyConfig();
 
         this._disposables.push(vscode.window.onDidChangeActiveTextEditor(() => {
             this.postActiveFileInfo();
@@ -137,9 +129,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 event.affectsConfiguration("refactai.xperimental")
             ) {
                 this.handleSettingsChange();
-            }
-            if (event.affectsConfiguration("refactai.addressURL")) {
-                this.checkForBringYourOwnKeyConfig();
             }
         }));
 
@@ -285,16 +274,15 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 ?.get<boolean>("refactai.ast") ?? false;
 
 
-        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
-        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
-        const port = global.rust_binary_blob?.get_port() ?? 8001;
+        const rawPort = global.rust_binary_blob?.get_port();
+        const port = typeof rawPort === "number" && Number.isFinite(rawPort) && rawPort > 0
+            ? rawPort
+            : 0;
         const submitChatWithShiftEnter = vscode.workspace.getConfiguration()?.get<boolean>("refactai.submitChatWithShiftEnter")?? false;
 
         const currentActiveWorkspaceName = this.getActiveWorkspace();
 
         const message = updateConfig({
-            apiKey,
-            addressURL,
             lspPort: port,
             shiftEnterToSubmit: submitChatWithShiftEnter,
             features: {vecdb, ast},
@@ -344,57 +332,8 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    /**
-     * Checks if user has a 'bring-your-own-key' host type configuration and logs them out
-     * as this option is no longer supported
-     */
-    private async checkForBringYourOwnKeyConfig() {
-        const hostType = this.context.globalState.get<string>('refactai.hostType');
-        const notificationMessage = "The 'bring-your-own-key' login option is no longer available. Your settings have been cleared. Please choose other login option.";
-        
-        if (hostType === 'bring-your-own-key') {
-            vscode.window.showInformationMessage(
-                notificationMessage,
-                "Open Settings"
-            ).then(selection => {
-                if (selection === "Open Settings") {
-                    vscode.commands.executeCommand("refactaicmd.openSettings");
-                }
-            });
-            await this.delete_old_settings();
-            
-            await this.context.globalState.update('refactai.hostType', undefined);
-            return;
-        }
-        
-        // Fallback for older versions without stored host type
-        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
-        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
-        
-        const lowerCasedAddressURL = addressURL.toLowerCase();
-        if (
-            typeof addressURL === 'string' && 
-            !lowerCasedAddressURL.startsWith("http://") && 
-            !lowerCasedAddressURL.startsWith("https://") && 
-            lowerCasedAddressURL.endsWith('.yaml')
-        ) {
-            vscode.window.showInformationMessage(
-                notificationMessage,
-                "Open Settings"
-            ).then(selection => {
-                if (selection === "Open Settings") {
-                    vscode.commands.executeCommand("refactaicmd.openSettings");
-                }
-            });
-            
-            await this.delete_old_settings();
-        }
-    }
-
     public async goto_main()
     {
-        await this.checkForBringYourOwnKeyConfig();
-        
         this.address = "";
         if (!this._view) {
             return;
@@ -425,20 +364,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     {
         const message = newChatAction();
         this._view?.webview.postMessage(message);
-    }
-
-    public async delete_old_settings()
-    {
-        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
-        if(vscode.workspace.workspaceFolders) {
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
-            await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
-        }
-        
-        await this.context.globalState.update('refactai.hostType', undefined);
     }
 
     public async js2ts_message(data: any)
@@ -560,18 +485,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }
 
-        if (isSetupHost(e)) {
-            const { host } = e.payload;
-            await this.context.globalState.update('refactai.hostType', host.type);
-            await this.delete_old_settings();
-            await vscode.workspace.getConfiguration().update('refactai.addressURL', "Refact", vscode.ConfigurationTarget.Global);
-            await vscode.workspace.getConfiguration().update('refactai.apiKey', host.apiKey, vscode.ConfigurationTarget.Global);
-        }
-
-        if (isLogOut(e)) {
-            await this.delete_old_settings();
-        }
-
         if (isOpenExternalUrl(e)) {
             await vscode.env.openExternal(vscode.Uri.parse(e.payload.url));
         }
@@ -627,14 +540,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
         if (ideSetLoginMessage.match(e)) {
             return this.handleSetLoginMessage(e.payload);
-        }
-
-        if (ideSetActiveTeamsGroup.match(e)) {
-            return this.handleSetActiveGroup(e.payload);
-        }
-
-        if (ideClearActiveTeamsGroup.match(e)) {
-            return this.handleClearActiveGroup();
         }
 
         if(ideEscapeKeyPressed.match(e)) {
@@ -821,23 +726,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     handleSetLoginMessage(message: string) {
         usabilityHints.show_message_from_server('InferenceServer', message);
-    }
-
-    async handleSetActiveGroup (group:TeamsGroup) {
-        await this.context.workspaceState.update(
-            'refactai.activeGroup',
-            group,
-        );
-        console.log(`[DEBUG]: updated locally active group in ./.vscode/settings.json: `, group);
-        this.handleSettingsChange();
-    }
-
-    async handleClearActiveGroup () {
-        await this.context.workspaceState.update(
-            'refactai.activeGroup',
-            undefined,
-        );
-        this.handleSettingsChange();
     }
 
     async handleEscapePressed(mode: string) {
@@ -1044,10 +932,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const activeColorTheme = this.getColorTheme();
         const vecdb = vscode.workspace.getConfiguration()?.get<boolean>("refactai.vecdb") ?? false;
         const ast = vscode.workspace.getConfiguration()?.get<boolean>("refactai.ast") ?? false;
-        const apiKey = vscode.workspace.getConfiguration()?.get<string>("refactai.apiKey") ?? "";
-        const addressURL = vscode.workspace.getConfiguration()?.get<string>("refactai.addressURL") ?? "";
-        const activeTeamsGroup = this.context.workspaceState.get<TeamsGroup>('refactai.activeGroup') ?? null;
-        const port = global.rust_binary_blob?.get_port() ?? 8001;
+        const rawPort = global.rust_binary_blob?.get_port();
+        const port = typeof rawPort === "number" && Number.isFinite(rawPort) && rawPort > 0
+            ? rawPort
+            : 0;
         const completeManual = await getKeyBindingForChat("refactaicmd.completionManual");
         const shiftEnterToSubmit = vscode.workspace.getConfiguration()?.get<boolean>("refactai.shiftEnterToSubmit")?? false;
 
@@ -1072,16 +960,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             keyBindings: {
                 completeManual,
             },
-            apiKey,
-            addressURL,
             lspPort: port,
             currentWorkspaceName: currentActiveWorkspaceName,
         };
 
         const state: Partial<InitialState> = {
-            teams: {
-                group: activeTeamsGroup,
-            },
             current_project: {name: vscode.workspace.name ?? ""},
             config,
         };
@@ -1147,11 +1030,6 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         );
 
         const nonce = this.getNonce();
-        let existing_address = vscode.workspace.getConfiguration().get("refactai.addressURL");
-        if (typeof existing_address !== "string" || (typeof existing_address === "string" && !existing_address.match(/^https?:\/\//))) {
-            existing_address = "";
-        }
-
         const initialState = await this.createInitialState(chat_thread, tabbed);
         let stringifiedInitialState = JSON.stringify(initialState);
         stringifiedInitialState = stringifiedInitialState.replace(/\<\/script>/gi, "</scr\"+\"ipt>");

@@ -7,7 +7,6 @@ import * as codeLens from "./codeLens";
 import * as interactiveDiff from "./interactiveDiff";
 import * as estate from "./estate";
 import * as fetchAPI from "./fetchAPI";
-import * as userLogin from "./userLogin";
 import * as sidebar from "./sidebar";
 import * as launchRust from "./launchRust";
 import { RefactConsoleProvider } from './rconsoleProvider';
@@ -186,24 +185,6 @@ async function f1_pressed()
     pressed_call_chat();
 }
 
-async function f1_deprecated()
-{
-    let editor = vscode.window.activeTextEditor;
-    if (editor) {
-        let state = estate.state_of_editor(editor, "f1_pressed");
-        if (state && state.get_mode() === Mode.Diff) {
-            rollback_and_regen(editor);
-            return;
-        }
-        if (state) {
-            RefactConsoleProvider.open_between_lines(editor);
-        }
-    }
-    // await vscode.commands.executeCommand("refactai-toolbox.focus");
-    // await vscode.commands.executeCommand("workbench.action.focusSideBar");
-}
-
-
 export async function inline_accepted(this_completion_serial_number: number)
 {
     if (typeof this_completion_serial_number === "number") {
@@ -262,7 +243,6 @@ export function activate(context: vscode.ExtensionContext)
     let disposable4 = vscode.commands.registerCommand('refactaicmd.esc', pressed_escape);
     let disposable5 = vscode.commands.registerCommand('refactaicmd.tab', pressed_tab);
     let disposable3 = vscode.commands.registerCommand('refactaicmd.activateToolbox', f1_pressed);
-    let disposable8 = vscode.commands.registerCommand('refactaicmd.activateToolboxDeprecated', f1_deprecated);
     let disposable13 = vscode.commands.registerCommand('refactaicmd.completionManual', async () => {
         await vscode.commands.executeCommand('editor.action.inlineSuggest.hide');
         await vscode.commands.executeCommand('editor.action.inlineSuggest.trigger');
@@ -278,7 +258,6 @@ export function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(disposable3);
     context.subscriptions.push(disposable4);
     context.subscriptions.push(disposable5);
-    context.subscriptions.push(disposable8);
     context.subscriptions.push(disposable13);
     context.subscriptions.push(disposable6);
     context.subscriptions.push(toolbar_command_disposable);
@@ -308,19 +287,6 @@ export function activate(context: vscode.ExtensionContext)
     });
     context.subscriptions.push(settingsCommand);
 
-    let logout = vscode.commands.registerCommand('refactaicmd.logout', async () => {
-        context.globalState.update('codifyFirstRun', false);
-        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Global);
-        await vscode.workspace.getConfiguration().update('refactai.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
-        await vscode.workspace.getConfiguration().update('refactai.addressURL', undefined, vscode.ConfigurationTarget.Workspace);
-        await vscode.workspace.getConfiguration().update('codify.apiKey', undefined, vscode.ConfigurationTarget.Workspace);
-        global.status_bar.choose_color();
-        vscode.commands.executeCommand("workbench.action.webview.reloadWebviewAction");
-    });
-
-    context.subscriptions.push(logout);
     context.subscriptions.push(...statusBar.status_bar_init());
     context.subscriptions.push(...estate.estate_init());
 
@@ -352,12 +318,8 @@ export function activate(context: vscode.ExtensionContext)
 
     let config_debounce: NodeJS.Timeout|undefined;
     vscode.workspace.onDidChangeConfiguration(e => {
-        // TODO: update commands here?
         if (
-            e.affectsConfiguration("refactai.infurl") ||
-            e.affectsConfiguration("refactai.addressURL") ||
             e.affectsConfiguration("refactai.xDebug") ||
-            e.affectsConfiguration("refactai.apiKey") ||
             e.affectsConfiguration("refactai.insecureSSL") ||
             e.affectsConfiguration("refactai.ast") ||
             e.affectsConfiguration("refactai.astFileLimit") ||
@@ -373,10 +335,6 @@ export function activate(context: vscode.ExtensionContext)
                     global.rust_binary_blob.settings_changed();
                 }
             }, 1000);
-        }
-
-        if (e.affectsConfiguration("refactai.apiKey") || e.affectsConfiguration("refactai.addressURL")) {
-            global.side_panel?.handleSettingsChange();
         }
 
         if (
@@ -492,10 +450,6 @@ export async function deactivate(context: vscode.ExtensionContext)
 export async function status_bar_clicked()
 {
     let editor = vscode.window.activeTextEditor;
-    if (!userLogin.secret_api_key()) {
-        userLogin.login_message();
-        return;
-    }
     let selection: string | undefined;
 
     if (global.status_bar.ast_limit_hit || global.status_bar.vecdb_limit_hit) {

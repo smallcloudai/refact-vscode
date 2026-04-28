@@ -910,6 +910,27 @@ export class ChatTab {
 
         const fontSize = vscode.workspace.getConfiguration().get<number>("editor.fontSize") ?? 12;
         const scaling = fontSize < 14 ? "90%" : "100%";
+        const rawPort = global.rust_binary_blob?.get_port();
+        const port = typeof rawPort === "number" && Number.isFinite(rawPort) && rawPort > 0
+            ? rawPort
+            : 0;
+        const config = {
+            host: "vscode",
+            tabbed: isTab,
+            themeProps: {
+                accentColor: "gray",
+                scaling,
+            },
+            features: {
+                vecdb,
+                ast,
+            },
+            lspPort: port,
+        };
+        const serializedConfig = JSON.stringify(config).replace(
+            /<\/script>/gi,
+            "</scr\"+\"ipt>"
+        );
 
         const nonce = ChatTab.getNonce();
         return `<!DOCTYPE html>
@@ -938,18 +959,7 @@ export class ChatTab {
                 <script nonce="${nonce}">
                 window.onload = function() {
                     const root = document.getElementById("refact-chat")
-                    RefactChat.render(root, {
-                        host: "vscode",
-                        tabbed: ${isTab},
-                        themeProps: {
-                            accentColor: "gray",
-                            scaling: "${scaling}",
-                        },
-                        features: {
-                            vecdb: ${vecdb},
-                            ast: ${ast},
-                        }
-                    })
+                    RefactChat.render(root, ${serializedConfig})
                 }
                 </script>
             </body>

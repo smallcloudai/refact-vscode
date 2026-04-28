@@ -2,7 +2,6 @@
 import * as vscode from 'vscode';
 import * as estate from "./estate";
 import * as fetchAPI from "./fetchAPI";
-import * as fetchH2 from 'fetch-h2';
 import { FimDebugData, fim } from 'refact-chat-js/dist/events';
 
 
@@ -165,10 +164,9 @@ export class MyInlineCompletionProvider implements vscode.InlineCompletionItemPr
             return ["", -1];
         }
         let de_facto_model = json["model"];
-        let serial_number = json["snippet_telemetry_id"];
         this.maybeSendFIMData(json);
         global.status_bar.completion_model_worked(de_facto_model);
-        return [completion, serial_number];
+        return [completion, -1];
     }
 
     maybeSendFIMData(data: FimDebugData | null) {
@@ -192,33 +190,9 @@ export function _extract_extension(feed: estate.ApiFields)
 }
 
 
-export async function inline_accepted(serial_number: number)
+export async function inline_accepted(_serial_number: number)
 {
-    let url = fetchAPI.rust_url("/v1/snippet-accepted");
-    if (!url) {
-        console.log(["Failed to get url for /v1/snippet-accepted"]);
-    }
-    const post = JSON.stringify({
-        "snippet_telemetry_id": serial_number
-    });
-    const headers = {
-        "Content-Type": "application/json",
-        // "Authorization": `Bearer ${apiKey}`,
-    };
-    let req = new fetchH2.Request(url, {
-        method: "POST",
-        headers: headers,
-        body: post,
-        redirect: "follow",
-        cache: "no-cache",
-        referrer: "no-referrer"
-    });
-
-    try {
-        await fetchH2.fetch(req);
-    } catch (error) {
-        console.log("failed to post to /v1/snippet-accepted");
-    }
+    return;
 }
 
 

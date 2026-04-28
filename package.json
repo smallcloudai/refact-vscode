@@ -128,28 +128,6 @@
 			"type": "object",
 			"title": "Refact Assistant",
 			"properties": {
-				"refactai.addressURL": {
-					"type": "string",
-					"description": "For Enterprise, put there your company's server address. Your admin should have emailed that to you.\nFor self-hosted, use something like http://127.0.0.1:8008/\nFor inference in public cloud, use \"Refact\" or \"HF\".",
-					"default": "",
-					"order": 0
-				},
-				"refactai.infurl": {
-					"type": "string",
-					"deprecationMessage": "The new field is called addressURL. It's about the same, but it has special values like \"HF\" and if it's empty, makes the plugin do nothing, which is better for Enterprise use case to prevent leaks.",
-					"order": 0
-				},
-				"refactai.apiKey": {
-					"type": "string",
-					"default": "",
-					"description": "Secret API Key. It's used to authenticate your requests.",
-					"order": 1
-				},
-				"codify.apiKey": {
-					"type": "string",
-					"deprecationMessage": "Use refactai.apiKey instead.",
-					"order": 1
-				},
 				"refactai.insecureSSL": {
 					"type": "boolean",
 					"description": "Allow insecure server connections when using SSL, ignore certificate verification errors. Allows you to use self-signed certificates.",
@@ -195,7 +173,7 @@
 				},
 				"refactai.ast": {
 					"type": "boolean",
-					"markdownDescription": "Enable context-aware code completion and chat, adds defintion() and references() functions for a chat model, and @definition, @references commands for you to add context manually.\n\nRAG works better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"markdownDescription": "Enable context-aware code completion and chat. This adds definition() and references() functions for chat models, plus @definition and @references commands for adding context manually.",
 					"default": true,
 					"order": 8
 				},
@@ -207,7 +185,7 @@
 				},
 				"refactai.vecdb": {
 					"type": "boolean",
-					"markdownDescription": "Enable vector database. This adds the ability for a chat model to perform a semantic search in your codebase, and the @workspace command for you to add context manually.\n\nRAG performs better with a larger context, available in the [Pro plan](https://refact.ai/pricing/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin) and [for companies](https://refact.ai/enterprise/?utm_source=vscode&utm_medium=settings&utm_campaign=plugin).",
+					"markdownDescription": "Enable vector database. This adds semantic search over your codebase and the @workspace command for adding context manually.",
 					"default": true,
 					"order": 11
 				},
@@ -227,16 +205,6 @@
 					"description": "Enable experimental features.",
 					"default": false,
 					"order": 14
-				},
-				"refactai.activeGroup": {
-					"type": [
-						"object",
-						"null"
-					],
-					"default": null,
-					"description": "Active selected group in your Team Workspace. Modify via settings.json in your workspace",
-					"scope": "machine-overridable",
-					"included": false
 				}
 			}
 		},
@@ -252,18 +220,8 @@
 				"title": "Close"
 			},
 			{
-				"command": "refactaicmd.activateToolboxDeprecated",
-				"title": "Activate Toolbox (deprecated)",
-				"category": "Refact.ai"
-			},
-			{
 				"command": "refactaicmd.activateToolbox",
 				"title": "Activate (opens chat)",
-				"category": "Refact.ai"
-			},
-			{
-				"command": "refactaicmd.login",
-				"title": "Login",
 				"category": "Refact.ai"
 			},
 			{
@@ -313,10 +271,6 @@
 			]
 		},
 		"keybindings": [
-			{
-				"command": "refactaicmd.activateToolboxDeprecated",
-				"key": "alt+t"
-			},
 			{
 				"command": "refactaicmd.completionManual",
 				"key": "alt+space"
@@ -388,13 +342,6 @@
 				"default": {
 					"fontPath": "./assets/codify.woff",
 					"fontCharacter": "\\e807"
-				}
-			},
-			"codify-coin": {
-				"description": "codify coin",
-				"default": {
-					"fontPath": "./assets/codify.woff",
-					"fontCharacter": "\\e802"
 				}
 			},
 			"codify-chat": {
