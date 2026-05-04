@@ -96,17 +96,11 @@ export class RustBinaryBlob {
                 await this.start_lsp_socket();
                 return;
             }
-            let plugin_version = vscode.extensions.getExtension("smallcloud.codify")?.packageJSON.version;   // codify is the old name of the product, smallcloud is the company
-            if (!plugin_version) {
-                plugin_version = "unknown";
-            }
-
             let new_cmdline: string[] = [
                 join(this.asset_path, "refact-lsp"),
                 "--ping-message", ping_response,
                 "--http-port", port.toString(),
                 "--lsp-stdin-stdout", "1",
-                "--enduser-client-version", "refact-" + plugin_version + "/vscode-" + vscode.version,
             ];
 
             if (vscode.workspace.getConfiguration().get<boolean>("refactai.vecdb")) {
