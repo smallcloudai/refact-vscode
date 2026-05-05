@@ -54,6 +54,53 @@ function composeHandlers(...eventHandlers: Handler[]) {
     return (data: any) => eventHandlers.forEach(fn => fn && fn(data));
 }
 
+export type CurrentProjectInfoPayload = {
+    name: string;
+    workspaceRoots?: string[];
+};
+
+export function normalizeWindowsExtendedPath(fileName: string): string {
+    const uncPrefix = "\\\\?\\UNC\\";
+    const localPrefix = "\\\\?\\";
+
+    if (fileName.startsWith(uncPrefix)) {
+        return "\\\\" + fileName.slice(uncPrefix.length);
+    }
+
+    if (fileName.startsWith(localPrefix)) {
+        return fileName.slice(localPrefix.length);
+    }
+
+    return fileName;
+}
+
+function isPathInsideRoot(candidate: string, root: string): boolean {
+    const relativePath = path.relative(root, candidate);
+    return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
+}
+
+export function resolveFilePathWithinWorkspace(fileName: string, workspaceRoots: string[], activeFilePath?: string): string | undefined {
+    const roots = workspaceRoots
+        .filter(root => root.trim().length > 0)
+        .map(root => path.resolve(root));
+
+    if (roots.length === 0) {
+        return undefined;
+    }
+
+    const formattedFileName = normalizeWindowsExtendedPath(fileName);
+    const activePath = activeFilePath ? path.resolve(activeFilePath) : undefined;
+    const activeRoot = activePath ? roots.find(root => isPathInsideRoot(activePath, root)) : undefined;
+    const baseRoot = activeRoot ?? roots[0];
+    const candidate = path.resolve(path.isAbsolute(formattedFileName) ? formattedFileName : path.join(baseRoot, formattedFileName));
+
+    return roots.some(root => isPathInsideRoot(candidate, root)) ? candidate : undefined;
+}
+
+export function createCurrentProjectInfo(name: string, workspaceRoots: string[]): CurrentProjectInfoPayload {
+    return workspaceRoots.length > 0 ? { name, workspaceRoots } : { name };
+}
+
 export async function open_chat_tab(
     question: string,
     editor: vscode.TextEditor | undefined,
@@ -266,14 +313,11 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     private getWorkspaceRoots(): string[] {
         return (vscode.workspace.workspaceFolders ?? [])
             .filter(folder => folder.uri.scheme === "file")
-            .map(folder => folder.uri.fsPath);
+            .map(folder => path.resolve(folder.uri.fsPath));
     }
 
-    private getCurrentProjectInfo() {
-        return {
-            name: vscode.workspace.name ?? "",
-            workspaceRoots: this.getWorkspaceRoots(),
-        };
+    private getCurrentProjectInfo(): CurrentProjectInfoPayload {
+        return createCurrentProjectInfo(vscode.workspace.name ?? "", this.getWorkspaceRoots());
     }
 
     handleSettingsChange() {
@@ -607,8 +651,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     async handleToolEdit(toolCall: TextDocToolCall,  toolEdit: ToolEditResult) {
         const args = toolCall.function.arguments;
         const filePath = 'path' in args ? args.path : undefined;
-        if (!filePath) {
+        if (typeof filePath !== "string" || filePath.length === 0) {
             console.error('Tool call arguments missing path property');
+            this.toolEditChange("", false);
             return;
         }
 
@@ -623,6 +668,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     // This isn't called
     async deleteFile(fileName: string) {
         const uri = this.filePathToUri(fileName);
+        if (!uri) {
+            return;
+        }
         const edit = new vscode.WorkspaceEdit();
         edit.deleteFile(uri);
         return vscode.workspace.applyEdit(edit).then(success => {
@@ -634,6 +682,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     createNewFileWithContent(fileName: string, content: string) {
         const uri = this.filePathToUri(fileName);
+        if (!uri) {
+            this.toolEditChange(fileName, false);
+            return;
+        }
         const newFile = vscode.Uri.parse('untitled:' + uri.fsPath);
         vscode.workspace.openTextDocument(newFile).then(document => {
             const edit = new vscode.WorkspaceEdit();
@@ -687,6 +739,10 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     async addDiffToFile(fileName: string, content: string) {
         const uri = this.filePathToUri(fileName);
+        if (!uri) {
+            this.toolEditChange(fileName, false);
+            return;
+        }
         const document = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(document);
 
@@ -705,6 +761,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     // this isn't called
     async editFileWithContent(fileName: string, content: string) {
         const uri = this.filePathToUri(fileName);
+        if (!uri) {
+            return;
+        }
         const document = await vscode.workspace.openTextDocument(uri);
 
         const start = new vscode.Position(0, 0);
@@ -805,67 +864,31 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    private getWorkspaceFolderForFile(filePath?: string): vscode.WorkspaceFolder | undefined {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders || workspaceFolders.length === 0) {
+    private filePathToUri(fileName: string): vscode.Uri | undefined {
+        const activeEditor = vscode.window.activeTextEditor;
+        const currentActiveEditorPath = activeEditor?.document.uri.scheme === "file"
+            ? activeEditor.document.uri.fsPath
+            : undefined;
+        const filePath = resolveFilePathWithinWorkspace(fileName, this.getWorkspaceRoots(), currentActiveEditorPath);
+
+        if (!filePath) {
+            this.warnRejectedFilePath(fileName);
             return undefined;
         }
 
-        if (filePath) {
-            const folder = workspaceFolders.find(folder => {
-                const folderPath = folder.uri.fsPath;
-                return filePath.startsWith(folderPath);
-            });
-
-            if (folder) {
-                return folder;
-            }
-        }
-
-        return workspaceFolders[0];
+        return vscode.Uri.file(filePath);
     }
 
-    private filePathToUri(fileName: string): vscode.Uri {
-        let formattedFileName = fileName;
-    
-        // Handle Windows extended-length paths robustly
-        // Examples:
-        //   \\?\C:\Users\TestUser\Desktop\test6.py  =>  C:\Users\TestUser\Desktop\test6.py
-        //   \\?\UNC\server\share\file.txt           =>  \\server\share\file.txt
-        if (typeof formattedFileName === 'string') {
-            if (formattedFileName.startsWith('\\\\?\\UNC\\')) {
-                // UNC path: replace \\?\UNC\ with \\
-                formattedFileName = '\\\\' + formattedFileName.slice(8);
-            } else if (formattedFileName.startsWith('\\\\?\\')) {
-                // Local drive path: remove \\?\
-                formattedFileName = formattedFileName.slice(4);
-            }
-        }
-
-        
-        if (path.isAbsolute(formattedFileName)) {
-            return vscode.Uri.file(formattedFileName);
-        }
-        
-        const activeEditor = vscode.window.activeTextEditor;
-        const currentActiveEditorPath = activeEditor?.document.uri.fsPath;
-
-        // Getting current workspace folder based on active editor's path
-        const workspaceFolder = this.getWorkspaceFolderForFile(currentActiveEditorPath);
-        if (workspaceFolder) {
-            const workspaceRoot = workspaceFolder.uri.fsPath;
-            const candidate = path.resolve(workspaceRoot, formattedFileName);
-            return vscode.Uri.file(candidate);
-        }
-    
-        // Fallback: just return as is (may not exist)
-        return vscode.Uri.file(formattedFileName);
+    private warnRejectedFilePath(fileName: string) {
+        const message = `Refact skipped file operation outside workspace: ${fileName}`;
+        console.warn(message);
+        void vscode.window.showWarningMessage(message);
     }
 
     async startFileAnimation(fileName: string) {
         const editor = vscode.window.activeTextEditor;
         const uri = this.filePathToUri(fileName);
-        if (!editor) { return; }
+        if (!editor || !uri) { return; }
 
         const document = await vscode.workspace.openTextDocument(uri);
         await vscode.window.showTextDocument(document);
@@ -885,6 +908,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     async stopFileAnimation(fileName: string) {
         const editor = vscode.window.activeTextEditor;
         const uri = this.filePathToUri(fileName);
+        if (!uri) { return; }
 
         const state = estate.state_of_editor(editor, "stop_animate for file: " + uri);
         if(!state) {return;}
@@ -912,6 +936,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
 
     async handleOpenFile(file: OpenFilePayload) {
         const uri = this.filePathToUri(file.file_path);
+        if (!uri) {
+            return;
+        }
         const document = await vscode.workspace.openTextDocument(uri);
 
         if(file.line !== undefined) {
