@@ -132,8 +132,9 @@ export class PanelWebview implements vscode.WebviewViewProvider {
             }
         }));
 
-        this._disposables.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+        this._disposables.push(vscode.workspace.onDidChangeWorkspaceFolders(() => {
             this.sendCurrentProjectInfo();
+            this.handleSettingsChange();
         }));
 
 
@@ -260,6 +261,19 @@ export class PanelWebview implements vscode.WebviewViewProvider {
                 return workspaceFolders[0].name;
             }
         }
+    }
+
+    private getWorkspaceRoots(): string[] {
+        return (vscode.workspace.workspaceFolders ?? [])
+            .filter(folder => folder.uri.scheme === "file")
+            .map(folder => folder.uri.fsPath);
+    }
+
+    private getCurrentProjectInfo() {
+        return {
+            name: vscode.workspace.name ?? "",
+            workspaceRoots: this.getWorkspaceRoots(),
+        };
     }
 
     handleSettingsChange() {
@@ -921,7 +935,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
     }
 
     sendCurrentProjectInfo() {
-        const action = setCurrentProjectInfo({name: vscode.workspace.name ?? ""});
+        const action = setCurrentProjectInfo(this.getCurrentProjectInfo());
         this._view?.webview.postMessage(action);
     }
 
@@ -940,6 +954,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         const shiftEnterToSubmit = vscode.workspace.getConfiguration()?.get<boolean>("refactai.shiftEnterToSubmit")?? false;
 
         const currentActiveWorkspaceName = this.getActiveWorkspace();
+        const currentProject = this.getCurrentProjectInfo();
 
         const config: InitialState["config"] = {
             host: "vscode",
@@ -965,7 +980,7 @@ export class PanelWebview implements vscode.WebviewViewProvider {
         };
 
         const state: Partial<InitialState> = {
-            current_project: {name: vscode.workspace.name ?? ""},
+            current_project: currentProject,
             config,
         };
 
