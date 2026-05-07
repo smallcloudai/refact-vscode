@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/smallcloudai-refact-vscode-badge.png)](https://mseep.ai/app/smallcloudai-refact-vscode)
+
 <p align="center">
   <img alt="Refact" src="https://github.com/user-attachments/assets/190a9e7b-fd0b-4546-9213-1f5571346c8b"/>
 </p>
